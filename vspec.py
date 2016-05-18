@@ -83,7 +83,12 @@ def _load(file_name, prefix, include_paths):
     loader.construct_mapping = yaml_construct_mapping
     raw_yaml = loader.get_data()
 
+    # Check for file with no objects.
+    if not raw_yaml:
+        return []
+
     check_yaml_usage(raw_yaml, file_name)
+
     # Expand all includes. Will call back to _load() to
     # recursively expand all include files.
     expanded_includes = expand_includes(raw_yaml, prefix, list(set(include_paths + [directory])))
@@ -92,9 +97,9 @@ def _load(file_name, prefix, include_paths):
 
     # Add type: branch when type is missing.
     flat_model = add_default_type(expanded_includes)
-
-
     return flat_model
+
+
 
 #
 # If no type is specified, default it to "branch"
