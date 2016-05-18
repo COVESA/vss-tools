@@ -11,6 +11,7 @@
 
 import yaml
 import json
+import os
 
 class VSpecError(Exception):
     def __init__(self, *args, **kwargs):
@@ -30,10 +31,11 @@ class VSpecError(Exception):
 def search_and_read(file_name, include_paths):
     for directory in include_paths:
         try:
-            with open ("{}/{}".format(directory, file_name), "r") as fp:
+            path = "{}/{}".format(directory, file_name)
+            with open (path, "r") as fp:
                 text = fp.read()
                 fp.close()
-                return text
+                return os.path.dirname(path), text
         except IOError as e:
             pass
 
@@ -71,9 +73,8 @@ def _load(file_name, prefix, include_paths):
         return mapping
 
 
-    text = search_and_read(file_name, include_paths)
+    directory, text = search_and_read(file_name, include_paths)
     text = yamilify_includes(text)
-
 
     # Setup a loader to include $line$ and $file_name$ as
     # added python objects to the parsed tree.
@@ -85,12 +86,13 @@ def _load(file_name, prefix, include_paths):
     check_yaml_usage(raw_yaml, file_name)
     # Expand all includes. Will call back to _load() to
     # recursively expand all include files.
-    expanded_includes = expand_includes(raw_yaml, prefix, include_paths)
+    expanded_includes = expand_includes(raw_yaml, prefix, list(set(include_paths + [directory])))
+
+    # FIXME: Syntax and semantic checks of loaded nodes.
 
     # Add type: branch when type is missing.
     flat_model = add_default_type(expanded_includes)
 
-    # FIXME: Syntax and semantic checks of loaded nodes.
 
     return flat_model
 
@@ -168,8 +170,11 @@ def expand_includes(flat_model, prefix, include_paths):
             # Append include prefix to our current prefix.
             # Make sure we do not start new prefix with a "."
             if prefix != "":
-                include_prefix = "{}.{}".format(prefix, include_prefix)
-            
+                if include_prefix != "":
+                    include_prefix = "{}.{}".format(prefix, include_prefix)
+                else:
+                    include_prefix = prefix
+
             # Recursively load included file
 
             inc_elem = _load(include_elem["file"], include_prefix, include_paths)
