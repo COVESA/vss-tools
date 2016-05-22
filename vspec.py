@@ -44,12 +44,13 @@ def search_and_read(file_name, include_paths):
 
 
 def load(file_name, include_paths):
-    flat_model = _load(file_name, "", include_paths)
+    flat_model = load_flat_model(file_name, "", include_paths)
+    absolute_path_flat_model = create_absolute_paths(flat_model)
     deep_model = create_nested_model(flat_model, file_name)
     cleanup_deep_model(deep_model)
     return deep_model["children"]
 
-def _load(file_name, prefix, include_paths):
+def load_flat_model(file_name, prefix, include_paths):
     # Hooks into YAML parser to add line numbers 
     # and file name into each elemeent
     def yaml_compose_node(parent, index):
@@ -68,6 +69,15 @@ def _load(file_name, prefix, include_paths):
 
     def yaml_construct_mapping(node, deep=False):
         mapping = yaml.constructor.Constructor.construct_mapping(loader, node, deep=deep)
+
+        # Find the name of the branch / signal and convert
+        # it to a dictionary element '$name$'
+        for key, val in mapping.iteritems():
+            if val == None:
+                mapping['$name$'] = key
+                del mapping[key]
+                break
+
         mapping['$line$'] = node.__line__
         mapping['$file_name$'] = node.__file_name__
         return mapping
@@ -87,13 +97,12 @@ def _load(file_name, prefix, include_paths):
     if not raw_yaml:
         return []
 
+    # Sanity check of loaded code
     check_yaml_usage(raw_yaml, file_name)
 
-    # Expand all includes. Will call back to _load() to
+    # Expand all includes. Will call back to load_flat_model() to
     # recursively expand all include files.
     expanded_includes = expand_includes(raw_yaml, prefix, list(set(include_paths + [directory])))
-
-    # FIXME: Syntax and semantic checks of loaded nodes.
 
     # Add type: branch when type is missing.
     flat_model = add_default_type(expanded_includes)
@@ -120,7 +129,7 @@ def cleanup_deep_model(deep_model):
     # Traverse the flat list of the parsed specification
     # Is this an include element?
     if deep_model.has_key("$file_name$"):
-            del deep_model["$file_name$"]
+        del deep_model["$file_name$"]
 
     if deep_model.has_key("$line$"):
         del deep_model["$line$"]
@@ -128,10 +137,9 @@ def cleanup_deep_model(deep_model):
     if deep_model.has_key("$prefix$"):
         del deep_model["$prefix$"]
 
-    try:
-        del deep_model[find_element_name(deep_model)]
-    except:
-        pass
+    if deep_model.has_key("$name$"):
+        del deep_model['$name$']
+
 
     if deep_model["type"] == "branch":
         children = deep_model["children"]
@@ -154,8 +162,6 @@ def check_yaml_usage(flat_model, file_name):
     # Add more usage checks, such as absence of nested models.
     # and mutually exclusive elements.
 
-
-#
 
 
 # Expand yaml include elements (inserted by yamilify_include())
@@ -181,8 +187,7 @@ def expand_includes(flat_model, prefix, include_paths):
                     include_prefix = prefix
 
             # Recursively load included file
-
-            inc_elem = _load(include_elem["file"], include_prefix, include_paths)
+            inc_elem = load_flat_model(include_elem["file"], include_prefix, include_paths)
             
             # Add the loaded elements at the end of the new spec model
             new_flat_model.extend(inc_elem)
@@ -195,10 +200,43 @@ def expand_includes(flat_model, prefix, include_paths):
     return new_flat_model
 
 
+
 #
-# Take the flat model parsed from the vspec file and create a nested
-# variant where each component of a prefix becomes a branch.
+# Take the flat model created by _load() and merge all $prefix$ with its name
+# I.e: $prefix$ = "Cabin.Doors.1"
+#      name = "Window.Pos"
+#      -> name = "Cabin.Doors.1.Window.Pos"
 #
+# $prefix$ is deleted
+# 
+#
+def create_absolute_paths(flat_model):
+    for elem in flat_model:
+        # Create a list of path components to the given element
+        #
+        # $prefix$='body.door.front.left' name='lock' ->
+        # [ 'body', 'door', 'front', 'left', 'lock' ]
+        name = elem['$name$']
+
+        if elem["$prefix$"] == "":
+            new_name = name
+        else:
+            new_name= "{}.{}".format(elem["$prefix$"], name)
+
+        elem['$name$'] = new_name
+        del elem["$prefix$"]
+
+
+    return flat_model
+
+
+
+#
+# Take the flat model with absolute signal names parsed from the vspec
+# file and create a nested variant where each component of a prefix
+# becomes a branch.
+#
+
 def create_nested_model(flat_model, file_name):
     deep_model = {
         "children": {},
@@ -213,11 +251,11 @@ def create_nested_model(flat_model, file_name):
         if elem["type"] == "branch":
             elem["children"] = {}
 
+            
         # Create a list of path components to the given element
-        #
-        # $prefix$='body.door.front.left' name='lock' ->
+        #  name='body.door.front.left.lock' ->
         # [ 'body', 'door', 'front', 'left', 'lock' ]
-        name_list = elemnent_to_list(elem)
+        name_list = elem['$name$'].split(".")
 
         # Extract prefix and name 
         prefix = list_to_path(name_list[:-1])
@@ -240,7 +278,7 @@ def find_branch(branch, name_list, index):
         if branch["type"] != "branch":
             raise VSpecError(branch.get("$file_name$","??"),
                              branch.get("$line$", "??"),
-                             "Not a branch: {}.".format(find_element_name(branch)))
+                             "Not a branch: {}.".format(branch['$name$']))
             
         return branch
     
@@ -273,26 +311,16 @@ def list_to_path(name_list):
     return path
 
 
-def find_element_name(elem):
-    # Find the name of the branch / signal
-    for key, val in elem.iteritems():
-        if val == None:
-            return key
-
-    raise VSpecError(elem.get("$file_name$","??"),
-                     elem.get("$line$", "??"),
-                     "Could not find element name.")
-
-
-def elemnent_to_list(elem):
-    name = find_element_name(elem)
+# Convert a dot-notated element name to a list.
+def element_to_list(elem):
+    name = elem['$name$']
 
     if elem["$prefix$"] == "":
         path = name
     else:
         path = "{}.{}".format(elem["$prefix$"], name)
 
-    return path.split(".")
+    return 
     
 #
 # Convert
@@ -328,6 +356,3 @@ def yamilify_includes(text):
     file: {}
     prefix: {}
 {}""".format(text[:st_index], include_file, include_prefix, text[end_index:])
-
-        
-
