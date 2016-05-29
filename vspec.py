@@ -23,7 +23,144 @@ class VSpecError(Exception):
     def __str__(self):
         return  "{}: {}: {}".format(self.file_name, self.line_nr, self.message)
 
+#
+# Manager of all SignalDB instances.
+#
+class SignalDBManager:
+    def __init__(self):
+        self.signal_id_db_set = {}
+        
+    # Process a command line option with the format
+    #  [prefix]:filename:[start_id]
+    # If [prefix] is empty then all signals will match, regardless
+    # of their name.
+    # If start_id is '', then it will be set to 0.
+    #
+    def process_command_line_option(self, option):
+        try:
+            [prefix, file_name, start_id] = option.split(":")
+            if start_id == "":
+                start_id = '0'
 
+        except:
+            return False
+
+        self.create_signal_db(prefix, id_db_file_name, prefix, start_id)
+        return True
+    
+    # Create a new SignalDB instance.
+    #
+    # 'prefix' is the prefix of the signal names that are to
+    # be assigned ID's by the new object.
+    #
+    # 'id_db_file_name' is the file to read existing IDs
+    # and store newly assigned IDs into forP prefix-matching signals.
+    #
+    # 'start_id' is the initial ID to assign to the first matching signal
+    # All other signals will be assigned a sequentially incremented
+    # ID.
+    def create_signal_db(self, prefix, id_db_file_name, start_id):
+        self.signal_id_db_set[prefix] = SignalDB(id_db_file_name, start_id)
+
+    # Locate and return an existing signal ID, or create and return a new one.
+    #
+    # All SignalDB instances created by create_signal_db() will be prefix matched
+    # against the all prefix - SignalDB mappings setup through create_signal_db()
+    # calls.
+    # The SignalDB mapped against the longest prefix match against signal_name
+    # will be searched for an existing signal ID assigned to signal_name.
+    # If no signal ID has been assigned, a new ID is created and assigned to
+    # 'signal_name' in the specified SignalDB object.
+    #
+    def get_or_assign_signal_id(self, signal_name):
+        match_db = None
+        match_len = 0
+
+        # Find the longest matching prefix
+        for key, signal_db in self.signal_id_db_set.iteritems():
+            key_len = len(key)
+            if signal_name.find(key, 0, key_len) == -1:
+                continue
+
+            # Is this a longer prefix match than the previous one
+            if key_len < match_len:
+                continue
+
+            match_db = signal_db
+            match_len = key_len
+
+        if not match_db:
+            print "NO SIGNAL DB FILE TO USE!"
+            return -1
+
+        return match_db.get_or_assign_signal_id(signal_name)
+
+    # Go through all SignalDB instances and save them to disk.
+    def save_all_signal_db(self):
+        for key, signal_db in self.signal_id_db_set.iteritems():
+            signal_db.save()
+
+#
+# Manage the IDs of a set of signals with a given prefix.
+#
+class SignalDB:
+    # Create a new SignalDB object.
+    # id_db_file_name is the file to read existing IDs
+    # and store newly assined IDs into for all signals whose IDs
+    # are managed by this object.
+    # start_id is the initial ID to assign to the first matching signal
+    # All other signals will be assigned a sequentially incremented
+    # ID.
+    def __init__(self, id_file_name, start_id):
+        self.id_file_name = id_file_name
+        if os.path.isfile(id_file_name):
+            with open (self.id_file_name, "r") as fp:
+                text = fp.read()
+                self.id_db = yaml.load(text)
+                fp.close()
+
+            for signal_name in sorted(self.id_db):
+                signal_id = self.id_db[signal_name]
+                if int(signal_id) > start_id:
+                    start_id = int(signal_id)
+        else:
+            self.id_db = {}
+
+        self.max_signal_id = start_id
+
+
+    # Locate and return an existing signal ID, or create and return a new one.
+    # 
+    # If an signal ID has already been assigned to 'signal_name', return it.
+    # If no assignment has been done, the previous signal ID + 1 will be assigned
+    # the the signal and returned.
+    # If this is the first ID assigned to a signal in thie SignalDB object,
+    # then use the ID provided by 'start_id' constructor argument plus 1.
+    #
+    def get_or_assign_signal_id(self, signal_name):
+        try:
+            return self.id_db[signal_name]
+        except:
+            self.max_signal_id = self.max_signal_id + 1
+            self.id_db[signal_name] = self.max_signal_id
+            return self.max_signal_id
+
+
+    #
+    # Save all signal - ID mappings in self to a yaml file.
+    # The file read at object construction will be used
+    # to store all mappings (including those added by get_or_assign_signal_id()).
+    #
+    def save(self):
+        try:
+            with open (self.id_file_name, "w") as fp:
+                yaml.dump(self.id_db, fp, default_flow_style=False)
+                fp.close()
+                return True
+        except IOError as e:
+            pass
+        
+        
 # Try to open a file name that can reside
 # in any directory listed in incude_paths.
 # If successful, read context and return file
@@ -43,12 +180,25 @@ def search_and_read(file_name, include_paths):
     raise VSpecError(file_name, 0, "File not found")
 
 
+def assign_signal_ids(flat_model):
+    for elem in flat_model:
+        if elem["type"] == "branch":
+            continue
+
+        elem["id"] = db_mgr.get_or_assign_signal_id(elem["$name$"])
+        
+    db_mgr.save_all_signal_db()
+    return flat_model
+
+
 def load(file_name, include_paths):
     flat_model = load_flat_model(file_name, "", include_paths)
     absolute_path_flat_model = create_absolute_paths(flat_model)
-    deep_model = create_nested_model(flat_model, file_name)
+    absolute_path_flat_model_with_id = assign_signal_ids(absolute_path_flat_model)
+    deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
     return deep_model["children"]
+
 
 def load_flat_model(file_name, prefix, include_paths):
     # Hooks into YAML parser to add line numbers 
@@ -73,6 +223,9 @@ def load_flat_model(file_name, prefix, include_paths):
         # Find the name of the branch / signal and convert
         # it to a dictionary element '$name$'
         for key, val in mapping.iteritems():
+            if key[0]=='$':
+                continue
+
             if val == None:
                 mapping['$name$'] = key
                 del mapping[key]
@@ -85,13 +238,18 @@ def load_flat_model(file_name, prefix, include_paths):
 
     directory, text = search_and_read(file_name, include_paths)
     text = yamilify_includes(text)
+    text = yamilify_signal_id_db(text, prefix)
 
     # Setup a loader to include $line$ and $file_name$ as
     # added python objects to the parsed tree.
     loader = yaml.Loader(text)
     loader.compose_node = yaml_compose_node
+
     loader.construct_mapping = yaml_construct_mapping
     raw_yaml = loader.get_data()
+    
+    # Import signal IDs from the given database
+    
 
     # Check for file with no objects.
     if not raw_yaml:
@@ -100,8 +258,7 @@ def load_flat_model(file_name, prefix, include_paths):
     # Sanity check of loaded code
     check_yaml_usage(raw_yaml, file_name)
 
-    # Expand all includes. Will call back to load_flat_model() to
-    # recursively expand all include files.
+    # Recursively expand all include files.
     expanded_includes = expand_includes(raw_yaml, prefix, list(set(include_paths + [directory])))
 
     # Add type: branch when type is missing.
@@ -356,3 +513,37 @@ def yamilify_includes(text):
     file: {}
     prefix: {}
 {}""".format(text[:st_index], include_file, include_prefix, text[end_index:])
+
+    return text
+    
+#
+# Convert
+#   #signal_id_db VehicleSignalSpecification.id
+# to
+#   - $signal_id_db$:
+#     file: VehicleSignalSpecification.id
+#     prefix: private
+#
+# Where the value of the prefix element is provided by the 'prefix'
+# argument to this function.
+#
+def yamilify_signal_id_db(text, prefix):
+    st_index = text.find("\n#signal_id_db")
+    if st_index == -1:
+        return text
+
+    end_index = text.find("\n", st_index+1)
+    if end_index == -1:
+        return text
+
+    signal_id_db = text[st_index+15:end_index]
+
+    text = """{}
+- $signal_id_db$:
+    file: {}
+    prefix: {}
+{}""".format(text[:st_index], signal_id_db, prefix, text[end_index:])
+
+    return text
+
+db_mgr = SignalDBManager()
