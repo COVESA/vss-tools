@@ -90,7 +90,7 @@ class SignalDBManager:
             match_len = key_len
 
         if not match_db:
-            print "NO SIGNAL DB FILE TO USE!"
+#            print "NO SIGNAL DB FILE TO USE!"
             return -1
 
         return match_db.get_or_assign_signal_id(signal_name)
@@ -185,7 +185,9 @@ def assign_signal_ids(flat_model):
         if elem["type"] == "branch":
             continue
 
-        elem["id"] = db_mgr.get_or_assign_signal_id(elem["$name$"])
+        id_val = db_mgr.get_or_assign_signal_id(elem["$name$"])
+        if id_val != -1:
+            elem["id"] = id_val
         
     db_mgr.save_all_signal_db()
     return flat_model
