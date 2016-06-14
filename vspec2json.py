@@ -17,7 +17,7 @@ import json
 import getopt
 
 def usage():
-    print "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file"
+    print "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file json_file"
     print "  -I include_dir              Add include directory to search for included vspec"
     print "                              files. Can be used multiple timees."
     print
@@ -25,6 +25,7 @@ def usage():
     print "                              files. Can be used multiple timees."
     print
     print " vspec_file                   The vehicle specification file to parse."     
+    print " json_file                    The file to output the JSON objects to."     
     sys.exit(255)
 
 if __name__ == "__main__":
