@@ -8,7 +8,7 @@
 # Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
 #
 # 
-# Concert vspec file to JSON
+# Convert vspec file to FrancaIDL spec.
 #  
 
 import sys
