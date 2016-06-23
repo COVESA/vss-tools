@@ -264,20 +264,44 @@ def load_flat_model(file_name, prefix, include_paths):
     expanded_includes = expand_includes(raw_yaml, prefix, list(set(include_paths + [directory])))
 
     # Add type: branch when type is missing.
-    flat_model = add_default_type(expanded_includes)
+    flat_model = cleanup_flat_entries(expanded_includes)
+
     return flat_model
 
 
 
 #
-# If no type is specified, default it to "branch"
+# 1. If no type is specified, default it to "branch".
+# 2. Check that the declared type is a FrancaIDL.
+# 3. Correct the  casing of type.
+# 4, Check that enums are provided as arrays.
 #
-def add_default_type(flat_model):
+def cleanup_flat_entries(flat_model):
+    available_types =[ "branch", "UInt8", "Int8", "UInt16", "Int16",
+                       "UInt32", "Int32", "UInt64", "Int64", "Boolean",
+                       "Float", "Double", "String", "ByteBuffer" ]
+
+    available_downcase_types =[ "branch", "uint8", "int8", "uint16", "int16",
+                                "uint32", "int32", "uint64", "int64", "boolean",
+                                "float", "double", "string", "bytebuffer" ]
+        
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
         # Is this an include element?
         if not elem.has_key("type"):
             elem["type"] = "branch"
+
+        # Check, without case sensitivity that we do have
+        # a validated type.
+        if not elem["type"].lower() in available_downcase_types:
+            raise VSpecError(elem["$file_name$"], elem["$line$"], "Unknown type: {}".format(elem["type"]))
+        
+        # Get the correct casing for the type.
+        elem["type"] = available_types[available_downcase_types.index(elem["type"].lower())]
+
+        if elem.has_key("enum") and not isinstance(elem["enum"], list):
+            raise VSpecError(elem["$file_name$"], elem["$line$"], "Enum is not an array.")
+
 
     return flat_model
 
@@ -298,7 +322,6 @@ def cleanup_deep_model(deep_model):
 
     if deep_model.has_key("$name$"):
         del deep_model['$name$']
-
 
     if deep_model["type"] == "branch":
         children = deep_model["children"]
