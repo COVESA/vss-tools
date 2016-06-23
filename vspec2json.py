@@ -50,8 +50,10 @@ if __name__ == "__main__":
         else:
             usage()
 
-    if len(args) != 1:
+    if len(args) != 2:
         usage()
+
+    json_out = open (args[1], "w")
 
     try:
         tree = vspec.load(args[0], include_dirs)
@@ -59,5 +61,6 @@ if __name__ == "__main__":
         print "Error: {}".format(e)
         exit(255)
 
-    print json.dumps(tree, indent=2)
-    
+    json.dump(tree, json_out, indent=2)
+    json_out.write("\n")
+    json_out.close()
