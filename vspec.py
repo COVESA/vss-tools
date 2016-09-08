@@ -141,8 +141,8 @@ class SignalDB:
         try:
             return self.id_db[signal_name]
         except:
-            self.max_signal_id = self.max_signal_id + 1
             self.id_db[signal_name] = self.max_signal_id
+            self.max_signal_id = self.max_signal_id + 1
             return self.max_signal_id
 
 
