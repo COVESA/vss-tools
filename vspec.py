@@ -40,7 +40,7 @@ class SignalDBManager:
         try:
             [prefix, file_name, start_id] = option.split(":")
             if start_id == "":
-                start_id = '0'
+                start_id = '1'
 
         except:
             return False
