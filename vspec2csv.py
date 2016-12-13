@@ -29,6 +29,7 @@ def format_data(json_data):
     Min = '""'
     Max = '""'
     Desc = '""'
+    Enum = '""'
     if (json_data.has_key('id')):
         Id = '"' + str(json_data['id']) + '"'
     if (json_data.has_key('type')):
@@ -41,7 +42,9 @@ def format_data(json_data):
         Max = '"' + str(json_data['max']) + '"'
     if (json_data.has_key('description')):
         Desc = '"' + json_data['description'] + '"'
-    return Id + ","+ Type + ","+ Unit + ","+ Min + ","+ Max + ","+ Desc
+    if (json_data.has_key('enum')):
+        Enum = '"' + ' / '.join(json_data['enum']) + '"'
+    return Id + ","+ Type + ","+ Unit + ","+ Min + ","+ Max + ","+ Desc + ","+ Enum
 
 def json2csv(json_data, file_out, parent_signal):
     for k in json_data.keys():
