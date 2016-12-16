@@ -221,7 +221,6 @@ def load_flat_model(file_name, prefix, include_paths):
 
     def yaml_construct_mapping(node, deep=False):
         mapping = yaml.constructor.Constructor.construct_mapping(loader, node, deep=deep)
-
         # Find the name of the branch / signal and convert
         # it to a dictionary element '$name$'
         for key, val in mapping.iteritems():
@@ -446,9 +445,20 @@ def create_nested_model(flat_model, file_name):
         # Locate the correct branch in the tree
         parent_branch = find_branch(deep_model, name_list[:-1], 0)
 
-        # Delete redundant element
-
-        parent_branch["children"][name] = elem
+        # If an element with name is already in the parent branch
+        # we update its fields with the fields from the new element
+        if name in parent_branch["children"]:
+            old_elem = parent_branch["children"][name]
+            print "Found: " + str(old_elem)
+            # never update the type
+            elem.pop("type", None)
+            # concatenate file names
+            fname = "{}:{}".format(old_elem["$file_name$"], elem["$file_name$"])
+            old_elem.update(elem)
+            old_elem["$file_name$"] = fname
+            print "Set: " + str(parent_branch["children"][name])
+        else:
+            parent_branch["children"][name] = elem
 
     return deep_model
         
