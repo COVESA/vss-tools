@@ -1,11 +1,10 @@
 #!/usr/bin/python
 
 #
-# Copyright (C) 2016, Jaguar Land Rover
+# (C) 2016 Jaguar Land Rover
 #
-# This program is licensed under the terms and conditions of the
-# Mozilla Public License, version 2.0.  The full text of the 
-# Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
+# All files and artifacts in this repository are licensed under the
+# provisions of the license provided by the LICENSE file in this repository.
 #
 # 
 # Concert vspec file to JSON

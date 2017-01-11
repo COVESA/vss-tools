@@ -1,9 +1,8 @@
 #
-# Copyright (C) 2016, Jaguar Land Rover
+# (C) 2016 Jaguar Land Rover
 #
-# This program is licensed under the terms and conditions of the
-# Mozilla Public License, version 2.0.  The full text of the 
-# Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
+# All files and artifacts in this repository are licensed under the
+# provisions of the license provided by the LICENSE file in this repository.
 #
 # 
 # VSpec file parser.
@@ -449,14 +448,14 @@ def create_nested_model(flat_model, file_name):
         # we update its fields with the fields from the new element
         if name in parent_branch["children"]:
             old_elem = parent_branch["children"][name]
-            print "Found: " + str(old_elem)
+            #print "Found: " + str(old_elem)
             # never update the type
             elem.pop("type", None)
             # concatenate file names
             fname = "{}:{}".format(old_elem["$file_name$"], elem["$file_name$"])
             old_elem.update(elem)
             old_elem["$file_name$"] = fname
-            print "Set: " + str(parent_branch["children"][name])
+            #print "Set: " + str(parent_branch["children"][name])
         else:
             parent_branch["children"][name] = elem
 
