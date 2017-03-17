@@ -61,13 +61,13 @@ if __name__ == "__main__":
     opts, args= getopt.getopt(sys.argv[1:], "I:i:v:")
 
     # Always search current directory for include_file
-    vss_version = -1
+    vss_version = "unspecified version"
     include_dirs = ["."]
     for o, a in opts:
         if o == "-I":
             include_dirs.append(a)
         elif o == "-v":
-            vss_version = int(a)
+            vss_version = a
         elif o == "-i":
             id_spec = a.split(":")
             if len(id_spec) != 3:
