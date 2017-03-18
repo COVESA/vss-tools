@@ -93,7 +93,7 @@ if __name__ == "__main__":
         if o == "-I":
             include_dirs.append(a)
         elif o == "-v":
-            vss_version = float(a)
+            vss_version = a
         elif o == "-i":
             id_spec = a.split(":")
             if len(id_spec) != 3:
