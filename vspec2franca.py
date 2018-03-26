@@ -76,6 +76,12 @@ def traverse_tree(tree, outf, prefix_arr, is_first_element):
         if val.has_key("enum"):
             outf.write("    enum: {}\n".format(val["enum"]))
 
+        if val.has_key("sensor"):
+            outf.write("    sensor: {}\n".format(val["sensor"]))
+
+        if val.has_key("actuator"):
+            outf.write("    actuator: {}\n".format(val["actuator"]))
+
         outf.write("}\n")
         is_first_element = False
 

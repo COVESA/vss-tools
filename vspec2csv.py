@@ -51,7 +51,11 @@ def format_data(json_data):
         Desc = '"' + json_data['description'] + '"'
     if (json_data.has_key('enum')):
         Enum = '"' + ' / '.join(json_data['enum']) + '"'
-    return Id + ","+ Type + ","+ Unit + ","+ Min + ","+ Max + ","+ Desc + ","+ Enum
+    if (json_data.has_key('sensor')):
+        Sensor = '"' + str(json_data['sensor']) + '"'
+    if (json_data.has_key('actuator')):
+        Actuator = '"' + str(json_data['actuator']) + '"'
+    return Id + ","+ Type + ","+ Unit + ","+ Min + ","+ Max + ","+ Desc + ","+ Enum + ","+ Sensor + ","+ Actuator
 
 def json2csv(json_data, file_out, parent_signal):
     for k in json_data.keys():
