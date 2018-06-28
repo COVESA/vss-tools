@@ -30,7 +30,10 @@ def usage():
     print " franca_file                  The file to output the Franca IDL spec to."     
     sys.exit(255)
 
-_cnative = ctypes.CDLL('/home/ubjorken/proj/forkedvss/vehicle_signal_specification/tools/c_native/cnativenodelib.so')
+import os.path
+dllName = "c_native/cnativenodelib.so"
+dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
+_cnative = ctypes.CDLL(dllAbsPath)
 
 #void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums);
 _cnative.createNativeCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p)

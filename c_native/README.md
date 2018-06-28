@@ -7,9 +7,6 @@ $ gcc -shared -o cnativenodelib.so -fPIC cnativenodelib.c
 In the tools directory, compile vspec.py.
 $ python -m compileall vspec.py
 
-In the tools directory, edit the vspec2cnative.py file to modify the absolute path to the file cnativemodelib.so in the declaration:
-_cnative = ctypes.CDLL('/home/ubjorken/proj/forkedvss/vehicle_signal_specification/tools/c_native/cnativenodelib.so')
-
 In the tools directory, run the c-native tool. Input is the root vspec file, and an unused dummy file.
 $ Python vspec2cnative.py ../spec/VehicleSignalSpecification.vspec dummyfile
 
