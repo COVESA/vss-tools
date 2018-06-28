@@ -2,6 +2,7 @@
 
 #
 # (C) 2018 Volvo Cars
+# (C) 2016 Jaguar Land Rover
 #
 # All files and artifacts in this repository are licensed under the
 # provisions of the license provided by the LICENSE file in this repository.
@@ -11,6 +12,7 @@
 #  
 
 import sys
+import os
 import vspec
 import json
 import getopt
@@ -28,18 +30,88 @@ def usage():
     print " franca_file                  The file to output the Franca IDL spec to."     
     sys.exit(255)
 
-_cnative = ctypes.CDLL('/home/ubjorken/proj/vehicle_signal_specification/tools/c_native/cnativenodelib.so')
-#_cnative.createNativeCnode.argtypes = (ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.c_int,ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char),ctypes.POINTER(ctypes.c_char))
+_cnative = ctypes.CDLL('/home/ubjorken/proj/forkedvss/vehicle_signal_specification/tools/c_native/cnativenodelib.so')
 
-_cnative.createNativeCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p)
+#void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums);
+_cnative.createNativeCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p)
+
+#void createNativeCnodeRbranch(char* name, char* type, char* descr, int children, char* childType, int numOfProperties, char** propNames, char** propDescrs, char** propTypes, char** propFormats, char** propUnits, char** propValues);
+_cnative.createNativeCnodeRbranch.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p))
+
+
+#void createNativeCnodeElement(char* name, char* type, char* descr, int children, int numOfElems, char** memberName, char** memberValue);
+_cnative.createNativeCnodeElement.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_int,ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p))
+
+
+def createNativeCnode(nodename, nodetype, description, children, nodemin, nodemax, unit, enums):
+    global _cnative
+    _cnative.createNativeCnode(nodename, nodetype, description, children, nodemin, nodemax, unit, enums)
+
+
+def createNativeCnodeRbranch(nodename, nodetype, nodedescr, children, childType, numOfProperties, propNames, propDescrs, propTypes, propFormats, propUnits, propValues):
+    global _cnative
+    numofPropNames = len(propNames)
+    propNamesArrayType = ctypes.c_char_p*numofPropNames
+    propNamesArray = propNamesArrayType()
+    for i, param in enumerate(propNames):
+        propNamesArray[i] = param
+
+    numofPropDescrs = len(propDescrs)
+    propDescrsArrayType = ctypes.c_char_p*numofPropDescrs
+    propDescrsArray = propDescrsArrayType()
+    for i, param in enumerate(propDescrs):
+        propDescrsArray[i] = param
+
+    numofPropTypes = len(propTypes)
+    propTypesArrayType = ctypes.c_char_p*numofPropTypes
+    propTypesArray = propTypesArrayType()
+    for i, param in enumerate(propTypes):
+        propTypesArray[i] = param
+
+    numofPropFormats = len(propFormats)
+    propFormatsArrayType = ctypes.c_char_p*numofPropFormats
+    propFormatsArray = propFormatsArrayType()
+    for i, param in enumerate(propFormats):
+        propFormatsArray[i] = param
+
+    numofPropUnits = len(propUnits)
+    propUnitsArrayType = ctypes.c_char_p*numofPropUnits
+    propUnitsArray = propUnitsArrayType()
+    for i, param in enumerate(propUnits):
+        propUnitsArray[i] = param
+
+    numofPropValues = len(propValues)
+    propValuesArrayType = ctypes.c_char_p*numofPropValues
+    propValuesArray = propValuesArrayType()
+    for i, param in enumerate(propValues):
+        propValuesArray[i] = param
+
+    _cnative.createNativeCnodeRbranch(nodename, nodetype, nodedescr, children, childType, numOfProperties, propNamesArray, propDescrsArray, propTypesArray, propFormatsArray, propUnitsArray, propValuesArray)
+
+
+def createNativeCnodeElement(name, type, description, children, numOfElems, keys, values):
+    global _cnative
+    numofKeys = len(keys)
+    keysArrayType = ctypes.c_char_p*numofKeys
+    keysArray = keysArrayType()
+    for i, param in enumerate(keys):
+        keysArray[i] = param
+
+    numofValues = len(values)
+    valuesArrayType = ctypes.c_char_p*numofValues
+    valuesArray = valuesArrayType()
+    for i, param in enumerate(values):
+        valuesArray[i] = param
+
+    _cnative.createNativeCnodeElement(name, type, description, children, numOfElems, keysArray, valuesArray)
+
 
 def createRootNode():
-    # create root node above Attribute/Signal/Private nodes !!! if add/delete nodes on this level nodechildren below must follow !!!
+    # create root node above Attribute/Signal/Private nodes !!! if add/delete nodes on this level nodechildren below must be updated !!!
     nodename = "Root"
     nodetype = "branch"
     nodedescription = "VSS tree root node"
-    nodeid = ""
-    nodechildren = 3
+    nodechildren = 3   # Attribute, Signal, Private
     nodemin = ""
     nodemax = ""
     nodeunit = ""
@@ -47,18 +119,13 @@ def createRootNode():
     b_nodename = nodename.encode('utf-8')
     b_nodetype = nodetype.encode('utf-8')
     b_nodedescription = nodedescription.encode('utf-8')
-    b_nodeid = nodeid.encode('utf-8')
     b_nodemin = nodemin.encode('utf-8')
     b_nodemax = nodemax.encode('utf-8')
     b_nodeunit = nodeunit.encode('utf-8')
     b_nodeenum = nodeenum.encode('utf-8')
 
-    createNativeCnode(b_nodename,b_nodeid,b_nodetype,nodechildren,b_nodedescription,b_nodemin,b_nodemax,b_nodeunit,b_nodeenum)
+    createNativeCnode(b_nodename,b_nodetype,b_nodedescription,nodechildren,b_nodemin,b_nodemax,b_nodeunit,b_nodeenum)
 
-
-def createNativeCnode(nodename, nodeid, nodetype, children, description, nodemin, nodemax, unit, enums):
-    global _cnative
-    _cnative.createNativeCnode(nodename, nodeid, nodetype, children, description, nodemin, nodemax, unit, enums)
 
 def enumString(enumList):
     enumStr = "/"
@@ -66,26 +133,12 @@ def enumString(enumList):
         enumStr += elem + "/"
     return enumStr
 
-def create_node(key, val):
-    nodename = key
-    b_nodename = nodename.encode('utf-8')
-    nodetype = val['type']
-    b_nodetype = nodetype.encode('utf-8')
-    nodedescription = val['description']
-    b_nodedescription = nodedescription.encode('utf-8')
-    nodeid = ""
-    nodechildren = 0
+def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodedescription, children):
     nodemin = ""
     nodemax = ""
     nodeunit = ""
     nodeenum = ""
     
-    if val.has_key("id"):
-        nodeid = val["id"]
-
-    if val.has_key("children"):
-        nodechildren = len(val["children"].keys())
-
     if val.has_key("min"):
         nodemin = str(val["min"])
 
@@ -98,17 +151,120 @@ def create_node(key, val):
     if val.has_key("enum"):
         nodeenum = enumString(val["enum"])
 
-    b_nodeid = nodeid.encode('utf-8')
     b_nodemin = nodemin.encode('utf-8')
     b_nodemax = nodemax.encode('utf-8')
     b_nodeunit = nodeunit.encode('utf-8')
     b_nodeenum = nodeenum.encode('utf-8')
 
-#    print ("Name=%s, Type=%s, Description=%s, Id=%s, Min=%s, Max=%s, Unit=%s, Enum=%s, Children=%d\n" % (nodename,nodetype,nodedescription,nodeid,nodemin,nodemax,nodeunit,nodeenum,nodechildren))
-
-    createNativeCnode(b_nodename,b_nodeid,b_nodetype,nodechildren,b_nodedescription,b_nodemin,b_nodemax,b_nodeunit,b_nodeenum)
+    createNativeCnode(b_nodename, b_nodetype, b_nodedescription, children, b_nodemin, b_nodemax, b_nodeunit, b_nodeenum)
 
 
+def create_node_rbranch(key, val, b_nodename, b_nodetype, b_nodedescription, children):
+    childType = ""
+    childProperties = 0
+    propNames = {}
+    propDescriptions = {}
+    propTypes = {}
+    propFormats = {}
+    propUnits = {}
+    propValues = {}
+    
+    if val.has_key("child-type"):
+        childType = val["child-type"]
+
+    if val.has_key("child-properties"):
+        childProperties = val["child-properties"]
+
+    if val.has_key("prop-name"):
+        propNames = val["prop-name"]
+
+    if val.has_key("prop-description"):
+        propDescriptions = val["prop-description"]
+
+    if val.has_key("prop-type"):
+        propTypes = val["prop-type"]
+
+    if val.has_key("prop-format"):
+        propFormats = val["prop-format"]
+
+    if val.has_key("prop-unit"):
+        propUnits = val["prop-unit"]
+
+    if val.has_key("prop-value"):
+        propValues = val["prop-value"]
+
+
+    b_childType = childType.encode('utf-8')
+
+    b_names = []
+    for elem in propNames:
+        b_names.append(elem.encode('utf-8'))
+
+    b_descrs = []
+    for elem in propDescriptions:
+        b_descrs.append(elem.encode('utf-8'))
+
+    b_types = []
+    for elem in propTypes:
+        b_types.append(elem.encode('utf-8'))
+
+    b_formats = []
+    for elem in propFormats:
+        b_formats.append(elem.encode('utf-8'))
+
+    b_units = []
+    for elem in propUnits:
+        b_units.append(elem.encode('utf-8'))
+
+    b_values = []
+    for elem in propValues:
+        b_values.append(elem.encode('utf-8'))
+
+    createNativeCnodeRbranch(b_nodename, b_nodetype, b_nodedescription, children, b_childType, childProperties, b_names, b_descrs, b_types, b_formats, b_units, b_values) 
+
+
+def create_node_element(nodekey, val, b_nodename, b_nodetype, b_nodedescription, children):
+    keys = []
+    values = []
+
+    del val["type"]
+    del val["description"]
+
+    numOfElems = len(val)
+    
+    for key, value in val.items():
+        keys.append(key)
+        values.append(str(value))
+
+    b_keys = []
+    for elem in keys:
+        b_keys.append(elem.encode('utf-8'))
+
+    b_values = []
+    for elem in values:
+            b_values.append(elem.encode('utf-8'))
+
+    createNativeCnodeElement(b_nodename, b_nodetype, b_nodedescription, children, numOfElems, b_keys, b_values) 
+
+
+def create_node(key, val):
+    nodename = key
+    b_nodename = nodename.encode('utf-8')
+    nodetype = val['type']
+    b_nodetype = nodetype.encode('utf-8')
+    nodedescription = val['description']
+    b_nodedescription = nodedescription.encode('utf-8')
+    children = 0
+    if val.has_key("children"):
+        children = len(val["children"].keys())
+    if (nodetype != "rbranch") and (nodetype != "element"):
+        create_node_legacy(key, val, b_nodename, b_nodetype, b_nodedescription, children)
+    if (nodetype == "rbranch"):
+        create_node_rbranch(key, val, b_nodename, b_nodetype, b_nodedescription, children)
+    if (nodetype == "element"):
+        create_node_element(key, val, b_nodename, b_nodetype, b_nodedescription, children)
+#        create_node_element(key, val, b_nodename, b_nodetype, b_nodedescription, children)
+        
 
 def traverse_tree(tree):
     # Traverse all elemnts in tree.
@@ -149,6 +305,8 @@ if __name__ == "__main__":
 
     if len(args) != 2:
         usage()
+
+    os.remove("../vss_rel_1.0.cnative")
 
     try:
         tree = vspec.load(args[0], include_dirs)

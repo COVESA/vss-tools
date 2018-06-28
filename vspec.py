@@ -1,4 +1,5 @@
 #
+# (C) 2018 Volvo Cars
 # (C) 2016 Jaguar Land Rover
 #
 # All files and artifacts in this repository are licensed under the
@@ -181,7 +182,7 @@ def search_and_read(file_name, include_paths):
 
 def assign_signal_ids(flat_model):
     for elem in flat_model:
-        if elem["type"] == "branch":
+        if (elem["type"] == "branch") or (elem["type"] == "rbranch"):
             continue
 
         id_val = db_mgr.get_or_assign_signal_id(elem["$name$"])
@@ -277,11 +278,11 @@ def load_flat_model(file_name, prefix, include_paths):
 def cleanup_flat_entries(flat_model):
     available_types =[ "branch", "UInt8", "Int8", "UInt16", "Int16",
                        "UInt32", "Int32", "UInt64", "Int64", "Boolean",
-                       "Float", "Double", "String", "ByteBuffer" ]
+                       "Float", "Double", "String", "ByteBuffer", "rbranch", "element" ]
 
     available_downcase_types =[ "branch", "uint8", "int8", "uint16", "int16",
                                 "uint32", "int32", "uint64", "int64", "boolean",
-                                "float", "double", "string", "bytebuffer" ]
+                                "float", "double", "string", "bytebuffer", "rbranch", "element" ]
         
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
@@ -321,7 +322,7 @@ def cleanup_deep_model(deep_model):
     if deep_model.has_key("$name$"):
         del deep_model['$name$']
 
-    if deep_model["type"] == "branch":
+    if (deep_model["type"] == "branch") or (deep_model["type"] == "rbranch"):
         children = deep_model["children"]
         for child in deep_model["children"]:
             cleanup_deep_model(children[child])
@@ -429,6 +430,10 @@ def create_nested_model(flat_model, file_name):
     for elem in flat_model:
         # Create children for branch type objects
         if elem["type"] == "branch":
+            deep_model["type"] = "branch"
+        if elem["type"] == "rbranch":
+            deep_model["type"] = "rbranch"
+        if (elem["type"] == "branch") or (elem["type"] == "rbranch"):
             elem["children"] = {}
 
             
@@ -466,14 +471,14 @@ def create_nested_model(flat_model, file_name):
 def find_branch(branch, name_list, index):
     # Have we reached the end of the name list
     if len(name_list) == index:
-        if branch["type"] != "branch":
+        if (branch["type"] != "branch") and (branch["type"] != "rbranch"):
             raise VSpecError(branch.get("$file_name$","??"),
                              branch.get("$line$", "??"),
                              "Not a branch: {}.".format(branch['$name$']))
             
         return branch
     
-    if branch["type"] != "branch":
+    if (branch["type"] != "branch") and (branch["type"] != "rbranch"):
         raise VSpecError(branch.get("$file_name$","??"),
                          branch.get("$line$", "??"),
                          "{} is not a branch.".format(list_to_path(name_list[:index])))
