@@ -306,7 +306,8 @@ if __name__ == "__main__":
     if len(args) != 2:
         usage()
 
-    os.remove("../vss_rel_1.0.cnative")
+    if os.path.isfile("../vss_rel_1.0.cnative"):
+        os.remove("../vss_rel_1.0.cnative")
 
     try:
         tree = vspec.load(args[0], include_dirs)
