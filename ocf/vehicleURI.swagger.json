@@ -1,0 +1,186 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Vehicle",
+    "version": "v1.1.0-20160519",
+    "license": {
+      "name": "copyright 2016-2017 Open Connectivity Foundation, Inc. All rights reserved.",
+      "x-description": "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n        1.  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n        2.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n\n        THIS SOFTWARE IS PROVIDED BY THE Open Connectivity Foundation, INC. \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE OR WARRANTIES OF NON-INFRINGEMENT, ARE DISCLAIMED.\n        IN NO EVENT SHALL THE Open Connectivity Foundation, INC. OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\n        HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+    }
+  },
+  "schemes": ["http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/VehicleResURI" : {
+      "get": {
+        "description": "This resource describes the resources a vehicle.\nThis is a collection of resources.\n",
+        "parameters": [
+          {"$ref": "#/parameters/interface"}
+        ],
+        "responses": {
+            "200": {
+              "description" : "",
+              "x-example":
+                {
+                  "rt":             ["oic.r.vehicle"],
+                  "id":             "unique_example_id",
+                  //FIXME Add examples
+                }
+                ,
+              "schema": { "$ref": "#/definitions/AirQuality" }
+            }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "interface" : {
+      "in" : "query",
+      "name" : "if",
+      "type" : "string",
+      "enum" : ["oic.if.s", "oic.if.baseline"]
+    }
+  },
+  "definitions": {
+    "AirQuality" :
+            {
+        "properties": {
+          "contaminanttype": {
+            "description": "The contaminant being measured.",
+            "enum": [
+              "CH2O",
+              "CO2",
+              "CO",
+              "PM2.5",
+              "PM10",
+              "VOC",
+              "Smoke",
+              "Odor",
+              "AirPollution"
+            ],
+            "readOnly": true
+          },
+          "contaminantvalue": {
+            "description": "The measured or qualitative value for the contaminant.",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "id": {
+            "description": "Instance ID of this specific resource",
+            "maxLength": 64,
+            "readOnly": true,
+            "type": "string"
+          },
+          "if": {
+            "description": "The interface set supported by this resource",
+            "items": {
+              "enum": [
+                "oic.if.baseline",
+                "oic.if.ll",
+                "oic.if.b",
+                "oic.if.lb",
+                "oic.if.rw",
+                "oic.if.r",
+                "oic.if.a",
+                "oic.if.s"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "readOnly": true,
+            "type": "array"
+          },
+          "n": {
+            "description": "Friendly name of the resource",
+            "maxLength": 64,
+            "readOnly": true,
+            "type": "string"
+          },
+          "precision": {
+            "description": "Accuracy granularity of the exposed value",
+            "readOnly": true,
+            "type": "number"
+          },
+          "range": {
+            "description": "The valid range for the value Property",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "readOnly": true,
+            "type": "array"
+          },
+          "rt": {
+            "description": "Resource Type",
+            "items": {
+              "maxLength": 64,
+              "type": "string"
+            },
+            "minItems": 1,
+            "readOnly": true,
+            "type": "array"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "description": "Step value across the defined range",
+            "readOnly": true
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "object"
+              }
+            ],
+            "description": "The value sensed or actuated by this Resource"
+          },
+          "valuetype": {
+            "description": "Indicates whether the provided value is qualitative or measured.",
+            "enum": [
+              "Qualitative",
+              "Measured"
+            ],
+            "readOnly": true
+          }
+        },
+        "required": [
+          "contaminantvalue",
+          "contaminanttype",
+          "valuetype",
+          "range"
+        ],
+        "type": "object"
+      }
+
+  }
+}

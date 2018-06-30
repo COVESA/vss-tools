@@ -10,12 +10,17 @@
 # Concert vspec file to OCF
 #
 
+import os
 import sys
-import vspec
 import json
 import getopt
+import csv
 from pprint import pprint
 sys.setrecursionlimit(10000)
+
+vspecpath=os.path.realpath(__file__)
+sys.path.append(os.path.dirname(vspecpath) + "/../")
+import vspec
 
 def usage():
 	print "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file json_file"
@@ -31,7 +36,7 @@ def usage():
 
 uritracker = []
 uniques = {}
-
+mapper = []
 
 # print the whole tree hierarchy
 def print_subtree_full(key, value):
@@ -94,39 +99,7 @@ def print_subtree_unique(key, value):
 	return
 
 
-
-if __name__ == "__main__":
-	opts, args= getopt.getopt(sys.argv[1:], "I:i:")
-	include_dirs = ["."]
-	for o, a in opts:
-		if o == "-I":
-			include_dirs.append(a)
-		elif o == "-i":
-			id_spec = a.split(":")
-			if len(id_spec) != 3:
-				print "ERROR: -i needs a 'prefix:id_file:start_id' argument."
-				usage()
-			[prefix, file_name, start_id] = id_spec
-			vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
-		else:
-			usage()
-	if len(args) != 2:
-		usage()
-	json_out = open (args[1], "w")
-	try:
-		tree = vspec.load(args[0], include_dirs)
-	except vspec.VSpecError as e:
-		print "Error: {}".format(e)
-		exit(255)
-	json.dump(tree, json_out, indent=2)
-	json_out.write("\n")
-	json_out.close()
-	with open(args[1]) as data_file:
-		data = json.load(data_file)
-		for key,value in data.iteritems():
-			uritracker.append(key)
-			print_subtree_unique(key, value)
-			uritracker.pop()
+def print_vss_tree():
 	for p in uniques.keys():
 		prop = uniques[p];
 		sys.stdout.write(str(prop['id']));
@@ -165,3 +138,44 @@ if __name__ == "__main__":
 			else:
 				sys.stdout.write('NA:')
 		sys.stdout.write('\n')
+
+
+
+if __name__ == "__main__":
+	opts, args= getopt.getopt(sys.argv[1:], "I:i:")
+	include_dirs = ["."]
+	for o, a in opts:
+		if o == "-I":
+			include_dirs.append(a)
+		elif o == "-i":
+			id_spec = a.split(":")
+			if len(id_spec) != 3:
+				print "ERROR: -i needs a 'prefix:id_file:start_id' argument."
+				usage()
+			[prefix, file_name, start_id] = id_spec
+			vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
+		else:
+			usage()
+	if len(args) != 2:
+		usage()
+	json_out = open (args[1], "w")
+	try:
+		tree = vspec.load(args[0], include_dirs)
+	except vspec.VSpecError as e:
+		print "Error: {}".format(e)
+		exit(255)
+	json.dump(tree, json_out, indent=2)
+	json_out.write("\n")
+	json_out.close()
+	with open(args[1]) as data_file:
+		data = json.load(data_file)
+		for key,value in data.iteritems():
+			uritracker.append(key)
+			#print_subtree_unique(key, value)
+			uritracker.pop()
+	file = open("tools/ocf/vspec2ocf.csv", "w")
+	with open('tools/ocf/vspecocfmap.csv', 'rb') as f:
+	    mapper = csv.reader(f, delimiter=':', quoting=csv.QUOTE_NONE)
+	    for row in mapper:
+			file.write(row[0] + "," + row[1] + "\n")
+	file.close()
