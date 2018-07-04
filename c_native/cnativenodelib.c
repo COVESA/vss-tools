@@ -107,16 +107,18 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
     fwrite(&numOfEnumElements, sizeof(int), 1, treeFp);
     if (numOfEnumElements > 0) {
         enum_t* enumeration;
-        enumeration = malloc(sizeof(enum_t)*numOfEnumElements);
+        enumeration = malloc(sizeof(enum_t)*numOfEnumElements+1);
         if (enumeration == NULL) {
             printf("traverseAndSaveNode:malloc failed\n");
             return;
         }
         char enumElementBuf[MAXENUMELEMENTLEN];
         for (int i = 0 ; i < numOfEnumElements ; i++) {
-            strcpy((char*)(enumeration[i]), getEnumElement(enums, i, enumElementBuf));
+            strncpy((char*)(enumeration[i]), getEnumElement(enums, i, enumElementBuf), MAXENUMELEMENTLEN);
+            enumeration[i][MAXENUMELEMENTLEN] = '\0';
         }
         fwrite(enumeration, sizeof(enum_t)*numOfEnumElements, 1, treeFp);
+        free(enumeration);
     }
 }
 
@@ -188,6 +190,7 @@ printf("parseRefString: %d refs\n", numOfRefs);
 printf("Ref[%d]=%s\n",i, thisRef);
         refStart = strchr(refEnd+1, '\'')+1;
     }
+    return numOfRefs;
 }
 
 void populateAndWriteObject(int objectType, int numOfElems, char** memberName, char** memberValue) {
