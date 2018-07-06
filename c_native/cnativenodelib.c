@@ -114,9 +114,11 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
         }
         char enumElementBuf[MAXENUMELEMENTLEN];
         for (int i = 0 ; i < numOfEnumElements ; i++) {
-            strcpy((char*)(enumeration[i]), getEnumElement(enums, i, enumElementBuf));
+            strncpy((char*)(enumeration[i]), getEnumElement(enums, i, enumElementBuf), MAXENUMELEMENTLEN);
+            enumeration[i][MAXENUMELEMENTLEN-1] = '\0';
         }
         fwrite(enumeration, sizeof(enum_t)*numOfEnumElements, 1, treeFp);
+        free(enumeration);
     }
 }
 
@@ -188,6 +190,7 @@ printf("parseRefString: %d refs\n", numOfRefs);
 printf("Ref[%d]=%s\n",i, thisRef);
         refStart = strchr(refEnd+1, '\'')+1;
     }
+    return numOfRefs;
 }
 
 void populateAndWriteObject(int objectType, int numOfElems, char** memberName, char** memberValue) {
