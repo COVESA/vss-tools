@@ -107,7 +107,7 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
     fwrite(&numOfEnumElements, sizeof(int), 1, treeFp);
     if (numOfEnumElements > 0) {
         enum_t* enumeration;
-        enumeration = malloc(sizeof(enum_t)*numOfEnumElements+1);
+        enumeration = malloc(sizeof(enum_t)*numOfEnumElements);
         if (enumeration == NULL) {
             printf("traverseAndSaveNode:malloc failed\n");
             return;
@@ -115,7 +115,7 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
         char enumElementBuf[MAXENUMELEMENTLEN];
         for (int i = 0 ; i < numOfEnumElements ; i++) {
             strncpy((char*)(enumeration[i]), getEnumElement(enums, i, enumElementBuf), MAXENUMELEMENTLEN);
-            enumeration[i][MAXENUMELEMENTLEN] = '\0';
+            enumeration[i][MAXENUMELEMENTLEN-1] = '\0';
         }
         fwrite(enumeration, sizeof(enum_t)*numOfEnumElements, 1, treeFp);
         free(enumeration);
