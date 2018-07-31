@@ -8,20 +8,36 @@
 * Parser utilities for a native format VSS tree.
 **/
 
-#define MAXCHARSPATH 512
+#define MAXENUMELEMENTLEN 20
+typedef enum { INT8, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, BRANCH, RBRANCH, ELEMENT } nodeTypes_t;
+typedef char enum_t[MAXENUMELEMENTLEN];
 
+typedef enum { MEDIACOLLECTION, MEDIAITEM } objectTypes_t;
+#define ELEMENT_STRING_MAXLEN 125
+typedef char elementRef_t[ELEMENT_STRING_MAXLEN];
+
+#define MAXCHARSPATH 512
 typedef char path_t[MAXCHARSPATH];
 
-struct NodeHandle_t {
-    nodeTypes_t nodeType;
-    void* nodePtr;
-} NodeHandle_t;
+int VSSReadTree(char* filePath);
+void VSSWriteTree(char* filePath, int rootHandle);
 
-FILE* treeFp;
+int getParent(int nodeHandle);
+int getChild(int nodeHandle, int childNo);
+int getNumOfChildren(int nodeHandle);
+nodeTypes_t getType(int nodeHandle);
+char* getName(int nodeHandle);
+char* getDescr(int nodeHandle);
+int getNumOfEnumElements(int nodeHandle);
+char* getEnumElement(int nodeHandle, int index);
+char* getUnit(int nodeHandle);
+char* getSensor(int nodeHandle);
+char* getActuator(int nodeHandle);
+int getResource(int nodeHandle);
+int getObjectType(int resourceHandle);
+int getMediaCollectionNumOfItems(int resourceHandle);
+char* getMediaCollectionItemRef(int resourceHandle, int i);
 
-struct node_t* VSSReadTree();
-
-//int VSSGetNodes(char* searchPath, struct node_t* rootNode, int maxFound, path_t* responsePaths, struct node_t** foundNodePtrs);
-int VSSGetNodes(char* searchPath, struct NodeHandle_t* rootNode, int maxFound, path_t* responsePaths, struct NodeHandle_t* foundNodePtrs);
+int VSSGetNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePaths, int* foundNodeHandles);
 
 

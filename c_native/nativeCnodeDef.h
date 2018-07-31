@@ -9,20 +9,12 @@
 **/
 
 #define MAXNAMELEN 28
-#define MAXUNITLEN 11
-#define MAXENUMELEMENTS 16
-#define MAXENUMELEMENTLEN 20
-//#define MAXCHILDREN 75
 #define MAXPROPNAMELEN 30
 #define MAXPROPDESCRLEN 50
 #define MAXPROPFORMATLEN 15
 #define MAXPROPUNITLEN 15
 #define MAXPROPVALUELEN 50
 
-
-typedef enum { INT8, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, BRANCH, RBRANCH, ELEMENT } nodeTypes_t;
-
-typedef char enum_t[MAXENUMELEMENTLEN];
 
 /**
 * There are three different node structures defined below: 
@@ -56,10 +48,14 @@ typedef struct node_t {
     struct node_t** child;
     int max;
     int min;
-    char unit[MAXUNITLEN];
+    int unitLen;
+    char* unit;
     int numOfEnumElements;
-//    int id;
     enum_t* enumeration;
+    int sensorLen;
+    char* sensor;
+    int actuatorLen;
+    char* actuator;
 } node_t;
 
 typedef struct {
@@ -105,10 +101,9 @@ typedef struct {
     int children;
 } common_node_data_t;
 
-typedef enum { MEDIACOLLECTION, MEDIAITEM } objectTypes_t;
-
-#define ELEMENT_STRING_MAXLEN 125
-typedef char elementRef_t[ELEMENT_STRING_MAXLEN];
+typedef struct {
+    int objectType;
+} resourceObject_t;  // generic type only used for generic access to the object type
 
 typedef struct {
     int objectType;  // this must be first element in any object struct declaration
