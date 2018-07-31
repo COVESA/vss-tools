@@ -63,7 +63,7 @@ int countEnumElements(char* enums) {
     return delimiters-1;
 }
 
-char* getEnumElement(char* enums, int index, char* buf) {
+char* extractEnumElement(char* enums, int index, char* buf) {
     char* enumstart = enums;
     char* enumend  = NULL;
     for (int i = 0 ; i < index+1 ; i++) {
@@ -118,7 +118,7 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
         }
         char enumElementBuf[MAXENUMELEMENTLEN];
         for (int i = 0 ; i < numOfEnumElements ; i++) {
-            strncpy((char*)(enumeration[i]), getEnumElement(enums, i, enumElementBuf), MAXENUMELEMENTLEN);
+            strncpy((char*)(enumeration[i]), extractEnumElement(enums, i, enumElementBuf), MAXENUMELEMENTLEN);
             enumeration[i][MAXENUMELEMENTLEN-1] = '\0';
         }
         fwrite(enumeration, sizeof(enum_t)*numOfEnumElements, 1, treeFp);
