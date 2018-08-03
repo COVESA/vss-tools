@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <limits.h>
+#include "vssparserutilities.h"  //nativeCnodeDef.h uses it. Maybe some methods could be used also?
 #include "nativeCnodeDef.h"
 
 FILE* treeFp;
@@ -62,7 +63,7 @@ int countEnumElements(char* enums) {
     return delimiters-1;
 }
 
-char* getEnumElement(char* enums, int index, char* buf) {
+char* extractEnumElement(char* enums, int index, char* buf) {
     char* enumstart = enums;
     char* enumend  = NULL;
     for (int i = 0 ; i < index+1 ; i++) {
@@ -90,8 +91,8 @@ void writeCommonPart(char* name, char* type, char* descr, int children) {
     fwrite(descr, sizeof(char)*commonData.descrLen, 1, treeFp);
 }
 
-void writeNodeData(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums) {
-printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%s\n", name, type, children, descr, min, max, unit, enums);
+void writeNodeData(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* sensor, char* actuator) {
+printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%s, sensor=%s, actuator=%s\n", name, type, children, descr, min, max, unit, enums, sensor, actuator);
     writeCommonPart(name, type, descr, children);
     int nodeMin = INT_MAX;
     if (strlen(min) != 0)
@@ -101,7 +102,10 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
     if (strlen(max) != 0)
         nodeMax = atoi(max);
     fwrite(&nodeMax, sizeof(int), 1, treeFp);
-    fwrite(unit, sizeof(char)*MAXUNITLEN, 1, treeFp);
+    int unitLen = (int)strlen(unit);
+    fwrite(&unitLen, sizeof(int), 1, treeFp);
+    if (unitLen > 0)
+        fwrite(unit, sizeof(char)*unitLen, 1, treeFp);
     int numOfEnumElements = countEnumElements(enums);
 //printf("Num of enum elements=%d\n", numOfEnumElements);
     fwrite(&numOfEnumElements, sizeof(int), 1, treeFp);
@@ -114,21 +118,30 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
         }
         char enumElementBuf[MAXENUMELEMENTLEN];
         for (int i = 0 ; i < numOfEnumElements ; i++) {
-            strncpy((char*)(enumeration[i]), getEnumElement(enums, i, enumElementBuf), MAXENUMELEMENTLEN);
+            strncpy((char*)(enumeration[i]), extractEnumElement(enums, i, enumElementBuf), MAXENUMELEMENTLEN);
             enumeration[i][MAXENUMELEMENTLEN-1] = '\0';
         }
         fwrite(enumeration, sizeof(enum_t)*numOfEnumElements, 1, treeFp);
         free(enumeration);
     }
+    int sensorLen = (int)strlen(sensor);
+    fwrite(&sensorLen, sizeof(int), 1, treeFp);
+    if (sensorLen > 0)
+        fwrite(sensor, sizeof(char)*sensorLen, 1, treeFp);
+    int actuatorLen = (int)strlen(actuator);
+    fwrite(&actuatorLen, sizeof(int), 1, treeFp);
+    if (actuatorLen > 0) {
+        fwrite(actuator, sizeof(char)*actuatorLen, 1, treeFp);
+    }
 }
 
-void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums) {
+void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* sensor, char* actuator) {
     treeFp = fopen("../vss_rel_1.0.cnative", "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeNodeData(name, type, descr, children, min, max, unit, enums);
+    writeNodeData(name, type, descr, children, min, max, unit, enums, sensor, actuator);
     fclose(treeFp);
 }
 
@@ -264,7 +277,7 @@ printf("Element:Name=%s, Type=%s, Descr=%s, children=%d, numOfElems=%d\n", name,
     populateAndWriteObject(objectType, numOfElems, memberName, memberValue);
 }
 
-int getObjectType(char* childType) {
+int convertObjectType(char* childType) {
     if (strcmp(childType, "mediaCollectionObject") == 0)
         return MEDIACOLLECTION;
     if (strcmp(childType, "mediaItemObject") == 0)
@@ -279,7 +292,7 @@ void createNativeCnodeRbranch(char* name, char* type, char* descr, int children,
         return;
     }
     writeRbranchNodeData(name, type, descr, children, childType, numOfProperties, propNames, propDescrs, propTypes, propFormats, propUnits, propValues);
-    objectType = getObjectType(childType);
+    objectType = convertObjectType(childType);
     fclose(treeFp);
 }
 
