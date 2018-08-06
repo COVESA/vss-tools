@@ -21,6 +21,8 @@ FILE* treeFp;
 int currentDepth;
 int maxTreeDepth;
 
+int stepsInPath;
+
 void initTreeDepth() {
     currentDepth = 0;
     maxTreeDepth = 0;
@@ -298,8 +300,9 @@ printf("ptr->name=%s, stepNo=%d, responsePaths[%d]=%s\n",ptr->name, stepNo, *fou
         return NULL; // found buffers full
     char pathNodeName[MAXNAMELEN];
     strncpy(pathNodeName, getNodeName(stepNo, searchPath), MAXNAMELEN);
-    if (stepNo == getNumOfPathSteps(searchPath)-1) { // at leave node, so save ptr and return success
+    if (stepNo == stepsInPath) { // at matching node, so save ptr and return success
         foundNodePtrs[*foundResponses] = (intptr_t)ptr;
+        (*foundResponses)++;
         return ptr;
     }
     strncpy(pathNodeName, getNodeName(stepNo+1, searchPath), MAXNAMELEN);  // get name of next step in path
@@ -324,8 +327,7 @@ printf("Wildcard:ptr->child[%d]->name=%s\n", i, ptr->child[i]->name);
             if (ptr2 == NULL) {
                 copySteps(responsePaths[*foundResponses], responsePaths[*foundResponses], stepNo+1);
             } else {
-                if (i < ptr->children && foundNodePtrs[*foundResponses] != 0) {
-                    (*foundResponses)++;
+                if (i < ptr->children && foundNodePtrs[*foundResponses-1] != 0) {
                     copySteps(responsePaths[*foundResponses], responsePaths[*foundResponses-1], stepNo+1);
                 } else
                     copySteps(responsePaths[*foundResponses], responsePaths[*foundResponses], stepNo+1);
@@ -336,10 +338,16 @@ printf("Wildcard:ptr->child[%d]->name=%s\n", i, ptr->child[i]->name);
     }
 }
 
+/**
+* Returns handle (and path) to all leaf nodes that are found under the node before the wildcard in the path.
+**/
+void trailingWildCardSearch(struct node_t* ptr, char* searchPath, int maxFound, int* foundResponses, path_t* responsePaths, int* foundNodePtrs) {
+        stepToNextNode(ptr, 0, searchPath, maxFound, foundResponses, responsePaths, foundNodePtrs);
+}
 
-int VSSGetNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePaths, int* foundNodeHandles) {
+
+int VSSSearchNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePaths, int* foundNodeHandles) {
     intptr_t ptr = (intptr_t)rootNode;
-    int stepNo = 0;
     int foundResponses = 0;
     /* 
      * This is a workaround to the fact that with X multiple wildcards, 
@@ -351,10 +359,14 @@ int VSSGetNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePa
         foundNodeHandles[i] = 0;
 
     strcpy(responsePaths[0], ((struct node_t*)ptr)->name); // root node name needs to be written initially
-    stepToNextNode((struct node_t*)ptr, stepNo, searchPath, maxFound, &foundResponses, responsePaths, foundNodeHandles);
 
-    if (strchr(searchPath, '*') == NULL)
-        foundResponses++;
+    stepsInPath = getNumOfPathSteps(searchPath)-1; //must be set before first call to stepToNextNode
+
+    if (searchPath[strlen(searchPath)] != '*') {
+        stepToNextNode((struct node_t*)ptr, 0, searchPath, maxFound, &foundResponses, responsePaths, foundNodeHandles);
+    } else {
+        trailingWildCardSearch((struct node_t*)ptr, searchPath, maxFound, &foundResponses, responsePaths, foundNodeHandles);
+    }
 
     return foundResponses;
 }

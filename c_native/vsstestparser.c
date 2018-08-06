@@ -129,10 +129,10 @@ int main(void) {
                 scanf("%s", searchPath);
                 path_t responsePaths[MAXFOUNDNODES];
                 int foundNodes[MAXFOUNDNODES];
-                int foundResponses = VSSGetNodes(searchPath, rootNode, MAXFOUNDNODES, responsePaths, foundNodes);
+                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, responsePaths, foundNodes);
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
-                    printf("Found node name=%s\n", getName(foundNodes[i]));
+                    printf("Found node type=%s\n", getTypeName(getType(foundNodes[i])));
                     printf("Found path=%s\n", responsePaths[i]);
                 }
             }

@@ -38,6 +38,6 @@ int getObjectType(int resourceHandle);
 int getMediaCollectionNumOfItems(int resourceHandle);
 char* getMediaCollectionItemRef(int resourceHandle, int i);
 
-int VSSGetNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePaths, int* foundNodeHandles);
+int VSSSearchNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePaths, int* foundNodeHandles);
 
 
