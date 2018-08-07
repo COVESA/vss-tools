@@ -18,6 +18,7 @@ typedef char elementRef_t[ELEMENT_STRING_MAXLEN];
 
 #define MAXCHARSPATH 512
 typedef char path_t[MAXCHARSPATH];
+#define MAXFOUNDNODES 150
 
 int VSSReadTree(char* filePath);
 void VSSWriteTree(char* filePath, int rootHandle);

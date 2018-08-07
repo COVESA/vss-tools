@@ -16,8 +16,6 @@
 #include <stdbool.h>
 #include "vssparserutilities.h"
 
-#define MAXFOUNDNODES 150
-
 int currentNode;
 int rootNode;
 char vspecfile[] = "../../vss_rel_1.0.cnative";
