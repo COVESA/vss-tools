@@ -440,7 +440,7 @@ printf("After stepToNextNode(jobPath=%s, jobRoot->name=%s) in trailingWildCardSe
 printf("Non-leaf node=%s\n", getName(matchingNodeHandles[i]));
                 strcpy(jobPath, getName(matchingNodeHandles[i]));
                 strcat(jobPath, ".*");
-                addToWildCardQue(jobPath, (struct node_t*)matchingNodeHandles[i], maxFoundLeft);
+                addToWildCardQue(jobPath, (struct node_t*)((intptr_t)matchingNodeHandles[i]), maxFoundLeft);
             } else {
 printf("Leaf node=%s, matchingPaths[%d]=%s, *foundResponses=%d\n", getName(matchingNodeHandles[i]), i, matchingPaths[i], *foundResponses);
                 strncpy(responsePaths[*foundResponses], matchingPaths[i], MAXCHARSPATH-1); // TODO: relativ -> absolut
