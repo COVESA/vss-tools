@@ -332,7 +332,7 @@ if __name__ == "__main__":
         print "Error: {}".format(e)
         exit(255)
 
-    createRootNode()    
+    #createRootNode()    
 
     traverse_tree(tree)
 
