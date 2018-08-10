@@ -64,12 +64,9 @@ void showNodeData(int currentNode, int currentChild) {
         char* tmp = getUnit(currentNode);
         if (tmp != NULL)
             printf("Unit = %s\n", getUnit(currentNode));
-        tmp = getSensor(currentNode);
+        tmp = getFunction(currentNode);
         if (tmp != NULL)
-            printf("Sensor = %s\n", tmp);
-        tmp = getActuator(currentNode);
-        if (tmp != NULL)
-            printf("Actuator = %s\n", tmp);
+            printf("Function = %s\n", tmp);
         if (getType(currentNode) == ELEMENT) {
             // as all objectdefinitions start with objectType, this is ok. But only for reading the objectType
             uint32_t resourceHandle = getResource(currentNode); 

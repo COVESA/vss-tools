@@ -52,10 +52,8 @@ typedef struct node_t {
     char* unit;
     int numOfEnumElements;
     enum_t* enumeration;
-    int sensorLen;
-    char* sensor;
-    int actuatorLen;
-    char* actuator;
+    int functionLen;
+    char* function;
 } node_t;
 
 typedef struct {

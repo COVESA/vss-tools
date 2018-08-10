@@ -91,8 +91,8 @@ void writeCommonPart(char* name, char* type, char* descr, int children) {
     fwrite(descr, sizeof(char)*commonData.descrLen, 1, treeFp);
 }
 
-void writeNodeData(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* sensor, char* actuator) {
-printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%s, sensor=%s, actuator=%s\n", name, type, children, descr, min, max, unit, enums, sensor, actuator);
+void writeNodeData(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* function) {
+printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, children, descr, min, max, unit, enums, function);
     writeCommonPart(name, type, descr, children);
     int nodeMin = INT_MAX;
     if (strlen(min) != 0)
@@ -124,24 +124,19 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
         fwrite(enumeration, sizeof(enum_t)*numOfEnumElements, 1, treeFp);
         free(enumeration);
     }
-    int sensorLen = (int)strlen(sensor);
-    fwrite(&sensorLen, sizeof(int), 1, treeFp);
-    if (sensorLen > 0)
-        fwrite(sensor, sizeof(char)*sensorLen, 1, treeFp);
-    int actuatorLen = (int)strlen(actuator);
-    fwrite(&actuatorLen, sizeof(int), 1, treeFp);
-    if (actuatorLen > 0) {
-        fwrite(actuator, sizeof(char)*actuatorLen, 1, treeFp);
-    }
+    int functionLen = (int)strlen(function);
+    fwrite(&functionLen, sizeof(int), 1, treeFp);
+    if (functionLen > 0)
+        fwrite(function, sizeof(char)*functionLen, 1, treeFp);
 }
 
-void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* sensor, char* actuator) {
+void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* function) {
     treeFp = fopen("../vss_rel_1.0.cnative", "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeNodeData(name, type, descr, children, min, max, unit, enums, sensor, actuator);
+    writeNodeData(name, type, descr, children, min, max, unit, enums, function);
     fclose(treeFp);
 }
 

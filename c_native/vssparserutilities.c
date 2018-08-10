@@ -188,24 +188,15 @@ if (node2->unitLen > 0)
             }
 for (int i = 0 ; i < node2->numOfEnumElements ; i++)
   printf("Enum[%d]=%s\n", i, (char*)node2->enumeration[i]);
-            fread(&(node2->sensorLen), sizeof(int), 1, treeFp);
-            node2->sensor = NULL;
-            if (node2->sensorLen > 0) {
-                node2->sensor = (char*) malloc(sizeof(char)*(node2->sensorLen+1));
-                fread(node2->sensor, sizeof(char)*node2->sensorLen, 1, treeFp);
-                node2->sensor[node2->sensorLen] = '\0';
+            fread(&(node2->functionLen), sizeof(int), 1, treeFp);
+            node2->function = NULL;
+            if (node2->functionLen > 0) {
+                node2->function = (char*) malloc(sizeof(char)*(node2->functionLen+1));
+                fread(node2->function, sizeof(char)*node2->functionLen, 1, treeFp);
+                node2->function[node2->functionLen] = '\0';
             }
-if (node2->sensorLen > 0)
-    printf("Sensor = %s\n", node2->sensor);
-            fread(&(node2->actuatorLen), sizeof(int), 1, treeFp);
-            node2->actuator = NULL;
-            if (node2->actuatorLen > 0) {
-                node2->actuator = (char*) malloc(sizeof(char)*(node2->actuatorLen+1));
-                fread(node2->actuator, sizeof(char)*node2->actuatorLen, 1, treeFp);
-                node2->actuator[node2->actuatorLen] = '\0';
-            }
-if (node2->actuatorLen > 0)
-    printf("Actuator = %s, Len=%d\n", node2->actuator, node2->actuatorLen);
+if (node2->functionLen > 0)
+    printf("Function = %s\n", node2->function);
             node = (node_t*)node2;
         }
         break;
@@ -535,13 +526,10 @@ void traverseAndWriteNode(struct node_t* node) {
             if (node->numOfEnumElements > 0) {
                 fwrite(node->enumeration, sizeof(enum_t)*node->numOfEnumElements, 1, treeFp);
             }
-            fwrite(&(node->sensorLen), sizeof(int), 1, treeFp);
-            if (node->sensorLen > 0)
-                fwrite(node->sensor, sizeof(char)*node->sensorLen, 1, treeFp);
-            fwrite(&(node->actuatorLen), sizeof(int), 1, treeFp);
-            if (node->actuatorLen > 0)
-                fwrite(node->actuator, sizeof(char)*node->actuatorLen, 1, treeFp);
-//printf("numOfEnumElements=%d, unitlen=%d, sensorLen=%d, actuatorLen=%d\n", node->numOfEnumElements, node->unitLen, node->sensorLen, node->actuatorLen);
+            fwrite(&(node->functionLen), sizeof(int), 1, treeFp);
+            if (node->functionLen > 0)
+                fwrite(node->function, sizeof(char)*node->functionLen, 1, treeFp);
+//printf("numOfEnumElements=%d, unitlen=%d, functionLen=%d\n", node->numOfEnumElements, node->unitLen, node->functionLen);
 for (int i = 0 ; i < node->numOfEnumElements ; i++)
   printf("Enum[%d]=%s\n", i, (char*)node->enumeration[i]);
         }
@@ -571,12 +559,14 @@ int getParent(int nodeHandle) {
     return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->parent);
 }
 
-int getChild(int nodeHandle, int childNo) {
-    return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->child[childNo]);
-}
-
 int getNumOfChildren(int nodeHandle) {
     return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->children);
+}
+
+int getChild(int nodeHandle, int childNo) {
+    if (getNumOfChildren(nodeHandle) > childNo)
+        return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->child[childNo]);
+    return 0;
 }
 
 nodeTypes_t getType(int nodeHandle) {
@@ -592,7 +582,10 @@ char* getDescr(int nodeHandle) {
 }
 
 int getNumOfEnumElements(int nodeHandle) {
-    return ((node_t*)((intptr_t)nodeHandle))->numOfEnumElements;
+    nodeTypes_t type = getType(nodeHandle);
+    if (type != BRANCH && type != RBRANCH && type != ELEMENT)
+        return ((node_t*)((intptr_t)nodeHandle))->numOfEnumElements;
+    return 0;
 }
 
 char* getEnumElement(int nodeHandle, int index) {
@@ -600,19 +593,23 @@ char* getEnumElement(int nodeHandle, int index) {
 }
 
 char* getUnit(int nodeHandle) {
-    return ((node_t*)((intptr_t)nodeHandle))->unit;
+    nodeTypes_t type = getType(nodeHandle);
+    if (type != BRANCH && type != RBRANCH && type != ELEMENT)
+        return ((node_t*)((intptr_t)nodeHandle))->unit;
+    return NULL;
 }
 
-char* getSensor(int nodeHandle) {
-    return ((node_t*)((intptr_t)nodeHandle))->sensor;
-}
-
-char* getActuator(int nodeHandle) {
-    return ((node_t*)((intptr_t)nodeHandle))->actuator;
+char* getFunction(int nodeHandle) {
+    nodeTypes_t type = getType(nodeHandle);
+    if (type != BRANCH && type != RBRANCH && type != ELEMENT)
+        return ((node_t*)((intptr_t)nodeHandle))->function;
+    return NULL;
 }
 
 int getResource(int nodeHandle) {
-    return (int)((intptr_t)((element_node_t*)((intptr_t)nodeHandle))->uniqueObject);
+    if (getType(nodeHandle) == ELEMENT)
+        return (int)((intptr_t)((element_node_t*)((intptr_t)nodeHandle))->uniqueObject);
+    return -1;
 }
 
 int getObjectType(int resourceHandle) {
@@ -620,10 +617,14 @@ int getObjectType(int resourceHandle) {
 }
 
 int getMediaCollectionNumOfItems(int resourceHandle) {
-    return ((mediaCollectionObject_t*)((intptr_t)resourceHandle))->numOfItems;
+    if (getObjectType(resourceHandle) == MEDIACOLLECTION)
+        return ((mediaCollectionObject_t*)((intptr_t)resourceHandle))->numOfItems;
+    return -1;
 }
 
 char* getMediaCollectionItemRef(int resourceHandle, int i) {
-    return ((mediaCollectionObject_t*)((intptr_t)resourceHandle))->items[i];
+    if (getObjectType(resourceHandle) == MEDIACOLLECTION)
+        return ((mediaCollectionObject_t*)((intptr_t)resourceHandle))->items[i];
+    return NULL;
 }
 
