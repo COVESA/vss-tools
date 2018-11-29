@@ -5,9 +5,9 @@
 # All files and artifacts in this repository are licensed under the
 # provisions of the license provided by the LICENSE file in this repository.
 #
-# 
+#
 # VSpec file parser.
-#  
+#
 
 import yaml
 import json
@@ -19,7 +19,7 @@ class VSpecError(Exception):
         self.line_nr=args[1]
         self.message = args[2]
         Exception.__init__(self, *args, **kwargs)
-    
+
     def __str__(self):
         return  "{}: {}: {}".format(self.file_name, self.line_nr, self.message)
 
@@ -29,7 +29,7 @@ class VSpecError(Exception):
 class SignalDBManager:
     def __init__(self):
         self.signal_id_db_set = {}
-        
+
     # Process a command line option with the format
     #  [prefix]:filename:[start_id]
     # If [prefix] is empty then all signals will match, regardless
@@ -47,7 +47,7 @@ class SignalDBManager:
 
         self.create_signal_db(prefix, id_db_file_name, prefix, start_id)
         return True
-    
+
     # Create a new SignalDB instance.
     #
     # 'prefix' is the prefix of the signal names that are to
@@ -130,7 +130,7 @@ class SignalDB:
 
 
     # Locate and return an existing signal ID, or create and return a new one.
-    # 
+    #
     # If an signal ID has already been assigned to 'signal_name', return it.
     # If no assignment has been done, the previous signal ID + 1 will be assigned
     # the the signal and returned.
@@ -159,8 +159,8 @@ class SignalDB:
                 return True
         except IOError as e:
             pass
-        
-        
+
+
 # Try to open a file name that can reside
 # in any directory listed in incude_paths.
 # If successful, read context and return file
@@ -188,7 +188,7 @@ def assign_signal_ids(flat_model):
         id_val = db_mgr.get_or_assign_signal_id(elem["$name$"])
         if id_val != -1:
             elem["id"] = id_val
-        
+
     db_mgr.save_all_signal_db()
     return flat_model
 
@@ -203,12 +203,12 @@ def load(file_name, include_paths):
 
 
 def load_flat_model(file_name, prefix, include_paths):
-    # Hooks into YAML parser to add line numbers 
+    # Hooks into YAML parser to add line numbers
     # and file name into each elemeent
     def yaml_compose_node(parent, index):
         # the line number where the previous token has ended (plus empty lines)
         line = loader.line
-        try: 
+        try:
             node = yaml.composer.Composer.compose_node(loader, parent, index)
         except yaml.scanner.ScannerError as e:
             raise VSpecError(file_name, line + 1, e)
@@ -248,9 +248,9 @@ def load_flat_model(file_name, prefix, include_paths):
 
     loader.construct_mapping = yaml_construct_mapping
     raw_yaml = loader.get_data()
-    
+
     # Import signal IDs from the given database
-    
+
 
     # Check for file with no objects.
     if not raw_yaml:
@@ -276,14 +276,14 @@ def load_flat_model(file_name, prefix, include_paths):
 # 4, Check that enums are provided as arrays.
 #
 def cleanup_flat_entries(flat_model):
-    available_types =[ "branch", "UInt8", "Int8", "UInt16", "Int16",
+    available_types =[ "sensor", "actuator", "stream", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
                        "UInt32", "Int32", "UInt64", "Int64", "Boolean",
                        "Float", "Double", "String", "ByteBuffer", "rbranch", "element" ]
 
-    available_downcase_types =[ "branch", "uint8", "int8", "uint16", "int16",
+    available_downcase_types =[ "sensor", "actuator", "stream", "branch", "attribute", "uint8", "int8", "uint16", "int16",
                                 "uint32", "int32", "uint64", "int64", "boolean",
                                 "float", "double", "string", "bytebuffer", "rbranch", "element" ]
-        
+
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
         # Is this an include element?
@@ -294,7 +294,7 @@ def cleanup_flat_entries(flat_model):
         # a validated type.
         if not elem["type"].lower() in available_downcase_types:
             raise VSpecError(elem["$file_name$"], elem["$line$"], "Unknown type: {}".format(elem["type"]))
-        
+
         # Get the correct casing for the type.
         elem["type"] = available_types[available_downcase_types.index(elem["type"].lower())]
 
@@ -338,7 +338,7 @@ def check_yaml_usage(flat_model, file_name):
             raise VSpecError(file_name,  0,
                              "Element {} is not a list entry. (Did you forget a ':'?)".format(elem))
 
-        
+
     # FIXME:
     # Add more usage checks, such as absence of nested models.
     # and mutually exclusive elements.
@@ -350,7 +350,7 @@ def check_yaml_usage(flat_model, file_name):
 def expand_includes(flat_model, prefix, include_paths):
     # Build up a new spec model based on the old one, but
     # with expanded include directives.
-    
+
     new_flat_model = []
 
     # Traverse the flat list of the parsed specification
@@ -369,7 +369,7 @@ def expand_includes(flat_model, prefix, include_paths):
 
             # Recursively load included file
             inc_elem = load_flat_model(include_elem["file"], include_prefix, include_paths)
-            
+
             # Add the loaded elements at the end of the new spec model
             new_flat_model.extend(inc_elem)
         else:
@@ -377,7 +377,7 @@ def expand_includes(flat_model, prefix, include_paths):
             elem["$prefix$"] = prefix
             # Add the existing elements at the end of the new spec model
             new_flat_model.append(elem)
-           
+
     return new_flat_model
 
 
@@ -389,7 +389,7 @@ def expand_includes(flat_model, prefix, include_paths):
 #      -> name = "Cabin.Doors.1.Window.Pos"
 #
 # $prefix$ is deleted
-# 
+#
 #
 def create_absolute_paths(flat_model):
     for elem in flat_model:
@@ -436,13 +436,13 @@ def create_nested_model(flat_model, file_name):
         if (elem["type"] == "branch") or (elem["type"] == "rbranch"):
             elem["children"] = {}
 
-            
+
         # Create a list of path components to the given element
         #  name='body.door.front.left.lock' ->
         # [ 'body', 'door', 'front', 'left', 'lock' ]
         name_list = elem['$name$'].split(".")
 
-        # Extract prefix and name 
+        # Extract prefix and name
         prefix = list_to_path(name_list[:-1])
         name = name_list[-1]
 
@@ -465,7 +465,7 @@ def create_nested_model(flat_model, file_name):
             parent_branch["children"][name] = elem
 
     return deep_model
-        
+
 
 # Find the given prefix somewhere under the tree rooted in branch.
 def find_branch(branch, name_list, index):
@@ -475,16 +475,16 @@ def find_branch(branch, name_list, index):
             raise VSpecError(branch.get("$file_name$","??"),
                              branch.get("$line$", "??"),
                              "Not a branch: {}.".format(branch['$name$']))
-            
+
         return branch
-    
+
     if (branch["type"] != "branch") and (branch["type"] != "rbranch"):
         raise VSpecError(branch.get("$file_name$","??"),
                          branch.get("$line$", "??"),
                          "{} is not a branch.".format(list_to_path(name_list[:index])))
 
     children = branch["children"]
-    
+
     if not children.has_key(name_list[index]):
         raise VSpecError(branch.get("$file_name$","??"),
                          branch.get("$line$", "??"),
@@ -516,8 +516,8 @@ def element_to_list(elem):
     else:
         path = "{}.{}".format(elem["$prefix$"], name)
 
-    return 
-    
+    return
+
 #
 # Convert
 #   #include door.vspec, body.door.front.left
@@ -545,7 +545,7 @@ def yamilify_includes(text):
             [ include_file, include_prefix] = include_arg
         else:
             include_prefix = '""'
-            [include_file] = include_arg 
+            [include_file] = include_arg
 
         text = """{}
 - $include$:
@@ -554,7 +554,7 @@ def yamilify_includes(text):
 {}""".format(text[:st_index], include_file, include_prefix, text[end_index:])
 
     return text
-    
+
 #
 # Convert
 #   #signal_id_db VehicleSignalSpecification.id
