@@ -185,7 +185,7 @@ int propertyPosition(objectTypes_t objectType, char* memberName) {
             return 2;
         if (objectType == MEDIACOLLECTION && strcmp(memberName, "items" ) == 0)
             return 3;
-        return -1;
+        return -1;    
 }
 
 int parseRefString(char* refString, elementRef_t** elementRef) {
@@ -312,3 +312,4 @@ void createNativeCnodeElement(char* name, char* type, char* descr, int children,
     writeElementNodeData(name, type, descr, children, numOfElems, memberName, memberValue);
     fclose(treeFp);
 }
+
