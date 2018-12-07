@@ -46,6 +46,7 @@ typedef struct node_t {
     int children;
     struct node_t* parent;
     struct node_t** child;
+    nodeTypes_t datatype;
     int max;
     int min;
     int unitLen;

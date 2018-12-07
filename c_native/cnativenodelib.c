@@ -22,26 +22,34 @@ FILE* treeFp;
 int objectType = -1;  // declared at this level to propagate type from rbranch context to its element children contexts
 
 int stringToTypeDef(char* type) {
-    if (strcmp(type, "Int8") == 0)
+    if (strcmp(type, "Int8") == 0 || strcmp(type, "int8") == 0)
         return INT8;
-    if (strcmp(type, "UInt8") == 0)
+    if (strcmp(type, "UInt8") == 0 || strcmp(type, "uint8") == 0)
         return UINT8;
-    if (strcmp(type, "Int16") == 0)
+    if (strcmp(type, "Int16") == 0 || strcmp(type, "int16") == 0)
         return INT16;
-    if (strcmp(type, "UInt16") == 0)
+    if (strcmp(type, "UInt16") == 0 || strcmp(type, "uint16") == 0)
         return UINT16;
-    if (strcmp(type, "Int32") == 0)
+    if (strcmp(type, "Int32") == 0 || strcmp(type, "int32") == 0)
         return INT32;
-    if (strcmp(type, "UInt32") == 0)
+    if (strcmp(type, "UInt32") == 0 || strcmp(type, "uint32") == 0)
         return UINT32;
-    if (strcmp(type, "Double") == 0)
+    if (strcmp(type, "Double") == 0 || strcmp(type, "double") == 0)
         return DOUBLE;
-    if (strcmp(type, "Float") == 0)
+    if (strcmp(type, "Float") == 0 || strcmp(type, "float") == 0)
         return FLOAT;
-    if (strcmp(type, "Boolean") == 0)
+    if (strcmp(type, "Boolean") == 0 || strcmp(type, "boolean") == 0)
         return BOOLEAN;
-    if (strcmp(type, "String") == 0)
+    if (strcmp(type, "String") == 0 || strcmp(type, "string") == 0)
         return STRING;
+    if (strcmp(type, "sensor") == 0)
+        return SENSOR;
+    if (strcmp(type, "actuator") == 0)
+        return ACTUATOR;
+    if (strcmp(type, "streamsensor") == 0)
+        return STREAMSENSOR;
+    if (strcmp(type, "attribute") == 0)
+        return ATTRIBUTE;
     if (strcmp(type, "branch") == 0)
         return BRANCH;
     if (strcmp(type, "rbranch") == 0)
@@ -91,9 +99,13 @@ void writeCommonPart(char* name, char* type, char* descr, int children) {
     fwrite(descr, sizeof(char)*commonData.descrLen, 1, treeFp);
 }
 
-void writeNodeData(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* function) {
-printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, children, descr, min, max, unit, enums, function);
+void writeNodeData(char* name, char* type, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
+printf("Name=%s, Type=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, children, descr, datatype, min, max, unit, enums, function);
     writeCommonPart(name, type, descr, children);
+    int dtype = -1;
+    if (strlen(datatype) != 0)
+        dtype = stringToTypeDef(datatype);
+    fwrite(&dtype, sizeof(int), 1, treeFp);
     int nodeMin = INT_MAX;
     if (strlen(min) != 0)
         nodeMin = atoi(min);
@@ -130,13 +142,13 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, min=%s, max=%s Unit=%s, Enums=%
         fwrite(function, sizeof(char)*functionLen, 1, treeFp);
 }
 
-void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* function) {
+void createNativeCnode(char* name, char* type, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
     treeFp = fopen("../vss_rel_1.0.cnative", "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeNodeData(name, type, descr, children, min, max, unit, enums, function);
+    writeNodeData(name, type, descr, children, datatype, min, max, unit, enums, function);
     fclose(treeFp);
 }
 

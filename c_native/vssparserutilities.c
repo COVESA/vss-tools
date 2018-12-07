@@ -170,6 +170,7 @@ printf("Type=%d\n",common_data->type);
             copyData((node_t*)node2, common_data, name, descr);
             if (node2->children > 0)
                 node2->child = (node_t**) malloc(sizeof(node_t**)*node2->children);
+            fread(&(node2->datatype), sizeof(int), 1, treeFp);
             fread(&(node2->min), sizeof(int), 1, treeFp);
             fread(&(node2->max), sizeof(int), 1, treeFp);
             fread(&(node2->unitLen), sizeof(int), 1, treeFp);
@@ -517,6 +518,7 @@ void traverseAndWriteNode(struct node_t* node) {
         break;
         default:
         {
+            fwrite(&(node->datatype), sizeof(int), 1, treeFp);
             fwrite(&(node->min), sizeof(int), 1, treeFp);
             fwrite(&(node->max), sizeof(int), 1, treeFp);
             fwrite(&(node->unitLen), sizeof(int), 1, treeFp);
@@ -571,6 +573,13 @@ int getChild(int nodeHandle, int childNo) {
 
 nodeTypes_t getType(int nodeHandle) {
     return ((node_t*)((intptr_t)nodeHandle))->type;
+}
+
+nodeTypes_t getDatatype(int nodeHandle) {
+    nodeTypes_t type = getType(nodeHandle);
+    if (type != BRANCH && type != RBRANCH && type != ELEMENT)
+        return ((node_t*)((intptr_t)nodeHandle))->datatype;
+    return -1;
 }
 
 char* getName(int nodeHandle) {
