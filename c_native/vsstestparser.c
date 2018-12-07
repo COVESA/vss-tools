@@ -61,9 +61,12 @@ void showNodeData(int currentNode, int currentChild) {
             printf("Node child[%d]=%s\n", currentChild, getName(getChild(currentNode, currentChild)));
         for (int i = 0 ; i < getNumOfEnumElements(currentNode) ; i++)
             printf("Enum[%d]=%s\n", i, getEnumElement(currentNode, i));
+        nodeTypes_t dtype = getDatatype(currentNode);
+        if (dtype != -1)
+            printf("Datatype = %d\n", dtype);
         char* tmp = getUnit(currentNode);
         if (tmp != NULL)
-            printf("Unit = %s\n", getUnit(currentNode));
+            printf("Unit = %s\n", tmp);
         tmp = getFunction(currentNode);
         if (tmp != NULL)
             printf("Function = %s\n", tmp);

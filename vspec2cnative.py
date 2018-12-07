@@ -35,8 +35,8 @@ dllName = "c_native/cnativenodelib.so"
 dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
 _cnative = ctypes.CDLL(dllAbsPath)
 
-#void createNativeCnode(char* name, char* type, char* descr, int children, char* min, char* max, char* unit, char* enums, char* function);
-_cnative.createNativeCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p)
+#void createNativeCnode(char* name, char* type, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function);
+_cnative.createNativeCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p)
 
 #void createNativeCnodeRbranch(char* name, char* type, char* descr, int children, char* childType, int numOfProperties, char** propNames, char** propDescrs, char** propTypes, char** propFormats, char** propUnits, char** propValues);
 _cnative.createNativeCnodeRbranch.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p))
@@ -46,9 +46,9 @@ _cnative.createNativeCnodeRbranch.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ct
 _cnative.createNativeCnodeElement.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_int,ctypes.POINTER(ctypes.c_char_p),ctypes.POINTER(ctypes.c_char_p))
 
 
-def createNativeCnode(nodename, nodetype, description, children, nodemin, nodemax, unit, enums, function):
+def createNativeCnode(nodename, nodetype, description, children, nodedatatype, nodemin, nodemax, unit, enums, function):
     global _cnative
-    _cnative.createNativeCnode(nodename, nodetype, description, children, nodemin, nodemax, unit, enums, function)
+    _cnative.createNativeCnode(nodename, nodetype, description, children, nodedatatype, nodemin, nodemax, unit, enums, function)
 
 
 def createNativeCnodeRbranch(nodename, nodetype, nodedescr, children, childType, numOfProperties, propNames, propDescrs, propTypes, propFormats, propUnits, propValues):
@@ -115,6 +115,7 @@ def createRootNode():
     nodetype = "branch"
     nodedescription = "VSS tree root node"
     nodechildren = 3   # Attribute, Signal, Private
+    nodedatatype = ""
     nodemin = ""
     nodemax = ""
     nodeunit = ""
@@ -123,13 +124,14 @@ def createRootNode():
     b_nodename = nodename.encode('utf-8')
     b_nodetype = nodetype.encode('utf-8')
     b_nodedescription = nodedescription.encode('utf-8')
+    b_nodedatatype = nodedatatype.encode('utf-8')
     b_nodemin = nodemin.encode('utf-8')
     b_nodemax = nodemax.encode('utf-8')
     b_nodeunit = nodeunit.encode('utf-8')
     b_nodeenum = nodeenum.encode('utf-8')
     b_nodefunction = nodefunction.encode('utf-8')
 
-    createNativeCnode(b_nodename,b_nodetype,b_nodedescription,nodechildren,b_nodemin,b_nodemax,b_nodeunit,b_nodeenum,b_nodefunction)
+    createNativeCnode(b_nodename,b_nodetype,b_nodedescription,nodechildren, b_nodedatatype,b_nodemin,b_nodemax,b_nodeunit,b_nodeenum,b_nodefunction)
 
 
 def enumString(enumList):
@@ -139,12 +141,16 @@ def enumString(enumList):
     return enumStr
 
 def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodedescription, children):
+    nodedatatype = ""
     nodemin = ""
     nodemax = ""
     nodeunit = ""
     nodeenum = ""
     nodefunction = ""
     
+    if val.has_key("datatype"):
+        nodedatatype = str(val["datatype"])
+
     if val.has_key("min"):
         nodemin = str(val["min"])
 
@@ -160,13 +166,14 @@ def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodedescription, chil
     if val.has_key("function"):
         nodefunction = val["function"]
 
+    b_nodedatatype = nodedatatype.encode('utf-8')
     b_nodemin = nodemin.encode('utf-8')
     b_nodemax = nodemax.encode('utf-8')
     b_nodeunit = nodeunit.encode('utf-8')
     b_nodeenum = nodeenum.encode('utf-8')
     b_nodefunction = nodefunction.encode('utf-8')
 
-    createNativeCnode(b_nodename, b_nodetype, b_nodedescription, children, b_nodemin, b_nodemax, b_nodeunit, b_nodeenum, b_nodefunction)
+    createNativeCnode(b_nodename, b_nodetype, b_nodedescription, children, b_nodedatatype, b_nodemin, b_nodemax, b_nodeunit, b_nodeenum, b_nodefunction)
 
 
 def create_node_rbranch(key, val, b_nodename, b_nodetype, b_nodedescription, children):

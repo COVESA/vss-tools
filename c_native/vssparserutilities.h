@@ -9,7 +9,7 @@
 **/
 
 #define MAXENUMELEMENTLEN 20
-typedef enum { INT8, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, BRANCH, RBRANCH, ELEMENT } nodeTypes_t;
+typedef enum { INT8, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, SENSOR, ACTUATOR, STREAMSENSOR, ATTRIBUTE, BRANCH, RBRANCH, ELEMENT } nodeTypes_t;
 typedef char enum_t[MAXENUMELEMENTLEN];
 
 typedef enum { MEDIACOLLECTION, MEDIAITEM } objectTypes_t;
@@ -27,6 +27,7 @@ int getParent(int nodeHandle);
 int getChild(int nodeHandle, int childNo);
 int getNumOfChildren(int nodeHandle);
 nodeTypes_t getType(int nodeHandle);
+nodeTypes_t getDatatype(int nodeHandle);
 char* getName(int nodeHandle);
 char* getDescr(int nodeHandle);
 int getNumOfEnumElements(int nodeHandle);
