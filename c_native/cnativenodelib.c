@@ -4,7 +4,7 @@
 * All files and artifacts in this repository are licensed under the
 * provisions of the license provided by the LICENSE file in this repository.
 *
-* 
+*
 * Write native format to file.
 **/
 
@@ -46,8 +46,8 @@ int stringToTypeDef(char* type) {
         return SENSOR;
     if (strcmp(type, "actuator") == 0)
         return ACTUATOR;
-    if (strcmp(type, "streamsensor") == 0)
-        return STREAMSENSOR;
+    if (strcmp(type, "stream") == 0)
+        return STREAM;
     if (strcmp(type, "attribute") == 0)
         return ATTRIBUTE;
     if (strcmp(type, "branch") == 0)
@@ -185,7 +185,7 @@ int propertyPosition(objectTypes_t objectType, char* memberName) {
             return 2;
         if (objectType == MEDIACOLLECTION && strcmp(memberName, "items" ) == 0)
             return 3;
-        return -1;    
+        return -1;
 }
 
 int parseRefString(char* refString, elementRef_t** elementRef) {
@@ -203,8 +203,8 @@ printf("parseRefString: %d refs\n", numOfRefs);
     refStart = strchr(refString, '\'')+1;
     char* thisRef;
     for (int i = 0 ; i < numOfRefs ; i++) {
-        refEnd = strchr(refStart, '\''); 
-        thisRef = (*elementRef)[i];      
+        refEnd = strchr(refStart, '\'');
+        thisRef = (*elementRef)[i];
         strncpy(thisRef, refStart, refEnd-refStart);
         thisRef[refEnd-refStart] = '\0';
 printf("Ref[%d]=%s\n",i, thisRef);
@@ -312,4 +312,3 @@ void createNativeCnodeElement(char* name, char* type, char* descr, int children,
     writeElementNodeData(name, type, descr, children, numOfElems, memberName, memberValue);
     fclose(treeFp);
 }
-
