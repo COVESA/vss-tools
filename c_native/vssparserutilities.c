@@ -214,7 +214,7 @@ printf("node->children = %d\n", node->children);
     return node;
 }
 
-int VSSReadTree(char* filePath) {
+long VSSReadTree(char* filePath) {
     treeFp = fopen(filePath, "r");
     if (treeFp == NULL) {
         printf("Could not open file for reading tree data\n");
@@ -224,7 +224,7 @@ int VSSReadTree(char* filePath) {
     intptr_t root = (intptr_t)traverseAndReadNode(NULL);
     printTreeDepth();
     fclose(treeFp);
-    return (int)root;
+    return (long)root;
 }
 
 char tmpNodeName[MAXNAMELEN];
@@ -290,7 +290,7 @@ void copySteps(char* newPath, char* oldPath, int stepNo) {
 /**
 * !!! First call to stepToNextNode() must be preceeeded by a call to initStepToNextNode() !!!
 **/
-struct node_t* stepToNextNode(struct node_t* ptr, int stepNo, char* searchPath, int maxFound, int* foundResponses, path_t* responsePaths, int* foundNodePtrs) {
+struct node_t* stepToNextNode(struct node_t* ptr, int stepNo, char* searchPath, int maxFound, int* foundResponses, path_t* responsePaths, long* foundNodePtrs) {
 printf("ptr->name=%s, stepNo=%d, responsePaths[%d]=%s\n",ptr->name, stepNo, *foundResponses, responsePaths[*foundResponses]);
     if (*foundResponses >= maxFound-1)
         return NULL; // response buffers are full
@@ -334,7 +334,7 @@ printf("Wildcard:ptr->child[%d]->name=%s\n", i, ptr->child[i]->name);
     }
 }
 
-void initStepToNextNode(struct node_t* originalRoot, struct node_t* currentRoot, char* searchPath, int* foundNodeHandles, path_t* foundPaths, int maxFound) {
+void initStepToNextNode(struct node_t* originalRoot, struct node_t* currentRoot, char* searchPath, long* foundNodeHandles, path_t* foundPaths, int maxFound) {
     /* 
      * This is a workaround to the fact that with X multiple wildcards, 
      * there are "(X-1)*numberofrealresults" bogus results added.
@@ -408,10 +408,10 @@ void removeFromWildCardQue(char* path, struct node_t** rootPtr, int* maxFoundLef
 /**
 * Returns handle (and path) to all leaf nodes that are found under the node before the wildcard in the path.
 **/
-void trailingWildCardSearch(struct node_t* rootPtr, char* searchPath, int maxFound, int* foundResponses, path_t* responsePaths, int* foundNodePtrs) {
+void trailingWildCardSearch(struct node_t* rootPtr, char* searchPath, int maxFound, int* foundResponses, path_t* responsePaths, long* foundNodePtrs) {
     int matches = 0;
     path_t matchingPaths[MAXFOUNDNODES];
-    int matchingNodeHandles[MAXFOUNDNODES];
+    long matchingNodeHandles[MAXFOUNDNODES];
     char jobPath[MAXCHARSPATH];
     struct node_t* jobRoot;
     int jobMaxFound;
@@ -443,7 +443,7 @@ printf("Leaf node=%s, matchingPaths[%d]=%s, *foundResponses=%d\n", getName(match
     }
 }
 
-int VSSSearchNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePaths, int* foundNodeHandles) {
+int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, path_t* responsePaths, long* foundNodeHandles) {
     intptr_t ptr = (intptr_t)rootNode;
     int foundResponses = 0;
 
@@ -557,81 +557,81 @@ void VSSWriteTree(char* filePath, int rootHandle) {
 
 // the intptr_t castings below are needed to avoid compiler warnings
 
-int getParent(int nodeHandle) {
-    return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->parent);
+long getParent(long nodeHandle) {
+    return (long)((intptr_t)((node_t*)((intptr_t)nodeHandle))->parent);
 }
 
-int getNumOfChildren(int nodeHandle) {
+int getNumOfChildren(long nodeHandle) {
     return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->children);
 }
 
-int getChild(int nodeHandle, int childNo) {
+long getChild(long nodeHandle, int childNo) {
     if (getNumOfChildren(nodeHandle) > childNo)
-        return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->child[childNo]);
+        return (long)((intptr_t)((node_t*)((intptr_t)nodeHandle))->child[childNo]);
     return 0;
 }
 
-nodeTypes_t getType(int nodeHandle) {
+nodeTypes_t getType(long nodeHandle) {
     return ((node_t*)((intptr_t)nodeHandle))->type;
 }
 
-nodeTypes_t getDatatype(int nodeHandle) {
+nodeTypes_t getDatatype(long nodeHandle) {
     nodeTypes_t type = getType(nodeHandle);
     if (type != BRANCH && type != RBRANCH && type != ELEMENT)
         return ((node_t*)((intptr_t)nodeHandle))->datatype;
     return -1;
 }
 
-char* getName(int nodeHandle) {
+char* getName(long nodeHandle) {
     return ((node_t*)((intptr_t)nodeHandle))->name;
 }
 
-char* getDescr(int nodeHandle) {
+char* getDescr(long nodeHandle) {
     return ((node_t*)((intptr_t)nodeHandle))->description;
 }
 
-int getNumOfEnumElements(int nodeHandle) {
+int getNumOfEnumElements(long nodeHandle) {
     nodeTypes_t type = getType(nodeHandle);
     if (type != BRANCH && type != RBRANCH && type != ELEMENT)
         return ((node_t*)((intptr_t)nodeHandle))->numOfEnumElements;
     return 0;
 }
 
-char* getEnumElement(int nodeHandle, int index) {
+char* getEnumElement(long nodeHandle, int index) {
     return ((node_t*)((intptr_t)nodeHandle))->enumeration[index];
 }
 
-char* getUnit(int nodeHandle) {
+char* getUnit(long nodeHandle) {
     nodeTypes_t type = getType(nodeHandle);
     if (type != BRANCH && type != RBRANCH && type != ELEMENT)
         return ((node_t*)((intptr_t)nodeHandle))->unit;
     return NULL;
 }
 
-char* getFunction(int nodeHandle) {
+char* getFunction(long nodeHandle) {
     nodeTypes_t type = getType(nodeHandle);
     if (type != BRANCH && type != RBRANCH && type != ELEMENT)
         return ((node_t*)((intptr_t)nodeHandle))->function;
     return NULL;
 }
 
-int getResource(int nodeHandle) {
+long getResource(long nodeHandle) {
     if (getType(nodeHandle) == ELEMENT)
-        return (int)((intptr_t)((element_node_t*)((intptr_t)nodeHandle))->uniqueObject);
+        return (long)((intptr_t)((element_node_t*)((intptr_t)nodeHandle))->uniqueObject);
     return -1;
 }
 
-int getObjectType(int resourceHandle) {
+int getObjectType(long resourceHandle) {
     return ((resourceObject_t*)((intptr_t)resourceHandle))->objectType;
 }
 
-int getMediaCollectionNumOfItems(int resourceHandle) {
+int getMediaCollectionNumOfItems(long resourceHandle) {
     if (getObjectType(resourceHandle) == MEDIACOLLECTION)
         return ((mediaCollectionObject_t*)((intptr_t)resourceHandle))->numOfItems;
     return -1;
 }
 
-char* getMediaCollectionItemRef(int resourceHandle, int i) {
+char* getMediaCollectionItemRef(long resourceHandle, int i) {
     if (getObjectType(resourceHandle) == MEDIACOLLECTION)
         return ((mediaCollectionObject_t*)((intptr_t)resourceHandle))->items[i];
     return NULL;
