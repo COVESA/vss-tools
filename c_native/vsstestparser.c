@@ -16,8 +16,8 @@
 #include <stdbool.h>
 #include "vssparserutilities.h"
 
-int currentNode;
-int rootNode;
+long currentNode;
+long rootNode;
 char vspecfile[] = "../../vss_rel_1.0.cnative";
 
 char* getTypeName(nodeTypes_t type) {
@@ -55,7 +55,7 @@ char* getTypeName(nodeTypes_t type) {
     } // switch
 }
 
-void showNodeData(int currentNode, int currentChild) {
+void showNodeData(long currentNode, int currentChild) {
         printf("\nNode name = %s, Node type = %s, Node children = %d\nNode description = %s\n", getName(currentNode), getTypeName(getType(currentNode)), getNumOfChildren(currentNode), getDescr(currentNode));
         if (getNumOfChildren(currentNode) > 0)
             printf("Node child[%d]=%s\n", currentChild, getName(getChild(currentNode, currentChild)));
@@ -126,7 +126,7 @@ int main(void) {
                 printf("\nPath to resource(s): ");
                 scanf("%s", searchPath);
                 path_t responsePaths[MAXFOUNDNODES];
-                int foundNodes[MAXFOUNDNODES];
+                long foundNodes[MAXFOUNDNODES];
                 int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, responsePaths, foundNodes);
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
