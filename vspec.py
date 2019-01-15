@@ -223,7 +223,7 @@ def load_flat_model(file_name, prefix, include_paths):
         mapping = yaml.constructor.Constructor.construct_mapping(loader, node, deep=deep)
         # Find the name of the branch / signal and convert
         # it to a dictionary element '$name$'
-        for key, val in mapping.iteritems():
+        for key, val in mapping.items():
             if key[0]=='$':
                 continue
 
@@ -334,7 +334,7 @@ def cleanup_deep_model(deep_model):
 #
 def check_yaml_usage(flat_model, file_name):
     for elem in flat_model:
-        if isinstance(elem, basestring):
+        if isinstance(elem, list):
             raise VSpecError(file_name,  0,
                              "Element {} is not a list entry. (Did you forget a ':'?)".format(elem))
 

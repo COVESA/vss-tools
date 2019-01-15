@@ -20,23 +20,23 @@ typedef char elementRef_t[ELEMENT_STRING_MAXLEN];
 typedef char path_t[MAXCHARSPATH];
 #define MAXFOUNDNODES 150
 
-int VSSReadTree(char* filePath);
+long VSSReadTree(char* filePath);
 void VSSWriteTree(char* filePath, int rootHandle);
 
-int getParent(int nodeHandle);
-int getChild(int nodeHandle, int childNo);
-int getNumOfChildren(int nodeHandle);
-nodeTypes_t getType(int nodeHandle);
-nodeTypes_t getDatatype(int nodeHandle);
-char* getName(int nodeHandle);
-char* getDescr(int nodeHandle);
-int getNumOfEnumElements(int nodeHandle);
-char* getEnumElement(int nodeHandle, int index);
-char* getUnit(int nodeHandle);
-char* getFunction(int nodeHandle);
-int getResource(int nodeHandle);
-int getObjectType(int resourceHandle);
-int getMediaCollectionNumOfItems(int resourceHandle);
-char* getMediaCollectionItemRef(int resourceHandle, int i);
+long getParent(long nodeHandle);
+long getChild(long nodeHandle, int childNo);
+int getNumOfChildren(long nodeHandle);
+nodeTypes_t getType(long nodeHandle);
+nodeTypes_t getDatatype(long nodeHandle);
+char* getName(long nodeHandle);
+char* getDescr(long nodeHandle);
+int getNumOfEnumElements(long nodeHandle);
+char* getEnumElement(long nodeHandle, int index);
+char* getUnit(long nodeHandle);
+char* getFunction(long nodeHandle);
+long getResource(long nodeHandle);
+int getObjectType(long resourceHandle);
+int getMediaCollectionNumOfItems(long resourceHandle);
+char* getMediaCollectionItemRef(long resourceHandle, int i);
 
-int VSSSearchNodes(char* searchPath, int rootNode, int maxFound, path_t* responsePaths, int* foundNodeHandles);
+int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, path_t* responsePaths, long* foundNodeHandles);
