@@ -22,28 +22,36 @@ char vspecfile[] = "../../vss_rel_1.0.cnative";
 
 char* getTypeName(nodeTypes_t type) {
     switch (type) { 
-        case BRANCH:
-                return "BRANCH";
-        case BOOLEAN:
-                return "BOOLEAN";
-        case UINT8:
-                return "UINT8";
         case INT8:
                 return "INT8";
-        case UINT16:
-                return "UINT16";
+        case UINT8:
+                return "UINT8";
         case INT16:
                 return "INT16";
-        case UINT32:
-                return "UINT32";
+        case UINT16:
+                return "UINT16";
         case INT32:
                 return "INT32";
+        case UINT32:
+                return "UINT32";
         case DOUBLE:
             return "DOUBLE";
         case FLOAT:
             return "FLOAT";
+        case BOOLEAN:
+            return "BOOLEAN";
         case STRING:
             return "STRING";
+        case SENSOR:
+            return "SENSOR";
+        case ACTUATOR:
+            return "ACTUATOR";
+        case STREAM:
+            return "STREAM";
+        case ATTRIBUTE:
+            return "ATTRIBUTE";
+        case BRANCH:
+            return "BRANCH";
         case RBRANCH:
             return "RBRANCH";
         case ELEMENT:
@@ -127,7 +135,7 @@ int main(void) {
                 scanf("%s", searchPath);
                 path_t responsePaths[MAXFOUNDNODES];
                 long foundNodes[MAXFOUNDNODES];
-                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, responsePaths, foundNodes);
+                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, responsePaths, foundNodes, false);
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
                     printf("Found node type=%s\n", getTypeName(getType(foundNodes[i])));
