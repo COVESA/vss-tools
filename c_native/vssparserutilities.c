@@ -296,10 +296,13 @@ printf("ptr->name=%s, stepNo=%d, responsePaths[%d]=%s\n",ptr->name, stepNo, *fou
         return NULL; // response buffers are full
     char pathNodeName[MAXNAMELEN];
     strncpy(pathNodeName, getNodeName(stepNo, searchPath), MAXNAMELEN);
-    if (stepNo == stepsInPath) { // at matching node, so save ptr and return success
-        foundNodePtrs[*foundResponses] = (intptr_t)ptr;
-        (*foundResponses)++;
-        return ptr;
+    if (stepNo == stepsInPath) {
+        if (strcmp(pathNodeName, ptr->name) == 0 || strcmp(pathNodeName, "*") == 0) {
+            // at matching node, so save ptr and return success
+            foundNodePtrs[*foundResponses] = (intptr_t)ptr;
+            (*foundResponses)++;
+            return ptr;
+        }
     }
     strncpy(pathNodeName, getNodeName(stepNo+1, searchPath), MAXNAMELEN);  // get name of next step in path
     if (strcmp(pathNodeName, "*") != 0) {  // try to match with one of the children
@@ -443,15 +446,15 @@ printf("Leaf node=%s, matchingPaths[%d]=%s, *foundResponses=%d\n", getName(match
     }
 }
 
-int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, path_t* responsePaths, long* foundNodeHandles) {
+int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, path_t* responsePaths, long* foundNodeHandles, bool wildcardAllDepths) {
     intptr_t ptr = (intptr_t)rootNode;
     int foundResponses = 0;
 
-    if (searchPath[strlen(searchPath)-1] != '*') {
+    if ((searchPath[strlen(searchPath)-1] == '*') && (wildcardAllDepths)) {
+        trailingWildCardSearch((struct node_t*)ptr, searchPath, maxFound, &foundResponses, responsePaths, foundNodeHandles);
+    } else {
         initStepToNextNode((struct node_t*)ptr,(struct node_t*)ptr, searchPath, foundNodeHandles, responsePaths, maxFound);
         stepToNextNode((struct node_t*)ptr, 0, searchPath, maxFound, &foundResponses, responsePaths, foundNodeHandles);
-    } else {
-        trailingWildCardSearch((struct node_t*)ptr, searchPath, maxFound, &foundResponses, responsePaths, foundNodeHandles);
     }
 
     return foundResponses;
