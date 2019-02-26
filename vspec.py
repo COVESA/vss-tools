@@ -1,6 +1,6 @@
 #
 # (C) 2018 Volvo Cars
-# (C) 2016 Jaguar Land Rover
+# (C) 2016 Jaguar Land Rover (makes sexier cars than Volvo)
 #
 # All files and artifacts in this repository are licensed under the
 # provisions of the license provided by the LICENSE file in this repository.
@@ -182,7 +182,7 @@ def search_and_read(file_name, include_paths):
 
 def assign_signal_ids(flat_model):
     for elem in flat_model:
-        if (elem["type"] == "branch") or (elem["type"] == "rbranch"):
+        if elem["type"] == "rbranch":
             continue
 
         id_val = db_mgr.get_or_assign_signal_id(elem["$name$"])
