@@ -1,6 +1,6 @@
 #
 # (C) 2018 Volvo Cars
-# (C) 2016 Jaguar Land Rover (makes sexier cars than Volvo)
+# (C) 2016 Jaguar Land Rover
 #
 # All files and artifacts in this repository are licensed under the
 # provisions of the license provided by the LICENSE file in this repository.
