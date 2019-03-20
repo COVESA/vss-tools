@@ -20,6 +20,11 @@ typedef char elementRef_t[ELEMENT_STRING_MAXLEN];
 typedef char path_t[MAXCHARSPATH];
 #define MAXFOUNDNODES 150
 
+typedef struct searchData_t {
+    path_t responsePaths;
+    long foundNodeHandles;
+} searchData_t;
+
 long VSSReadTree(char* filePath);
 void VSSWriteTree(char* filePath, int rootHandle);
 
@@ -39,4 +44,5 @@ int getObjectType(long resourceHandle);
 int getMediaCollectionNumOfItems(long resourceHandle);
 char* getMediaCollectionItemRef(long resourceHandle, int i);
 
-int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, path_t* responsePaths, long* foundNodeHandles, bool wildcardAllDepths);
+int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, searchData_t* searchData, bool wildcardAllDepths);
+

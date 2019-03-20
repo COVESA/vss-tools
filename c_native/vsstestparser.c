@@ -133,13 +133,12 @@ int main(void) {
                 char searchPath[MAXCHARSPATH];
                 printf("\nPath to resource(s): ");
                 scanf("%s", searchPath);
-                path_t responsePaths[MAXFOUNDNODES];
-                long foundNodes[MAXFOUNDNODES];
-                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, responsePaths, foundNodes, false);
+                searchData_t searchData[MAXFOUNDNODES];
+                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, searchData, false);
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
-                    printf("Found node type=%s\n", getTypeName(getType(foundNodes[i])));
-                    printf("Found path=%s\n", responsePaths[i]);
+                    printf("Found node type=%s\n", getTypeName(getType((long)(&(searchData[i]))->foundNodeHandles)));
+                    printf("Found path=%s\n", (char*)(&(searchData[i]))->responsePaths);
                 }
             }
             break;
