@@ -17,23 +17,40 @@ import json
 import getopt
 import csv
 
+
 def usage():
-    print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file csv_file")
-    print("  -I include_dir              Add include directory to search for included vspec")
-    print("                              files. Can be used multiple timees.")
-    print()
-    print("  -i prefix:id_file:start_id  Add include directory to search for included vspec")
-    print("                              files. Can be used multiple timees.")
-    print()
-    print(" vspec_file                   The vehicle specification file to parse.")
-    print(" csv_file                    The file to output the CSV data to.")
+    print ( \
+f"""
+Usage: {sys.argv[0]} [options] vspec_file csv_file
+
+  where [options] are:
+
+  -I include_dir              Add include directory to search for included vspec
+                              files. Can be used multiple timees.
+
+  -i prefix:id_file:start_id  "prefix" is an optional string that will be
+                              prepended to each signal name defined in the
+                              vspec file.
+
+                              "id_file" is the name of the file containing the
+                              static ID values for the signals.  This file is
+                              read/write and will be updated if necessary.
+
+                              "start_id" is the optional starting ID value to
+                              be used for signals that need to be generated.
+
+  vspec_file                  The vehicle specification file to parse.
+
+  csv_file                    The file to output the CSV data to.
+""" )
     sys.exit(255)
+
 
 def format_data(json_data):
     Id = '""'
     Type = '""'
-    Unit = '""'
     DataType = '""'
+    Unit = '""'
     Min = '""'
     Max = '""'
     Desc = '""'
@@ -61,7 +78,8 @@ def format_data(json_data):
         Sensor = '"' + str(json_data['sensor']) + '"'
     if ('actuator' in json_data):
         Actuator = '"' + str(json_data['actuator']) + '"'
-    return Id + ","+ Type + ","+ DataType + ","+ Unit + ","+ Min + ","+ Max + ","+ Desc + ","+ Enum + ","+ Sensor + ","+ Actuator
+    return f"{Id},{Type},{DataType},{Unit},{Min},{Max},{Desc},{Enum},{Sensor},{Actuator}"
+
 
 def json2csv(json_data, file_out, parent_signal):
     for k in list(json_data.keys()):
@@ -75,6 +93,7 @@ def json2csv(json_data, file_out, parent_signal):
             json2csv(json_data[k]['children'], file_out, signal)
         else:
             file_out.write(signal + ',' + format_data(json_data[k]) + '\n')
+
 
 if __name__ == "__main__":
     #
@@ -106,9 +125,17 @@ if __name__ == "__main__":
     try:
         tree = vspec.load(args[0], include_dirs)
     except vspec.VSpecError as e:
-        print("Error: {}".format(e))
+        print ( f"Error: {e}" )
         exit(255)
 
+    #
+    #   Write out the column name line.
+    #
+    csv_out.write ( "Signal,Id,Type,DataType,Unit,Min,Max,Desc,Enum,Sensor,Actuator\n" )
+
+    #
+    #   Go process all of the data records in the input JSON file.
+    #
     json2csv(tree, csv_out, "")
     csv_out.write("\n")
     csv_out.close()
