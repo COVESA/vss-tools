@@ -182,8 +182,6 @@ def search_and_read(file_name, include_paths):
 
 def assign_signal_ids(flat_model):
     for elem in flat_model:
-        if elem["type"] == "rbranch":
-            continue
 
         id_val = db_mgr.get_or_assign_signal_id(elem["$name$"])
         if id_val != -1:
