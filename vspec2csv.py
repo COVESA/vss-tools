@@ -25,29 +25,30 @@ Usage: {sys.argv[0]} [options] vspec_file csv_file
 
   where [options] are:
 
-  -I include_dir              Add include directory to search for included vspec
-                              files. Can be used multiple timees.
+  -I include_dir       Add include directory to search for included vspec
+                       files. Can be used multiple timees.
 
-  -i prefix:id_file:start_id  "prefix" is an optional string that will be
-                              prepended to each signal name defined in the
-                              vspec file.
+  -i prefix:uuid_file  "prefix" is an optional string that will be
+                       prepended to each signal name defined in the
+                       vspec file.
 
-                              "id_file" is the name of the file containing the
-                              static ID values for the signals.  This file is
-                              read/write and will be updated if necessary.
+                       "uuid_file" is the name of the file containing the
+                       static UUID values for the signals.  This file is
+                       read/write and will be updated if necessary.
 
-                              "start_id" is the optional starting ID value to
-                              be used for signals that need to be generated.
+                       This option can be specified several times in
+                       to store the UUIDs of different parts of the
+                       signal tree in different files.
 
-  vspec_file                  The vehicle specification file to parse.
+  vspec_file           The vehicle specification file to parse.
 
-  csv_file                    The file to output the CSV data to.
+  csv_file             The file to output the CSV data to.
 """ )
     sys.exit(255)
 
 
 def format_data(json_data):
-    Id = '""'
+    Uuid = '""'
     Type = '""'
     DataType = '""'
     Unit = '""'
@@ -58,8 +59,8 @@ def format_data(json_data):
     Sensor = '""'
     Actuator = '""'
 
-    if ('id' in json_data):
-        Id = '"' + str(json_data['id']) + '"'
+    if ('uuid' in json_data):
+        Uuid = '"' + str(json_data['uuid']) + '"'
     if ('type' in json_data):
         Type = '"' + json_data['type'] + '"'
     if ('datatype' in json_data):
@@ -78,7 +79,7 @@ def format_data(json_data):
         Sensor = '"' + str(json_data['sensor']) + '"'
     if ('actuator' in json_data):
         Actuator = '"' + str(json_data['actuator']) + '"'
-    return f"{Id},{Type},{DataType},{Unit},{Min},{Max},{Desc},{Enum},{Sensor},{Actuator}"
+    return f"{Uuid},{Type},{DataType},{Unit},{Min},{Max},{Desc},{Enum},{Sensor},{Actuator}"
 
 
 def json2csv(json_data, file_out, parent_signal):
@@ -108,12 +109,12 @@ if __name__ == "__main__":
             include_dirs.append(a)
         elif o == "-i":
             id_spec = a.split(":")
-            if len(id_spec) != 3:
-                print("ERROR: -i needs a 'prefix:id_file:start_id' argument.")
+            if len(id_spec) != 2:
+                print("ERROR: -i needs a 'prefix:id_file' argument.")
                 usage()
 
-            [prefix, file_name, start_id] = id_spec
-            vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
+            [prefix, file_name] = id_spec
+            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 

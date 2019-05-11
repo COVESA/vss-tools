@@ -16,15 +16,16 @@ import json
 import getopt
 
 def usage():
-    print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file franca_file")
-    print("  -I include_dir              Add include directory to search for included vspec")
-    print("                              files. Can be used multiple timees.")
+    print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file franca_file")
+    print("  -I include_dir       Add include directory to search for included vspec")
+    print("                       files. Can be used multiple timees.")
     print()
-    print("  -i prefix:id_file:start_id  Add include directory to search for included vspec")
-    print("                              files. Can be used multiple timees.")
+    print("  -i prefix:uuid_file  File to use for storing generated UUIDs for signals with")
+    print("                       a given path prefix. Can be used multiple times to store")
+    print("                       UUIDs for signal sub-trees in different files.")
     print()
-    print(" vspec_file                   The vehicle specification file to parse.")
-    print(" franca_file                  The file to output the Franca IDL spec to.")
+    print(" vspec_file            The vehicle specification file to parse.")
+    print(" franca_file           The file to output the Franca IDL spec to.")
     sys.exit(255)
 
 
@@ -64,8 +65,8 @@ def traverse_tree(tree, outf, prefix_arr, is_first_element):
         if "datatype" in val:
             outf.write("    datatype: {}\n".format(val["datatype"]))
 
-        if "id" in val:
-            outf.write("    id: {}\n".format(val["id"]))
+        if "uuid" in val:
+            outf.write("    uuid: {}\n".format(val["uuid"]))
 
         if "min" in val:
             outf.write("    min: {}\n".format(val["min"]))
@@ -105,12 +106,12 @@ if __name__ == "__main__":
             vss_version = a
         elif o == "-i":
             id_spec = a.split(":")
-            if len(id_spec) != 3:
-                print("ERROR: -i needs a 'prefix:id_file:start_id' argument.")
+            if len(id_spec) != 2:
+                print("ERROR: -i needs a 'prefix:uuid_file' argument.")
                 usage()
 
-            [prefix, file_name, start_id] = id_spec
-            vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
+            [prefix, file_name] = id_spec
+            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 
