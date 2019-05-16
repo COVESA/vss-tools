@@ -139,6 +139,10 @@ typedef struct _vss_signal_t {
     // Set to "" if not specified.
     //
     const char* actuator;
+
+    // User Data element that can be used to
+    // connect the signal to application-managed structures.
+    void* user_data;
 } vss_signal_t;
 
 
@@ -459,7 +463,7 @@ def emit_signal(signal_name, vspec_data):
     else:
         parent = "&vss_signal[{}]".format(vspec_data['_parent_index_'])
 
-    return f'    {{ {index}, {parent}, (const vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}" }},\n'
+    return f'    {{ {index}, {parent}, (const vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}", (void*) 0 }},\n'
 
 
 
