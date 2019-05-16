@@ -25,4 +25,4 @@ ${HDR}: ../../vss_rel_${VSS_VERSION}.h
 	cp $^ ${HDR}
 
 clean:
-	rm ${HDR} ${OBJ} ${TARGET} *~
+	rm -f ${HDR} ${OBJ} ${TARGET} *~
