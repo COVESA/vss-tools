@@ -22,9 +22,8 @@ import json
 vss_hdr_template = """
 //
 // Auto generated code by vspec2c.py
-// See github.com/GENIVI/vehicle_signal_specification for details/
+// See github.com/GENIVI/vehicle_signal_specification for details.
 //
-
 #include <stdint.h>
 #include <float.h>
 #include <errno.h>
@@ -40,6 +39,8 @@ typedef enum _vss_data_type_e {
     VSS_BOOLEAN = 8,
     VSS_STRING = 9,
     VSS_STREAM = 10,
+
+    // Usd for VSS_BRANCH and VSS_RBRANCH etnries
     VSS_NA = 11,
 } vss_data_type_e;
 
@@ -52,39 +53,129 @@ typedef enum _vss_element_type_e {
     VSS_ELEMENT = 5,
 } vss_element_type_e;
 
+// A single signal.
+// The vss_signal[] array hosts all the signals from the specification.
+// The array is pre-populated and initialized at build time, meaning
+// that it can be accessed directly from a program without any
+// further initialization.
+//
 typedef struct _vss_signal_t {
-    int index;
-    struct _vss_signal_t* parent;
-    struct _vss_signal_t** children; // Null terminated array of children pointers.
-    const char *name;
-    const char *uuid;
-    vss_element_type_e element_type;
-    vss_data_type_e data_type;
-    const char *unit_type;
+    // Unique index for a signal. Based on the signal's position
+    // in the array.
+    //
+    const int index;
 
-    union  {
+    // Pointer to parent signal. Null if this is root signal
+    //
+    const struct _vss_signal_t const* parent;
+
+    // Pointer to null-termianted array of all children.
+    // Traverse using children[index].
+    // If there are no children, then children[0] == 0
+    //
+    const struct _vss_signal_t const* const* children;
+
+    // Name of this signal or branch.
+    // Use vss_get_signal_path() to get complete path to a signal.
+    // Always set.
+    //
+    const char const *name;
+
+    // UUID of signal or branch.
+    // Always set.
+    //
+    const char const *uuid;
+
+    // Element type of signal
+    // Use this to determine if this is a signal or a branch.
+    //
+    const vss_element_type_e element_type;
+
+    // Data type of signal.
+    // Will be set to VSS_NA if this is a branch.
+    //
+    const vss_data_type_e data_type;
+
+    // Unit type of signal.
+    // Set to "" if not definedf.
+    //
+    const char *const unit_type;
+
+    // Minimum allowed value for a signal.
+    // Use min_val.d if signal.data_type is VSS_FLOAT or VSS_DOUBLE.
+    // Use min_val.i if signal.data_type is one of the integer types.
+    //
+    const union  {
         int64_t i;
         double d;
     } min_val;
 
-    union {
+    // Maximum allowed value for a signal.
+    // Use max_val.d if signal.data_type is VSS_FLOAT or VSS_DOUBLE.
+    // Use max_val.i if signal.data_type is one of the integer types.
+    //
+    const union {
         int64_t i;
         double d;
     } max_val;
 
-    const char *description;
-    const char **enum_values;
-    const char *sensor;
-    const char *actuator;
+    // Signal description.
+    // Set to "" if not specified.
+    //
+    const char const* description;
+
+    // Pointer to null-termianted array of values that signal can have
+    // Traverse using enum_values[index].
+    // If there are no enumerated values specifed, then enum_values[0] == 0
+    //
+    const char const* const* enum_values;
+
+    // Sensor specification of signal.
+    // Set to "" if not specified.
+    //
+    const char const* sensor;
+
+    // Actuator specification of signal.
+    // Set to "" if not specified.
+    //
+    const char const* actuator;
 } vss_signal_t;
 
 
 // Return a signal struct pointer based on signal index.
-// Use index 0 to get root.
+//
+// The index of a signal is available in its 'index'
+// struct member and is guaranteed to have the same
+// signal - index mapping across all vspec2c-generated
+// code for a given signal specification.
+//
+// Use index 0 to get root signal ("Vehicle")
+//
+// The returned signal can have its members inspected (but not modified).
+//
+// The 'children' member will always be a null terminated array
+// of vsd_signal_t pointers that can be traversed by accessing
+// sig->children[index] untila null pointer is encountered.
+// If there are no children sig->children[0] will be null.
+//
+// The 'enum_values' member will likewise be a null terminated
+// array of char pointers with the enum values.
+// If there are no enum values sig->enum_values[0] will be null.
+//
+// If the index argument is less than zero or greater to or equal
+// than the size of the index array.
+//
 extern vss_signal_t* vss_find_signal_by_index(int index);
 
+// Locate a signal by its path.
+// Path is in the format "Branch.Branch.[...].Signal.
+// If
 extern int vss_find_signal_by_path(char* path,
-                                   vss_signal_t** result);
+                                   vss_signal_t const** result);
+
+const char* vss_element_type_string(vss_element_type_e elem_type);
+
+const char* vss_data_type_string(vss_data_type_e data_type);
 
 // Populate the full path name to the given signal.
 // The name will be stored in 'result'.
@@ -92,13 +183,26 @@ extern int vss_find_signal_by_path(char* path,
 // The copied name will always be null terminated.
 // 'result' is returned.
 // In case of error, an empty string is copiec into result.
-extern char* vss_get_signal_path(vss_signal_t* signal, char* result, int result_max_len);
+extern char* vss_get_signal_path(vss_signal_t* signal,
+                                 char* result,
+                                 int result_max_len);
 
 extern vss_signal_t vss_signal[];
 
+// The number of signals in vss_signal array.
+#define VSS_SIGNAL_COUNT (sizeof(vss_signal) / sizeof(vss_signal[0]))
+
+// A unique hash generated across all signals' combined
+// UUID values.
+// This signature can be used by two networked systems to
+// verify that they are both using the same signal
+// specification version.
+//
 #define VSS_SHA256_SIGNATURE_TEXT ":VSS_HASH_TEXT:"
 #define VSS_SHA256_SIGNATURE_BINARY ":VSS_HASH_BINARY:"
 
+// Tag to denote that a signal's min_value or max_value has
+// not been specified.
 #define VSS_LIMIT_UNDEFINED INT64_MIN
 
 :MACRO_DEFINITION_BLOCK:
@@ -120,6 +224,40 @@ vss_signal_t vss_signal[] = {
 :VSS_SIGNAL_ARRAY:
 };
 
+
+const char* vss_element_type_string(vss_element_type_e elem_type)
+{
+    switch(elem_type) {
+    case VSS_ATTRIBUTE: return "attribute";
+    case VSS_BRANCH: return "branch";
+    case VSS_SENSOR: return "sensor";
+    case VSS_ACTUATOR: return "actuator";
+    case VSS_RBRANCH: return "rbranch";
+    case VSS_ELEMENT: return "element";
+    default: return "*unknown*";
+    }
+}
+
+const char* vss_data_type_string(vss_data_type_e data_type)
+{
+    switch(data_type) {
+    case VSS_INT8: return "INT8";
+    case VSS_UINT8: return "UINT8";
+    case VSS_INT16: return "INT16";
+    case VSS_UINT16: return "uint16";
+    case VSS_INT32: return "int32";
+    case VSS_UINT32: return "uint32";
+    case VSS_DOUBLE: return "double";
+    case VSS_FLOAT: return "float";
+    case VSS_BOOLEAN: return "boolean";
+    case VSS_STRING: return "string";
+    case VSS_STREAM: return "stream";
+    case VSS_NA: return "na";
+    default: return "*unknown*";
+    }
+}
+
+
 vss_signal_t* vss_find_signal_by_index(int index)
 {
     if (index < 0 || index >= sizeof(vss_signal) / sizeof(vss_signal[0]))
@@ -129,9 +267,9 @@ vss_signal_t* vss_find_signal_by_index(int index)
 }
 
 int vss_find_signal_by_path(char* path,
-                            vss_signal_t** result)
+                            vss_signal_t const** result)
 {
-    vss_signal_t* cur_signal = &vss_signal[0]; // Start at root.
+    vss_signal_t const* cur_signal = &vss_signal[0]; // Start at root.
     char *path_separator = 0;
     vss_signal_t* loc_res = 0;
 
@@ -298,7 +436,7 @@ def emit_signal(signal_name, vspec_data):
 
     children = '{ '
     if 'children' in vspec_data:
-        for k,v in vspec_data['children'].items():
+        for k, v in sorted(vspec_data['children'].items(), key=lambda item: item[0]):
             children += '&vss_signal[{}], '.format(v['_index_'])
 
     children += ' 0 }'
@@ -322,7 +460,7 @@ def emit_signal(signal_name, vspec_data):
     else:
         parent = "&vss_signal[{}]".format(vspec_data['_parent_index_'])
 
-    return f'    {{ {index}, {parent}, (vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}" }},\n'
+    return f'    {{ {index}, {parent}, (const vss_signal_t const*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}" }},\n'
 
 
 
@@ -332,14 +470,14 @@ def emit_signal(signal_name, vspec_data):
 # This is used to calculate a unique signature for the entire spec.
 #
 def generate_hash(vspec_data, sha256hash):
-    for k,v in vspec_data.items():
+    for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
         sha256hash.update(v['uuid'].encode("utf-8"))
         if (v['type'] == 'branch'):
             generate_hash(v['children'], sha256hash)
 
 
 def add_signal_index(vspec_data,  index = 0, parent_index = -1):
-    for k,v in vspec_data.items():
+    for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
         v['_index_'] = index;
         index += 1
         v['_parent_index_'] = parent_index;
@@ -350,7 +488,7 @@ def add_signal_index(vspec_data,  index = 0, parent_index = -1):
     return index
 
 def add_signal_path(vspec_data, parent_signal = ""):
-    for k, v in vspec_data.items():
+    for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
         if (len(parent_signal) > 0):
             signal_path = parent_signal + "_" + k
         else:
@@ -373,8 +511,7 @@ def generate_binary_sha(sha256_hex):
 
 def generate_source(vspec_data):
     sig_decl = ''
-    for k,v in vspec_data.items():
-
+    for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
         sig_decl += emit_signal(k, v)
 
         if (v['type'] == 'branch'):
@@ -385,7 +522,7 @@ def generate_source(vspec_data):
 
 def generate_header(vspec_data):
     macro = ''
-    for k,v in vspec_data.items():
+    for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
         macro += '#define VSS_{}() vss_find_signal_by_index({})\n'.format(v['_signal_path_'],v['_index_'])
         if (v['type'] == 'branch'):
             macro += generate_header(v['children'])

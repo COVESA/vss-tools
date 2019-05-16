@@ -5,56 +5,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const char* elem_type_str(vss_element_type_e elem_type)
-{
-    switch(elem_type) {
-    case VSS_ATTRIBUTE: return "attribute";
-    case VSS_BRANCH: return "branch";
-    case VSS_SENSOR: return "sensor";
-    case VSS_ACTUATOR: return "actuator";
-    case VSS_RBRANCH: return "rbranch";
-    case VSS_ELEMENT: return "element";
-    default: return "*unknown*";
-    }
-}
-
-const char* data_type_str(vss_data_type_e data_type)
-{
-    switch(data_type) {
-    case VSS_INT8: return "INT8";
-    case VSS_UINT8: return "UINT8";
-    case VSS_INT16: return "INT16";
-    case VSS_UINT16: return "uint16";
-    case VSS_INT32: return "int32";
-    case VSS_UINT32: return "uint32";
-    case VSS_DOUBLE: return "double";
-    case VSS_FLOAT: return "float";
-    case VSS_BOOLEAN: return "boolean";
-    case VSS_STRING: return "string";
-    case VSS_STREAM: return "stream";
-    case VSS_NA: return "na";
-    default: return "*unknown*";
-    }
-}
-
-void dump_signal(vss_signal_t* sig, int indent)
+// Recursively print out sig and all its children.
+void print_signal(const vss_signal_t const* sig, int indent)
 {
     printf("%*sName:        %s\n", indent, "", sig->name);
+    printf("%*sUUID: %s\n", indent, "", sig->uuid);
     printf("%*sDescription: %s\n", indent, "", sig->description);
-    printf("%*sType:        %s\n", indent, "", elem_type_str(sig->element_type));
-    if (sig->element_type != VSS_BRANCH)
-        printf("%*sData Type:   %s\n", indent, "", data_type_str(sig->data_type));
+    printf("%*sType:        %s\n", indent, "", vss_element_type_string(sig->element_type));
 
+    // Print data type if this is not a branch
+    if (sig->element_type != VSS_BRANCH)
+        printf("%*sData Type:   %s\n", indent, "", vss_data_type_string(sig->data_type));
+
+    // Print sensor type, if defined
     if (sig->sensor[0] != 0)
         printf("%*ssensor:      %s\n", indent, "", sig->sensor);
 
+    // Print actuator type, if defined
     if (sig->actuator[0] != 0)
         printf("%*sactuator:    %s\n", indent, "", sig->actuator);
 
-    printf("%*sUUID: %s\n", indent, "", sig->uuid);
 
     // Check if we have a define min_val
-    if (sig->min_val.i != INT64_MIN) {
+    if (sig->min_val.i != VSS_LIMIT_UNDEFINED) {
         // Print out the right union member
         if (sig->data_type == VSS_FLOAT ||
             sig->data_type == VSS_DOUBLE)
@@ -64,7 +37,7 @@ void dump_signal(vss_signal_t* sig, int indent)
     }
 
     // Check if we have a define max_val
-    if (sig->max_val.i != INT64_MIN) {
+    if (sig->max_val.i != VSS_LIMIT_UNDEFINED) {
         // Print out the right union member
         if (sig->data_type == VSS_FLOAT ||
             sig->data_type == VSS_DOUBLE)
@@ -74,6 +47,8 @@ void dump_signal(vss_signal_t* sig, int indent)
     }
 
 
+    // If we have an array of allowed enumeration values,
+    // print them out.
     if (sig->enum_values[0] != 0) {
         int ind = 0;
         printf("%*senum:        ", indent, "");
@@ -81,14 +56,16 @@ void dump_signal(vss_signal_t* sig, int indent)
             printf("%s ", sig->enum_values[ind]);
             ind++;
         }
+        puts("");
     }
 
-    // Dump the kids.
+    // Recursively print out the children with
+    // the right indentation.
     if (sig->element_type == VSS_BRANCH) {
         int ind = 0;
-        printf("%*schildren:", indent, "");
+        printf("%*schildren:" ,indent, "");
         while(sig->children[ind]) {
-            dump_signal(sig->children[ind], indent + 2);
+            print_signal(sig->children[ind], indent + 2);
             ind++;
         }
         printf("%*s---\n\n", indent, "");
@@ -98,9 +75,12 @@ void dump_signal(vss_signal_t* sig, int indent)
 
 int main(int argc, char* argv[])
 {
-    vss_signal_t* sig = 0;
-    dump_signal(&vss_signal[0], 0);
+    vss_signal_t const* sig = 0;
     int res = 0;
+
+    vss_signal_t ss;
+    // Dump the entire tree, starting with the root.
+    print_signal(&vss_signal[0], 0);
 
     // Grab
     puts("Retrieving Vehicle.VehicleIdentification.VIN by its path");
@@ -108,7 +88,7 @@ int main(int argc, char* argv[])
         perror("vss_find_signal_by_path(\"Vehicle.VehicleIdentification.VIN\")");
         exit(255);
     }
-    dump_signal(sig, 0);
+    print_signal(sig, 0);
 
     puts("\n\nRetrieving Vehicle.Body.Mirrors.Left.Heating.Status by its macro.");
     sig = VSS_Vehicle_Body_Mirrors_Left_Heating_Status();
@@ -118,6 +98,6 @@ int main(int argc, char* argv[])
         exit(255);
     }
 
-    dump_signal(sig, 0);
+    print_signal(sig, 0);
 
 }
