@@ -14,8 +14,8 @@ import sys
 import os
 import vspec
 import getopt
-import pprint
-import fileinput
+import hashlib
+import json
 #
 # C Header file template code.
 #
@@ -27,8 +27,8 @@ vss_hdr_template = """
 
 #include <stdint.h>
 #include <float.h>
-
-typedef enum _vss_signal_type_e {
+#include <errno.h>
+typedef enum _vss_data_type_e {
     VSS_INT8 = 0,
     VSS_UINT8 = 1,
     VSS_INT16 = 2,
@@ -41,7 +41,7 @@ typedef enum _vss_signal_type_e {
     VSS_STRING = 9,
     VSS_STREAM = 10,
     VSS_NA = 11,
-} vss_signal_type_e;
+} vss_data_type_e;
 
 typedef enum _vss_element_type_e {
     VSS_ATTRIBUTE = 0,
@@ -54,11 +54,12 @@ typedef enum _vss_element_type_e {
 
 typedef struct _vss_signal_t {
     int index;
-    int parent_index;
+    struct _vss_signal_t* parent;
+    struct _vss_signal_t** children; // Null terminated array of children pointers.
     const char *name;
     const char *uuid;
     vss_element_type_e element_type;
-    vss_signal_type_e data_type;
+    vss_data_type_e data_type;
     const char *unit_type;
 
     union  {
@@ -79,13 +80,11 @@ typedef struct _vss_signal_t {
 
 
 // Return a signal struct pointer based on signal index.
-extern vss_signal_t* vss_signal_by_index(int index);
+// Use index 0 to get root.
+extern vss_signal_t* vss_find_signal_by_index(int index);
 
-// Return a signal struct pointer based on full signal path
-extern vss_signal_t* vss_signal_by_name(char* path);
-
-// Return the parent of a signal. Return 0 if signal is root.
-extern vss_signal_t* vss_get_parent(vss_signal_t* signal);
+extern int vss_find_signal_by_path(char* path,
+                                   vss_signal_t** result);
 
 // Populate the full path name to the given signal.
 // The name will be stored in 'result'.
@@ -93,9 +92,14 @@ extern vss_signal_t* vss_get_parent(vss_signal_t* signal);
 // The copied name will always be null terminated.
 // 'result' is returned.
 // In case of error, an empty string is copiec into result.
-char* vss_get_signal_path(vss_signal_t* sig, char* result, int result_max_len);
+extern char* vss_get_signal_path(vss_signal_t* signal, char* result, int result_max_len);
 
 extern vss_signal_t vss_signal[];
+
+#define VSS_SHA256_SIGNATURE_TEXT ":VSS_HASH_TEXT:"
+#define VSS_SHA256_SIGNATURE_BINARY ":VSS_HASH_BINARY:"
+
+#define VSS_LIMIT_UNDEFINED INT64_MIN
 
 :MACRO_DEFINITION_BLOCK:
 """
@@ -108,24 +112,95 @@ vss_src_template = """
 // Auto generated code by vspec2c.py
 // See github.com/GENIVI/vehicle_signal_specification for details/
 //
-
+#include <string.h>
+#include <stdio.h>
 #include ":HEADER_FILE_NAME:"
-
-vss_signal_t* vss_signal_by_index(int index)
-{
-}
-
-vss_signal_t* vss_signal_by_name(char* path)
-{
-}
-
-vss_signal_t* vss_get_parent(vss_signal_t* signal)
-{
-}
 
 vss_signal_t vss_signal[] = {
 :VSS_SIGNAL_ARRAY:
 };
+
+vss_signal_t* vss_find_signal_by_index(int index)
+{
+    if (index < 0 || index >= sizeof(vss_signal) / sizeof(vss_signal[0]))
+        return 0;
+
+    return &vss_signal[index];
+}
+
+int vss_find_signal_by_path(char* path,
+                            vss_signal_t** result)
+{
+    vss_signal_t* cur_signal = &vss_signal[0]; // Start at root.
+    char *path_separator = 0;
+    vss_signal_t* loc_res = 0;
+
+    if (!path || !result)
+        return EINVAL;
+
+    // Ensure that first element in root matches
+    path_separator = strchr(path, '.');
+
+    // If we found a path component separator, nil it out and
+    // move to the next char after the separator
+    // If no separator is found, path_separator == NULL, allowing
+    // us to detect end of path
+    if (strncmp(cur_signal->name, path, path_separator?path_separator-path:strlen(path))) {
+        printf("Root signal mismatch between %s and %*s\\n",
+               cur_signal->name,
+               (int)(path_separator?path_separator-path:strlen(path)), path);
+        return ENOENT;
+    }
+
+    if (path_separator)
+        path_separator++;
+
+    path = path_separator;
+
+    while(path) {
+        int ind = 0;
+        path_separator = strchr(path, '.');
+        int path_len = path_separator?path_separator-path:strlen(path);
+
+        // We have to go deeper into the tree. Is our current
+        // signal a branch that we can traverse into?
+        if (cur_signal->element_type != VSS_BRANCH) {
+            printf ("signal %*s is not a branch under %s. ENODIR\\n",
+                     path_len, path, cur_signal->name);
+            return ENOTDIR;
+        }
+        loc_res = 0;
+        // Step through all children and check for a path componment match.
+
+        while(cur_signal->children[ind]) {
+            if (!strncmp(path, cur_signal->children[ind]->name, path_len) &&
+                strlen(cur_signal->children[ind]->name) == path_len)
+              break;
+              ind++;
+        }
+        if (!cur_signal->children[ind]) {
+            printf ("Child %*s not found under %s. ENOENT\\n",
+                     path_len, path, cur_signal->name);
+
+            return ENOENT;
+        }
+        cur_signal = cur_signal->children[ind];
+
+        // If we found a path component separator, nil it out and
+        // move to the next char after the separator
+        // If no separator is found, path_separator == NULL, allowing
+        // us to detect end of path
+        if (path_separator)
+            path_separator++;
+
+        path = path_separator;
+    }
+
+    *result = cur_signal;
+
+    return 0;
+}
+
 """
 
 def usage():
@@ -183,13 +258,13 @@ def emit_signal(signal_name, vspec_data):
 
     data_type = 'VSS_NA'
     unit = ''
-    min = 'INT64_MIN' # not defined.
-    max = 'INT64_MIN' # not defined.
+    min = 'VSS_LIMIT_UNDEFINED' # not defined.
+    max = 'VSS_LIMIT_UNDEFINED' # not defined.
     desc = ''
     enum = '{ 0 }'
     sensor = ''
     actuator = ''
-
+    children = '{ 0 }'
 
     if 'datatype' in vspec_data:
         try:
@@ -221,11 +296,19 @@ def emit_signal(signal_name, vspec_data):
     if 'description' in vspec_data:
         desc = vspec_data['description']
 
+    children = '{ '
+    if 'children' in vspec_data:
+        for k,v in vspec_data['children'].items():
+            children += '&vss_signal[{}], '.format(v['_index_'])
+
+    children += ' 0 }'
+
+
+    enum = '{ '
     if 'enum' in vspec_data:
-        enum = '{'
         for enum_elem in vspec_data['enum']:
             enum += '"{}", '.format(enum_elem)
-        enum += '}'
+    enum += ' 0 }'
 
     if 'sensor' in vspec_data:
         sensor = vspec_data['sensor']
@@ -234,9 +317,25 @@ def emit_signal(signal_name, vspec_data):
     if 'actuator' in vspec_data:
         actuator = vspec_data['actuator']
 
-    return f'    {{ {index}, {parent_index}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}" }},\n'
+    if parent_index == -1:
+        parent = "0"
+    else:
+        parent = "&vss_signal[{}]".format(vspec_data['_parent_index_'])
+
+    return f'    {{ {index}, {parent}, (vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}" }},\n'
 
 
+
+#
+# Return a blob of self's and all childrens' uuid value
+#
+# This is used to calculate a unique signature for the entire spec.
+#
+def generate_hash(vspec_data, sha256hash):
+    for k,v in vspec_data.items():
+        sha256hash.update(v['uuid'].encode("utf-8"))
+        if (v['type'] == 'branch'):
+            generate_hash(v['children'], sha256hash)
 
 
 def add_signal_index(vspec_data,  index = 0, parent_index = -1):
@@ -262,6 +361,16 @@ def add_signal_path(vspec_data, parent_signal = ""):
         if (v['type'] == 'branch'):
             add_signal_path(v['children'], signal_path)
 
+
+def generate_binary_sha(sha256_hex):
+    res = ''
+    while len(sha256_hex) > 0:
+        hex_byte = sha256_hex[0:1].zfill(2)
+        sha256_hex = sha256_hex[2:]
+        res += '\\0x{}'.format(hex_byte)
+
+    return res
+
 def generate_source(vspec_data):
     sig_decl = ''
     for k,v in vspec_data.items():
@@ -277,7 +386,7 @@ def generate_source(vspec_data):
 def generate_header(vspec_data):
     macro = ''
     for k,v in vspec_data.items():
-        macro += '#define VSS_{}() vss_get_signal_by_index({})\n'.format(v['_signal_path_'],v['_index_'])
+        macro += '#define VSS_{}() vss_find_signal_by_index({})\n'.format(v['_signal_path_'],v['_index_'])
         if (v['type'] == 'branch'):
             macro += generate_header(v['children'])
 
@@ -315,15 +424,21 @@ if __name__ == "__main__":
         print("Error: {}".format(e))
         exit(255)
 
-
-
     add_signal_index(tree)
     add_signal_path(tree)
 
+    # Generate a hash
+    sha256hash = hashlib.sha256()
+    generate_hash(tree, sha256hash)
+
     # Generate header file
+
     macro = generate_header(tree)
     with open (args[1], "w") as hdr_out:
-        hdr_out.write(vss_hdr_template.replace(':MACRO_DEFINITION_BLOCK:', macro))
+        hdr_out.write(vss_hdr_template.
+                      replace(':MACRO_DEFINITION_BLOCK:', macro).
+                      replace(':VSS_HASH_TEXT:', sha256hash.hexdigest()).
+                      replace(':VSS_HASH_BINARY:', generate_binary_sha(sha256hash.hexdigest())))
 
     # Generate source file
     sig_decl = generate_source(tree)
