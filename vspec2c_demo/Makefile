@@ -6,7 +6,7 @@
 
 #VSS_VERSION=$(cat ../../VERSION)
 VSS_VERSION=2.0.0-alpha+005
-CFLAGS=-DVSS_VERSION=\"${VSS_VERSION}\" -ggdb
+CFLAGS=-DVSS_VERSION=\"${VSS_VERSION}\" -ggdb -Wall
 TARGET=demo
 OBJ=demo.o ../../vss_rel_${VSS_VERSION}.o
 HDR=vss.h # Copied in from the master header so that the c

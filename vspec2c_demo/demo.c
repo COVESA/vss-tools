@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 // Recursively print out sig and all its children.
-void print_signal(const vss_signal_t const* sig, int indent)
+void print_signal(const vss_signal_t * sig, int indent)
 {
     printf("%*sName:        %s\n", indent, "", sig->name);
     printf("%*sUUID: %s\n", indent, "", sig->uuid);
@@ -81,7 +81,6 @@ int main(int argc, char* argv[])
     vss_signal_t const* sig = 0;
     int res = 0;
 
-    vss_signal_t ss;
     // Dump the entire tree, starting with the root.
     print_signal(&vss_signal[0], 0);
 

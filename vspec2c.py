@@ -67,24 +67,24 @@ typedef struct _vss_signal_t {
 
     // Pointer to parent signal. Null if this is root signal
     //
-    const struct _vss_signal_t const* parent;
+    const struct _vss_signal_t* parent;
 
     // Pointer to null-termianted array of all children.
     // Traverse using children[index].
     // If there are no children, then children[0] == 0
     //
-    const struct _vss_signal_t const* const* children;
+    const struct _vss_signal_t** children;
 
     // Name of this signal or branch.
     // Use vss_get_signal_path() to get complete path to a signal.
     // Always set.
     //
-    const char const *name;
+    const char *name;
 
     // UUID of signal or branch.
     // Always set.
     //
-    const char const *uuid;
+    const char *uuid;
 
     // Element type of signal
     // Use this to determine if this is a signal or a branch.
@@ -122,23 +122,23 @@ typedef struct _vss_signal_t {
     // Signal description.
     // Set to "" if not specified.
     //
-    const char const* description;
+    const char* description;
 
     // Pointer to null-termianted array of values that signal can have
     // Traverse using enum_values[index].
     // If there are no enumerated values specifed, then enum_values[0] == 0
     //
-    const char const* const* enum_values;
+    const char* const* enum_values;
 
     // Sensor specification of signal.
     // Set to "" if not specified.
     //
-    const char const* sensor;
+    const char* sensor;
 
     // Actuator specification of signal.
     // Set to "" if not specified.
     //
-    const char const* actuator;
+    const char* actuator;
 } vss_signal_t;
 
 
@@ -271,7 +271,6 @@ int vss_find_signal_by_path(char* path,
 {
     vss_signal_t const* cur_signal = &vss_signal[0]; // Start at root.
     char *path_separator = 0;
-    vss_signal_t* loc_res = 0;
 
     if (!path || !result)
         return EINVAL;
@@ -307,14 +306,14 @@ int vss_find_signal_by_path(char* path,
                      path_len, path, cur_signal->name);
             return ENOTDIR;
         }
-        loc_res = 0;
-        // Step through all children and check for a path componment match.
 
+        // Step through all children and check for a path componment match.
         while(cur_signal->children[ind]) {
             if (!strncmp(path, cur_signal->children[ind]->name, path_len) &&
                 strlen(cur_signal->children[ind]->name) == path_len)
-              break;
-              ind++;
+                break;
+
+            ind++;
         }
         if (!cur_signal->children[ind]) {
             printf ("Child %*s not found under %s. ENOENT\\n",
@@ -460,7 +459,7 @@ def emit_signal(signal_name, vspec_data):
     else:
         parent = "&vss_signal[{}]".format(vspec_data['_parent_index_'])
 
-    return f'    {{ {index}, {parent}, (const vss_signal_t const*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}" }},\n'
+    return f'    {{ {index}, {parent}, (const vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}" }},\n'
 
 
 
