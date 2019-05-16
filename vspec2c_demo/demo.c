@@ -67,6 +67,9 @@ void print_signal(const vss_signal_t const* sig, int indent)
         while(sig->children[ind]) {
             print_signal(sig->children[ind], indent + 2);
             ind++;
+            if (sig->children[ind])
+                puts("");
+
         }
         printf("%*s---\n\n", indent, "");
     }
