@@ -73,7 +73,7 @@ typedef struct _vss_signal_t {
     // Traverse using children[index].
     // If there are no children, then children[0] == 0
     //
-    const struct _vss_signal_t** children;
+    struct _vss_signal_t** children;
 
     // Name of this signal or branch.
     // Use vss_get_signal_path() to get complete path to a signal.
@@ -175,7 +175,7 @@ extern vss_signal_t* vss_get_signal_by_index(int index);
 // Path is in the format "Branch.Branch.[...].Signal.
 // If
 extern int vss_get_signal_by_path(char* path,
-                                   vss_signal_t const** result);
+                                   vss_signal_t ** result);
 
 const char* vss_element_type_string(vss_element_type_e elem_type);
 
@@ -262,7 +262,7 @@ const char* vss_data_type_string(vss_data_type_e data_type)
     }
 }
 
-extern const int vss_get_signal_count(void)
+int vss_get_signal_count(void)
 {
    return (int) (sizeof(vss_signal) / sizeof(vss_signal[0]));
 }
@@ -283,9 +283,9 @@ vss_signal_t* vss_get_signal_by_index(int index)
 }
 
 int vss_get_signal_by_path(char* path,
-                            vss_signal_t const** result)
+                            vss_signal_t ** result)
 {
-    vss_signal_t const* cur_signal = &vss_signal[0]; // Start at root.
+    vss_signal_t * cur_signal = &vss_signal[0]; // Start at root.
     char *path_separator = 0;
 
     if (!path || !result)
@@ -475,7 +475,7 @@ def emit_signal(signal_name, vspec_data):
     else:
         parent = "&vss_signal[{}]".format(vspec_data['_parent_index_'])
 
-    return f'    {{ {index}, {parent}, (const vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}", (void*) 0 }},\n'
+    return f'    {{ {index}, {parent}, (vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}", (void*) 0 }},\n'
 
 
 

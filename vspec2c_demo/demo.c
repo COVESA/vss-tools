@@ -78,7 +78,7 @@ void print_signal(const vss_signal_t * sig, int indent)
 
 int main(int argc, char* argv[])
 {
-    vss_signal_t const* sig = 0;
+    vss_signal_t * sig = 0;
     int res = 0;
 
     // Dump the entire tree, starting with the root.
