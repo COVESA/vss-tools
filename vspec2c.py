@@ -67,7 +67,7 @@ typedef struct _vss_signal_t {
 
     // Pointer to parent signal. Null if this is root signal
     //
-    const struct _vss_signal_t* parent;
+    struct _vss_signal_t* parent;
 
     // Pointer to null-termianted array of all children.
     // Traverse using children[index].
