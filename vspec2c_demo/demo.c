@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
     // Grab
     puts("Retrieving Vehicle.VehicleIdentification.VIN by its path");
-    if ((res = vss_find_signal_by_path("Vehicle.VehicleIdentification.VIN", &sig))) {
+    if ((res = vss_get_signal_by_path("Vehicle.VehicleIdentification.VIN", &sig))) {
         perror("vss_find_signal_by_path(\"Vehicle.VehicleIdentification.VIN\")");
         exit(255);
     }

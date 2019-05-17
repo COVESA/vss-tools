@@ -169,12 +169,12 @@ typedef struct _vss_signal_t {
 // If the index argument is less than zero or greater to or equal
 // than the size of the index array.
 //
-extern vss_signal_t* vss_find_signal_by_index(int index);
+extern vss_signal_t* vss_get_signal_by_index(int index);
 
 // Locate a signal by its path.
 // Path is in the format "Branch.Branch.[...].Signal.
 // If
-extern int vss_find_signal_by_path(char* path,
+extern int vss_get_signal_by_path(char* path,
                                    vss_signal_t const** result);
 
 const char* vss_element_type_string(vss_element_type_e elem_type);
@@ -191,19 +191,20 @@ extern char* vss_get_signal_path(vss_signal_t* signal,
                                  char* result,
                                  int result_max_len);
 
-extern vss_signal_t vss_signal[];
-
-// The number of signals in vss_signal array.
-#define VSS_SIGNAL_COUNT (sizeof(vss_signal) / sizeof(vss_signal[0]))
-
 // A unique hash generated across all signals' combined
 // UUID values.
 // This signature can be used by two networked systems to
 // verify that they are both using the same signal
 // specification version.
 //
-#define VSS_SHA256_SIGNATURE_TEXT ":VSS_HASH_TEXT:"
-#define VSS_SHA256_SIGNATURE_BINARY ":VSS_HASH_BINARY:"
+extern const char* vss_get_sha256_signature(void);
+
+// The number of signals in vss_signal array.
+// The max value for vss_get_signal_by_index() is
+// the return value of this function - 1.
+extern const int vss_get_signal_count(void);
+
+extern vss_signal_t vss_signal[];
 
 // Tag to denote that a signal's min_value or max_value has
 // not been specified.
@@ -261,8 +262,19 @@ const char* vss_data_type_string(vss_data_type_e data_type)
     }
 }
 
+extern const int vss_get_signal_count(void)
+{
+   return (int) (sizeof(vss_signal) / sizeof(vss_signal[0]));
+}
 
-vss_signal_t* vss_find_signal_by_index(int index)
+const char* vss_get_sha256_signature(void)
+{
+    return ":VSS_HASH_TEXT:";
+}
+
+
+
+vss_signal_t* vss_get_signal_by_index(int index)
 {
     if (index < 0 || index >= sizeof(vss_signal) / sizeof(vss_signal[0]))
         return 0;
@@ -270,7 +282,7 @@ vss_signal_t* vss_find_signal_by_index(int index)
     return &vss_signal[index];
 }
 
-int vss_find_signal_by_path(char* path,
+int vss_get_signal_by_path(char* path,
                             vss_signal_t const** result)
 {
     vss_signal_t const* cur_signal = &vss_signal[0]; // Start at root.
@@ -526,7 +538,7 @@ def generate_source(vspec_data):
 def generate_header(vspec_data):
     macro = ''
     for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
-        macro += '#define VSS_{}() vss_find_signal_by_index({})\n'.format(v['_signal_path_'],v['_index_'])
+        macro += '#define VSS_{}() vss_get_signal_by_index({})\n'.format(v['_signal_path_'],v['_index_'])
         if (v['type'] == 'branch'):
             macro += generate_header(v['children'])
 
@@ -576,13 +588,12 @@ if __name__ == "__main__":
     macro = generate_header(tree)
     with open (args[1], "w") as hdr_out:
         hdr_out.write(vss_hdr_template.
-                      replace(':MACRO_DEFINITION_BLOCK:', macro).
-                      replace(':VSS_HASH_TEXT:', sha256hash.hexdigest()).
-                      replace(':VSS_HASH_BINARY:', generate_binary_sha(sha256hash.hexdigest())))
+                      replace(':MACRO_DEFINITION_BLOCK:', macro))
 
     # Generate source file
     sig_decl = generate_source(tree)
     with open (args[2], "w") as src_out:
         src_out.write(vss_src_template.
                       replace(':VSS_SIGNAL_ARRAY:', sig_decl).
-                      replace(':HEADER_FILE_NAME:', os.path.basename(args[1])))
+                      replace(':HEADER_FILE_NAME:', os.path.basename(args[1])).
+                      replace(':VSS_HASH_TEXT:', sha256hash.hexdigest()))
