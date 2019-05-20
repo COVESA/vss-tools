@@ -41,6 +41,8 @@ typedef struct node_t {
     int nameLen;
     char* name;
     nodeTypes_t type;
+    int uuidLen;
+    char* uuid;
     int descrLen;
     char* description;
     int children;
@@ -70,6 +72,8 @@ typedef struct element_node_t { // only fixed part defined here
     int nameLen;
     char* name;
     nodeTypes_t type;   // must be element
+    int uuidLen;
+    char* uuid;
     int descrLen;
     char* description;
     int children;      // must be zero
@@ -82,6 +86,8 @@ typedef struct rbranch_node_t {
     int nameLen;
     char* name;
     nodeTypes_t type;   // must be rbranch
+    int uuidLen;
+    char* uuid;
     int descrLen;
     char* description;
     int children;
@@ -96,6 +102,7 @@ typedef struct rbranch_node_t {
 typedef struct {
     int nameLen;
     nodeTypes_t type;
+    int uuidLen;
     int descrLen;
     int children;
 } common_node_data_t;

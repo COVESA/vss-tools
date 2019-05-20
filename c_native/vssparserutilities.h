@@ -34,6 +34,7 @@ int getNumOfChildren(long nodeHandle);
 nodeTypes_t getType(long nodeHandle);
 nodeTypes_t getDatatype(long nodeHandle);
 char* getName(long nodeHandle);
+char* getUUID(long nodeHandle);
 char* getDescr(long nodeHandle);
 int getNumOfEnumElements(long nodeHandle);
 char* getEnumElement(long nodeHandle, int index);

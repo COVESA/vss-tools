@@ -86,22 +86,24 @@ char* extractEnumElement(char* enums, int index, char* buf) {
     return buf;
 }
 
-void writeCommonPart(char* name, char* type, char* descr, int children) {
+void writeCommonPart(char* name, char* type, char* uuid, char* descr, int children) {
     common_node_data_t commonData;
 
     commonData.nameLen  = strlen(name);
     commonData.type = stringToTypeDef(type);
+    commonData.uuidLen  = strlen(uuid);
     commonData.descrLen = strlen(descr);
     commonData.children = children;
 
     fwrite(&commonData, sizeof(common_node_data_t), 1, treeFp);
     fwrite(name, sizeof(char)*commonData.nameLen, 1, treeFp);
+    fwrite(uuid, sizeof(char)*commonData.uuidLen, 1, treeFp);
     fwrite(descr, sizeof(char)*commonData.descrLen, 1, treeFp);
 }
 
-void writeNodeData(char* name, char* type, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
-printf("Name=%s, Type=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, children, descr, datatype, min, max, unit, enums, function);
-    writeCommonPart(name, type, descr, children);
+void writeNodeData(char* name, char* type, char* uuid, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
+printf("Name=%s, Type=%s, uuid=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, uuid, children, descr, datatype, min, max, unit, enums, function);
+    writeCommonPart(name, type, uuid, descr, children);
     int dtype = -1;
     if (strlen(datatype) != 0)
         dtype = stringToTypeDef(datatype);
@@ -142,13 +144,13 @@ printf("Name=%s, Type=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Uni
         fwrite(function, sizeof(char)*functionLen, 1, treeFp);
 }
 
-void createNativeCnode(char* name, char* type, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
-    treeFp = fopen("../vss_rel_1.0.cnative", "a");
+void createNativeCnode(char*fname, char* name, char* type, char* uuid, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
+    treeFp = fopen(fname, "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeNodeData(name, type, descr, children, datatype, min, max, unit, enums, function);
+    writeNodeData(name, type, uuid, descr, children, datatype, min, max, unit, enums, function);
     fclose(treeFp);
 }
 
@@ -165,9 +167,9 @@ printf("Rbranch:propName=%s, propDescr=%s, propType=%s, propFormat=%s, propUnit=
     fwrite(&propertyDefinition, sizeof(propertyDefinition_t), 1, treeFp);
 }
 
-void writeRbranchNodeData(char* name, char* type, char* descr, int children, char* childType, int numOfProperties, char** propNames, char** propDescrs, char** propTypes, char** propFormats, char** propUnits, char** propValues) {
+void writeRbranchNodeData(char* name, char* type, char* uuid, char* descr, int children, char* childType, int numOfProperties, char** propNames, char** propDescrs, char** propTypes, char** propFormats, char** propUnits, char** propValues) {
 printf("Rbranch:Name=%s, Type=%s, Descr=%s, children=%d, childType=%s, numOfProps=%d\n", name, type, descr, children, childType, numOfProperties);
-    writeCommonPart(name, type, descr, children);
+    writeCommonPart(name, type, uuid, descr, children);
     int childTypeLen = strlen(childType);
     fwrite(&childTypeLen, sizeof(int), 1, treeFp);
     fwrite(&numOfProperties, sizeof(int), 1, treeFp);
@@ -275,9 +277,9 @@ void populateAndWriteObject(int objectType, int numOfElems, char** memberName, c
     }// switch
 }
 
-void writeElementNodeData(char* name, char* type, char* descr, int children, int numOfElems, char** memberName, char** memberValue) {
+void writeElementNodeData(char* name, char* type, char* uuid, char* descr, int children, int numOfElems, char** memberName, char** memberValue) {
 printf("Element:Name=%s, Type=%s, Descr=%s, children=%d, numOfElems=%d\n", name, type, descr, children, numOfElems);
-    writeCommonPart(name, type, descr, children);
+    writeCommonPart(name, type, uuid, descr, children);
     for (int i = 0 ; i < numOfElems ; i++) {
         printf("%s:%s\n", memberName[i], memberValue[i]);
     }
@@ -292,23 +294,23 @@ int convertObjectType(char* childType) {
     return -1;
 }
 
-void createNativeCnodeRbranch(char* name, char* type, char* descr, int children, char* childType, int numOfProperties, char** propNames, char** propDescrs, char** propTypes, char** propFormats, char** propUnits, char** propValues) {
-    treeFp = fopen("../vss_rel_1.0.cnative", "a");
+void createNativeCnodeRbranch(char*fname, char* name, char* type, char* uuid, char* descr, int children, char* childType, int numOfProperties, char** propNames, char** propDescrs, char** propTypes, char** propFormats, char** propUnits, char** propValues) {
+    treeFp = fopen(fname, "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeRbranchNodeData(name, type, descr, children, childType, numOfProperties, propNames, propDescrs, propTypes, propFormats, propUnits, propValues);
+    writeRbranchNodeData(name, type, uuid, descr, children, childType, numOfProperties, propNames, propDescrs, propTypes, propFormats, propUnits, propValues);
     objectType = convertObjectType(childType);
     fclose(treeFp);
 }
 
-void createNativeCnodeElement(char* name, char* type, char* descr, int children, int numOfElems, char** memberName, char** memberValue) {
-    treeFp = fopen("../vss_rel_1.0.cnative", "a");
+void createNativeCnodeElement(char*fname, char* name, char* type, char* uuid, char* descr, int children, int numOfElems, char** memberName, char** memberValue) {
+    treeFp = fopen(fname, "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeElementNodeData(name, type, descr, children, numOfElems, memberName, memberValue);
+    writeElementNodeData(name, type, uuid, descr, children, numOfElems, memberName, memberValue);
     fclose(treeFp);
 }

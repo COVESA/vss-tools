@@ -43,25 +43,33 @@ void printTreeDepth() {
     printf("Max depth of VSS tree = %d\n", maxTreeDepth);
 }
 
-void readCommonPart(common_node_data_t* commonData, char** name, char** descr) {
+void readCommonPart(common_node_data_t* commonData, char** name, char**uuid, char** descr) {
     fread(commonData, sizeof(common_node_data_t), 1, treeFp);
     *name = (char*) malloc(sizeof(char)*(commonData->nameLen+1));
+    *uuid = (char*) malloc(sizeof(char)*(commonData->uuidLen+1));
     *descr = (char*) malloc(sizeof(char)*(commonData->descrLen+1));
     fread(*name, sizeof(char)*commonData->nameLen, 1, treeFp);
     (*name)[commonData->nameLen] = '\0';
 printf("Name = %s\n", *name);
+    fread(*uuid, sizeof(char)*commonData->uuidLen, 1, treeFp);
+    (*name)[commonData->uuidLen] = '\0';
+printf("UUID = %s\n", *uuid);
     fread(*descr, sizeof(char)*commonData->descrLen, 1, treeFp);
     *((*descr)+commonData->descrLen) = '\0';
 printf("Description = %s\n", *descr);
 printf("Children = %d\n", commonData->children);
 }
 
-void copyData(node_t* node, common_node_data_t* commonData, char* name, char* descr) {
+void copyData(node_t* node, common_node_data_t* commonData, char* name, char* uuid, char* descr) {
     node->nameLen = commonData->nameLen;
     node->name = (char*) malloc(sizeof(char)*(node->nameLen+1));
     strncpy(node->name, name, commonData->nameLen);
     node->name[commonData->nameLen] = '\0';
     node->type = commonData->type;
+    node->uuidLen = commonData->uuidLen;
+    node->uuid = (char*) malloc(sizeof(char)*(node->uuidLen+1));
+    strncpy(node->uuid, uuid, commonData->uuidLen);
+    node->uuid[commonData->uuidLen] = '\0';
     node->descrLen = commonData->descrLen;
     node->description = (char*) malloc(sizeof(char)*(node->descrLen+1));
     strncpy(node->description, descr, commonData->descrLen);
@@ -125,8 +133,9 @@ if (parentPtr != NULL)
     }
     updateTreeDepth(1);
     char* name;
+    char* uuid;
     char* descr;
-    readCommonPart(common_data, &name, &descr);
+    readCommonPart(common_data, &name, &uuid, &descr);
     node_t* node = NULL;
 printf("Type=%d\n",common_data->type);
     switch (common_data->type) {
@@ -134,7 +143,7 @@ printf("Type=%d\n",common_data->type);
         {
             rbranch_node_t* node2 = (rbranch_node_t*) malloc(sizeof(rbranch_node_t));
             node2->parent = parentPtr;
-            copyData((node_t*)node2, common_data, name, descr);
+            copyData((node_t*)node2, common_data, name, uuid, descr);
             if (common_data->children > 0)
                 node2->child = (element_node_t**) malloc(sizeof(element_node_t**)*common_data->children);
             fread(&(node2->childTypeLen), sizeof(int), 1, treeFp);
@@ -150,7 +159,7 @@ printf("Type=%d\n",common_data->type);
         {
             element_node_t* node2 = (element_node_t*) malloc(sizeof(element_node_t));
             node2->parent = parentPtr;
-            copyData((node_t*)node2, common_data, name, descr);
+            copyData((node_t*)node2, common_data, name, uuid, descr);
             objectTypes_t objectType;
             fread(&objectType, sizeof(int), 1, treeFp);
             int objectSize = getObjectSize(objectType);
@@ -167,7 +176,7 @@ printf("Type=%d\n",common_data->type);
         {
             node_t* node2 = (node_t*) malloc(sizeof(node_t));
             node2->parent = parentPtr;
-            copyData((node_t*)node2, common_data, name, descr);
+            copyData((node_t*)node2, common_data, name, uuid, descr);
             if (node2->children > 0)
                 node2->child = (node_t**) malloc(sizeof(node_t**)*node2->children);
             fread(&(node2->datatype), sizeof(int), 1, treeFp);
@@ -204,6 +213,7 @@ if (node2->functionLen > 0)
     } //switch
     free(common_data);
     free(name);
+    free(uuid);
     free(descr);
 printf("node->children = %d\n", node->children);
     int childNo = 0;
@@ -462,11 +472,13 @@ void writeCommonPart(struct node_t* node) {
     common_node_data_t* commonData = (common_node_data_t*)malloc(sizeof(common_node_data_t));
     commonData->nameLen = node->nameLen;
     commonData->type = node->type;
+    commonData->uuidLen = node->uuidLen;
     commonData->descrLen = node->descrLen;
     commonData->children = node->children;
     fwrite(commonData, sizeof(common_node_data_t), 1, treeFp);
     free(commonData);
     fwrite(node->name, sizeof(char)*node->nameLen, 1, treeFp);
+    fwrite(node->uuid, sizeof(char)*node->uuidLen, 1, treeFp);
     fwrite(node->description, sizeof(char)*node->descrLen, 1, treeFp);
 }
 
@@ -585,6 +597,10 @@ nodeTypes_t getDatatype(long nodeHandle) {
 
 char* getName(long nodeHandle) {
     return ((node_t*)((intptr_t)nodeHandle))->name;
+}
+
+char* getUUID(long nodeHandle) {
+    return ((node_t*)((intptr_t)nodeHandle))->uuid;
 }
 
 char* getDescr(long nodeHandle) {

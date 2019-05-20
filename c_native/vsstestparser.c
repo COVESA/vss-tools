@@ -18,7 +18,7 @@
 
 long currentNode;
 long rootNode;
-char vspecfile[] = "../../vss_rel_1.0.cnative";
+char* vspecfile;
 
 char* getTypeName(nodeTypes_t type) {
     switch (type) { 
@@ -64,7 +64,7 @@ char* getTypeName(nodeTypes_t type) {
 }
 
 void showNodeData(long currentNode, int currentChild) {
-        printf("\nNode name = %s, Node type = %s, Node children = %d\nNode description = %s\n", getName(currentNode), getTypeName(getType(currentNode)), getNumOfChildren(currentNode), getDescr(currentNode));
+        printf("\nNode name = %s, Node type = %s, Node uuid = %s, Node children = %d\nNode description = %s\n", getName(currentNode), getTypeName(getType(currentNode)), getUUID(currentNode), getNumOfChildren(currentNode), getDescr(currentNode));
         if (getNumOfChildren(currentNode) > 0)
             printf("Node child[%d]=%s\n", currentChild, getName(getChild(currentNode, currentChild)));
         for (int i = 0 ; i < getNumOfEnumElements(currentNode) ; i++)
@@ -90,8 +90,9 @@ void showNodeData(long currentNode, int currentChild) {
         }
 }
 
-int main(void) {
+int main(int argc, char** argv) {
 
+    vspecfile = argv[1];
     rootNode = VSSReadTree(vspecfile);
 
     char traverse[10];
