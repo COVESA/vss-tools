@@ -16,15 +16,16 @@ import json
 import getopt
 
 def usage():
-    print "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file franca_file"
-    print "  -I include_dir              Add include directory to search for included vspec"
-    print "                              files. Can be used multiple timees."
-    print
-    print "  -i prefix:id_file:start_id  Add include directory to search for included vspec"
-    print "                              files. Can be used multiple timees."
-    print
-    print " vspec_file                   The vehicle specification file to parse."
-    print " franca_file                  The file to output the Franca IDL spec to."
+    print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file franca_file")
+    print("  -I include_dir       Add include directory to search for included vspec")
+    print("                       files. Can be used multiple timees.")
+    print()
+    print("  -i prefix:uuid_file  File to use for storing generated UUIDs for signals with")
+    print("                       a given path prefix. Can be used multiple times to store")
+    print("                       UUIDs for signal sub-trees in different files.")
+    print()
+    print(" vspec_file            The vehicle specification file to parse.")
+    print(" franca_file           The file to output the Franca IDL spec to.")
     sys.exit(255)
 
 
@@ -42,9 +43,9 @@ def traverse_tree(tree, outf, prefix_arr, is_first_element):
 
 
     # Traverse all elemnts in tree.
-    for key, val in tree.iteritems():
+    for key, val in tree.items():
         # Is this a branch?
-        if val.has_key("children"):
+        if "children" in val:
             # Yes. Recurse
             traverse_tree(val['children'], outf, prefix_arr + [ key ], is_first_element)
             continue
@@ -61,28 +62,28 @@ def traverse_tree(tree, outf, prefix_arr, is_first_element):
            val['type'],
            val['description']))
 
-        if val.has_key("datatype"):
+        if "datatype" in val:
             outf.write("    datatype: {}\n".format(val["datatype"]))
 
-        if val.has_key("id"):
-            outf.write("    id: {}\n".format(val["id"]))
+        if "uuid" in val:
+            outf.write("    uuid: {}\n".format(val["uuid"]))
 
-        if val.has_key("min"):
+        if "min" in val:
             outf.write("    min: {}\n".format(val["min"]))
 
-        if val.has_key("max"):
+        if "max" in val:
             outf.write("    max: {}\n".format(val["max"]))
 
-        if val.has_key("unit"):
+        if "unit" in val:
             outf.write("    unit: {}\n".format(val["unit"]))
 
-        if val.has_key("enum"):
+        if "enum" in val:
             outf.write("    enum: {}\n".format(val["enum"]))
 
-        if val.has_key("sensor"):
+        if "sensor" in val:
             outf.write("    sensor: {}\n".format(val["sensor"]))
 
-        if val.has_key("actuator"):
+        if "actuator" in val:
             outf.write("    actuator: {}\n".format(val["actuator"]))
 
         outf.write("}\n")
@@ -105,12 +106,12 @@ if __name__ == "__main__":
             vss_version = a
         elif o == "-i":
             id_spec = a.split(":")
-            if len(id_spec) != 3:
-                print "ERROR: -i needs a 'prefix:id_file:start_id' argument."
+            if len(id_spec) != 2:
+                print("ERROR: -i needs a 'prefix:uuid_file' argument.")
                 usage()
 
-            [prefix, file_name, start_id] = id_spec
-            vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
+            [prefix, file_name] = id_spec
+            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 
@@ -121,7 +122,7 @@ if __name__ == "__main__":
     try:
         tree = vspec.load(args[0], include_dirs)
     except vspec.VSpecError as e:
-        print "Error: {}".format(e)
+        print("Error: {}".format(e))
         exit(255)
 
     franca_out.write(

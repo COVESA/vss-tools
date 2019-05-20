@@ -7,9 +7,9 @@
 # All files and artifacts in this repository are licensed under the
 # provisions of the license provided by the LICENSE file in this repository.
 #
-# 
+#
 # Convert vspec file to a platform native format.
-#  
+#
 
 import sys
 import os
@@ -19,15 +19,16 @@ import getopt
 import ctypes
 
 def usage():
-    print ("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file franca_file")
-    print ("  -I include_dir              Add include directory to search for included vspec")
-    print ("                              files. Can be used multiple timees.")
+    print(("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file franca_file"))
+    print ("  -I include_dir       Add include directory to search for included vspec")
+    print ("                       files. Can be used multiple timees.")
     print ("\n")
-    print ("  -i prefix:id_file:start_id  Add include directory to search for included vspec")
-    print ("                              files. Can be used multiple timees.")
+    print ("  -i prefix:uuid_file  File to use for storing generated UUIDs for signals with")
+    print ("                       a given path prefix. Can be used multiple times to store")
+    print ("                       UUIDs for signal sub-trees in different files.")
     print ("\n")
-    print (" vspec_file                   The vehicle specification file to parse.")
-    print (" franca_file                  The file to output the Franca IDL spec to.")
+    print (" vspec_file            The vehicle specification file to parse.")
+    print (" franca_file           The file to output the Franca IDL spec to.")
     sys.exit(255)
 
 import os.path
@@ -147,23 +148,23 @@ def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodedescription, chil
     nodeunit = ""
     nodeenum = ""
     nodefunction = ""
-    
-    if val.has_key("datatype"):
+
+    if "datatype" in val:
         nodedatatype = str(val["datatype"])
 
-    if val.has_key("min"):
+    if "min" in val:
         nodemin = str(val["min"])
 
-    if val.has_key("max"):
+    if "max" in val:
         nodemax = str(val["max"])
 
-    if val.has_key("unit"):
+    if "unit" in val:
         nodeunit = val["unit"]
 
-    if val.has_key("enum"):
+    if "enum" in val:
         nodeenum = enumString(val["enum"])
 
-    if val.has_key("function"):
+    if "function" in val:
         nodefunction = val["function"]
 
     b_nodedatatype = nodedatatype.encode('utf-8')
@@ -185,29 +186,29 @@ def create_node_rbranch(key, val, b_nodename, b_nodetype, b_nodedescription, chi
     propFormats = {}
     propUnits = {}
     propValues = {}
-    
-    if val.has_key("child-type"):
+
+    if "child-type" in val:
         childType = val["child-type"]
 
-    if val.has_key("child-properties"):
+    if "child-properties" in val:
         childProperties = val["child-properties"]
 
-    if val.has_key("prop-name"):
+    if "prop-name" in val:
         propNames = val["prop-name"]
 
-    if val.has_key("prop-description"):
+    if "prop-description" in val:
         propDescriptions = val["prop-description"]
 
-    if val.has_key("prop-type"):
+    if "prop-type" in val:
         propTypes = val["prop-type"]
 
-    if val.has_key("prop-format"):
+    if "prop-format" in val:
         propFormats = val["prop-format"]
 
-    if val.has_key("prop-unit"):
+    if "prop-unit" in val:
         propUnits = val["prop-unit"]
 
-    if val.has_key("prop-value"):
+    if "prop-value" in val:
         propValues = val["prop-value"]
 
 
@@ -237,7 +238,7 @@ def create_node_rbranch(key, val, b_nodename, b_nodetype, b_nodedescription, chi
     for elem in propValues:
         b_values.append(elem.encode('utf-8'))
 
-    createNativeCnodeRbranch(b_nodename, b_nodetype, b_nodedescription, children, b_childType, childProperties, b_names, b_descrs, b_types, b_formats, b_units, b_values) 
+    createNativeCnodeRbranch(b_nodename, b_nodetype, b_nodedescription, children, b_childType, childProperties, b_names, b_descrs, b_types, b_formats, b_units, b_values)
 
 
 def create_node_element(nodekey, val, b_nodename, b_nodetype, b_nodedescription, children):
@@ -248,8 +249,8 @@ def create_node_element(nodekey, val, b_nodename, b_nodetype, b_nodedescription,
     del val["description"]
 
     numOfElems = len(val)
-    
-    for key, value in val.items():
+
+    for key, value in list(val.items()):
         keys.append(key)
         values.append(str(value))
 
@@ -261,7 +262,7 @@ def create_node_element(nodekey, val, b_nodename, b_nodetype, b_nodedescription,
     for elem in values:
             b_values.append(elem.encode('utf-8'))
 
-    createNativeCnodeElement(b_nodename, b_nodetype, b_nodedescription, children, numOfElems, b_keys, b_values) 
+    createNativeCnodeElement(b_nodename, b_nodetype, b_nodedescription, children, numOfElems, b_keys, b_values)
 
 
 def create_node(key, val):
@@ -272,8 +273,8 @@ def create_node(key, val):
     nodedescription = val['description']
     b_nodedescription = nodedescription.encode('utf-8')
     children = 0
-    if val.has_key("children"):
-        children = len(val["children"].keys())
+    if "children" in val:
+        children = len(list(val["children"].keys()))
     if (nodetype != "rbranch") and (nodetype != "element"):
         create_node_legacy(key, val, b_nodename, b_nodetype, b_nodedescription, children)
     if (nodetype == "rbranch"):
@@ -281,22 +282,22 @@ def create_node(key, val):
     if (nodetype == "element"):
         create_node_element(key, val, b_nodename, b_nodetype, b_nodedescription, children)
 #        create_node_element(key, val, b_nodename, b_nodetype, b_nodedescription, children)
-        
+
 
 def traverse_tree(tree):
     # Traverse all elemnts in tree.
-    for key, val in tree.iteritems():
+    for key, val in tree.items():
         # Is this a branch?
-        if val.has_key("children"):
+        if "children" in val:
             # Yes. Recurse
             create_node(key, val)
             traverse_tree(val['children'])
             continue
-        create_node(key, val)            
+        create_node(key, val)
 
 
 if __name__ == "__main__":
-    # 
+    #
     # Check that we have the correct arguments
     #
     opts, args= getopt.getopt(sys.argv[1:], "I:i:v:")
@@ -311,12 +312,12 @@ if __name__ == "__main__":
             vss_version = a
         elif o == "-i":
             id_spec = a.split(":")
-            if len(id_spec) != 3:
-                print ("ERROR: -i needs a 'prefix:id_file:start_id' argument.")
+            if len(id_spec) != 2:
+                print ("ERROR: -i needs a 'prefix:id_file' argument.")
                 usage()
 
-            [prefix, file_name, start_id] = id_spec
-            vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
+            [prefix, file_name] = id_spec
+            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 
@@ -329,11 +330,9 @@ if __name__ == "__main__":
     try:
         tree = vspec.load(args[0], include_dirs)
     except vspec.VSpecError as e:
-        print ("Error: {}".format(e))
+        print(("Error: {}".format(e)))
         exit(255)
 
-    #createRootNode()    
+    #createRootNode()
 
     traverse_tree(tree)
-
-

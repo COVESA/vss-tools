@@ -6,9 +6,9 @@
 # All files and artifacts in this repository are licensed under the
 # provisions of the license provided by the LICENSE file in this repository.
 #
-# 
+#
 # Concert vspec file to JSON
-#  
+#
 
 import sys
 import vspec
@@ -16,19 +16,20 @@ import json
 import getopt
 
 def usage():
-    print "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file json_file"
-    print "  -I include_dir              Add include directory to search for included vspec"
-    print "                              files. Can be used multiple timees."
-    print
-    print "  -i prefix:id_file:start_id  Add include directory to search for included vspec"
-    print "                              files. Can be used multiple timees."
-    print
-    print " vspec_file                   The vehicle specification file to parse."     
-    print " json_file                    The file to output the JSON objects to."     
+    print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file json_file")
+    print("  -I include_dir       Add include directory to search for included vspec")
+    print("                       files. Can be used multiple timees.")
+    print()
+    print("  -i prefix:uuid_file  File to use for storing generated UUIDs for signals with")
+    print("                       a given path prefix. Can be used multiple times to store")
+    print("                       UUIDs for signal sub-trees in different files.")
+    print()
+    print(" vspec_file            The vehicle specification file to parse.")
+    print(" json_file             The file to output the JSON objects to.")
     sys.exit(255)
 
 if __name__ == "__main__":
-    # 
+    #
     # Check that we have the correct arguments
     #
     opts, args= getopt.getopt(sys.argv[1:], "I:i:")
@@ -40,12 +41,12 @@ if __name__ == "__main__":
             include_dirs.append(a)
         elif o == "-i":
             id_spec = a.split(":")
-            if len(id_spec) != 3:
-                print "ERROR: -i needs a 'prefix:id_file:start_id' argument."
+            if len(id_spec) != 2:
+                print("ERROR: -i needs a 'prefix:id_file' argument.")
                 usage()
 
-            [prefix, file_name, start_id] = id_spec
-            vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
+            [prefix, file_name] = id_spec
+            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 
@@ -57,7 +58,7 @@ if __name__ == "__main__":
     try:
         tree = vspec.load(args[0], include_dirs)
     except vspec.VSpecError as e:
-        print "Error: {}".format(e)
+        print("Error: {}".format(e))
         exit(255)
 
     json.dump(tree, json_out, indent=2)

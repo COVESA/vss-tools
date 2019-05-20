@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 #
 #
@@ -17,23 +17,41 @@ import json
 import getopt
 import csv
 
+
 def usage():
-    print "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file csv_file"
-    print "  -I include_dir              Add include directory to search for included vspec"
-    print "                              files. Can be used multiple timees."
-    print
-    print "  -i prefix:id_file:start_id  Add include directory to search for included vspec"
-    print "                              files. Can be used multiple timees."
-    print
-    print " vspec_file                   The vehicle specification file to parse."
-    print " csv_file                    The file to output the CSV data to."
+    print ( \
+f"""
+Usage: {sys.argv[0]} [options] vspec_file csv_file
+
+  where [options] are:
+
+  -I include_dir       Add include directory to search for included vspec
+                       files. Can be used multiple timees.
+
+  -i prefix:uuid_file  "prefix" is an optional string that will be
+                       prepended to each signal name defined in the
+                       vspec file.
+
+                       "uuid_file" is the name of the file containing the
+                       static UUID values for the signals.  This file is
+                       read/write and will be updated if necessary.
+
+                       This option can be specified several times in
+                       to store the UUIDs of different parts of the
+                       signal tree in different files.
+
+  vspec_file           The vehicle specification file to parse.
+
+  csv_file             The file to output the CSV data to.
+""" )
     sys.exit(255)
 
+
 def format_data(json_data):
-    Id = '""'
+    Uuid = '""'
     Type = '""'
-    Unit = '""'
     DataType = '""'
+    Unit = '""'
     Min = '""'
     Max = '""'
     Desc = '""'
@@ -41,30 +59,31 @@ def format_data(json_data):
     Sensor = '""'
     Actuator = '""'
 
-    if (json_data.has_key('id')):
-        Id = '"' + str(json_data['id']) + '"'
-    if (json_data.has_key('type')):
+    if ('uuid' in json_data):
+        Uuid = '"' + str(json_data['uuid']) + '"'
+    if ('type' in json_data):
         Type = '"' + json_data['type'] + '"'
-    if (json_data.has_key('datatype')):
+    if ('datatype' in json_data):
         DataType = '"' + json_data['datatype'] + '"'
-    if (json_data.has_key('unit')):
+    if ('unit' in json_data):
         Unit = '"' + json_data['unit'] + '"'
-    if (json_data.has_key('min')):
+    if ('min' in json_data):
         Min = '"' + str(json_data['min']) + '"'
-    if (json_data.has_key('max')):
+    if ('max' in json_data):
         Max = '"' + str(json_data['max']) + '"'
-    if (json_data.has_key('description')):
+    if ('description' in json_data):
         Desc = '"' + json_data['description'] + '"'
-    if (json_data.has_key('enum')):
+    if ('enum' in json_data):
         Enum = '"' + ' / '.join(json_data['enum']) + '"'
-    if (json_data.has_key('sensor')):
+    if ('sensor' in json_data):
         Sensor = '"' + str(json_data['sensor']) + '"'
-    if (json_data.has_key('actuator')):
+    if ('actuator' in json_data):
         Actuator = '"' + str(json_data['actuator']) + '"'
-    return Id + ","+ Type + ","+ DataType + ","+ Unit + ","+ Min + ","+ Max + ","+ Desc + ","+ Enum + ","+ Sensor + ","+ Actuator
+    return f"{Uuid},{Type},{DataType},{Unit},{Min},{Max},{Desc},{Enum},{Sensor},{Actuator}"
+
 
 def json2csv(json_data, file_out, parent_signal):
-    for k in json_data.keys():
+    for k in list(json_data.keys()):
         if (len(parent_signal) > 0):
             signal = parent_signal + "." + k
         else:
@@ -75,6 +94,7 @@ def json2csv(json_data, file_out, parent_signal):
             json2csv(json_data[k]['children'], file_out, signal)
         else:
             file_out.write(signal + ',' + format_data(json_data[k]) + '\n')
+
 
 if __name__ == "__main__":
     #
@@ -89,12 +109,12 @@ if __name__ == "__main__":
             include_dirs.append(a)
         elif o == "-i":
             id_spec = a.split(":")
-            if len(id_spec) != 3:
-                print "ERROR: -i needs a 'prefix:id_file:start_id' argument."
+            if len(id_spec) != 2:
+                print("ERROR: -i needs a 'prefix:id_file' argument.")
                 usage()
 
-            [prefix, file_name, start_id] = id_spec
-            vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
+            [prefix, file_name] = id_spec
+            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 
@@ -106,9 +126,17 @@ if __name__ == "__main__":
     try:
         tree = vspec.load(args[0], include_dirs)
     except vspec.VSpecError as e:
-        print "Error: {}".format(e)
+        print ( f"Error: {e}" )
         exit(255)
 
+    #
+    #   Write out the column name line.
+    #
+    csv_out.write ( "Signal,Id,Type,DataType,Unit,Min,Max,Desc,Enum,Sensor,Actuator\n" )
+
+    #
+    #   Go process all of the data records in the input JSON file.
+    #
     json2csv(tree, csv_out, "")
     csv_out.write("\n")
     csv_out.close()
