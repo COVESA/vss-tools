@@ -26,7 +26,7 @@ which can be used by an application to ensure that the correct vehicle
 signal specification is being used.
 
 
-## Building
+## Building the VSS C library
 To build the library providing the `vss_...` functions used to inspect the signal specification, run:
 
     make
@@ -34,7 +34,7 @@ To build the library providing the `vss_...` functions used to inspect the signa
 The build process generates `libvss.so` and `libvss.a`, to be linked
 by the appliction.
 
-## Installing
+## Installing the VSS C library
 To install the built vss library and header files under /usr/local, run:
 
     make install
