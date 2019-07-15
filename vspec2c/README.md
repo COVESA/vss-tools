@@ -13,6 +13,51 @@ to access signals.
 The two header files are included by the application, which is then
 linked with the vehicle signal specification built in this repo.
 
-Please see schematics for details.
+Please see the schematics below for details.
 
-[Schematics](schematics.png)
+![Schematics](schematics.png)
+
+
+The example `signal_spec.h` file contains an array of `vss_signal_t`
+structs, each element defining one signal.
+
+There is also a sha256 signature for the specification as a whole,
+which can be used by an application to ensure that the correct vehicle
+signal specification is being used.
+
+
+## Building
+To build the library providing the `vss_...` functions used to inspect the signal specification, run:
+
+    make
+
+The build process generates `libvss.so` and `libvss.a`, to be linked
+by the appliction.
+
+## Installing
+To install the built vss library and header files under /usr/local, run:
+
+    make install
+
+You can specify an alternate destination directory through the
+`DESTDIR` environment variable:
+
+    DESTDIR=/usr make install
+
+## Building the vss_dump demo
+The demo can be built by changing into the example directory and run
+make:
+
+    cd example
+    make
+
+The `vspec2.py` is executed to read the spec file and generate the
+`signal_spec.h` and `signal_macro.h` files. Please see the top-level
+`README.md` file for this repo for details on spec files, id files,
+and other aspects of the signal specifictaion toolkit.
+
+## Running the demo
+The vss_dump demo, which prints out the entire vehicle signal spec on
+screen, can be run from the example directory via:
+
+    ./vss_dump

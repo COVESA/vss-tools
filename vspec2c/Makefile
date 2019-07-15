@@ -10,9 +10,9 @@ SO_TARGET=libvss.so
 LIB_TARGET=libvss.a
 OBJ=vehicle_signal_specification.o
 HDR=vehicle_signal_specification.h
-DEMO=example/vss_demo
+.PHONY=demo
 
-all: ${LIB_TARGET} ${SO_TARGET} ${DEMO}
+all: ${LIB_TARGET} ${SO_TARGET}
 
 ${SO_TARGET}: ${OBJ}
 	${CC} -shared ${CFLAGS} -o ${SO_TARGET} ${OBJ}
@@ -22,7 +22,7 @@ ${LIB_TARGET}: ${OBJ}
 
 ${OBJ}: ${HDR}
 
-${DEMO}:
+demo:
 	@$(MAKE) -C example
 
 install:  ${LIB_TARGET} ${SO_TARGET}
