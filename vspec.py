@@ -172,6 +172,13 @@ class SignalUUID_DB:
 # If successful, read context and return file
 #
 def search_and_read(file_name, include_paths):
+    # If absolute path, then ignore include paths
+    if file_name[0]=='/':
+        with open (file_name, "r") as fp:
+            text = fp.read()
+            fp.close()
+            return os.path.dirname(file_name), text
+
     for directory in include_paths:
         try:
             path = "{}/{}".format(directory, file_name)
@@ -183,7 +190,7 @@ def search_and_read(file_name, include_paths):
             pass
 
     # We failed, raise last exception we ran into.
-    raise VSpecError(file_name, 0, "File not found")
+    raise VSpecError(file_name, 0, "File error")
 
 
 def assign_signal_uuids(flat_model):
