@@ -236,7 +236,7 @@ if __name__ == "__main__":
     try:
         tree = vspec.load(args[0], include_dirs)
     except vspec.VSpecError as e:
-        print("Error: {}".format(e))
+        print("Error: {}".format(e.__str__()))
         exit(255)
 
     add_signal_index(tree)
