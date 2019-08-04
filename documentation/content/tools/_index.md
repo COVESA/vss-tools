@@ -13,7 +13,7 @@ target specification formats, such as JSON, FrancaIDL, etc.
 
 Fig 1 shows the schematics of the top-level process.
 
-![Signal tree](/images/multi_target.png)<br>
+![Signal tree](/vehicle_signal_specification/images/multi_target.png)<br>
 *Fig 1. Generating documents from specification*
 
 

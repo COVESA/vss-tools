@@ -10,7 +10,7 @@ machine understanding of data. It is important to focus on a specific domain to
 get common understanding and acceptance. The link between two or more domain
 taxonomies can be seen as second step.
 
-![Taxonomy](/introduction/images/taxonomies.png?classes=shadow&width=60pc)
+![Taxonomy](/vehicle_signal_specification/images/taxonomies.png?classes=shadow&width=60pc)
 
 ## Components of a domain taxonomy
 A domain taxonomy, like VSS, consists of three important components, which will be

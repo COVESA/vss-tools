@@ -13,7 +13,7 @@ The core signal specification can be extended with additional signals through th
 use of private branches, as is shown in Fig 3.
 
 
-![Signal Extension](/images/private_extensions.png)<br>
+![Signal Extension](/vehicle_signal_specification/images/private_extensions.png)<br>
 *Fig 3. Extended signals*
 
 In this case the core signal specification, ```vss_23.vspec``` is
@@ -25,7 +25,7 @@ Signals can, in a similar manner, be overridden and replaced with a new definiti
 as is shown in Fig 4.
 
 
-![Signal Extension](/images/signal_override.png)<br>
+![Signal Extension](/vehicle_signal_specification/images/signal_override.png)<br>
 *Fig 4. Overridden signals*
 
 In this case, the ```GearChangeMode``` signal provided by the core
@@ -45,7 +45,7 @@ is to be defined on a per-deployment (vehicle) basis.
 
 An example is given in Fig 5.
 
-![Attributes](/images/attributes.png)<br>
+![Attributes](/vehicle_signal_specification/images/attributes.png)<br>
 *Fig 5. Declaring and defining attributes*
 
 The ```Attributes.Engine.Displacement``` and ```Attributes.Chassis.Weight``` attributes

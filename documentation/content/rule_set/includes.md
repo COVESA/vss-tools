@@ -13,7 +13,7 @@ files.
 
 See Fig 6 for an example of such a tree.
 
-![Include directive](/images/include_directives.png)<br>
+![Include directive](/vehicle_signal_specification/images/include_directives.png)<br>
 *Fig 6. Include directives*
 
 
