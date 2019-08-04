@@ -1,0 +1,58 @@
+---
+title: "Sensors & Actuators"
+date: 2019-08-04T12:37:03+02:00
+draft: true
+weight: 3
+---
+A data entry defines a single signal and its members. A data
+entry example is given below:
+
+```YAML
+- Drivetrain.Transmission.Speed:
+  type: sensor
+  datatype: uint16
+  unit: km/h
+  min: 0
+  max: 300
+  description: The vehicle speed, as measured by the drivetrain.
+```
+
+* **```Drivetrain.Transmission.Speed```**<br>
+Defines the dot-notated signal name of the signal. Please note that
+all parental branches included in the name must be defined as well.
+
+* **```type```**<br>
+Defines the type of the node. This can be ```branch```, ```rbranch```
+,```sensor```, ```actuator```, ```stream``` or attribute.
+
+
+* **```datatype```**<br>
+The string value of the type specifies the scalar type of the signal
+value. See [data type](#data-type) chapter for a list of available types.
+
+* **```min``` [optional]**<br>
+The minimum value, within the interval of the given ```type```, that the
+signal can be assigned.<br>
+If omitted, the minimum value will be the "Min" value for the given type.<br>
+Cannot be specified if ```enum``` is specified for the same signal entry.
+
+* **```max``` [optional]**<br>
+The maximum value, within the interval of the given ```type```, that the
+signal can be assigned.<br>
+If omitted, the maximum value will be the "Max" value for the given type.<br>
+Cannot be specified if ```enum``` is specified for the same signal entry.
+
+* **```unit``` [optional]**<br>
+The unit of measurement that the signal has. See [Unit
+Type](#data-unit-type) chapter for a list of available unit types.<br> This
+cannot be specified if ```enum``` is specified as the signal type.
+
+* **```description```**<br>
+A description string to be included (when applicable) in the various
+specification files generated from this signal entry.
+
+* **```sensor```[optional]**<br>
+The sensing appliance used to produce the signal.
+
+* **```actuator```[optional]**<br>
+The actuating appliance consuming the signal.

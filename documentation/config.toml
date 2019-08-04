@@ -1,0 +1,9 @@
+baseURL = "https://danielwilms.github.io/vehicle_signal_specification/"
+languageCode = "en-us"
+title = "Vehicle Signal Specification"
+theme = "learn"
+publishDir = "../../docs"
+[params]
+  # Change default color scheme with a variant one. Can be "red", "blue", "green".
+  themeVariant = "green"
+  disableInlineCopyToClipBoard = true
