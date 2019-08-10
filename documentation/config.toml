@@ -7,3 +7,16 @@ publishDir = "../../docs"
   # Change default color scheme with a variant one. Can be "red", "blue", "green".
   themeVariant = "green"
   disableInlineCopyToClipBoard = true
+  editURL = "https://github.com/danielwilms/vehicle_signal_specification/edit/master/tools/documentation/content/"
+
+
+[[menu.shortcuts]]
+name = "<i class='fab fa-github'></i> Github repo"
+identifier = "ds"
+url = "https://github.com/genivi/vehicle_signal_specification"
+weight = 10
+
+[[menu.shortcuts]]
+name = "<i class='fas fa-newspaper'></i> News"
+url = "/news"
+weight = 11
