@@ -1,7 +1,6 @@
 ---
 title: "Attributes"
 date: 2019-08-04T12:37:31+02:00
-draft: true
 weight: 5
 ---
 

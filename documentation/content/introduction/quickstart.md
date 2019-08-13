@@ -2,10 +2,9 @@
 title: "Quickstart"
 date: 2019-07-31T15:22:34+02:00
 weight: 3
-draft: true
 ---
 
-A variant of the vehicle signal specification is checked in
+A serialization of the data definition of the vehicle signal specification is checked in
 as ```vss_$VERSION.json```, where ```$VERSION``` is the content of
 the ```VERSION``` file.
 

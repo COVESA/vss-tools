@@ -1,7 +1,7 @@
 ---
 title: "Resource Branch"
 date: 2019-08-04T13:10:15+02:00
-draft: true
+weight: 6
 ---
 
 A ```resource branch``` is an entity that can host only element nodes.

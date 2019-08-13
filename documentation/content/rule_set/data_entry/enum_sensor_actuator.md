@@ -1,13 +1,12 @@
 ---
 title: "Enumerated Sensors & Actuators"
 date: 2019-08-04T12:37:12+02:00
-draft: true
 weight: 4
 ---
 
 
 A data entry can optionally be enumerated, allowing it to be assigned a
-value from a specified set of values. An example of an enumerated signal
+value from a specified set of values. An example of an enumerated sensor
 is given below:
 
 

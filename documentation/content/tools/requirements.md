@@ -1,7 +1,6 @@
 ---
 title: "Requirements"
 date: 2019-08-04T13:18:17+02:00
-draft: true
 weight: 1
 ---
 

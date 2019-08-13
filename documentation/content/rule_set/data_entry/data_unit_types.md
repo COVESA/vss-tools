@@ -1,7 +1,6 @@
 ---
 title: "Data Unit Types"
 date: 2019-08-04T12:36:12+02:00
-draft: true
 weight: 2
 ---
 A signal can optionally specify a unit of measurement from the following set.

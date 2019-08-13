@@ -1,13 +1,12 @@
 ---
 title: "Usage"
 date: 2019-08-04T13:21:34+02:00
-draft: true
 weight: 2
 ---
 After installing the dependencies, as described in the
 [requirements](/tools/requirements), you can simply run:
 
-    make 
+    make
 
 The results will be stored in ```vss_$VERSION.[xxx]```,
 where ```$VERSION``` is the contents of the ```VERSION``` file and ```xxx``` is
@@ -23,3 +22,12 @@ installed output formats.  If only a single format is desired, specify it as
 an arguement.  For example, to generate only the json format, type:
 
     make json
+
+## Supported Serialization Formats:
+
+| Serialization | Command |
+| ------ | ----------- |
+| json | make json |
+| csv | make csv |
+| C | make cnative |
+| franca | make franca |

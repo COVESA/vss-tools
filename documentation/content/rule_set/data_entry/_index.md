@@ -1,7 +1,6 @@
 ---
 title: "Data Entry"
 date: 2019-08-04T11:11:30+02:00
-draft: true
 chapter: true
 weight: 2
 ---
@@ -16,5 +15,7 @@ As summary, besides [```branch```](/rule_set/branches) and ```rbranch``` type ca
 
 * **```attribute```**, which describes static read-only value.
 * **```sensor```**, which describes non-static read-only signal.
-* **```actuator```**, same as sensor plus the possibility of changing the value.
+* **```actuator```**, which describes a non-static read-write signal.
 * **```stream```**, data stream like video.
+
+Examples you'll find in the [sensor and actuator chapter](/vehicle_signal_specification/rule_set/data_entry/sensor_actuator).

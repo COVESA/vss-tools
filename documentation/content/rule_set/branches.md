@@ -1,7 +1,6 @@
 ---
 title: "Branch Entry"
 date: 2019-07-31T15:27:36+02:00
-draft: true
 weight: 1
 ---
 
@@ -11,7 +10,7 @@ signals.
 A branch entry example is given below:
 
 ```YAML
-- Body.Trunk:
+- Trunk:
   type: branch
   aggregate: true
   description: All signals related to the rear trunk
@@ -29,8 +28,7 @@ The value ```branch``` specifies that this is a branch entry (as
 opposed to a signal entry). This is the default, in case ```type``` is omitted.
 
 * **```aggregate``` [optional]**<br>
-Defines whether or not this branch is an aggregate. See
-[aggregate branch](#aggregate-branch) chapter for more information.<br>
+Defines whether or not this branch is an aggregate.
 If not defined, this defaults to ```false```.
 
 * **```description```**<br>

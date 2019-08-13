@@ -1,7 +1,6 @@
 ---
 title: "Data Types"
 date: 2019-08-04T11:11:48+02:00
-draft: true
 weight: 1
 ---
 Each [data entry](/data_entry/data_types) specifies a ```datatype``` from the following set

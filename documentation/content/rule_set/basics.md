@@ -1,11 +1,10 @@
 ---
 title: "Basic Rules"
 date: 2019-08-04T13:05:11+02:00
-draft: true
 weight: 1
 ---
 ## Specification format
-A signal specification is written as a flat YAML list, where each signal and
+A domain specification is written as a flat YAML list, where each signal and
 branch is a self-contained YAML list element.
 
 The YAML list is a single file, called a *vspec* file.
@@ -20,7 +19,7 @@ perspective, the include directive is just another comment.
 
 Tree nodes are addressed, left-to-right, from the root of the tree
 toward the node itself. Each element in the name is delimited with
-a period (".") .
+a period ("."). The element hops from the root to the leaf is called ```path```.
 
 For example, the dimming status of the rearview mirror in the cabin is addressed:
 
@@ -58,7 +57,7 @@ positions in the car, is dependent on the actual vehicle using the
 spec.
 
 ## PARENT NODES
-If a signal is defined, all parent branches included in its name must
+If a new leaf node is defined, all parent branches included in its name must
 be included as well, as shown below:
 
 ```

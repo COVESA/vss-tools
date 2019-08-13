@@ -1,7 +1,6 @@
 ---
 title: "Private Branch"
 date: 2019-08-04T12:46:30+02:00
-draft: true
 weight: 7
 ---
 The private branch offers a way to clearly separate OEM specific definitions
