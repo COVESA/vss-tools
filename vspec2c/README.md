@@ -24,7 +24,7 @@ structs, each element defining one signal.
 **NOTE**: `signal_spec.h` containing global definitions, should only be included by
 a single source file in a project. If it is included multiple times, the
 linker will failed with multiple defintions of `vss_signal` and other symbols.<br>
-`vss_macro.h` can be included by all source file that needs a macro reference to 
+`signak_macro.h` can be included by all source file that needs a macro reference to 
 specific signals
 
 
