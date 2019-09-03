@@ -262,7 +262,12 @@ if __name__ == "__main__":
         hdr_out.write("// github.com/GENIVI/vehicle_signal_specification/tree/master/tools/vspec2c\n")
         hdr_out.write("#include <vehicle_signal_specification.h>\n\n")
         hdr_out.write("// SHA256 hash of vehicle spec\n")
-        hdr_out.write("""const char vss_sha256_signature[] = "{}";""".format(sha256hash.hexdigest()))
+
+        hdr_out.write("const char* vss_get_sha256_signature(void)\n")
+        hdr_out.write("{\n")
+        hdr_out.write("""    return "{}";\n""".format(sha256hash.hexdigest()))
+        hdr_out.write("}\n\n")
+
         hdr_out.write("\n\n// VSS Signal Array\n")
         hdr_out.write("vss_signal_t vss_signal[] = {\n")
         hdr_out.write(generate_source(tree))

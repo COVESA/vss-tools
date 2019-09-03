@@ -15,6 +15,7 @@
 extern "C" {
 #endif
 
+
 typedef enum _vss_data_type_e {
     VSS_INT8 = 0,
     VSS_UINT8 = 1,
@@ -162,6 +163,7 @@ extern char* vss_get_signal_path(vss_signal_t* signal,
 // specification version.
 //
 extern const char* vss_get_sha256_signature(void);
+
 // The number of signals in vss_signal array.
 // The max value for vss_get_signal_by_index() is
 // the return value of this function - 1.

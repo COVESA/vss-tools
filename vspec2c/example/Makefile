@@ -36,7 +36,7 @@ ${GEN_HDR} ${GEN_HDR_MACRO}:
 
 install:  ${TARGET}
 	install -d ${DESTDIR}/lib;
-	install -m 0644 ${TARGET} ${DESTDIR}/bin;
+	install -m 0755 ${TARGET} ${DESTDIR}/bin;
 
 uninstall:
 	rm -f ${DESTDIR}/bin/${TARGET};

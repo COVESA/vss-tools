@@ -102,6 +102,9 @@ int main(int argc, char* argv[])
         exit(255);
     }
 
+
     print_signal(sig, 0);
 
+    printf("\n\nVSS spec UUID is: %s\n", vss_get_sha256_signature());
+    exit(0);
 }
