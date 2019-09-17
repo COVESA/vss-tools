@@ -21,7 +21,7 @@ GEN_HDR_MACRO=signal_macro.h
 # ldconfig or LD_LIBRARY_PATH
 #
 ${TARGET}: ${GEN_HDR} ${GEN_HDR_MACRO} ${OBJ}
-	gcc -o ${TARGET} ${OBJ} -static -L.. -lvss
+	${CC} -o ${TARGET} ${OBJ} -static -L.. -lvss
 
 #
 # Invoke vspec2c.py to translate spec/VehicleSignalSpecification.vspec to

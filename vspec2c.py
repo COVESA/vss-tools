@@ -71,8 +71,8 @@ def emit_signal(signal_name, vspec_data):
 
     data_type = 'VSS_NA'
     unit = ''
-    min = 'VSS_LIMIT_UNDEFINED' # not defined.
-    max = 'VSS_LIMIT_UNDEFINED' # not defined.
+    min = '{ .i = VSS_LIMIT_UNDEFINED }' # not defined.
+    max = '{ .i = VSS_LIMIT_UNDEFINED }' # not defined.
     desc = ''
     enum = '{ 0 }'
     sensor = ''
@@ -93,15 +93,19 @@ def emit_signal(signal_name, vspec_data):
         unit = vspec_data['unit']
 
     if 'min' in vspec_data:
-        if not elem_type in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32", "double", "float"]:
-            min = vspec_data['min']
+        if elem_type in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32"]:
+            min = "{ .i = {} }".format(vspec_data['min'])
+        elif elem_type in [ "double", "float"]:
+            min = "{ .d = {} }".format(vspec_data['min'])
         else:
             print("Signal {}: Ignoring specified min value for type {}".format(vspec_data['_signal_path_'], data_type))
 
 
     if 'max' in vspec_data:
-        if not elem_type in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32", "double", "float"]:
-            max = vspec_data['max']
+        if elem_type in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32"]:
+            max = "{ .i = {} }".format(vspec_data['max'])
+        elif elem_type in [ "double", "float"]:
+            max = "{ .d = {} }".format(vspec_data['max'])
         else:
             print("Signal {}: Ignoring specified max value for type {}".format(vspec_data['_signal_path_'], data_type))
 
