@@ -67,6 +67,10 @@ typedef struct _vss_signal_t {
     // Always set.
     //
     const char *uuid;
+    // Signature for signal or branch. For branches the signature
+    // also encompasses all children.
+    //
+    const char *signature;
     // Element type of signal
     // Use this to determine if this is a signal or a branch.
     //

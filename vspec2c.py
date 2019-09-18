@@ -63,6 +63,7 @@ def emit_signal(signal_name, vspec_data):
         index = vspec_data['_index_'];
         parent_index = vspec_data['_parent_index_'];
         uuid = vspec_data['uuid'];
+        signature = vspec_data['signature'];
         elem_type = element_map[vspec_data['type'].lower()];
     except KeyError as e:
         print("Missing in vspec element key: {}".format(e))
@@ -80,8 +81,9 @@ def emit_signal(signal_name, vspec_data):
     children = '{ 0 }'
 
     if 'datatype' in vspec_data:
+        lcase_datatype = vspec_data['datatype'].lower()
         try:
-            data_type = type_map[vspec_data['datatype'].lower()];
+            data_type = type_map[lcase_datatype];
         except KeyError as e:
             print("Illegal data type: {}".format(e))
             print("Signal: {}".format(vspec_data['_signal_path_']))
@@ -89,32 +91,33 @@ def emit_signal(signal_name, vspec_data):
             print("     float double string boolean stream")
             exit(255)
 
+        if 'min' in vspec_data:
+            if lcase_datatype in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32"]:
+                min = "{{ .i = {} }}".format(vspec_data['min'])
+            elif lcase_datatype in [ "double", "float"]:
+                min = "{{ .d = {} }}".format(vspec_data['min'])
+            else:
+                print("Signal {}: Ignoring specified min value for type {}".format(vspec_data['_signal_path_'], data_type))
+
+        if 'max' in vspec_data:
+            if lcase_datatype in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32"]:
+                max = "{{ .i = {} }}".format(vspec_data['max'])
+            elif lcase_datatype in [ "double", "float"]:
+                max = "{{ .d = {} }}".format(vspec_data['max'])
+            else:
+                print("Signal {}: Ignoring specified max value for type {}".format(vspec_data['_signal_path_'], data_type))
+
+
+
     if 'unit' in vspec_data:
         unit = vspec_data['unit']
-
-    if 'min' in vspec_data:
-        if elem_type in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32"]:
-            min = "{ .i = {} }".format(vspec_data['min'])
-        elif elem_type in [ "double", "float"]:
-            min = "{ .d = {} }".format(vspec_data['min'])
-        else:
-            print("Signal {}: Ignoring specified min value for type {}".format(vspec_data['_signal_path_'], data_type))
-
-
-    if 'max' in vspec_data:
-        if elem_type in [ "int8", "uint8", "int16", "uint16", "int32" , "uint32"]:
-            max = "{ .i = {} }".format(vspec_data['max'])
-        elif elem_type in [ "double", "float"]:
-            max = "{ .d = {} }".format(vspec_data['max'])
-        else:
-            print("Signal {}: Ignoring specified max value for type {}".format(vspec_data['_signal_path_'], data_type))
 
 
     if 'description' in vspec_data:
         desc = vspec_data['description']
 
     children = '{ '
-    if 'children' in vspec_data:
+    if 'children' in vspec_data and len(vspec_data['children']):
         for k, v in sorted(vspec_data['children'].items(), key=lambda item: item[0]):
             children += '&vss_signal[{}], '.format(v['_index_'])
 
@@ -139,20 +142,84 @@ def emit_signal(signal_name, vspec_data):
     else:
         parent = "&vss_signal[{}]".format(vspec_data['_parent_index_'])
 
-    return f'    {{ {index}, {parent}, (vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}", (void*) 0 }},\n'
-
+    return f'    {{ {index}, {parent}, (vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", "{signature}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}", (void*) 0 }},\n'
 
 
 #
-# Return a blob of self's and all childrens' uuid value
+# Put together a string with all relevant data for a signal and
+# upodate the provided sha256 with it.
 #
-# This is used to calculate a unique signature for the entire spec.
+def update_sha256(vspec_data, sha256hash):
+    sha256hash.update(vspec_data['uuid'].encode("utf-8"))
+    sha256hash.update(vspec_data['type'].encode("utf-8"))
+    if 'name' in vspec_data:
+        sha256hash.update(vspec_data['name'].encode("utf-8"))
+
+    if 'enum' in vspec_data:
+        for enum_elem in vspec_data['enum']:
+            sha256hash.update(enum_elem.encode("utf-8") )
+
+    if 'datatype' in vspec_data:
+        sha256hash.update(vspec_data['datatype'].encode("utf-8"))
+
+    if 'elem_type' in vspec_data:
+        sha256hash.update(vspec_data['elem_type'].encode("utf-8"))
+
+    if 'max' in vspec_data:
+        sha256hash.update("{}".format(vspec_data['max']).encode("utf-8"))
+
+    if 'min' in vspec_data:
+        sha256hash.update("{}".format(vspec_data['min']).encode("utf-8"))
+
+    return sha256hash
+
 #
-def generate_hash(vspec_data, sha256hash):
-    for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
-        sha256hash.update(v['uuid'].encode("utf-8"))
-        if (v['type'] == 'branch'):
-            generate_hash(v['children'], sha256hash)
+# Create a hash for self's and all children's uuid
+# and add it to vspec_data as signature
+#
+def add_signal_signature(name, vspec_data, sha256hash = None):
+    # If sha256hash is not set, then this is a root call.
+    if not sha256hash:
+        local_sha = hashlib.sha256()
+        store_signature = True
+    else:
+        local_sha = sha256hash
+        store_signature = False
+
+    # Bug in vspec.py: All elements seem to have 'type' == 'branch'
+    # and 'children' == {}, even if they are signals and not branches.
+    if 'children' in vspec_data and len(vspec_data['children']):
+        for k, v in sorted(vspec_data['children'].items(), key=lambda item: item[0]):
+            local_sha = add_signal_signature(k, v, local_sha)
+            # Recurse to children and add signatures to each of them
+            add_signal_signature(k, v)
+
+        local_sha.update(name.encode("utf-8"))
+        local_sha = update_sha256(vspec_data, local_sha)
+        if store_signature:
+            if 'signature' in vspec_data:
+                return None
+            vspec_data['signature'] = local_sha.hexdigest()
+            return None
+
+        return local_sha
+
+    local_sha.update(name.encode("utf-8"))
+    local_sha = update_sha256(vspec_data, local_sha)
+
+    # We are a part of a recursive call, return updated sha
+    if not store_signature:
+        return local_sha
+
+    # We are the top-level call to add_signal_signature()
+    # Update signature member and return None
+    if 'signature' in vspec_data:
+        return None
+
+    vspec_data['signature'] = local_sha.hexdigest()
+    return None
+
+
 
 
 def add_signal_index(vspec_data,  index = 0, parent_index = -1):
@@ -161,32 +228,28 @@ def add_signal_index(vspec_data,  index = 0, parent_index = -1):
         index += 1
         v['_parent_index_'] = parent_index;
 
-        if (v['type'] == 'branch'):
+        # Bug in vspec.py: All elements seem to have 'type' == 'branch'
+        # and 'children' == {}, even if they are signals and not branches.
+        if 'children' in v and len(v['children']):
             index = add_signal_index(v['children'], index, v['_index_'])
 
     return index
 
 def add_signal_path(vspec_data, parent_signal = ""):
     for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
-        if (len(parent_signal) > 0):
+        if len(parent_signal) > 0:
             signal_path = parent_signal + "_" + k
         else:
             signal_path = k
 
         v['_signal_path_'] = signal_path
 
-        if (v['type'] == 'branch'):
+        # Bug in vspec.py: All elements seem to have 'type' == 'branch'
+        # and 'children' == {}, even if they are signals and not branches.
+        if 'children' in v:
             add_signal_path(v['children'], signal_path)
 
 
-def generate_binary_sha(sha256_hex):
-    res = ''
-    while len(sha256_hex) > 0:
-        hex_byte = sha256_hex[0:1].zfill(2)
-        sha256_hex = sha256_hex[2:]
-        res += '\\0x{}'.format(hex_byte)
-
-    return res
 
 def generate_source(vspec_data):
     global signal_count
@@ -195,7 +258,9 @@ def generate_source(vspec_data):
         sig_decl += emit_signal(k, v)
         signal_count += 1
 
-        if (v['type'] == 'branch'):
+        # Bug in vspec.py: All elements seem to have 'type' == 'branch'
+        # and 'children' == {}, even if they are signals and not branches.
+        if 'children' in v and len(v['children']):
             sig_decl += generate_source(v['children'])
 
     return sig_decl
@@ -206,7 +271,9 @@ def generate_header(vspec_data):
     for k, v in sorted(vspec_data.items(), key=lambda item: item[0]):
         macro += '#define VSS_{}() vss_get_signal_by_index({})\n'.format(v['_signal_path_'],v['_index_'])
 
-        if (v['type'] == 'branch'):
+        # Bug in vspec.py: All elements seem to have 'type' == 'branch'
+        # and 'children' == {}, even if they are signals and not branches.
+        if 'children' in v and len(v['children']):
             macro += generate_header(v['children'])
 
     return macro
@@ -246,9 +313,12 @@ if __name__ == "__main__":
     add_signal_index(tree)
     add_signal_path(tree)
 
-    # Generate a hash
-    sha256hash = hashlib.sha256()
-    generate_hash(tree, sha256hash)
+    # Generate a hash for every branch and node in the tree
+
+    for k, v in sorted(tree.items(), key=lambda item: item[0]):
+        add_signal_signature(k,v)
+
+
 
     # Generate header file
 
@@ -267,17 +337,34 @@ if __name__ == "__main__":
         hdr_out.write("#include <vehicle_signal_specification.h>\n\n")
         hdr_out.write("// SHA256 hash of vehicle spec\n")
 
-        hdr_out.write("const char* vss_get_sha256_signature(void)\n")
-        hdr_out.write("{\n")
-        hdr_out.write("""    return "{}";\n""".format(sha256hash.hexdigest()))
-        hdr_out.write("}\n\n")
 
         hdr_out.write("\n\n// VSS Signal Array\n")
         hdr_out.write("vss_signal_t vss_signal[] = {\n")
         hdr_out.write(generate_source(tree))
         hdr_out.write("};\n")
         hdr_out.write("\n\n// VSS Signal Array size\n")
-        hdr_out.write("const int vss_signal_count = {};\n".format(signal_count));
+        hdr_out.write("const int vss_signal_count = {};\n\n".format(signal_count));
+
+
+
+        hdr_out.write("//\n")
+        hdr_out.write("// Return the signature for the given signal and all its children.\n")
+        hdr_out.write("//\n")
+        hdr_out.write("const char* vss_get_subtree_sha_signature(vss_signal_t* vss_signal)\n")
+        hdr_out.write("{\n")
+        hdr_out.write("""    return vss_signal->signature;""");
+        hdr_out.write("}\n\n")
+
+
+        hdr_out.write("//\n")
+        hdr_out.write("// Legacy call to get signature of root element.\n")
+        hdr_out.write("// Equivalent to vss_get_subtree_sha_signature(&vss_signal[0]).\n")
+        hdr_out.write("//\n")
+        hdr_out.write("const char* vss_get_sha256_signature(void)\n")
+        hdr_out.write("{\n")
+        hdr_out.write("""    return vss_signal[0].signature;""");
+        hdr_out.write("}\n\n")
+
         hdr_out.write("#ifdef __cplusplus\n")
         hdr_out.write("}\n")
         hdr_out.write("#endif\n")
