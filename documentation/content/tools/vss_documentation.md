@@ -62,7 +62,7 @@ rm -r <vss_repo>/docs
 
 1. **Build the documentation**
 ```
-cd <vss_repo>/documentation
+cd <vss_repo>/tools/documentation
 hugo
 ls ../../docs
 ```

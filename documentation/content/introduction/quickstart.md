@@ -10,4 +10,4 @@ the ```VERSION``` file.
 
 A web-based JSON viewer can be used to view the current version.
 
-Click **[here](https://jsoneditoronline.org/?url=https%3A%2F%2Fraw.githubusercontent.com%2FGENIVI%2Fvehicle_signal_specification%2Fmaster%2Fvss_rel_2.0.0-alpha+005.json)**
+Click **[here](https://jsoneditoronline.org/?url=https://raw.githubusercontent.com/GENIVI/vehicle_signal_specification/746bbadc303ffa0645d4b547af925a041b25aa08/vss_rel_1.0.json)**

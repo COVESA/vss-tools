@@ -3,7 +3,7 @@ title: "Sensors & Actuators"
 date: 2019-08-04T12:37:03+02:00
 weight: 3
 ---
-A data entry defines a single sensor and its members. A data
+A data entry defines a single sensor/actuator and its members. A data
 entry example is given below:
 
 ```YAML

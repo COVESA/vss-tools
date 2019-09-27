@@ -4,7 +4,7 @@ date: 2019-08-04T12:36:12+02:00
 weight: 2
 ---
 A signal can optionally specify a unit of measurement from the following set.
-This list intends to be according to International Units (SI): [Specification](https://www.iso.org/standard/30669.html), [Wikipedia](https://en.wikipedia.org/wiki/International_System_of_Units)
+This list composed with definition according to International Units (SI) and few automotive specific units: [Specification](https://www.iso.org/standard/30669.html), [Wikipedia](https://en.wikipedia.org/wiki/International_System_of_Units)
 
 
 Unit type  | Domain        | Description
