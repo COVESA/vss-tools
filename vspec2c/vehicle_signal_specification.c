@@ -58,6 +58,22 @@ vss_signal_t* vss_get_signal_by_index(int index)
     return &vss_signal[index];
 }
 
+//
+// Return the signature for the given signal and all its children.
+//
+const uint32_t vss_get_subtree_signature(vss_signal_t* vss_signal)
+{
+    return vss_signal->signature;}
+
+//
+// Legacy call to get signature of root element.
+// Equivalent to vss_get_subtree_signature(&vss_signal[0]).
+//
+const uint32_t vss_get_signature(void)
+{
+    return vss_signal[0].signature;
+}
+
 int vss_get_signal_by_path(char* path,
                             vss_signal_t ** result)
 {

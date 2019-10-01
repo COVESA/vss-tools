@@ -142,7 +142,7 @@ def emit_signal(signal_name, vspec_data):
     else:
         parent = "&vss_signal[{}]".format(vspec_data['_parent_index_'])
 
-    return f'    {{ {index}, {parent}, (vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", "{signature}", {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}", (void*) 0 }},\n'
+    return f'    {{ {index}, {parent}, (vss_signal_t*[]) {children}, "{signal_name}", "{uuid}", {hex(signature)}, {elem_type}, {data_type}, "{unit}", {min}, {max}, "{desc}", (const char*[]) {enum}, "{sensor}", "{actuator}", (void*) 0 }},\n'
 
 
 #
@@ -199,7 +199,7 @@ def add_signal_signature(name, vspec_data, sha256hash = None):
         if store_signature:
             if 'signature' in vspec_data:
                 return None
-            vspec_data['signature'] = local_sha.hexdigest()
+            vspec_data['signature'] = int(local_sha.hexdigest()[0:7], 16)
             return None
 
         return local_sha
@@ -216,7 +216,7 @@ def add_signal_signature(name, vspec_data, sha256hash = None):
     if 'signature' in vspec_data:
         return None
 
-    vspec_data['signature'] = local_sha.hexdigest()
+    vspec_data['signature'] = int(local_sha.hexdigest()[0:7], 16)
     return None
 
 
@@ -344,26 +344,6 @@ if __name__ == "__main__":
         hdr_out.write("};\n")
         hdr_out.write("\n\n// VSS Signal Array size\n")
         hdr_out.write("const int vss_signal_count = {};\n\n".format(signal_count));
-
-
-
-        hdr_out.write("//\n")
-        hdr_out.write("// Return the signature for the given signal and all its children.\n")
-        hdr_out.write("//\n")
-        hdr_out.write("const char* vss_get_subtree_sha_signature(vss_signal_t* vss_signal)\n")
-        hdr_out.write("{\n")
-        hdr_out.write("""    return vss_signal->signature;""");
-        hdr_out.write("}\n\n")
-
-
-        hdr_out.write("//\n")
-        hdr_out.write("// Legacy call to get signature of root element.\n")
-        hdr_out.write("// Equivalent to vss_get_subtree_sha_signature(&vss_signal[0]).\n")
-        hdr_out.write("//\n")
-        hdr_out.write("const char* vss_get_sha256_signature(void)\n")
-        hdr_out.write("{\n")
-        hdr_out.write("""    return vss_signal[0].signature;""");
-        hdr_out.write("}\n\n")
 
         hdr_out.write("#ifdef __cplusplus\n")
         hdr_out.write("}\n")

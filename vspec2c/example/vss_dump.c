@@ -11,7 +11,7 @@ void print_signal(const vss_signal_t * sig, int indent)
 {
     printf("%*sName:        %s\n", indent, "", sig->name);
     printf("%*sUUID:        %s\n", indent, "", sig->uuid);
-    printf("%*sSignature:   %s\n", indent, "", sig->signature);
+    printf("%*sSignature:   0x%X\n", indent, "", sig->signature);
     printf("%*sDescription: %s\n", indent, "", sig->description);
     printf("%*sType:        %s\n", indent, "", vss_element_type_string(sig->element_type));
 
@@ -105,11 +105,11 @@ int main(int argc, char* argv[])
 
     print_signal(sig, 0);
 
-    printf("\n\nUUID for Vehicle.Body.Mirrors.Left.Heating.Status: %s\n", sig->signature);
+    printf("\n\nSignature for Vehicle.Body.Mirrors.Left.Heating.Status: 0x%X\n", sig->signature);
 
 
 
     puts("\n\nRetrieving Vehicle.Body.Mirrors.Left.Heating.Status by its macro.");
-    printf("\n\nVSS spec UUID is: %s\n", vss_get_sha256_signature());
+    printf("\n\nVSS spec signature is: 0x%X\n", vss_get_signature());
     exit(0);
 }

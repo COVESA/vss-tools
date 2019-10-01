@@ -31,6 +31,8 @@ typedef enum _vss_data_type_e {
     // Usd for VSS_BRANCH and VSS_RBRANCH etnries
     VSS_NA = 11,
 } vss_data_type_e;
+
+
 typedef enum _vss_element_type_e {
     VSS_ATTRIBUTE = 0,
     VSS_BRANCH = 1,
@@ -39,6 +41,8 @@ typedef enum _vss_element_type_e {
     VSS_RBRANCH = 4,
     VSS_ELEMENT = 5,
 } vss_element_type_e;
+
+
 // A single signal.
 // The vss_signal[] array hosts all the signals from the specification.
 // The array is pre-populated and initialized at build time, meaning
@@ -46,47 +50,59 @@ typedef enum _vss_element_type_e {
 // further initialization.
 //
 typedef struct _vss_signal_t {
+
     // Unique index for a signal. Based on the signal's position
     // in the array.
     //
     const int index;
+
     // Pointer to parent signal. Null if this is root signal
     //
     struct _vss_signal_t* parent;
+
     // Pointer to null-termianted array of all children.
     // Traverse using children[index].
     // If there are no children, then children[0] == 0
     //
     struct _vss_signal_t** children;
+
     // Name of this signal or branch.
     // Use vss_get_signal_path() to get complete path to a signal.
     // Always set.
     //
     const char *name;
+
     // UUID of signal or branch.
     // Always set.
     //
     const char *uuid;
+
     // Signature for signal or branch. For branches the signature
     // also encompasses all children.
+    // Cosnsists of the first four bytes of the sha256 signature.
     //
-    const char *signature;
+    const uint32_t signature;
+
     // Element type of signal
     // Use this to determine if this is a signal or a branch.
     //
+
     const vss_element_type_e element_type;
     // Data type of signal.
     // Will be set to VSS_NA if this is a branch.
     //
+
     const vss_data_type_e data_type;
     // Unit type of signal.
     // Set to "" if not definedf.
     //
     const char *const unit_type;
+
     // Minimum allowed value for a signal.
     // Use min_val.d if signal.data_type is VSS_FLOAT or VSS_DOUBLE.
     // Use min_val.i if signal.data_type is one of the integer types.
     //
+
     const union  {
         int64_t i;
         double d;
@@ -95,6 +111,7 @@ typedef struct _vss_signal_t {
     // Use max_val.d if signal.data_type is VSS_FLOAT or VSS_DOUBLE.
     // Use max_val.i if signal.data_type is one of the integer types.
     //
+
     const union {
         int64_t i;
         double d;
@@ -102,24 +119,31 @@ typedef struct _vss_signal_t {
     // Signal description.
     // Set to "" if not specified.
     //
+
     const char* description;
     // Pointer to null-termianted array of values that signal can have
     // Traverse using enum_values[index].
     // If there are no enumerated values specifed, then enum_values[0] == 0
     //
+
     const char* const* enum_values;
     // Sensor specification of signal.
     // Set to "" if not specified.
     //
+
     const char* sensor;
     // Actuator specification of signal.
     // Set to "" if not specified.
     //
+
     const char* actuator;
     // User Data element that can be used to
     // connect the signal to application-managed structures.
     void* user_data;
 } vss_signal_t;
+
+
+
 // Return a signal struct pointer based on signal index.
 //
 // The index of a signal is available in its 'index'
@@ -144,13 +168,19 @@ typedef struct _vss_signal_t {
 // than the size of the index array.
 //
 extern vss_signal_t* vss_get_signal_by_index(int index);
+
+
 // Locate a signal by its path.
 // Path is in the format "Branch.Branch.[...].Signal.
 // If
 extern int vss_get_signal_by_path(char* path,
                                    vss_signal_t ** result);
+
 const char* vss_element_type_string(vss_element_type_e elem_type);
+
 const char* vss_data_type_string(vss_data_type_e data_type);
+
+
 // Populate the full path name to the given signal.
 // The name will be stored in 'result'.
 // No more than 'result_max_len' bytes will be copied.
@@ -160,13 +190,25 @@ const char* vss_data_type_string(vss_data_type_e data_type);
 extern char* vss_get_signal_path(vss_signal_t* signal,
                                  char* result,
                                  int result_max_len);
-// A unique hash generated across all signals' combined
-// UUID values.
+
+
+// Return a unique hash generated across all signals' combined
+// attributes..
 // This signature can be used by two networked systems to
 // verify that they are both using the same signal
 // specification version.
 //
-extern const char* vss_get_sha256_signature(void);
+// This function is identical to vss_get_subtree_signature()
+// using the root signal (index 0) as an argument.
+//
+extern const uint32_t vss_get_signature(void);
+
+// Return a unique hash generated across all attributes of
+// vss_signals and its children (if applicable).
+// This value can be used in a networked system to ensure
+// that the sender and receiver are operating on identical
+// subtree specifications.
+extern const uint32_t vss_get_subtree_signature(vss_signal_t* vss_signal);
 
 // The number of signals in vss_signal array.
 // The max value for vss_get_signal_by_index() is
