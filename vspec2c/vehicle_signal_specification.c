@@ -91,7 +91,7 @@ int vss_get_signal_by_path(char* path,
     // If no separator is found, path_separator == NULL, allowing
     // us to detect end of path
     if (strncmp(cur_signal->name, path, path_separator?path_separator-path:strlen(path))) {
-        printf("Root signal mismatch between %s and %*s\\n",
+        printf("Root signal mismatch between %s and %*s\n",
                cur_signal->name,
                (int)(path_separator?path_separator-path:strlen(path)), path);
         return ENOENT;
@@ -110,7 +110,7 @@ int vss_get_signal_by_path(char* path,
         // We have to go deeper into the tree. Is our current
         // signal a branch that we can traverse into?
         if (cur_signal->element_type != VSS_BRANCH) {
-            printf ("signal %*s is not a branch under %s. ENODIR\\n",
+            printf ("signal %*s is not a branch under %s. ENODIR\n",
                      path_len, path, cur_signal->name);
             return ENOTDIR;
         }
@@ -124,7 +124,7 @@ int vss_get_signal_by_path(char* path,
             ind++;
         }
         if (!cur_signal->children[ind]) {
-            printf ("Child %*s not found under %s. ENOENT\\n",
+            printf ("Child %*s not found under %s. ENOENT\n",
                      path_len, path, cur_signal->name);
 
             return ENOENT;
@@ -144,4 +144,41 @@ int vss_get_signal_by_path(char* path,
     *result = cur_signal;
 
     return 0;
+}
+
+char* vss_get_signal_path(vss_signal_t* signal, char* result, int max_len)
+{
+    vss_signal_t* current = signal;
+    int ancestor_count = 0;
+    vss_signal_t* ancestors[255]; // Max depth 255
+    int result_ind = 0;
+
+    // Fill signal_array with pointers to all parental signals
+    // up to root.
+    while(current && ancestor_count < sizeof(ancestors) / sizeof(ancestors[0])) {
+        ancestors[ancestor_count] = current;
+        current = current->parent;
+        ++ancestor_count;
+    }
+
+    // Traverse the ancestors array backward and roll out their names
+    // into result.
+    while(ancestor_count--) {
+        int name_len = strlen(ancestors[ancestor_count]->name);
+
+        // Will the ancestor name fit with a "." and \0 charater)?
+        if (result_ind + name_len + 2 >= max_len) {
+            result[result_ind] = 0;
+            return result;
+        }
+
+        strcpy(&result[result_ind], ancestors[ancestor_count]->name);
+        result_ind += name_len;
+
+        // Do we add a period?
+        if (ancestor_count)
+            result[result_ind++] = '.';
+    }
+    return result;
+
 }

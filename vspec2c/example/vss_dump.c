@@ -4,6 +4,7 @@
 #include "signal_spec.h"
 #include "signal_macro.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 // Recursively print out sig and all its children.
@@ -82,6 +83,7 @@ int main(int argc, char* argv[])
 {
     vss_signal_t * sig = 0;
     int res = 0;
+    char path[1024];
 
     // Dump the entire tree, starting with the root.
     print_signal(&vss_signal[0], 0);
@@ -104,6 +106,27 @@ int main(int argc, char* argv[])
     }
 
     print_signal(sig, 0);
+
+    puts("\n");
+    printf("Signal path for Vehicle.Body.Mirrors.Left.Heating.Status is:\n");
+    printf("                %s\n", vss_get_signal_path(sig, path, sizeof(path)));
+
+    if (strcmp(path, "Vehicle.Body.Mirrors.Left.Heating.Status")) {
+        puts("Incorrect path retrieved for Vehicle.Body.Mirrors.Left.Heating.Status");
+        exit(255);
+    }
+
+    puts("\n");
+    printf("Truncated path for Vehicle.Body.Mirrors.Left.Heating.Status is:\n");
+    printf("                   %s\n", vss_get_signal_path(sig, path, 16));
+
+    if (strcmp(path, "Vehicle.Body.")) {
+        puts("Incorrect truncated retrieved for Vehicle.Body.Mirrors.Left.Heating.Status");
+        puts("Wanted Vehicle.Body.");
+        exit(255);
+    }
+
+
 
     printf("\n\nSignature for Vehicle.Body.Mirrors.Left.Heating.Status: 0x%X\n", sig->signature);
 
