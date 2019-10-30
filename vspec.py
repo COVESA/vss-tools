@@ -144,7 +144,7 @@ class SignalUUID_DB:
         if os.path.isfile(id_file_name):
             with open (self.id_file_name, "r") as fp:
                 text = fp.read()
-                self.db = yaml.load(text)
+                self.db = yaml.load(text, Loader=yaml.SafeLoader)
                 if not self.db:
                     self.db = {}
                 fp.close()
