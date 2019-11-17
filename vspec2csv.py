@@ -104,9 +104,7 @@ def json2csv(json_data, file_out, parent_signal, ext=[]):
         # if it's a leave, make an entry, check the extension entries and
         # create an entry for every extension
         else:
-            if not local_ext:
-                file_out.write(signal + ',' + format_data(json_data[k]) + "," + str(ext) + '\n')
-
+            file_out.write(signal + ',' + format_data(json_data[k]) + "," + str(ext) + '\n')
             createExtensionEntries(local_ext, file_out, json_data[k], signal)
 
 
@@ -131,7 +129,6 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
 
     if not ext and file_out and json_data:
         return
-
     rest = None
     i = []
     if len(ext) == 1:
@@ -139,7 +136,6 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
     else:
         i = ext[0]
         rest = ext[1:]
-
 
 
     if prefix and not prefix.endswith("."):
@@ -155,25 +151,27 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
                 if rest:
                     createExtensionEntries(rest, file_out, json_data, nextPrefix)
                 else:
-                    file_out.write(nextPrefix + ',' + format_data(json_data) + "," + '\n')
+                    json_data["type"] = "instance"
+                    file_out.write(nextPrefix + ',' + format_data(json_data) + ",***" + '\n')
 
 
         # TODO: right now dynamic extensions not supported
         else:
             raise vspec.VSpecError("","","Extension type not supported")
-    # Use list elements for extension (e.g. [LEFT,RIGHT])
+    # Use list elements for extension (e.g. ["LEFT","RIGHT"])
     elif (isinstance(i,list)):
+        complexList = False
         for r in i:
             # if in case of multiple extensions in one branch
             # it has to be distinguished from a list of
-            # string extensions, like [LEFT,RIGHT]
+            # string extensions, like ["LEFT","RIGHT"]
             if (isinstance(r,str)):
                 if re.match(REG_EX, r):
                     if (rest):
                         rest.append(r)
                     else:
                         rest = [r]
-                    createExtensionEntries(rest, file_out, json_data, prefix)
+                    complexList = True
                 else:
                     nextPrefix = prefix + str(r)
                     if rest:
@@ -186,13 +184,15 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
 
             else:
                 # in case of multiple extensions, the list is
-                # has to be parsed, like [LEFT,RIGHT]
+                # has to be parsed, like ["LEFT","RIGHT"]
                 if (rest):
                     rest.append(r)
                 else:
                     rest = [r]
-                createExtensionEntries(rest, file_out, json_data, prefix)
+                complexList = True
 
+        if complexList:
+            createExtensionEntries(rest, file_out, json_data, prefix)
 
     else:
         print (i)
