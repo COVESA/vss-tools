@@ -74,7 +74,7 @@ const uint32_t vss_get_signature(void)
     return vss_signal[0].signature;
 }
 
-int vss_get_signal_by_path(char* path,
+int vss_get_signal_by_path(const char* path,
                             vss_signal_t ** result)
 {
     vss_signal_t * cur_signal = &vss_signal[0]; // Start at root.
