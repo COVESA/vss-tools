@@ -173,7 +173,7 @@ extern vss_signal_t* vss_get_signal_by_index(int index);
 // Locate a signal by its path.
 // Path is in the format "Branch.Branch.[...].Signal.
 // If
-extern int vss_get_signal_by_path(char* path,
+extern int vss_get_signal_by_path(const char* path,
                                    vss_signal_t ** result);
 
 const char* vss_element_type_string(vss_element_type_e elem_type);
