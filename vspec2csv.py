@@ -83,73 +83,73 @@ def format_data(json_data):
     return f"{Uuid},{Type},{DataType},{Unit},{Min},{Max},{Desc},{Enum},{Sensor},{Actuator}"
 
 
-def json2csv(json_data, file_out, parent_signal, ext=[]):
+def json2csv(json_data, file_out, parent_signal, instances=[]):
     for k in json_data.keys():
         if (len(parent_signal) > 0):
             signal = parent_signal + "." + k
         else:
             signal = k
 
-        local_ext = ext
-        if ('extension' in json_data[k].keys()):
-            local_ext = ext + [(json_data[k]['extension'])]
+        local_instances = instances
+        if ('instances' in json_data[k].keys()):
+            local_instances = instances + [(json_data[k]['instances'])]
 
         # if it's a branch, create an entry and continue
         # with its children
         if (json_data[k]['type'] == 'branch'):
             file_out.write(signal + ',' + format_data(json_data[k]) + '\n')
             # if postion attribute exists, keep it
-            json2csv(json_data[k]['children'], file_out, signal, local_ext)
+            json2csv(json_data[k]['children'], file_out, signal, local_instances)
 
-        # if it's a leave, make an entry, check the extension entries and
-        # create an entry for every extension
+        # if it's a leave, make an entry, check the entries for instances and
+        # create an entry for every instance
         else:
-            file_out.write(signal + ',' + format_data(json_data[k]) + "," + str(ext) + '\n')
-            createExtensionEntries(local_ext, file_out, json_data[k], signal)
+            file_out.write(signal + ',' + format_data(json_data[k]) + "," + str(instances) + '\n')
+            createInstantiationEntries(local_instances, file_out, json_data[k], signal)
 
 
 
-def createExtensionEntries(ext, file_out, json_data, prefix=''):
-    """Function creates the extension entries to a given node as
+def createInstantiationEntries(instances, file_out, json_data, prefix=''):
+    """Function creates the entries for instances to a given node as
        postfix of the node name (e.g. node.Row1.LEFT)
 
     Parameters
     ----------
-    ext : list
-        list of branches with extension argument in the path
+    instances : list
+        list of branches with instance argument in the path
     file_out : file
         csv file to write into
     json_data : json object
         json encoded information about the node
     prefix : string
-        node name before the extension information
+        node name before the instance information
     """
 
     REG_EX = "\w+\[\d+,(\d+)\]"
 
-    if not ext and file_out and json_data:
+    if not instances and file_out and json_data:
         return
     rest = None
     i = []
-    if len(ext) == 1:
-        i = ext[0]
+    if len(instances) == 1:
+        i = instances[0]
     else:
-        i = ext[0]
-        rest = ext[1:]
+        i = instances[0]
+        rest = instances[1:]
 
 
     if prefix and not prefix.endswith("."):
         prefix += "."
 
 
-    # parse string extension elements (e.g. Row[1,5])
+    # parse string instantiation elements (e.g. Row[1,5])
     if isinstance(i,str):
         if re.match(REG_EX, i):
-            extRangeArr = re.split("\[+|,+|\]",i)
-            for r in range(int(extRangeArr[1]),int(extRangeArr[2])+1):
-                nextPrefix = prefix + extRangeArr[0]+str(r)
+            instRangeArr = re.split("\[+|,+|\]",i)
+            for r in range(int(instRangeArr[1]),int(instRangeArr[2])+1):
+                nextPrefix = prefix + instRangeArr[0]+str(r)
                 if rest:
-                    createExtensionEntries(rest, file_out, json_data, nextPrefix)
+                    createInstantiationEntries(rest, file_out, json_data, nextPrefix)
                 else:
                     json_data["type"] = "instance"
                     file_out.write(nextPrefix + ',' + format_data(json_data) + ",***" + '\n')
@@ -157,14 +157,14 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
 
         # TODO: right now dynamic extensions not supported
         else:
-            raise vspec.VSpecError("","","Extension type not supported")
-    # Use list elements for extension (e.g. ["LEFT","RIGHT"])
+            raise vspec.VSpecError("","","instantiation type not supported")
+    # Use list elements for instances (e.g. ["LEFT","RIGHT"])
     elif (isinstance(i,list)):
         complexList = False
         for r in i:
-            # if in case of multiple extensions in one branch
+            # if in case of multiple instances in one branch
             # it has to be distinguished from a list of
-            # string extensions, like ["LEFT","RIGHT"]
+            # string instantiations, like ["LEFT","RIGHT"]
             if (isinstance(r,str)):
                 if re.match(REG_EX, r):
                     if (rest):
@@ -175,7 +175,7 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
                 else:
                     nextPrefix = prefix + str(r)
                     if rest:
-                        createExtensionEntries(rest, file_out, json_data, nextPrefix)
+                        createInstantiationEntries(rest, file_out, json_data, nextPrefix)
                     else:
                         # create a new type instance for now for
                         # better recognition, of what it is
@@ -183,7 +183,7 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
                         file_out.write(nextPrefix + ',' + format_data(json_data) + "," + '\n')
 
             else:
-                # in case of multiple extensions, the list is
+                # in case of multiple instances, the list is
                 # has to be parsed, like ["LEFT","RIGHT"]
                 if (rest):
                     rest.append(r)
@@ -192,7 +192,7 @@ def createExtensionEntries(ext, file_out, json_data, prefix=''):
                 complexList = True
 
         if complexList:
-            createExtensionEntries(rest, file_out, json_data, prefix)
+            createInstantiationEntries(rest, file_out, json_data, prefix)
 
     else:
         print (i)
