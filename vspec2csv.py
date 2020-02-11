@@ -48,10 +48,28 @@ Usage: {sys.argv[0]} [options] vspec_file csv_file
     sys.exit(255)
 
 
-def format_data(json_data):
-    Uuid = '""'
+def format_data(json_data, complex=False):
+    """Creates a csv compliant string with a dictionary as input.
+
+
+    Parameters
+    ----------
+    json_data : dictionary
+        Data to be included in the csv string.
+        Supported Fields: Id,Type,DataType,Unit,Min,Max,Desc,Enum,Sensor,Actuator
+    complex : boolean
+        Set True, if the data-type is complex (e.g. through instantiation)
+
+    Returns
+    -------
+    String
+        Comma-separated, csv compliant string
+
+    """
+    Id = '""'
     Type = '""'
     DataType = '""'
+    Complex = '"%s"'%(complex)
     Unit = '""'
     Min = '""'
     Max = '""'
@@ -80,7 +98,7 @@ def format_data(json_data):
         Sensor = '"' + str(json_data['sensor']) + '"'
     if ('actuator' in json_data):
         Actuator = '"' + str(json_data['actuator']) + '"'
-    return f"{Uuid},{Type},{DataType},{Unit},{Min},{Max},{Desc},{Enum},{Sensor},{Actuator}"
+    return f"{Id},{Type},{DataType},{Complex},{Unit},{Min},{Max},{Desc},{Enum},{Sensor},{Actuator}"
 
 
 def json2csv(json_data, file_out, parent_signal, instances=[]):
@@ -104,7 +122,11 @@ def json2csv(json_data, file_out, parent_signal, instances=[]):
         # if it's a leave, make an entry, check the entries for instances and
         # create an entry for every instance
         else:
-            file_out.write(signal + ',' + format_data(json_data[k]) + "," + str(instances) + '\n')
+            complex = False
+            if instances:
+                complex = True
+            file_out.write(signal + ',' + format_data(json_data[k],complex) \
+                          + "," + str(instances) + '\n')
             createInstantiationEntries(local_instances, file_out, json_data[k], signal)
 
 
@@ -149,10 +171,11 @@ def createInstantiationEntries(instances, file_out, json_data, prefix=''):
             for r in range(int(instRangeArr[1]),int(instRangeArr[2])+1):
                 nextPrefix = prefix + instRangeArr[0]+str(r)
                 if rest:
+                    file_out.write(nextPrefix + ',' + format_data(json_data, True) \
+                    + "," + '\n')
                     createInstantiationEntries(rest, file_out, json_data, nextPrefix)
                 else:
-                    json_data["type"] = "instance"
-                    file_out.write(nextPrefix + ',' + format_data(json_data) + ",***" + '\n')
+                    file_out.write(nextPrefix + ',' + format_data(json_data) + "," + '\n')
 
 
         # TODO: right now dynamic extensions not supported
@@ -175,11 +198,10 @@ def createInstantiationEntries(instances, file_out, json_data, prefix=''):
                 else:
                     nextPrefix = prefix + str(r)
                     if rest:
+                        file_out.write(nextPrefix + ',' + format_data(json_data, True) \
+                        + "," + '\n')
                         createInstantiationEntries(rest, file_out, json_data, nextPrefix)
                     else:
-                        # create a new type instance for now for
-                        # better recognition, of what it is
-                        json_data["type"] = "instance"
                         file_out.write(nextPrefix + ',' + format_data(json_data) + "," + '\n')
 
             else:
@@ -236,7 +258,7 @@ if __name__ == "__main__":
     #
     #   Write out the column name line.
     #
-    csv_out.write ( "Signal,Id,Type,DataType,Unit,Min,Max,Desc,Enum,Sensor,Actuator\n" )
+    csv_out.write ( "Signal,Id,Type,DataType,Complex,Unit,Min,Max,Desc,Enum,Sensor,Actuator,instances\n" )
 
     #
     #   Go process all of the data records in the input JSON file.
