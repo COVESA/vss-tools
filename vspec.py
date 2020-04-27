@@ -13,6 +13,8 @@ import yaml
 import json
 import os
 import uuid
+import collections
+
 
 class VSpecError(Exception):
     def __init__(self, *args, **kwargs):
@@ -29,7 +31,7 @@ class VSpecError(Exception):
 #
 class SignalUUIDManager:
     NAMESPACE = "vehicle_signal_specification"
-    
+
     def __init__(self):
         self.signal_uuid_db_set = {}
         self.namespace_uuid = uuid.uuid5(uuid.NAMESPACE_OID, self.NAMESPACE)
@@ -212,6 +214,23 @@ def load(file_name, include_paths):
     return deep_model["children"]
 
 
+def convert_yaml_to_list(raw_yaml):
+    if isinstance(raw_yaml, list):
+        return raw_yaml
+
+    # Sort the dictionary according to line number.
+    # The reason is that when the YAML file is loaded
+    # the object order is not preserved in the created
+    # dictionary
+    raw_yaml = collections.OrderedDict(sorted(raw_yaml.items(), key=lambda x: x[1]['$line$']))
+    lst = []
+    for elem in raw_yaml:
+        if isinstance(raw_yaml[elem], dict):
+            raw_yaml[elem]['$name$'] = elem
+            lst.append(raw_yaml[elem])
+
+    return lst
+
 def load_flat_model(file_name, prefix, include_paths):
     # Hooks into YAML parser to add line numbers
     # and file name into each elemeent
@@ -225,15 +244,31 @@ def load_flat_model(file_name, prefix, include_paths):
         except yaml.parser.ParserError as e:
             raise VSpecError(file_name, line + 1, e)
 
-        node.__line__ = line + 1
-        node.__file_name__ = file_name
+        if node.value == '$include$':
+            node.value = f'$include${load_flat_model.include_index}'
+            load_flat_model.include_index = load_flat_model.include_index + 1
+
+        # Avoid having root-level line numbers as non-dictionary entries
+        if parent:
+            node.__line__ = line + 1
+            node.__file_name__ = file_name
+        else:
+            node.__line__ = None
+            node.__file_name = None
         return node
 
-    def yaml_construct_mapping(node, deep=False):
+
+
+    def yaml_construct_mapping(node, deep=True):
         mapping = yaml.constructor.Constructor.construct_mapping(loader, node, deep=deep)
-        # Find the name of the branch / signal and convert
-        # it to a dictionary element '$name$'
+
+        # Replace
+        # { 'Vehicle.Speed': { 'datatype': 'boolean', 'type': 'sensor' }}
+        # with
+        # { '$name$': 'Vehicle.Speed', 'datatype': 'boolean', 'type': 'sensor' }
+
         for key, val in list(mapping.items()):
+            # Don't convert metadata.
             if key[0]=='$':
                 continue
 
@@ -242,10 +277,12 @@ def load_flat_model(file_name, prefix, include_paths):
                 del mapping[key]
                 break
 
-        mapping['$line$'] = node.__line__
-        mapping['$file_name$'] = node.__file_name__
-        return mapping
+        # Add line number and file name to element.
+        if node.__line__ is not None:
+            mapping['$line$'] = node.__line__
+            mapping['$file_name$'] = node.__file_name__
 
+        return mapping
 
     directory, text = search_and_read(file_name, include_paths)
     text = yamilify_includes(text)
@@ -258,12 +295,13 @@ def load_flat_model(file_name, prefix, include_paths):
     loader.construct_mapping = yaml_construct_mapping
     raw_yaml = loader.get_data()
 
-    # Import signal IDs from the given database
-
 
     # Check for file with no objects.
     if not raw_yaml:
         return []
+
+    raw_yaml = convert_yaml_to_list(raw_yaml)
+
 
     # Sanity check of loaded code
     check_yaml_usage(raw_yaml, file_name)
@@ -365,9 +403,8 @@ def expand_includes(flat_model, prefix, include_paths):
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
         # Is this an include element?
-        if "$include$" in elem:
-            include_elem = elem["$include$"]
-            include_prefix = include_elem.get("prefix", "")
+        if elem['$name$'][0:9] == "$include$":
+            include_prefix = elem.get("prefix", "")
             # Append include prefix to our current prefix.
             # Make sure we do not start new prefix with a "."
             if prefix != "":
@@ -377,7 +414,7 @@ def expand_includes(flat_model, prefix, include_paths):
                     include_prefix = prefix
 
             # Recursively load included file
-            inc_elem = load_flat_model(include_elem["file"], include_prefix, include_paths)
+            inc_elem = load_flat_model(elem["file"], include_prefix, include_paths)
 
             # Add the loaded elements at the end of the new spec model
             new_flat_model.extend(inc_elem)
@@ -557,11 +594,13 @@ def yamilify_includes(text):
             [include_file] = include_arg
 
         text = """{}
-- $include$:
-    file: {}
-    prefix: {}
+- $name$: $include$
+  file: {}
+  prefix: {}
 {}""".format(text[:st_index], include_file, include_prefix, text[end_index:])
 
     return text
 
 db_mgr = SignalUUIDManager()
+
+load_flat_model.include_index = 1
