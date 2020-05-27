@@ -122,7 +122,7 @@ if __name__ == "__main__":
     signal_patterns=[]
     interface_hierarchy=[]
     vss_version = "version not specified"
-    interface_version = "version not specified"
+    interface_version = ""
     for o, a in opts:
         # This just for "compatibility" with other converters:
         if o == "-I":
@@ -189,13 +189,12 @@ if __name__ == "__main__":
 // (https://gitub.com/GENIVI/vehicle_signal_specification)
 //
 {}
-const UTF8String VSS_INTERFACE_VERSION = "{}"
 
 // Vehicle signal attributes generated from VSS specification version FIXME
 
 package {}
 
-""".format(YEAR, license, vss_version, package))
+""".format(YEAR, license, package))
 
     for i in interface_hierarchy:
         franca_out.write(prefix() + "interface {} {{\n".format(i))
@@ -205,6 +204,8 @@ package {}
         major=interface_version[0:interface_version.find(",")]
         minor=interface_version[interface_version.find(",")+1:]
         franca_out.write(prefix() + "version {{ major {}, minor {} }}\n".format(major, minor))
+
+    franca_out.write(prefix() + 'const UTF8String VSS_INTERFACE_VERSION = "{}"\n'.format(vss_version))
 
     for row in csv.DictReader(csv_in):
         # Get Fully qualified node name (fqn) and type from respective
