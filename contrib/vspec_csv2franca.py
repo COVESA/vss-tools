@@ -30,6 +30,22 @@ license = """// This program is licensed under the terms and conditions of the
 // Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
 """
 
+# Handle indentation.  All operations are kept here, but depend on a shared
+# global variable
+INDENTATION_STRING = "    "  # 4 spaces at the moment
+indentlevel = 0 # It is easiest to keep this variable in global scope
+
+def prefix():
+   return INDENTATION_STRING * indentlevel
+
+def indent():
+    global indentlevel 
+    indentlevel += 1
+
+def unindent():
+    global indentlevel 
+    indentlevel -= 1
+
 def usage():
     print("Usage:", sys.argv[0], "-p <package>  -n <interface-name> -s <signal_pattern_match> vspec-CSV-file output-file")
     print("  -p package           Fully qualified Franca package name (mandatory, once)")
@@ -163,7 +179,6 @@ if __name__ == "__main__":
 
     print(signal_patterns)
 
-    indentlevel = 0
     attribute_count = 0
 
     franca_out.write(
@@ -181,15 +196,13 @@ package {}
 """.format(YEAR, license, vss_version, package))
 
     for i in interface_hierarchy:
-        indentlevel = indentlevel + 1
-        indent = indentation_string * indentlevel
-        franca_out.write(indent + "interface {} {{\n".format(i))
+        franca_out.write(prefix() + "interface {} {{\n".format(i))
+        indent()
 
     if interface_version != "":
-        indentlevel += 1
         major=interface_version[0:interface_version.find(",")]
         minor=interface_version[interface_version.find(",")+1:]
-        franca_out.write(indentation_string * indentlevel + "version {{ major {}, minor {} }}\n".format(major, minor))
+        franca_out.write(prefix() + "version {{ major {}, minor {} }}\n".format(major, minor))
 
     for row in csv.DictReader(csv_in):
         # Get Fully qualified node name (fqn) and type from respective
@@ -202,15 +215,15 @@ package {}
         if row['Type'] != 'branch':
             if tree_matches(fqn, interface_hierarchy):
                 if signal_matches(fqn, signal_patterns):
-                    franca_out.write(indent + generate_attribute(fqn, datatype, interface_hierarchy) + "\n")
+                    franca_out.write(prefix() + generate_attribute(fqn, datatype, interface_hierarchy) + "\n")
                     attribute_count += 1
         else:
             debug("No match for %s" % fqn)
 
     # Close the open braces
     for n in range(len(interface_hierarchy)):
-        indentlevel = indentlevel - 1
-        franca_out.write(indentation_string * indentlevel + "}\n")
+        unindent()
+        franca_out.write(prefix() + "}\n")
 
     franca_out.write("""
 // End of file
