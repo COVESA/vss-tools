@@ -104,9 +104,11 @@ def generate_attribute(fqn, datatype, interface_hierarchy):
     # In a typical case only the leaf node name remains, but if the user
     # configured it that way, some part of the branch hierarchy may remain
     # in the generated attribute name.
-    ignored_parents = ".".join(interface_hierarchy) + "."
-    # Remove the parent-path from result with nothing
-    attr_name = fqn.replace(ignored_parents,"")
+    parent_path = ".".join(interface_hierarchy) + "."
+    # Remove the parent-path (parent namespaces) from result so that only the
+    # necessary path specifier is left.  Also, if there is any hierarchy left
+    # (in other words any "." left, replace it with underscore.
+    attr_name = fqn.replace(parent_path,"").replace(".","_")
     return "attribute %s %s" % (convert_to_franca_type(datatype), attr_name)
 
 if __name__ == "__main__":
