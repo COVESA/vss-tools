@@ -10,21 +10,26 @@
 #
 
 import yaml
-import json
 import os
 import uuid
-import collections
+import sys
+
+from anytree import (Resolver, ChildResolverError, LevelOrderIter)
+import deprecation
+
+from model.vsstree import VSSNode
 
 
 class VSpecError(Exception):
     def __init__(self, *args, **kwargs):
-        self.file_name=args[0]
-        self.line_nr=args[1]
+        self.file_name = args[0]
+        self.line_nr = args[1]
         self.message = args[2]
         Exception.__init__(self, *args, **kwargs)
 
     def __str__(self):
-        return  "{}: {}: {}".format(self.file_name, self.line_nr, self.message)
+        return "{}: {}: {}".format(self.file_name, self.line_nr, self.message)
+
 
 #
 # Manager of all SignalUUID instances.
@@ -35,7 +40,6 @@ class SignalUUIDManager:
     def __init__(self):
         self.signal_uuid_db_set = {}
         self.namespace_uuid = uuid.uuid5(uuid.NAMESPACE_OID, self.NAMESPACE)
-
 
     # Process a command line option with the format
     #  [prefix]:filename
@@ -135,6 +139,7 @@ class SignalUUIDManager:
         for _key, signal_uuid_db in self.signal_uuid_db_set.items():
             signal_uuid_db.save()
 
+
 #
 # Manage the UUIDs of a set of signals with a given prefix.
 #
@@ -146,7 +151,7 @@ class SignalUUID_DB:
     def __init__(self, id_file_name):
         self.id_file_name = id_file_name
         if os.path.isfile(id_file_name):
-            with open (self.id_file_name, "r") as fp:
+            with open(self.id_file_name, "r") as fp:
                 text = fp.read()
                 self.db = yaml.load(text, Loader=yaml.SafeLoader)
                 if not self.db:
@@ -155,7 +160,6 @@ class SignalUUID_DB:
         else:
             self.db = {}
 
-
     #
     # Save all signal - ID mappings in self to a yaml file.  The file
     # read at object construction will be used to store all mappings
@@ -163,7 +167,7 @@ class SignalUUID_DB:
     #
     def save(self):
         try:
-            with open (self.id_file_name, "w") as fp:
+            with open(self.id_file_name, "w") as fp:
                 yaml.safe_dump(self.db, fp, default_flow_style=False)
                 fp.close()
                 return True
@@ -177,8 +181,8 @@ class SignalUUID_DB:
 #
 def search_and_read(file_name, include_paths):
     # If absolute path, then ignore include paths
-    if file_name[0]=='/':
-        with open (file_name, "r") as fp:
+    if file_name[0] == '/':
+        with open(file_name, "r") as fp:
             text = fp.read()
             fp.close()
             return os.path.dirname(file_name), text
@@ -186,7 +190,7 @@ def search_and_read(file_name, include_paths):
     for directory in include_paths:
         try:
             path = "{}/{}".format(directory, file_name)
-            with open (path, "r") as fp:
+            with open(path, "r") as fp:
                 text = fp.read()
                 fp.close()
                 return os.path.dirname(path), text
@@ -205,6 +209,9 @@ def assign_signal_uuids(flat_model):
     return flat_model
 
 
+@deprecation.deprecated(deprecated_in="2.0", removed_in="2.0",
+                        current_version="2.1",
+                        details="Anytree as tree library introduced for typesafe handling of vss structure.")
 def load(file_name, include_paths):
     flat_model = load_flat_model(file_name, "", include_paths)
     absolute_path_flat_model = create_absolute_paths(flat_model)
@@ -214,22 +221,15 @@ def load(file_name, include_paths):
     return deep_model["children"]
 
 
-def convert_yaml_to_list(raw_yaml):
-    if isinstance(raw_yaml, list):
-        return raw_yaml
+def load_tree(file_name, include_paths):
+    flat_model = load_flat_model(file_name, "", include_paths)
+    absolute_path_flat_model = create_absolute_paths(flat_model)
+    absolute_path_flat_model_with_id = assign_signal_uuids(absolute_path_flat_model)
+    deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
+    cleanup_deep_model(deep_model)
+    dict_tree = deep_model["children"]
+    return render_tree(dict_tree, True)
 
-    # Sort the dictionary according to line number.
-    # The reason is that when the YAML file is loaded
-    # the object order is not preserved in the created
-    # dictionary
-    raw_yaml = collections.OrderedDict(sorted(raw_yaml.items(), key=lambda x: x[1]['$line$']))
-    lst = []
-    for elem in raw_yaml:
-        if isinstance(raw_yaml[elem], dict):
-            raw_yaml[elem]['$name$'] = elem
-            lst.append(raw_yaml[elem])
-
-    return lst
 
 def load_flat_model(file_name, prefix, include_paths):
     # Hooks into YAML parser to add line numbers
@@ -268,8 +268,7 @@ def load_flat_model(file_name, prefix, include_paths):
         # { '$name$': 'Vehicle.Speed', 'datatype': 'boolean', 'type': 'sensor' }
 
         for key, val in list(mapping.items()):
-            # Don't convert metadata.
-            if key[0]=='$':
+            if key[0] == '$':
                 continue
 
             if val == None:
@@ -284,8 +283,6 @@ def load_flat_model(file_name, prefix, include_paths):
 
         return mapping
 
-
-    # Read the file, searching all relevant includepaths
     directory, text = search_and_read(file_name, include_paths)
 
     # Do a trial pasing of the file to find out if it is list- or
@@ -312,7 +309,6 @@ def load_flat_model(file_name, prefix, include_paths):
     loader.construct_mapping = yaml_construct_mapping
     raw_yaml = loader.get_data()
 
-
     # Check for file with no objects.
     if not raw_yaml:
         return []
@@ -332,7 +328,6 @@ def load_flat_model(file_name, prefix, include_paths):
     return flat_model
 
 
-
 #
 # 1. If no type is specified, default it to "branch".
 # 2. Check that the declared type is a FrancaIDL.
@@ -340,13 +335,14 @@ def load_flat_model(file_name, prefix, include_paths):
 # 4, Check that enums are provided as arrays.
 #
 def cleanup_flat_entries(flat_model):
-    available_types =[ "sensor", "actuator", "stream", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
+    available_types = ["sensor", "actuator", "stream", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
                        "UInt32", "Int32", "UInt64", "Int64", "Boolean",
-                       "Float", "Double", "String", "ByteBuffer", "rbranch", "element" ]
+                       "Float", "Double", "String", "ByteBuffer", "rbranch", "element"]
 
-    available_downcase_types =[ "sensor", "actuator", "stream", "branch", "attribute", "uint8", "int8", "uint16", "int16",
+    available_downcase_types = ["sensor", "actuator", "stream", "branch", "attribute", "uint8", "int8", "uint16",
+                                "int16",
                                 "uint32", "int32", "uint64", "int64", "boolean",
-                                "float", "double", "string", "bytebuffer", "rbranch", "element" ]
+                                "float", "double", "string", "bytebuffer", "rbranch", "element"]
 
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
@@ -365,8 +361,8 @@ def cleanup_flat_entries(flat_model):
         if "enum" in elem and not isinstance(elem["enum"], list):
             raise VSpecError(elem["$file_name$"], elem["$line$"], "Enum is not an array.")
 
-
     return flat_model
+
 
 #
 # Delete parser-specific elements
@@ -393,20 +389,19 @@ def cleanup_deep_model(deep_model):
 
     return None
 
+
 #
 # Verify that we are using correct YAML in the model
 #
 def check_yaml_usage(flat_model, file_name):
     for elem in flat_model:
         if isinstance(elem, list):
-            raise VSpecError(file_name,  0,
+            raise VSpecError(file_name, 0,
                              "Element {} is not a list entry. (Did you forget a ':'?)".format(elem))
-
 
     # FIXME:
     # Add more usage checks, such as absence of nested models.
     # and mutually exclusive elements.
-
 
 
 # Expand yaml include elements (inserted by yamilify_include())
@@ -444,7 +439,6 @@ def expand_includes(flat_model, prefix, include_paths):
     return new_flat_model
 
 
-
 #
 # Take the flat model created by _load() and merge all $prefix$ with its name
 # I.e: $prefix$ = "Cabin.Doors.1"
@@ -465,14 +459,12 @@ def create_absolute_paths(flat_model):
         if elem["$prefix$"] == "":
             new_name = name
         else:
-            new_name= "{}.{}".format(elem["$prefix$"], name)
+            new_name = "{}.{}".format(elem["$prefix$"], name)
 
         elem['$name$'] = new_name
         del elem["$prefix$"]
 
-
     return flat_model
-
 
 
 #
@@ -499,7 +491,6 @@ def create_nested_model(flat_model, file_name):
         if (elem["type"] == "branch") or (elem["type"] == "rbranch"):
             elem["children"] = {}
 
-
         # Create a list of path components to the given element
         #  name='body.door.front.left.lock' ->
         # [ 'body', 'door', 'front', 'left', 'lock' ]
@@ -516,14 +507,14 @@ def create_nested_model(flat_model, file_name):
         # we update its fields with the fields from the new element
         if name in parent_branch["children"]:
             old_elem = parent_branch["children"][name]
-            #print "Found: " + str(old_elem)
+            # print "Found: " + str(old_elem)
             # never update the type
             elem.pop("type", None)
             # concatenate file names
             fname = "{}:{}".format(old_elem["$file_name$"], elem["$file_name$"])
             old_elem.update(elem)
             old_elem["$file_name$"] = fname
-            #print "Set: " + str(parent_branch["children"][name])
+            # print "Set: " + str(parent_branch["children"][name])
         else:
             parent_branch["children"][name] = elem
 
@@ -535,21 +526,21 @@ def find_branch(branch, name_list, index):
     # Have we reached the end of the name list
     if len(name_list) == index:
         if (branch["type"] != "branch") and (branch["type"] != "rbranch"):
-            raise VSpecError(branch.get("$file_name$","??"),
+            raise VSpecError(branch.get("$file_name$", "??"),
                              branch.get("$line$", "??"),
                              "Not a branch: {}.".format(branch['$name$']))
 
         return branch
 
     if (branch["type"] != "branch") and (branch["type"] != "rbranch"):
-        raise VSpecError(branch.get("$file_name$","??"),
+        raise VSpecError(branch.get("$file_name$", "??"),
                          branch.get("$line$", "??"),
                          "{} is not a branch.".format(list_to_path(name_list[:index])))
 
     children = branch["children"]
 
     if name_list[index] not in children:
-        raise VSpecError(branch.get("$file_name$","??"),
+        raise VSpecError(branch.get("$file_name$", "??"),
                          branch.get("$line$", "??"),
                          "Missing branch: {} in {}.".format(name_list[index],
                                                             list_to_path(name_list)))
@@ -581,6 +572,7 @@ def element_to_list(elem):
 
     return
 
+
 #
 # Convert
 #   #include door.vspec, body.door.front.left
@@ -599,13 +591,13 @@ def yamilify_includes(text, is_list):
         if st_index == -1:
             return text
 
-        end_index = text.find("\n", st_index+1)
+        end_index = text.find("\n", st_index + 1)
         if end_index == -1:
             return text
 
-        include_arg = text[st_index+10:end_index].split()
+        include_arg = text[st_index + 10:end_index].split()
         if len(include_arg) == 2:
-            [ include_file, include_prefix] = include_arg
+            [include_file, include_prefix] = include_arg
         else:
             include_prefix = '""'
             [include_file] = include_arg
@@ -628,6 +620,68 @@ $include$:
         text = fmt_str.format(text[:st_index], include_file, include_prefix, text[end_index:])
 
     return text
+
+
+def render_tree(tree_dict, merge_private=False) -> VSSNode:
+    if len(tree_dict) != 1:
+        raise Exception('Invalid VSS model, must have single root node')
+
+    root_element_name = next(iter(tree_dict.keys()))
+    root_element = tree_dict[root_element_name]
+    tree_root = VSSNode(root_element_name, root_element)
+
+    if "children" in root_element.keys():
+        child_nodes = root_element["children"]
+        render_subtree(child_nodes, tree_root)
+
+    if merge_private:
+        merge_private_into_main_tree(tree_root)
+    return tree_root
+
+
+def render_subtree(subtree, parent):
+    for element_name in subtree:
+        current_element = subtree[element_name]
+
+        new_element = VSSNode(element_name, current_element, parent=parent)
+        if "children" in current_element.keys():
+            child_nodes = current_element["children"]
+            render_subtree(child_nodes, new_element)
+
+
+def merge_private_into_main_tree(tree_root: VSSNode):
+    r = Resolver()
+    try:
+        private = r.get(tree_root, "/Vehicle/Private")
+        detect_and_merge(tree_root, private)
+        private.parent = None
+    except ChildResolverError:
+        print("No private Attribute branch detected")
+
+
+def detect_and_merge(tree_root: VSSNode, private_root: VSSNode):
+    r = Resolver()
+    private_element: VSSNode
+    for private_element in LevelOrderIter(private_root):
+        if private_element == private_root:
+            continue
+
+        if not private_element.is_private():
+            continue
+
+        element_name = "/" + private_element.qualified_name()
+        candidate_name = element_name.replace("Private/", "")
+
+        if not VSSNode.node_exists(tree_root, candidate_name):
+            new_parent_name = "/" + private_element.parent.qualified_name().replace("/Private", "")
+            new_parent = r.get(tree_root, new_parent_name)
+            private_element.parent = new_parent
+
+        elif private_element.is_leaf:
+            other_node = r.get(tree_root, candidate_name)
+            other_node.merge(private_element)
+            private_element.parent = None
+
 
 db_mgr = SignalUUIDManager()
 
