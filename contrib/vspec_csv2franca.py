@@ -48,6 +48,8 @@ def unindent():
 
 def usage():
     print("Usage:", sys.argv[0], "-p <package>  -n <interface-name> -s <signal_pattern_match> vspec-CSV-file output-file")
+    print("  vspec-CSV-file       VSS database in the CSV format from vspec2csv script")
+    print("  output-file          Franca file (.fidl) to write output to.  Warning - the program will overwrite this file.")
     print("  -p package           Fully qualified Franca package name (mandatory, once)")
     print("  -n interface         Interface name(s) (mandatory, can be repeated but the given order MUST match hierarchy)")
     print("  -s signals           Pattern for signals to include (mandatory, can be repeated, Case Sensitive, full names or use * for wildcard)")
