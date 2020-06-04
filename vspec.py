@@ -284,11 +284,28 @@ def load_flat_model(file_name, prefix, include_paths):
 
         return mapping
 
-    directory, text = search_and_read(file_name, include_paths)
-    text = yamilify_includes(text)
 
-    # Setup a loader to include $line$ and $file_name$ as
-    # added python objects to the parsed tree.
+    # Read the file, searching all relevant includepaths
+    directory, text = search_and_read(file_name, include_paths)
+
+    # Do a trial pasing of the file to find out if it is list- or
+    # object-formatted.
+    loader = yaml.Loader(text)
+    loader.compose_node = yaml_compose_node
+
+    loader.construct_mapping = yaml_construct_mapping
+    test_yaml = loader.get_data()
+
+    # Depending on if this is a list or an object, expand
+    # the #include diretives differently
+    #
+    if isinstance(test_yaml, list):
+        text = yamilify_includes(text, True)
+    else:
+        text = yamilify_includes(text, False)
+
+    # Re-initialize loader with the new text hosting the
+    # yamilified includes.
     loader = yaml.Loader(text)
     loader.compose_node = yaml_compose_node
 
@@ -576,7 +593,7 @@ def element_to_list(elem):
 # then be further processed to actually include
 # the given file.
 #
-def yamilify_includes(text):
+def yamilify_includes(text, is_list):
     while True:
         st_index = text.find("\n#include")
         if st_index == -1:
@@ -593,11 +610,22 @@ def yamilify_includes(text):
             include_prefix = '""'
             [include_file] = include_arg
 
-        text = """{}
+        if is_list:
+            fmt_str = """{}
+
 - $name$: $include$
   file: {}
   prefix: {}
-{}""".format(text[:st_index], include_file, include_prefix, text[end_index:])
+{}"""
+        else:
+            fmt_str = """{}
+
+$include$:
+  file: {}
+  prefix: {}
+{}"""
+
+        text = fmt_str.format(text[:st_index], include_file, include_prefix, text[end_index:])
 
     return text
 
