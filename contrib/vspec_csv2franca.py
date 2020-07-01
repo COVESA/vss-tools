@@ -236,9 +236,9 @@ package {}
     if interface_version != "":
         major=interface_version[0:interface_version.find(",")]
         minor=interface_version[interface_version.find(",")+1:]
-        franca_out.write(prefix() + "version {{ major {}, minor {} }}\n".format(major, minor))
+        franca_out.write(prefix() + "version {{ major {} minor {} }}\n".format(major, minor))
 
-    franca_out.write(prefix() + 'const UTF8String VSS_INTERFACE_VERSION = "{}"\n'.format(vss_version))
+    franca_out.write(prefix() + 'const String VSS_INTERFACE_VERSION = "{}"\n'.format(vss_version))
 
     for row in csv.DictReader(csv_in):
         # Get Fully qualified node name (fqn) and type from respective
