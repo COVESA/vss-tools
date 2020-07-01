@@ -14,6 +14,8 @@ import sys
 import getopt
 import re
 import csv
+import random
+import os.path
 
 # SETTINGS
 YEAR = 2020
@@ -136,6 +138,67 @@ def generate_attribute(fqn, datatype, interface):
     attribute_collection.append(attr_name) # Remember all processed attributes
     return "attribute %s %s" % (convert_to_franca_type(datatype), attr_name)
 
+random_cache = []
+def random_unique(min, max, numeric=False):
+    global random_cache
+    random.seed()
+    while True:
+        # Separate each by a factor of 10, so we can add 1,2,3 to it later
+        r = random.randint(min,max) * 10
+        # Just make sure it is unique
+        if not r in random_cache:
+            # append in array and exit
+            random_cache.append(r)
+            if numeric:
+                return r
+            else:
+                return str(r)
+
+def someip_depl_interface_start(interface):
+    fdepl_out.write(
+"""
+import "platform:/plugin/org.genivi.commonapi.someip/deployment/CommonAPI-SOMEIP_deployment_spec.fdepl"
+import "{}"
+""".format(os.path.basename(franca_file)))
+
+    fdepl_out.write(
+"""
+
+define org.genivi.commonapi.someip.deployment for interface {}.{} {{
+	SomeIpServiceID = {}
+""".format(package, flatten_hierarchical_name(interface), random_unique(100,199)))
+
+def someip_depl_attributes(attributes):
+   for a in attributes:
+      base_id = random_unique(200,299,True)
+      fdepl_out.write(
+"""
+	attribute {} {{
+		SomeIpGetterID = {}
+		SomeIpSetterID = {}
+		SomeIpNotifierID = {}
+		SomeIpEventGroups = {{ 1 }}
+		SomeIpAttributeEndianess = le
+    }}
+""".format(a, base_id, base_id + 1, base_id + 2))
+   fdepl_out.write('}\n')
+
+def end_someip_depl_file():
+    fdepl_out.write("}\n")
+
+def someip_depl_provider(provider_name, interface):
+    fdepl_out.write(
+"""
+define org.genivi.commonapi.someip.deployment for provider {} {{
+	instance {}.{} {{
+		InstanceId = "{}"
+		SomeIpInstanceID = {}
+	}}
+}}
+""".format(provider_name, package, flatten_hierarchical_name(interface) ,random_unique(300,399), random_unique(400,500)))
+
+# MAIN
+
 if __name__ == "__main__":
     #
     # Check that we have the correct arguments
@@ -212,6 +275,19 @@ if __name__ == "__main__":
         print("Error: {}".format(e))
         exit(255)
 
+    fdepl_file = franca_file.replace('.fidl','.fdepl')
+    # This file must be unique, different from franca_out
+    # Fail if the user input is not what we expect (e.g. if it is already .fdepl)
+    if fdepl_file == franca_file:
+        print("ERROR: Franca output file should be specified as .fidl, not .fdepl!")
+        usage
+    try:
+        fdepl_out = open (fdepl_file, "w")
+    except OSError as e:
+        print("Error opening file %s for writing?" % fdepl_file)
+        print("Error: {}".format(e))
+        exit(253)
+
 
     print(signal_patterns)
 
@@ -263,6 +339,11 @@ package {}
     franca_out.write("""
 // End of file
 """)
+
+# Generate necessary SOME/IP deployment file (.fdepl)
+someip_depl_interface_start(interface)
+someip_depl_attributes(attribute_collection)
+someip_depl_provider(provider, interface)
 
 if attribute_count == 0:
     print("WARNING: No signals matched -- adjust signal match pattern or interface hierarchy (NOTE, hierarchy must match in name and order to the branch names).  All matches are case-sensitive.)")
