@@ -61,13 +61,12 @@ char* getTypeName(nodeTypes_t type) {
 }
 
 void showNodeData(long currentNode, int currentChild) {
-        printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d,\ndescription = %s\n", getName(currentNode), getTypeName(getType(currentNode)), getUUID(currentNode), getValidation(currentNode), getNumOfChildren(currentNode), getDescr(currentNode));
+        printf("\nNode name = %s, Node type = %s, Node uuid = %s, Node children = %d\nNode description = %s\n", getName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), getNumOfChildren(currentNode), getDescr(currentNode));
         if (getNumOfChildren(currentNode) > 0)
             printf("Node child[%d]=%s\n", currentChild, getName(getChild(currentNode, currentChild)));
-//        for (int i = 0 ; i < getNumOfEnumElements(currentNode) ; i++)
-//            printf("Enum[%d]=%s\n", i, getEnumElement(currentNode, i));
-printf("#enums=%d\n", getNumOfEnumElements(currentNode));
-        nodeTypes_t dtype = getDatatype(currentNode);
+        for (int i = 0 ; i < getNumOfEnumElements(currentNode) ; i++)
+            printf("Enum[%d]=%s\n", i, getEnumElement(currentNode, i));
+        nodeTypes_t dtype = VSSgetDatatype(currentNode);
         if (dtype != -1)
             printf("Datatype = %d\n", dtype);
         char* tmp = getUnit(currentNode);
@@ -84,11 +83,11 @@ int main(int argc, char** argv) {
     rootNode = VSSReadTree(vspecfile);
 
     char traverse[10];
-    printf("\nTo traverse the tree, 'u'(p)p/'d'(own)/'l'(eft)/'r'(ight)/g(et)/m(etadata subtree)/w(rite to file)/h(elp), or any other to quit\n");
+    printf("\nTo traverse the tree: 'u'(p)/'d'(own)/'l'(eft)/'r'(ight)/s(earch)/n(odelist)/(uu)i(dlist)/w(rite)/h(elp), or any other to quit\n");
     currentNode = rootNode;
     int currentChild = 0;
     while (true) {
-        printf("\n'u'/'d'/'l'/'r'/'g'/'w'/'h', or any other to quit: ");
+        printf("\n'u'/'d'/'l'/'r'/'s'/'n'/'i'/'w'/'h', or any other to quit: ");
         scanf("%s", traverse);
         switch (traverse[0]) {
             case 'u':  //up
@@ -117,47 +116,34 @@ int main(int argc, char** argv) {
                 }
                 showNodeData(currentNode, currentChild);
             break;
-            case 'g':  //get nodes matching path
+            case 's':  //search for nodes matching path
             {
                 char searchPath[MAXCHARSPATH];
                 printf("\nPath to resource(s): ");
                 scanf("%s", searchPath);
                 searchData_t searchData[MAXFOUNDNODES];
-                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, searchData, true, true, NULL);
+                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, searchData, true, true,NULL);
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
-                    printf("Found node type=%s\n", getTypeName(getType((long)(&(searchData[i]))->foundNodeHandles)));
+                    printf("Found node type=%s\n", getTypeName(VSSgetType((long)(&(searchData[i]))->foundNodeHandles)));
                     printf("Found path=%s\n", (char*)(&(searchData[i]))->responsePaths);
                 }
             }
             break;
-            case 'm':  //subtree metadata
+            case 'n':  //create node list file "nodelist.txt"
             {
-                char subTreePath[MAXCHARSPATH];
-                printf("\nPath to subtree node: ");
-                scanf("%s", subTreePath);
-                int depth;
-                printf("\nSubtree depth: ");
-                scanf("%d", &depth);
-                searchData_t searchData[MAXFOUNDNODES];
-                int foundResponses = VSSSearchNodes(subTreePath, rootNode, MAXFOUNDNODES, searchData, false, false, NULL);
-                long subtreeNode = (long)(&(searchData[foundResponses-1]))->foundNodeHandles;
-                char subTreeRootName[MAXCHARSPATH];
-                strcpy(subTreeRootName, getName((long)(&(searchData[foundResponses-1]))->foundNodeHandles));
-                for (int i = 1 ; i < depth ; i++) {
-                    strcat(subTreeRootName, ".*");
-                }
-                foundResponses = VSSSearchNodes(subTreeRootName, subtreeNode, MAXFOUNDNODES, searchData, false, false, NULL);
-                printf("\nNumber of elements found=%d\n", foundResponses);
-                for (int i = 0 ; i < foundResponses ; i++) {
-                    printf("Node type=%s\n", getTypeName(getType((long)(&(searchData[i]))->foundNodeHandles)));
-                    printf("Node path=%s\n", (char*)(&(searchData[i]))->responsePaths);
-                    printf("Node validation=%d\n", getValidation((long)(&(searchData[i]))->foundNodeHandles));
-                }
+                int numOfNodes = VSSGetLeafNodesList(rootNode, "nodelist.txt");
+                printf("\nLeaf node list with %d nodes found in nodelist.txt\n", numOfNodes);
+            }
+            break;
+            case 'i':  //create node list file "uuidlist.txt"
+            {
+                int numOfNodes = VSSGetUuidList(rootNode, "uuidlist.txt");
+                printf("\nUUID list with %d nodes found in uuidlist.txt\n", numOfNodes);
             }
             break;
             case 'h':  //help
-                printf("\nTo traverse the tree, 'u'(p)p/'d'(own)/'l'(eft)/'r'(ight)/g(et)/m(etadata subtree)/w(rite to file)/h(elp), or any other to quit\n");
+                printf("\nTo traverse the tree, 'u'(p)p/'d'(own)/'l'(eft)/'r'(ight)/s(earch)/n(odelist)/(uu)i(dlist)/h(elp), or any other to quit\n");
             break;
             case 'w':  //write to file
                 VSSWriteTree(vspecfile, rootNode);
