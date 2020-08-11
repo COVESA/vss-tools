@@ -165,4 +165,3 @@ if __name__ == "__main__":
         exit(255)
 
     traverse_tree(tree)
-
