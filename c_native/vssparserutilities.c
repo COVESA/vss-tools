@@ -279,12 +279,12 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 			    fwrite("\"", 1, 1, context->listFp);
 			} else {
 			    if (context->numOfMatches == 0) {
-				    fwrite("{\"", 2, 1, context->listFp);
+				    fwrite("{\"path\":\"", 9, 1, context->listFp);
 			    } else {
-				    fwrite(", {\"", 4, 1, context->listFp);
+				    fwrite(", {\"path\":\"", 11, 1, context->listFp);
 			    }
 			    fwrite(context->matchPath, strlen(context->matchPath), 1, context->listFp);
-			    fwrite("\", \"", 4, 1, context->listFp);
+			    fwrite("\", \"uuid\":\"", 11, 1, context->listFp);
 			    char uuid[32+1];
 			    strcpy(uuid, VSSgetUUID(thisNode));
 			    fwrite(uuid, strlen(uuid), 1, context->listFp);
