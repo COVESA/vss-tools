@@ -122,7 +122,7 @@ class VSSDataType(Enum):
     INT32 = "Int32"
     UINT32 = "UInt32"
     INT64 = "Int64"
-    UINT64 = "Int64"
+    UINT64 = "UInt64"
     BOOLEAN = "Boolean"
     FLOAT = "Float"
     DOUBLE = "Double"

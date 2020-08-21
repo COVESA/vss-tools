@@ -99,7 +99,7 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(VSSDataType.INT32, VSSDataType.from_str("Int32"))
         self.assertEqual(VSSDataType.UINT32, VSSDataType.from_str("UInt32"))
         self.assertEqual(VSSDataType.INT64, VSSDataType.from_str("Int64"))
-        self.assertEqual(VSSDataType.UINT64, VSSDataType.from_str("Int64"))
+        self.assertEqual(VSSDataType.UINT64, VSSDataType.from_str("UInt64"))
         self.assertEqual(VSSDataType.BOOLEAN, VSSDataType.from_str("Boolean"))
         self.assertEqual(VSSDataType.FLOAT, VSSDataType.from_str("Float"))
         self.assertEqual(VSSDataType.DOUBLE, VSSDataType.from_str("Double"))
