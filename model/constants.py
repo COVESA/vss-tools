@@ -77,7 +77,7 @@ class Unit(Enum):
     LITERPERHOUR = "l/h"
     MILESPERGALLON = "mpg"
     POUND = "lbs"
-    NETWONMETER = "N.m"
+    NEWTONMETER = "Nm"
     REVOLUTIONSPERMINUTE = "rpm"
     INCH = "inch"
     RATIO = "ratio"
@@ -139,4 +139,3 @@ class VSSDataType(Enum):
     @staticmethod
     def values():
         return list(map(lambda v: v.value, VSSDataType))
-
