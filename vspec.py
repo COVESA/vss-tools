@@ -219,6 +219,25 @@ def load(file_name, include_paths):
     deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
     return deep_model["children"]
+    
+
+def convert_yaml_to_list(raw_yaml):
+    if isinstance(raw_yaml, list):
+        return raw_yaml
+
+    # Sort the dictionary according to line number.
+    # The reason is that when the YAML file is loaded
+    # the object order is not preserved in the created
+    # dictionary
+    raw_yaml = collections.OrderedDict(sorted(raw_yaml.items(), key=lambda x: x[1]['$line$']))
+    lst = []
+    for elem in raw_yaml:
+        if isinstance(raw_yaml[elem], dict):
+            raw_yaml[elem]['$name$'] = elem
+            lst.append(raw_yaml[elem])
+
+    return lst
+
 
 
 def load_tree(file_name, include_paths):
