@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 #
 # (C) 2020 Geotab Inc
@@ -165,4 +165,3 @@ if __name__ == "__main__":
         exit(255)
 
     traverse_tree(tree)
-
