@@ -64,7 +64,7 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(Unit.LITERPERHOUR, Unit.from_str("l/h"))
         self.assertEqual(Unit.MILESPERGALLON, Unit.from_str("mpg"))
         self.assertEqual(Unit.POUND, Unit.from_str("lbs"))
-        self.assertEqual(Unit.NETWONMETER, Unit.from_str("N.m"))
+        self.assertEqual(Unit.NEWTONMETER, Unit.from_str("Nm"))
         self.assertEqual(Unit.REVOLUTIONSPERMINUTE, Unit.from_str("rpm"))
         self.assertEqual(Unit.INCH, Unit.from_str("inch"))
         self.assertEqual(Unit.RATIO, Unit.from_str("ratio"))
