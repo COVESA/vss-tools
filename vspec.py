@@ -13,6 +13,7 @@ import yaml
 import os
 import uuid
 import sys
+import re
 
 from anytree import (Resolver, ChildResolverError, LevelOrderIter)
 import deprecation
@@ -214,12 +215,13 @@ def assign_signal_uuids(flat_model):
                         details="Anytree as tree library introduced for typesafe handling of vss structure.")
 def load(file_name, include_paths):
     flat_model = load_flat_model(file_name, "", include_paths)
-    absolute_path_flat_model = create_absolute_paths(flat_model)
+    flat_model_instances = expand_instances(flat_model)
+    absolute_path_flat_model = create_absolute_paths(flat_model_instances)
     absolute_path_flat_model_with_id = assign_signal_uuids(absolute_path_flat_model)
     deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
     return deep_model["children"]
-    
+
 
 def convert_yaml_to_list(raw_yaml):
     if isinstance(raw_yaml, list):
@@ -242,7 +244,8 @@ def convert_yaml_to_list(raw_yaml):
 
 def load_tree(file_name, include_paths):
     flat_model = load_flat_model(file_name, "", include_paths)
-    absolute_path_flat_model = create_absolute_paths(flat_model)
+    flat_model_instances = expand_instances(flat_model)
+    absolute_path_flat_model = create_absolute_paths(flat_model_instances)
     absolute_path_flat_model_with_id = assign_signal_uuids(absolute_path_flat_model)
     deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
@@ -456,6 +459,146 @@ def expand_includes(flat_model, prefix, include_paths):
             new_flat_model.append(elem)
 
     return new_flat_model
+
+
+def expand_instances(flat_model):
+    # create instances from specification
+
+    new_flat_model = []
+    instantiation = []
+    base_name = ''
+    instances = None
+    inst_path = ''
+    cont = True
+
+    def extend_entry(new_entry, instance, name):
+
+        if base_name in new_entry["$name$"]:
+            new_entry["$name$"] = new_entry["$name$"].replace(name, "{}.{}".format(name, instance), 1)
+        else:
+            new_entry["$prefix$"] = new_entry["$prefix$"].replace(name, "{}.{}".format(name, instance), 1)
+        return new_entry
+
+    # repetition for nested instances
+    while cont:
+        cont = False
+
+        for elem in flat_model:
+            # collect elements, which belong under an instantiated branch
+            if inst_path and inst_path in "{}.{}".format(elem["$prefix$"], elem["$name$"]):
+                instantiation.append(elem)
+            # first node outside the instantiated branch
+            elif inst_path:
+                # add instantiation branches
+                for i in instances:
+                    # if multiple instances, only attach children under last instance
+                    # e.g. row1.left.{children}
+                    new_flat_model.append(extend_entry(dict(instantiation[0]), i[0], base_name))
+                    if i[1]:
+                        for e in instantiation[1:]:
+                            if isinstance(i[0], str):
+                                new_flat_model.append(extend_entry(dict(e), i[0], base_name))
+
+                inst_path = ''
+                instantiation = []
+                instances = None
+                base_name = ''
+
+                new_flat_model.append(elem)
+
+            else:
+                new_flat_model.append(elem)
+
+            if 'instances' in elem.keys():
+                # ignore nested instances for now and do it in the next run
+                if instances:
+                    cont = True
+                else:
+                    instances = createInstantiationEntries([elem['instances']])
+                    del elem['instances']
+                    instantiation.append(elem)
+                    base_name = elem["$name$"]
+                    inst_path = "{}.{}".format(elem["$prefix$"], elem["$name$"])
+
+        flat_model = new_flat_model
+        new_flat_model = []
+    return flat_model
+
+
+def createInstantiationEntries(instances, prefix=''):
+    # create instances according to the spec
+
+    reg_ex = "\w+\[\d+,(\d+)\]"
+
+    if not instances:
+        return
+
+    rest = None
+    i = []
+    result = []
+
+    if len(instances) == 1:
+        i = instances[0]
+    else:
+        i = instances[0]
+        rest = instances[1:]
+
+    if prefix and not prefix.endswith("."):
+        prefix += "."
+
+    # parse string instantiation elements (e.g. Row[1,5])
+    if isinstance(i, str):
+        if re.match(reg_ex, i):
+
+            inst_range_arr = re.split("\[+|,+|\]", i)
+
+            for r in range(int(inst_range_arr[1]), int(inst_range_arr[2]) + 1):
+                next_prefix = prefix + inst_range_arr[0] + str(r)
+                if rest:
+                    result.append([next_prefix, False])
+                    result.extend(createInstantiationEntries(rest, next_prefix))
+                else:
+                    result.append([next_prefix, True])
+        else:
+            raise VSpecError("", "", "instantiation type not supported")
+
+    # Use list elements for instances (e.g. ["LEFT","RIGHT"])
+    elif isinstance(i, list):
+
+        complex_list = False
+
+        for r in i:
+            # if in case of multiple instances in one branch
+            # it has to be distinguished from a list of
+            # string instantiations, like ["LEFT","RIGHT"]
+            if isinstance(r, str):
+                if re.match(reg_ex, r):
+                    if rest:
+                        rest.append(r)
+                    else:
+                        rest = [r]
+                    complex_list = True
+                else:
+                    next_prefix = prefix + str(r)
+
+                    if rest:
+                        result.append([next_prefix, False])
+                        result.extend(createInstantiationEntries(rest, next_prefix))
+                    else:
+                        result.append([next_prefix, True])
+
+            else:
+                # in case of multiple instances, the list is
+                # has to be parsed, like ["LEFT","RIGHT"]
+                if rest:
+                    rest.append(r)
+                else:
+                    rest = [r]
+                complex_list = True
+
+        if complex_list:
+            result.extend(createInstantiationEntries(rest, prefix))
+    return result
 
 
 #
