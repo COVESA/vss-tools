@@ -3,7 +3,7 @@ language: python
 python: 3.8
 
 install:
-  - pip install pyyaml anytree deprecation stringcase
+  - pip install -r requirements.txt
 
 script:
   # Go up to home directory of travis environment, and put VSS there
