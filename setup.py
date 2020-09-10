@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
-
 from distutils.core import setup
+import subprocess
+
+# Use tag as version, *if* it is a tagged commit...
+r = subprocess.run(['git', 'tag', '--points-at=HEAD'], stdout=subprocess.PIPE)
+version = r.stdout.rstrip().decode('UTF-8')
+
+# ...otherwise, use abbreviated git commit hash
+if version == '':
+    r = subprocess.run(['git', 'rev-parse', '--short=8', 'HEAD'], stdout=subprocess.PIPE)
+    version = r.stdout.rstrip().decode('UTF-8')
 
 setup(
-    name='vehicle_signal_specification',
-    version=open('../VERSION', 'r').read().replace('\n', ''),
+    name='vss-tools',
+    version=version,
     description='GENIVI Vehicle Signal Specification tooling.',
-    url='https://github.com/GENIVI/vehicle_signal_specification',
+    url='https://github.com/GENIVI/vss-tools',
     license='Mozilla Public License v2',
     py_modules=['vspec'],
     scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2cnative.py', 'vspec2json.py', 'vspec2c.py'],
