@@ -534,6 +534,10 @@ int getValidation(long nodeHandle) {
 	return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->validate);
 }
 
+int VSSgetValidation(long nodeHandle) {
+    return (int)((intptr_t)((node_t*)((intptr_t)nodeHandle))->validate);
+}
+
 char* getDescr(long nodeHandle) {
 	return ((node_t*)((intptr_t)nodeHandle))->description;
 }
