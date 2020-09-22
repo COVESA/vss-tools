@@ -91,3 +91,6 @@ ENV/
 
 # Apple files
 .DS_Store
+
+# IDE
+.idea
