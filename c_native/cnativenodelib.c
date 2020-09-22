@@ -23,37 +23,61 @@ FILE* treeFp;
 int objectType = -1;  // declared at this level to propagate type from rbranch context to its element children contexts
 
 int stringToTypeDef(char* type) {
-    if (strcmp(type, "Int8") == 0 || strcmp(type, "int8") == 0)
-        return INT8;
-    if (strcmp(type, "UInt8") == 0 || strcmp(type, "uint8") == 0)
-        return UINT8;
-    if (strcmp(type, "Int16") == 0 || strcmp(type, "int16") == 0)
-        return INT16;
-    if (strcmp(type, "UInt16") == 0 || strcmp(type, "uint16") == 0)
-        return UINT16;
-    if (strcmp(type, "Int32") == 0 || strcmp(type, "int32") == 0)
-        return INT32;
-    if (strcmp(type, "UInt32") == 0 || strcmp(type, "uint32") == 0)
-        return UINT32;
-    if (strcmp(type, "Double") == 0 || strcmp(type, "double") == 0)
-        return DOUBLE;
-    if (strcmp(type, "Float") == 0 || strcmp(type, "float") == 0)
-        return FLOAT;
-    if (strcmp(type, "Boolean") == 0 || strcmp(type, "boolean") == 0)
-        return BOOLEAN;
-    if (strcmp(type, "String") == 0 || strcmp(type, "string") == 0)
-        return STRING;
     if (strcmp(type, "sensor") == 0)
         return SENSOR;
     if (strcmp(type, "actuator") == 0)
         return ACTUATOR;
-    if (strcmp(type, "stream") == 0)
-        return STREAM;
     if (strcmp(type, "attribute") == 0)
         return ATTRIBUTE;
     if (strcmp(type, "branch") == 0)
         return BRANCH;
     printf("Unknown type! |%s|\n", type);
+    return -1;
+}
+
+int stringToDataTypeDef(char* datatype) {
+    if (strcmp(datatype, "Int8") == 0 || strcmp(datatype, "int8") == 0)
+        return INT8;
+    if (strcmp(datatype, "Uint8") == 0 || strcmp(datatype, "uint8") == 0 || strcmp(datatype, "UInt8") == 0)
+        return UINT8;
+    if (strcmp(datatype, "Int16") == 0 || strcmp(datatype, "int16") == 0)
+        return INT16;
+    if (strcmp(datatype, "Uint16") == 0 || strcmp(datatype, "uint16") == 0 || strcmp(datatype, "UInt16") == 0)
+        return UINT16;
+    if (strcmp(datatype, "Int32") == 0 || strcmp(datatype, "int32") == 0)
+        return INT32;
+    if (strcmp(datatype, "Uint32") == 0 || strcmp(datatype, "uint32") == 0 || strcmp(datatype, "UInt32") == 0)
+        return UINT32;
+    if (strcmp(datatype, "Double") == 0 || strcmp(datatype, "double") == 0)
+        return DOUBLE;
+    if (strcmp(datatype, "Float") == 0 || strcmp(datatype, "float") == 0)
+        return FLOAT;
+    if (strcmp(datatype, "Bool") == 0 || strcmp(datatype, "bool") == 0 || strcmp(datatype, "boolean") == 0)
+        return BOOLEAN;
+    if (strcmp(datatype, "String") == 0 || strcmp(datatype, "string") == 0)
+        return STRING;
+
+    if (strcmp(datatype, "Int8[]") == 0 || strcmp(datatype, "int8[]") == 0)
+        return INT8ARRAY;
+    if (strcmp(datatype, "Uint8[]") == 0 || strcmp(datatype, "uint8[]") == 0 || strcmp(datatype, "UInt8[]") == 0)
+        return UINT8ARRAY;
+    if (strcmp(datatype, "Int16[]") == 0 || strcmp(datatype, "int16[]") == 0)
+        return INT16ARRAY;
+    if (strcmp(datatype, "Uint16[]") == 0 || strcmp(datatype, "uint16[]") == 0 || strcmp(datatype, "UInt16[]") == 0)
+        return UINT16ARRAY;
+    if (strcmp(datatype, "Int32[]") == 0 || strcmp(datatype, "int32[]") == 0)
+        return INT32ARRAY;
+    if (strcmp(datatype, "Uint32[]") == 0 || strcmp(datatype, "uint32[]") == 0 || strcmp(datatype, "UInt32[]") == 0)
+        return UINT32ARRAY;
+    if (strcmp(datatype, "Double[]") == 0 || strcmp(datatype, "double[]") == 0)
+        return DOUBLEARRAY;
+    if (strcmp(datatype, "Float[]") == 0 || strcmp(datatype, "float[]") == 0)
+        return FLOATARRAY;
+    if (strcmp(datatype, "Bool[]") == 0 || strcmp(datatype, "bool[]") == 0 || strcmp(datatype, "boolean[]") == 0)
+        return BOOLEANARRAY;
+    if (strcmp(datatype, "String[]") == 0 || strcmp(datatype, "string[]") == 0)
+        return STRINGARRAY;
+    printf("Unknown datatype! |%s|\n", datatype);
     return -1;
 }
 
@@ -100,11 +124,11 @@ void writeCommonPart(char* name, char* type, char* uuid, int validate, char* des
 }
 
 void writeNodeData(char* name, char* type, char* uuid, int validate, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
-printf("Name=%s, Type=%s, uuid=%s, validate=%d, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, enums, function);
+//printf("Name=%s, Type=%s, uuid=%s, validate=%d, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, enums, function);
     writeCommonPart(name, type, uuid, validate, descr, children);
     int dtype = -1;
     if (strlen(datatype) != 0)
-        dtype = stringToTypeDef(datatype);
+        dtype = stringToDataTypeDef(datatype);
     fwrite(&dtype, sizeof(int), 1, treeFp);
     int nodeMin = INT_MAX;
     if (strlen(min) != 0)

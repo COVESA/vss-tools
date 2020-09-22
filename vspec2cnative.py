@@ -106,11 +106,11 @@ def create_node(key, val):
     b_nodedescription = nodedescription.encode('utf-8')
     validate = 0
     if "validate" in val:
-	nodevalidate = val["validate"]
-	if (nodevalidate == "write-only"):
-		validate = 1
-	elif (nodevalidate == "read-write"):
-		validate = 2
+        nodevalidate = val["validate"]
+        if (nodevalidate == "write-only"):
+                validate = 1
+        elif (nodevalidate == "read-write"):
+                validate = 2
     children = 0
     if "children" in val:
         children = len(list(val["children"].keys()))

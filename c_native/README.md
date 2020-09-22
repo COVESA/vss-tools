@@ -3,7 +3,7 @@ However, before doing that the library cnativenodelib.so must be built by going 
 
 $ gcc -shared -o cnativenodelib.so -fPIC cnativenodelib.c
 
-And in the tools directory, compile vspec.py.
+And in the tools directory, compile vspec.py.<br>
 $ python -m compileall vspec.py
 
 The created cnative tree file can then be tried out using the testparser found in the cnative directory.
@@ -11,7 +11,7 @@ To build it, execute:
 
 cc vsstestparser.c vssparserutilities.c -o vsstestparser
 
-When starting it, the path to the cnative file must be provided. If started from the cnative directory:
+When starting it, the path to the cnative file must be provided. If started from the cnative directory:<br>
 $ ./vsstestparser ../../vss_rel_<current version>.cnative
 
 In the tesparser you can traverse the tree from the keyboard keys r/l/u/d as shown in the simple UI. 

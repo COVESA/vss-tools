@@ -6,11 +6,12 @@
 * provisions of the license provided by the LICENSE file in this repository.
 *
 *
-* Parser utilities for a native format VSS tree.
+* Parser utilities for a  C native format VSS tree.
 **/
 
+typedef enum {SENSOR, ACTUATOR, ATTRIBUTE, BRANCH } nodeTypes_t;
+typedef enum {INT8, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, INT8ARRAY, UINT8ARRAY, INT16ARRAY, UINT16ARRAY, INT32ARRAY, UINT32ARRAY, DOUBLEARRAY, FLOATARRAY, BOOLEANARRAY, STRINGARRAY} nodeDatatypes_t;
 #define MAXENUMELEMENTLEN 20
-typedef enum { INT8, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, SENSOR, ACTUATOR, STREAM, ATTRIBUTE, BRANCH } nodeTypes_t;
 typedef char enum_t[MAXENUMELEMENTLEN];
 
 #define ELEMENT_STRING_MAXLEN 125
@@ -32,7 +33,7 @@ long getParent(long nodeHandle);
 long getChild(long nodeHandle, int childNo);
 int getNumOfChildren(long nodeHandle);
 nodeTypes_t VSSgetType(long nodeHandle);
-nodeTypes_t VSSgetDatatype(long nodeHandle);
+nodeDatatypes_t VSSgetDatatype(long nodeHandle);
 char* getName(long nodeHandle);
 char* VSSgetUUID(long nodeHandle);
 int getValidation(long nodeHandle);

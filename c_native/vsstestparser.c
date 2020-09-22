@@ -23,6 +23,23 @@ char* vspecfile;
 
 char* getTypeName(nodeTypes_t type) {
     switch (type) { 
+        case SENSOR:
+            return "SENSOR";
+        case ACTUATOR:
+            return "ACTUATOR";
+        case ATTRIBUTE:
+            return "ATTRIBUTE";
+        case BRANCH:
+            return "BRANCH";
+        default:
+            printf("getTypeName: unknown type(%d)\n", type);
+            return "unknown";
+        break;
+    } // switch
+}
+
+char* getDatatypeName(nodeDatatypes_t datatype) {
+    switch (datatype) { 
         case INT8:
                 return "INT8";
         case UINT8:
@@ -43,25 +60,35 @@ char* getTypeName(nodeTypes_t type) {
             return "BOOLEAN";
         case STRING:
             return "STRING";
-        case SENSOR:
-            return "SENSOR";
-        case ACTUATOR:
-            return "ACTUATOR";
-        case STREAM:
-            return "STREAM";
-        case ATTRIBUTE:
-            return "ATTRIBUTE";
-        case BRANCH:
-            return "BRANCH";
+        case INT8ARRAY:
+                return "INT8[]";
+        case UINT8ARRAY:
+                return "UINT8[]";
+        case INT16ARRAY:
+                return "INT16[]";
+        case UINT16ARRAY:
+                return "UINT16[]";
+        case INT32ARRAY:
+                return "INT32[]";
+        case UINT32ARRAY:
+                return "UINT32[]";
+        case DOUBLEARRAY:
+            return "DOUBLE[]";
+        case FLOATARRAY:
+            return "FLOAT[]";
+        case BOOLEANARRAY:
+            return "BOOLEAN[]";
+        case STRINGARRAY:
+            return "STRING[]";
         default:
-            printf("getTypeName: unknown type\n");
+            printf("getDatatypeName: unknown datatype (%d)\n", datatype);
             return "unknown";
         break;
     } // switch
 }
 
 void showNodeData(long currentNode, int currentChild) {
-        printf("\nNode name = %s, Node type = %s, Node uuid = %s, Node children = %d\nNode description = %s\n", getName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), getNumOfChildren(currentNode), getDescr(currentNode));
+        printf("\nNode name = %s, Node type = %s, Node datatype = %s, Node uuid = %s, Node children = %d\nNode description = %s\n", getName(currentNode), getTypeName(VSSgetType(currentNode)), getDatatypeName(VSSgetDatatype(currentNode)), VSSgetUUID(currentNode), getNumOfChildren(currentNode), getDescr(currentNode));
         if (getNumOfChildren(currentNode) > 0)
             printf("Node child[%d]=%s\n", currentChild, getName(getChild(currentNode, currentChild)));
         for (int i = 0 ; i < getNumOfEnumElements(currentNode) ; i++)
@@ -126,6 +153,7 @@ int main(int argc, char** argv) {
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
                     printf("Found node type=%s\n", getTypeName(VSSgetType((long)(&(searchData[i]))->foundNodeHandles)));
+                    printf("Found node datatype=%s\n", getDatatypeName(VSSgetDatatype((long)(&(searchData[i]))->foundNodeHandles)));
                     printf("Found path=%s\n", (char*)(&(searchData[i]))->responsePaths);
                 }
             }
