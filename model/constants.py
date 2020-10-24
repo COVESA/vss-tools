@@ -128,6 +128,19 @@ class VSSDataType(Enum):
     DOUBLE = "Double"
     STRING = "String"
     UNIX_TIMESTAMP = "UNIX Timestamp"
+    INT8_ARRAY = "Int8[]"
+    UINT8_ARRAY = "UInt8[]"
+    INT16_ARRAY = "Int16[]"
+    UINT16_ARRAY = "UInt16[]"
+    INT32_ARRAY = "Int32[]"
+    UINT32_ARRAY = "UInt32[]"
+    INT64_ARRAY = "Int64[]"
+    UINT64_ARRAY = "UInt64[]"
+    BOOLEAN_ARRAY = "Boolean[]"
+    FLOAT_ARRAY = "Float[]"
+    DOUBLE_ARRAY = "Double[]"
+    STRING_ARRAY = "String[]"
+    UNIX_TIMESTAMP_ARRAY = "UNIX Timestamp[]"
 
     @staticmethod
     def from_str(name):
