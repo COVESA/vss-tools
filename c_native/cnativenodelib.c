@@ -52,7 +52,7 @@ int stringToDataTypeDef(char* datatype) {
         return DOUBLE;
     if (strcmp(datatype, "Float") == 0 || strcmp(datatype, "float") == 0)
         return FLOAT;
-    if (strcmp(datatype, "Bool") == 0 || strcmp(datatype, "bool") == 0 || strcmp(datatype, "boolean") == 0)
+    if (strcmp(datatype, "Boolean") == 0 || strcmp(datatype, "boolean") == 0)
         return BOOLEAN;
     if (strcmp(datatype, "String") == 0 || strcmp(datatype, "string") == 0)
         return STRING;
@@ -73,7 +73,7 @@ int stringToDataTypeDef(char* datatype) {
         return DOUBLEARRAY;
     if (strcmp(datatype, "Float[]") == 0 || strcmp(datatype, "float[]") == 0)
         return FLOATARRAY;
-    if (strcmp(datatype, "Bool[]") == 0 || strcmp(datatype, "bool[]") == 0 || strcmp(datatype, "boolean[]") == 0)
+    if (strcmp(datatype, "Boolean[]") == 0 || strcmp(datatype, "boolean[]") == 0)
         return BOOLEANARRAY;
     if (strcmp(datatype, "String[]") == 0 || strcmp(datatype, "string[]") == 0)
         return STRINGARRAY;
@@ -124,7 +124,7 @@ void writeCommonPart(char* name, char* type, char* uuid, int validate, char* des
 }
 
 void writeNodeData(char* name, char* type, char* uuid, int validate, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
-//printf("Name=%s, Type=%s, uuid=%s, validate=%d, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s, function=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, enums, function);
+//printf("Name=%s, Type=%s, uuid=%s, validate=%d, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, enums);
     writeCommonPart(name, type, uuid, validate, descr, children);
     int dtype = -1;
     if (strlen(datatype) != 0)
@@ -160,19 +160,19 @@ void writeNodeData(char* name, char* type, char* uuid, int validate, char* descr
         fwrite(enumeration, sizeof(enum_t)*numOfEnumElements, 1, treeFp);
         free(enumeration);
     }
-    int functionLen = (int)strlen(function);
+    int functionLen = 0;  // function deprecated. TODO: Remove from file data structure.
     fwrite(&functionLen, sizeof(int), 1, treeFp);
     if (functionLen > 0)
         fwrite(function, sizeof(char)*functionLen, 1, treeFp);
 }
 
-void createNativeCnode(char*fname, char* name, char* type, char* uuid, int validate, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums, char* function) {
+void createNativeCnode(char*fname, char* name, char* type, char* uuid, int validate, char* descr, int children, char* datatype, char* min, char* max, char* unit, char* enums) {
     treeFp = fopen(fname, "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeNodeData(name, type, uuid, validate, descr, children, datatype, min, max, unit, enums, function);
+    writeNodeData(name, type, uuid, validate, descr, children, datatype, min, max, unit, enums, NULL);
     fclose(treeFp);
 }
 
