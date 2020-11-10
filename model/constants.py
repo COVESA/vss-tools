@@ -115,39 +115,39 @@ class VSSType(Enum):
 
 
 class VSSDataType(Enum):
-    INT8 = "Int8"
-    UINT8 = "UInt8"
-    INT16 = "Int16"
-    UINT16 = "UInt16"
-    INT32 = "Int32"
-    UINT32 = "UInt32"
-    INT64 = "Int64"
-    UINT64 = "UInt64"
-    BOOLEAN = "Boolean"
-    FLOAT = "Float"
-    DOUBLE = "Double"
-    STRING = "String"
+    INT8 = "int8"
+    UINT8 = "uint8"
+    INT16 = "int16"
+    UINT16 = "uint16"
+    INT32 = "int32"
+    UINT32 = "uint32"
+    INT64 = "int64"
+    UINT64 = "uint64"
+    BOOLEAN = "boolean"
+    FLOAT = "float"
+    DOUBLE = "double"
+    STRING = "string"
     UNIX_TIMESTAMP = "UNIX Timestamp"
-    INT8_ARRAY = "Int8[]"
-    UINT8_ARRAY = "UInt8[]"
-    INT16_ARRAY = "Int16[]"
-    UINT16_ARRAY = "UInt16[]"
-    INT32_ARRAY = "Int32[]"
-    UINT32_ARRAY = "UInt32[]"
-    INT64_ARRAY = "Int64[]"
-    UINT64_ARRAY = "UInt64[]"
-    BOOLEAN_ARRAY = "Boolean[]"
-    FLOAT_ARRAY = "Float[]"
-    DOUBLE_ARRAY = "Double[]"
-    STRING_ARRAY = "String[]"
+    INT8_ARRAY = "int8[]"
+    UINT8_ARRAY = "uint8[]"
+    INT16_ARRAY = "int16[]"
+    UINT16_ARRAY = "uint16[]"
+    INT32_ARRAY = "int32[]"
+    UINT32_ARRAY = "uint32[]"
+    INT64_ARRAY = "int64[]"
+    UINT64_ARRAY = "uint64[]"
+    BOOLEAN_ARRAY = "boolean[]"
+    FLOAT_ARRAY = "float[]"
+    DOUBLE_ARRAY = "double[]"
+    STRING_ARRAY = "string[]"
     UNIX_TIMESTAMP_ARRAY = "UNIX Timestamp[]"
 
     @staticmethod
     def from_str(name):
         for vss_type in VSSDataType:
-            if vss_type.value.lower() == name.lower():
+            if vss_type.value == name:
                 return vss_type
-        raise Exception("Invalid VSS type %s only support %s" % (name, VSSDataType.values()))
+        raise Exception("Invalid VSS datatype %s, valid types are %s" % (name, VSSDataType.values()))
 
     @staticmethod
     def values():
