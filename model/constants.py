@@ -147,7 +147,7 @@ class VSSDataType(Enum):
         for vss_type in VSSDataType:
             if vss_type.value == name:
                 return vss_type
-        raise Exception("Invalid VSS datatype %s, valid types are %s" % (name, VSSDataType.values()))
+        raise Exception("Invalid VSS datatype %s, valid types (case-sensitive) are %s" % (name, VSSDataType.values()))
 
     @staticmethod
     def values():
