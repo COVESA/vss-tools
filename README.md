@@ -50,7 +50,7 @@ Folder structure for the example below
     │   └── VehicleSignalSpecification.vspec
     ├──vss-tools  
     ├── vspec2c.py
-    ├── vspec2cnative.py
+    ├── vspec2binary.py
     ├── vspec2csv.py
     ├── vspec2franca.py
     ├── vspec2json.py
