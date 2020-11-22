@@ -6,7 +6,7 @@
 * provisions of the license provided by the LICENSE file in this repository.
 *
 * 
-* Example of parser for a native format VSS tree.
+* Example of parser for a binary format VSS tree.
 **/
 
 #include <stdio.h>
@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "vssparserutilities.h"
+#include "cparserlib.h"
 
 long currentNode;
 long rootNode;
@@ -88,21 +88,18 @@ char* getDatatypeName(nodeDatatypes_t datatype) {
 }
 
 void showNodeData(long currentNode, int currentChild) {
-        printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d,\ndescription = %s\n", getName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), getValidation(currentNode), getNumOfChildren(currentNode), getDescr(currentNode));
-        if (getNumOfChildren(currentNode) > 0)
-            printf("Node child[%d]=%s\n", currentChild, getName(getChild(currentNode, currentChild)));
-//        for (int i = 0 ; i < getNumOfEnumElements(currentNode) ; i++)
-//            printf("Enum[%d]=%s\n", i, getEnumElement(currentNode, i));
-        printf("#enums=%d\n", getNumOfEnumElements(currentNode));
+        printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d,\ndescription = %s\n", VSSgetName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), VSSgetValidation(currentNode), VSSgetNumOfChildren(currentNode), VSSgetDescr(currentNode));
+        if (VSSgetNumOfChildren(currentNode) > 0)
+            printf("Node child[%d]=%s\n", currentChild, VSSgetName(VSSgetChild(currentNode, currentChild)));
+//        for (int i = 0 ; i < VSSgetNumOfEnumElements(currentNode) ; i++)
+//            printf("Enum[%d]=%s\n", i, VSSgetEnumElement(currentNode, i));
+        printf("#enums=%d\n", VSSgetNumOfEnumElements(currentNode));
         nodeDatatypes_t dtype = VSSgetDatatype(currentNode);
         if (dtype != -1)
             printf("Datatype = %d\n", dtype);
-        char* tmp = getUnit(currentNode);
+        char* tmp = VSSgetUnit(currentNode);
         if (tmp != NULL)
             printf("Unit = %s\n", tmp);
-        tmp = getFunction(currentNode);
-        if (tmp != NULL)
-            printf("Function = %s\n", tmp);
 }
 
 int main(int argc, char** argv) {
@@ -119,15 +116,15 @@ int main(int argc, char** argv) {
         scanf("%s", traverse);
         switch (traverse[0]) {
             case 'u':  //up
-                if (getParent(currentNode) != 0) {
-                    currentNode = getParent(currentNode);
+                if (VSSgetParent(currentNode) != 0) {
+                    currentNode = VSSgetParent(currentNode);
                     currentChild = 0;
                 }
                 showNodeData(currentNode, currentChild);
             break;
             case 'd':  //down
-                if (getChild(currentNode, currentChild) != 0) {
-                    currentNode = getChild(currentNode, currentChild);
+                if (VSSgetChild(currentNode, currentChild) != 0) {
+                    currentNode = VSSgetChild(currentNode, currentChild);
                     currentChild = 0;
                 }
                 showNodeData(currentNode, currentChild);
@@ -139,7 +136,7 @@ int main(int argc, char** argv) {
                 showNodeData(currentNode, currentChild);
             break;
             case 'r':  //right
-                if (currentChild < getNumOfChildren(currentNode)-1) {
+                if (currentChild < VSSgetNumOfChildren(currentNode)-1) {
                     currentChild++;
                 }
                 showNodeData(currentNode, currentChild);
@@ -183,7 +180,7 @@ int main(int argc, char** argv) {
                 int foundResponses = VSSSearchNodes(subTreePath, rootNode, MAXFOUNDNODES, searchData, false, false, NULL);
                 long subtreeNode = (long)(&(searchData[foundResponses-1]))->foundNodeHandles;
                 char subTreeRootName[MAXCHARSPATH];
-                strcpy(subTreeRootName, getName((long)(&(searchData[foundResponses-1]))->foundNodeHandles));
+                strcpy(subTreeRootName, VSSgetName((long)(&(searchData[foundResponses-1]))->foundNodeHandles));
                 for (int i = 1 ; i < depth ; i++) {
                     strcat(subTreeRootName, ".*");
                 }
@@ -192,7 +189,7 @@ int main(int argc, char** argv) {
                 for (int i = 0 ; i < foundResponses ; i++) {
                     printf("Node type=%s\n", getTypeName(VSSgetType((long)(&(searchData[i]))->foundNodeHandles)));
                     printf("Node path=%s\n", (char*)(&(searchData[i]))->responsePaths);
-                    printf("Node validation=%d\n", getValidation((long)(&(searchData[i]))->foundNodeHandles));
+                    printf("Node validation=%d\n", VSSgetValidation((long)(&(searchData[i]))->foundNodeHandles));
                 }
             }
             break;
