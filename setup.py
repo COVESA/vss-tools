@@ -18,6 +18,6 @@ setup(
     url='https://github.com/GENIVI/vss-tools',
     license='Mozilla Public License v2',
     py_modules=['vspec'],
-    scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2cnative.py', 'vspec2json.py', 'vspec2c.py'],
+    scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py', 'vspec2c.py'],
     python_requires='>=3.4'
 )

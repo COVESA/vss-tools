@@ -1,1 +1,1 @@
-module github.com/GENIVI/vss-tools/native/go_parser/datamodel
+module github.com/GENIVI/vss-tools/binary/go_parser/datamodel
