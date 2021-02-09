@@ -50,7 +50,7 @@ Usage: {sys.argv[0]} [options] vspec_file csv_file
 
 
 def print_csv_header(file):
-    file.write("Signal,Id,Type,DataType,Complex,Unit,Min,Max,Desc,Enum,instance\n")
+    file.write("Signal,Type,DataType,Deprecated,Complex,Unit,Min,Max,Desc,Enum,Id,Instance\n")
 
 
 def print_csv_content(file, tree):
@@ -62,10 +62,10 @@ def print_csv_content(file, tree):
         if tree_node.instances:
             for instance in tree_node.instances:
                 file.write(
-                    f"{tree_node.qualified_name('.')},{tree_node.type.value},{data_type_str},true,{unit_str},{tree_node.min},{tree_node.max},{tree_node.description},{tree_node.enum},{instance}\n")
+                    f"{tree_node.qualified_name('.')},{tree_node.type.value},{data_type_str},{tree_node.deprecation},true,{unit_str},{tree_node.min},{tree_node.max},{tree_node.description},{tree_node.enum},{tree_node.uuid},{instance}\n")
         else:
             file.write(
-                f"{tree_node.qualified_name('.')},{tree_node.type.value},{data_type_str},false,{unit_str},{tree_node.min},{tree_node.max},{tree_node.description},{tree_node.enum},""\n")
+                f"{tree_node.qualified_name('.')},{tree_node.type.value},{data_type_str},{tree_node.deprecation},false,{unit_str},{tree_node.min},{tree_node.max},{tree_node.description},{tree_node.enum},{tree_node.uuid},""\n")
 
 
 if __name__ == "__main__":

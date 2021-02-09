@@ -35,6 +35,7 @@ class VSSNode(Node):
     value = ""
 
     instances = None
+    deprecation = ""
 
     def __init__(self, name, source_dict: dict, parent=None, children=None):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
@@ -82,6 +83,9 @@ class VSSNode(Node):
 
         if "instances" in source_dict.keys():
             self.instances = source_dict["instances"]
+        
+        if "deprecation" in source_dict.keys():
+            self.deprecation = source_dict["deprecation"]
 
     def is_private(self) -> bool:
         """Checks weather this instance is in private branch of VSS.
@@ -231,7 +235,7 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default", "value", "instances"]:
+                            "aggregate", "default", "value", "instances", "deprecation"]:
                 raise Exception("Unsupported attribute tree element %s found: %s" % (name, aKey))
 
 
