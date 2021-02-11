@@ -19,7 +19,8 @@ from model.vsstree import VSSNode, VSSType
 
 
 def usage():
-    print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file json_file")
+    print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file [-s] json_file")
+    print("  -s                   Use strict checking: Terminate when non-core attribute is found")
     print("  -I include_dir       Add include directory to search for included vspec")
     print("                       files. Can be used multiple timees.")
     print()
@@ -51,8 +52,6 @@ def export_node(json_dict, node):
         json_dict[node.name]["enum"]=node.enum
     if node.default_value != "":
         json_dict[node.name]["default"]=node.default_value
-    if node.value != "":
-        json_dict[node.name]["value"]=node.value
     if node.deprecation != "":
         json_dict[node.name]["deprecation"]=node.deprecation
 
@@ -96,7 +95,8 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args= getopt.getopt(sys.argv[1:], "I:i:")
+    opts, args= getopt.getopt(sys.argv[1:], "sI:i:")
+    strict=False
 
     # Always search current directory for include_file
     include_dirs = ["."]
@@ -108,9 +108,10 @@ if __name__ == "__main__":
             if len(id_spec) != 2:
                 print("ERROR: -i needs a 'prefix:id_file' argument.")
                 usage()
-
             [prefix, file_name] = id_spec
             vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
+        elif o == "-s":
+            strict=True
         else:
             usage()
 
@@ -122,7 +123,7 @@ if __name__ == "__main__":
 
     try:
         print("Loading vspec...")
-        tree = vspec.load_tree(args[0], include_dirs)
+        tree = vspec.load_tree(args[0], include_dirs, exclude_private=False, break_on_noncore_attribute=strict)
         print("Recursing tree and creating JSON...")
         export_json(json_out,tree)
         print("All done.")
