@@ -10,6 +10,8 @@
 #
 # Convert vspec file to GraphQL
 #
+
+import sys
 import re
 import stringcase
 from anytree import (Node, Resolver, ChildResolverError)
@@ -18,6 +20,11 @@ from model.constants import VSSType, VSSDataType, StringStyle, Unit
 
 DEFAULT_SEPARATOR = "."
 
+class NonCoreAttributeException(Exception):
+    def __init__(self, message):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
 
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
@@ -32,12 +39,11 @@ class VSSNode(Node):
     enum = ""
 
     default_value = ""
-    value = ""
 
     instances = None
     deprecation = ""
 
-    def __init__(self, name, source_dict: dict, parent=None, children=None):
+    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
             Args:
@@ -52,7 +58,14 @@ class VSSNode(Node):
         """
 
         super().__init__(name, parent, children)
-        VSSNode.validate_vss_element(source_dict, name)
+        try:
+            VSSNode.validate_vss_element(source_dict, name)
+        except NonCoreAttributeException as e:
+            print("Warning: {}".format(e))
+            if break_on_noncore_attribute:
+                print("You asked for strict checking. Terminating.")
+                sys.exit(-1)
+
         self.description = source_dict["description"]
         self.type = VSSType.from_str(source_dict["type"])
         self.uuid = source_dict["uuid"]
@@ -77,9 +90,6 @@ class VSSNode(Node):
 
         if "default" in source_dict.keys():
             self.default_value = source_dict["default"]
-
-        if "value" in source_dict.keys():
-            self.value = source_dict["value"]
 
         if "instances" in source_dict.keys():
             self.instances = source_dict["instances"]
@@ -235,8 +245,8 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default", "value", "instances", "deprecation"]:
-                raise Exception("Unsupported attribute tree element %s found: %s" % (name, aKey))
+                            "aggregate", "default" , "instances", "deprecation"]:
+                raise NonCoreAttributeException('Non-core attribute "%s" in elment %s found.' % (aKey, name))
 
 
 def camel_case(st):
