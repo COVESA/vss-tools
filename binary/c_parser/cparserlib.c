@@ -45,6 +45,8 @@ typedef struct SearchContext_t {
 	int maxValidation;
 	int numOfMatches;
 	searchData_t* searchData;
+	int listSize;
+	noScopeList_t* noScopeList;
 	FILE* listFp;
 } SearchContext_t;
 
@@ -188,7 +190,7 @@ char* dataTypeToString(nodeDatatypes_t datatype) {
     return "";
 }
 
-int validateToInt(char* validate) {
+uint8_t validateToUint8(char* validate) {
     if (strcmp(validate, "write-only") == 0) {
         return 1;
     }
@@ -279,6 +281,20 @@ bool compareNodeName(char* nodeName, char* pathName) {
 	return false;
 }
 
+bool isEndOfScope(SearchContext_t* context) {
+    int i;
+    if (context->listSize == 0) {
+        return false;
+    }
+    for (i = 0 ; i < context->listSize ; i++) {
+        char* noScopePath = context->noScopeList[i].path;
+        if (strcmp(context->matchPath, noScopePath) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 	if (strcmp(getPathSegment(0, context), "*") == 0) {
 		context->speculationIndex++;
@@ -301,12 +317,12 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 			    fwrite("\"", 1, 1, context->listFp);
 			} else {
 			    if (context->numOfMatches == 0) {
-				    fwrite("{\"path\":\"", 9, 1, context->listFp);
+				    fwrite("{\"", 2, 1, context->listFp);
 			    } else {
-				    fwrite(", {\"path\":\"", 11, 1, context->listFp);
+				    fwrite(", {\"", 4, 1, context->listFp);
 			    }
 			    fwrite(context->matchPath, strlen(context->matchPath), 1, context->listFp);
-			    fwrite("\", \"uuid\":\"", 11, 1, context->listFp);
+			    fwrite("\", \"", 4, 1, context->listFp);
 			    char uuid[32+1];
 			    strcpy(uuid, VSSgetUUID(thisNode));
 			    fwrite(uuid, strlen(uuid), 1, context->listFp);
@@ -318,7 +334,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 			context->speculativeMatches[context->speculationIndex]++;
 		}
 	}
-	if (VSSgetNumOfChildren(thisNode) == 0 || context->currentDepth == context->maxDepth) {
+	if (VSSgetNumOfChildren(thisNode) == 0 || context->currentDepth == context->maxDepth || isEndOfScope(context) == true) {
 		*done = true;
 	} else {
 		*done = false;
@@ -486,13 +502,13 @@ printf("unit: %s\n", thisNode->unit);
 printf("default: %s\n", thisNode->defaultEnum);
 	}
 
-	int validateLen;
+	uint8_t validateLen;
 	ret = fread(&validateLen, sizeof(uint8_t), 1, treeFp);
 	if (validateLen > 0) {
 		char validate[50];
 		ret = fread(validate, sizeof(char)*validateLen, 1, treeFp);
 		validate[validateLen] = '\0';
-		thisNode->validate = validateToInt(validate);
+		thisNode->validate = validateToUint8(validate);
 printf("validate: %s\n", validate);
 	} else {
 	    thisNode->validate = 0;
@@ -638,7 +654,7 @@ int traverseNode(long thisNode, SearchContext_t* context) {
 	return speculationSucceded;
 }
 
-void initContext(SearchContext_t* context, char* searchPath, long rootNode, int maxFound, searchData_t* searchData, bool anyDepth, bool leafNodesOnly) {
+void initContext(SearchContext_t* context, char* searchPath, long rootNode, int maxFound, searchData_t* searchData, bool anyDepth, bool leafNodesOnly, int listSize, noScopeList_t* noScopeList) {
 	context->searchPath = searchPath;
 	/*    if (anyDepth == true && context->searchPath[strlen(context->searchPath)-1] != '*') {
 		  strcat(context->searchPath, ".*");
@@ -652,6 +668,11 @@ void initContext(SearchContext_t* context, char* searchPath, long rootNode, int 
 		context->maxDepth = countSegments(context->searchPath);
 	}
 	context->leafNodesOnly = leafNodesOnly;
+	context->listSize = listSize;
+ 	context->noScopeList = NULL;
+	if (listSize > 0) {
+  	    context->noScopeList = noScopeList;
+	}
 	context->maxValidation = 0;
 	context->currentDepth = 0;
 	context->matchPath[0] = 0;
@@ -663,7 +684,7 @@ void initContext(SearchContext_t* context, char* searchPath, long rootNode, int 
 }
 
 //used for VSSGetLeafNodeList
-void initContext_LNL(SearchContext_t* context, char* searchPath, long rootNode, FILE* listFp, bool anyDepth, bool leafNodesOnly) {
+void initContext_LNL(SearchContext_t* context, char* searchPath, long rootNode, FILE* listFp, bool anyDepth, bool leafNodesOnly, int listSize, noScopeList_t* noScopeList) {
 	context->searchPath = searchPath;
 	context->rootNode = rootNode;
 	context->maxFound = 0;
@@ -675,6 +696,11 @@ void initContext_LNL(SearchContext_t* context, char* searchPath, long rootNode, 
 		context->maxDepth = countSegments(context->searchPath);
 	}
 	context->leafNodesOnly = leafNodesOnly;
+	context->listSize = listSize;
+ 	context->noScopeList = NULL;
+	if (listSize > 0) {
+  	    context->noScopeList = noScopeList;
+	}
 	context->maxValidation = 0;
 	context->currentDepth = 0;
 	context->matchPath[0] = 0;
@@ -698,14 +724,14 @@ long VSSReadTree(char* filePath) {
 	return (long)root;
 }
 
-int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, searchData_t* searchData, bool anyDepth, bool leafNodesOnly, int* validation) {
+int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, searchData_t* searchData, bool anyDepth,  bool leafNodesOnly, int listSize, noScopeList_t* noScopeList, int* validation) {
 	//    intptr_t root = (intptr_t)rootNode;
 	struct SearchContext_t searchContext;
 	struct SearchContext_t* context = &searchContext;
 	isGetLeafNodeList = false;
 	isGetUuidList = false;
 
-	initContext(context, searchPath, rootNode, maxFound, searchData, anyDepth, leafNodesOnly);
+	initContext(context, searchPath, rootNode, maxFound, searchData, anyDepth, leafNodesOnly, listSize, noScopeList);
 	traverseNode(rootNode, context);
 	if (validation != NULL) {
 		*validation = context->maxValidation;
@@ -720,7 +746,7 @@ int VSSGetLeafNodesList(long rootNode, char* listFname) {
 
 	FILE* listFp = fopen(listFname, "w+");
 	fwrite("{\"leafpaths\":[", 14, 1, listFp);
-	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true);  // anyDepth = true, leafNodesOnly = true
+	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
 	traverseNode(rootNode, context);
 	fwrite("]}", 2, 1, listFp);
 	fclose(listFp);
@@ -735,7 +761,7 @@ int VSSGetUuidList(long rootNode, char* listFname) {
 
 	FILE* listFp = fopen(listFname, "w+");
 	fwrite("{\"leafuuids\":[", 14, 1, listFp);
-	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true);  // anyDepth = true, leafNodesOnly = true
+	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
 	traverseNode(rootNode, context);
 	//    int len = strlen(leafNodeList);
 	//    leafNodeList[len-2] = '\0';
