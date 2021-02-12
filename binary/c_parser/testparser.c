@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
                 printf("\nPath to resource(s): ");
                 scanf("%s", searchPath);
                 searchData_t searchData[MAXFOUNDNODES];
-                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, searchData, true, true, NULL);
+                int foundResponses = VSSSearchNodes(searchPath, rootNode, MAXFOUNDNODES, searchData, true, true, 0, NULL, NULL);
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
                     printf("Found node type=%s\n", getTypeName(VSSgetType((long)(&(searchData[i]))->foundNodeHandles)));
@@ -177,14 +177,14 @@ int main(int argc, char** argv) {
                 printf("\nSubtree depth: ");
                 scanf("%d", &depth);
                 searchData_t searchData[MAXFOUNDNODES];
-                int foundResponses = VSSSearchNodes(subTreePath, rootNode, MAXFOUNDNODES, searchData, false, false, NULL);
+                int foundResponses = VSSSearchNodes(subTreePath, rootNode, MAXFOUNDNODES, searchData, false, false, 0, NULL, NULL);
                 long subtreeNode = (long)(&(searchData[foundResponses-1]))->foundNodeHandles;
                 char subTreeRootName[MAXCHARSPATH];
                 strcpy(subTreeRootName, VSSgetName((long)(&(searchData[foundResponses-1]))->foundNodeHandles));
                 for (int i = 1 ; i < depth ; i++) {
                     strcat(subTreeRootName, ".*");
                 }
-                foundResponses = VSSSearchNodes(subTreeRootName, subtreeNode, MAXFOUNDNODES, searchData, false, false, NULL);
+                foundResponses = VSSSearchNodes(subTreeRootName, subtreeNode, MAXFOUNDNODES, searchData, false, false, 0, NULL, NULL);
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
                     printf("Node type=%s\n", getTypeName(VSSgetType((long)(&(searchData[i]))->foundNodeHandles)));

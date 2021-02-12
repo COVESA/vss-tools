@@ -76,7 +76,7 @@ printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=
     }
     fwrite(&validateLen, sizeof(uint8_t), 1, treeFp);
     if (validateLen > 0) {
-        fwrite(validate, sizeof(char)*enumsLen, 1, treeFp);
+        fwrite(validate, sizeof(char)*validateLen, 1, treeFp);
     }
     fwrite(&children, sizeof(uint8_t), 1, treeFp);
 }
