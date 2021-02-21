@@ -255,7 +255,7 @@ def load_tree(file_name, include_paths, exclude_private=False, break_on_noncore_
 
 def load_flat_model(file_name, prefix, include_paths):
     # Hooks into YAML parser to add line numbers
-    # and file name into each elemeent
+    # and file name into each element
     def yaml_compose_node(parent, index):
         # the line number where the previous token has ended (plus empty lines)
         line = loader.line

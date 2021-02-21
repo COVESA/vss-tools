@@ -14,7 +14,7 @@
 import sys
 import re
 import stringcase
-from anytree import (Node, Resolver, ChildResolverError)
+from anytree import Node, Resolver, ChildResolverError
 
 from model.constants import VSSType, VSSDataType, StringStyle, Unit
 
@@ -93,7 +93,7 @@ class VSSNode(Node):
 
         if "instances" in source_dict.keys():
             self.instances = source_dict["instances"]
-        
+
         if "deprecation" in source_dict.keys():
             self.deprecation = source_dict["deprecation"]
 
@@ -174,6 +174,9 @@ class VSSNode(Node):
 
             name = "%s%s%s" % (node_name, separator, name)
         return name
+
+    def is_branch(self):
+        return self.type == VSSType.BRANCH or self.type == VSSType.RBRANCH
 
     def is_orphan(self) -> bool:
         """Checks if this instance is a (r)branch without any child nodes
