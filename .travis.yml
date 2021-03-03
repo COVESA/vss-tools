@@ -18,4 +18,4 @@ script:
   # Now test compilation with this vss-tools and the master branch of VSS
   - cd vehicle_signal_specification
   - /usr/bin/env python3 --version
-  - make clean json franca binary csv deploy
+  - make clean json franca binary csv tests deploy
