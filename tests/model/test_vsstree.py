@@ -25,7 +25,7 @@ class TestVSSNode(unittest.TestCase):
         """
         source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
                   "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "enum": ["one", "two"], "aggregate": False,
-                  "default": "test-default", "value": "test-value", "instances": ["i1", "i2"]}
+                  "default": "test-default", "instances": ["i1", "i2"]}
         node = VSSNode("test", source)
         self.assertIsNotNone(node)
         self.assertEqual("some desc", node.description)
@@ -38,7 +38,6 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual(["one", "two"], node.enum)
         self.assertEqual(False, node.aggregate)
         self.assertEqual("test-default", node.default_value)
-        self.assertEqual("test-value", node.value)
         self.assertEqual(["i1", "i2"], node.instances)
         self.assertTrue(node.has_unit())
         self.assertTrue(node.has_data_type())
