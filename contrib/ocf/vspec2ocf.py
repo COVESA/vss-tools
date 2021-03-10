@@ -175,9 +175,10 @@ if __name__ == "__main__":
 			uritracker.append(key)
 			#print_subtree_unique(key, value)
 			uritracker.pop()
-	file = open("tools/ocf/vspec2ocf.csv", "w")
-	with open('tools/ocf/vspecocfmap.csv', 'rb') as f:
-	    mapper = csv.reader(f, delimiter=':', quoting=csv.QUOTE_NONE)
-	    for row in mapper:
+	# This seems to assume that the script is run from the main VSS
+	file = open("vss-tools/contrib/ocf/vspec2ocf.csv", "w")
+	with open('vss-tools/contrib/ocf/vspecocfmap.csv', 'rb') as f:
+		mapper = csv.reader(f, delimiter=':', quoting=csv.QUOTE_NONE)
+		for row in mapper:
 			file.write(row[0] + "," + row[1] + "\n")
 	file.close()
