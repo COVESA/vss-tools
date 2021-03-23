@@ -19,19 +19,21 @@ from pprint import pprint
 sys.setrecursionlimit(10000)
 
 vspecpath=os.path.realpath(__file__)
-sys.path.append(os.path.dirname(vspecpath) + "/../")
+# Script is currently in contrib/ so VSS root is two steps up.
+# Maybe there is a more robust way of doing this...
+sys.path.append(os.path.dirname(vspecpath) + "/../..")
 import vspec
 
 def usage():
-	print "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file json_file"
-	print "  -I include_dir			  Add include directory to search for included vspec"
-	print "							  files. Can be used multiple timees."
-	print
-	print "  -i prefix:id_file:start_id  Add include directory to search for included vspec"
-	print "							  files. Can be used multiple timees."
-	print
-	print " vspec_file				   The vehicle specification file to parse."
-	print " json_file					The file to output the JSON objects to."
+	print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file json_file")
+	print("  -I include_dir			  Add include directory to search for included vspec")
+	print("							  files. Can be used multiple times.")
+	print()
+	print("  -i prefix:id_file:start_id  Add include directory to search for included vspec")
+	print("							  files. Can be used multiple times.")
+	print()
+	print(" vspec_file				   The vehicle specification file to parse.")
+	print(" json_file					The file to output the JSON objects to.")
 	sys.exit(255)
 
 uritracker = []
@@ -150,7 +152,7 @@ if __name__ == "__main__":
 		elif o == "-i":
 			id_spec = a.split(":")
 			if len(id_spec) != 3:
-				print "ERROR: -i needs a 'prefix:id_file:start_id' argument."
+				print("ERROR: -i needs a 'prefix:id_file:start_id' argument.")
 				usage()
 			[prefix, file_name, start_id] = id_spec
 			vspec.db_mgr.create_signal_db(prefix, file_name, int(start_id))
@@ -162,7 +164,7 @@ if __name__ == "__main__":
 	try:
 		tree = vspec.load(args[0], include_dirs)
 	except vspec.VSpecError as e:
-		print "Error: {}".format(e)
+		print("Error: {}".format(e))
 		exit(255)
 	json.dump(tree, json_out, indent=2)
 	json_out.write("\n")
