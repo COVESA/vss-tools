@@ -31,8 +31,8 @@ var isGetUuidList bool
 
 const MAXFOUNDNODES = 1500
 type SearchData_t struct {
-    ResponsePaths string
-    FoundNodeHandles *def.Node_t
+    NodePath string
+    NodeHandle *def.Node_t
 }
 
 type SearchContext_t struct {
@@ -48,6 +48,8 @@ type SearchContext_t struct {
 	MaxValidation int
 	NumOfMatches int
 	SearchData []SearchData_t
+	ListSize int
+	NoScopeList []string
 	ListFp *os.File
 }
 
@@ -179,8 +181,8 @@ func saveMatchingNode(thisNode *def.Node_t, context *SearchContext_t, done *bool
 	}
 	if (VSSgetType(thisNode) != def.BRANCH || context.LeafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
-			context.SearchData[context.NumOfMatches].ResponsePaths = context.MatchPath
-			context.SearchData[context.NumOfMatches].FoundNodeHandles = thisNode
+			context.SearchData[context.NumOfMatches].NodePath = context.MatchPath
+			context.SearchData[context.NumOfMatches].NodeHandle = thisNode
 		} else {
 			if (isGetLeafNodeList == true) {
 			    if (context.NumOfMatches == 0) {
@@ -208,7 +210,7 @@ func saveMatchingNode(thisNode *def.Node_t, context *SearchContext_t, done *bool
 			context.SpeculativeMatches[context.SpeculationIndex]++
 		}
 	}
-	if (VSSgetNumOfChildren(thisNode) == 0 || context.CurrentDepth == context.MaxDepth) {
+	if (VSSgetNumOfChildren(thisNode) == 0 || context.CurrentDepth == context.MaxDepth  || isEndOfScope(context) == true) {
 		*done = true
 	} else {
 		*done = false
@@ -217,6 +219,18 @@ func saveMatchingNode(thisNode *def.Node_t, context *SearchContext_t, done *bool
 		return 1
 	}
 	return 0
+}
+
+func isEndOfScope(context *SearchContext_t) bool {
+    if (context.ListSize == 0) {
+        return false
+    }
+    for i := 0 ; i < context.ListSize ; i++ {
+        if (context.MatchPath == context.NoScopeList[i]) {
+            return true
+        }
+    }
+    return false
 }
 
 func compareNodeName(nodeName string, pathName string) bool {
@@ -470,7 +484,7 @@ func countSegments(path string) int {
     return count + 1
 }
 
-func initContext(context *SearchContext_t, searchPath string, rootNode *def.Node_t, maxFound int, searchData []SearchData_t, anyDepth bool, leafNodesOnly bool) {
+func initContext(context *SearchContext_t, searchPath string, rootNode *def.Node_t, maxFound int, searchData []SearchData_t, anyDepth bool, leafNodesOnly bool, listSize int, noScopeList []string) {
 	context.SearchPath = searchPath
 	/*    if (anyDepth == true && context.SearchPath[len(context.SearchPath)-1] != '*') {
 		  context.SearchPath = append(context.SearchPath, ".*")
@@ -484,6 +498,11 @@ func initContext(context *SearchContext_t, searchPath string, rootNode *def.Node
 		context.MaxDepth = countSegments(context.SearchPath)
 	}
 	context.LeafNodesOnly = leafNodesOnly
+	context.ListSize = listSize
+ 	context.NoScopeList = nil
+	if (listSize > 0) {
+  	    context.NoScopeList = noScopeList
+	}
 	context.MaxValidation = 0
 	context.CurrentDepth = 0
 	context.MatchPath = ""
@@ -494,7 +513,7 @@ func initContext(context *SearchContext_t, searchPath string, rootNode *def.Node
 	}
 }
 
-func initContext_LNL(context *SearchContext_t, searchPath string, rootNode *def.Node_t, anyDepth bool, leafNodesOnly bool) {
+func initContext_LNL(context *SearchContext_t, searchPath string, rootNode *def.Node_t, anyDepth bool, leafNodesOnly bool, listSize int, noScopeList []string) {
 	context.SearchPath = searchPath
 	context.RootNode = rootNode
 	context.MaxFound = 0
@@ -506,6 +525,11 @@ func initContext_LNL(context *SearchContext_t, searchPath string, rootNode *def.
 		context.MaxDepth = countSegments(context.SearchPath)
 	}
 	context.LeafNodesOnly = leafNodesOnly
+	context.ListSize = listSize
+ 	context.NoScopeList = nil
+	if (listSize > 0) {
+  	    context.NoScopeList = noScopeList
+	}
 	context.MaxValidation = 0
 	context.CurrentDepth = 0
 	context.MatchPath = ""
@@ -516,13 +540,13 @@ func initContext_LNL(context *SearchContext_t, searchPath string, rootNode *def.
 	}
 }
 
-func VSSsearchNodes(searchPath string, rootNode *def.Node_t, maxFound int, anyDepth bool, leafNodesOnly bool, validation *int) ([]SearchData_t, int) {
+func VSSsearchNodes(searchPath string, rootNode *def.Node_t, maxFound int, anyDepth bool, leafNodesOnly bool, listSize int, noScopeList []string, validation *int) ([]SearchData_t, int) {
 	var context SearchContext_t
 	searchData := make([]SearchData_t, maxFound)
 	isGetLeafNodeList = false
 	isGetUuidList = false
 
-	initContext(&context, searchPath, rootNode, maxFound, searchData, anyDepth, leafNodesOnly)
+	initContext(&context, searchPath, rootNode, maxFound, searchData, anyDepth, leafNodesOnly, listSize, noScopeList)
 	traverseNode(rootNode, &context)
 	if (validation != nil) {
 		*validation = context.MaxValidation
@@ -540,7 +564,7 @@ func VSSGetLeafNodesList(rootNode *def.Node_t, listFname string) int {
 	return 0
     }
     treeFp.Write([]byte("{\"leafpaths\":["))
-    initContext_LNL(&context, "Vehicle.*", rootNode, true, true)  // anyDepth = true, leafNodesOnly = true
+    initContext_LNL(&context, "Vehicle.*", rootNode, true, true, 0, nil)  // anyDepth = true, leafNodesOnly = true
     traverseNode(rootNode, &context)
     treeFp.Write([]byte("]}"))
     treeFp.Close()
@@ -558,7 +582,7 @@ func VSSGetUuidList(rootNode *def.Node_t, listFname string) int {
 	return 0
     }
     treeFp.Write([]byte("{\"leafuuids\":["))
-    initContext_LNL(&context, "Vehicle.*", rootNode, true, true)  // anyDepth = true, leafNodesOnly = true
+    initContext_LNL(&context, "Vehicle.*", rootNode, true, true, 0, nil)  // anyDepth = true, leafNodesOnly = true
     traverseNode(rootNode, &context)
     treeFp.Write([]byte("]}"))
     treeFp.Close()
