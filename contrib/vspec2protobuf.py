@@ -10,6 +10,11 @@
 #
 
 import sys
+import os
+#Add path to main py vspec  parser
+myDir= os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(myDir, ".."))
+
 import vspec
 import getopt
 from anytree import RenderTree, PreOrderIter
