@@ -20,3 +20,4 @@ script:
   - cd vehicle_signal_specification
   - /usr/bin/env python3 --version
   - make travis_targets
+  - make -k travis_optional || true
