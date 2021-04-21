@@ -1,4 +1,5 @@
 #
+# (C) 2021 Robert Bosch GmbH
 # (C) 2018 Volvo Cars
 # (C) 2016 Jaguar Land Rover
 #
@@ -464,11 +465,6 @@ def expand_includes(flat_model, prefix, include_paths):
 def expand_instances(flat_model):
     # create instances from specification
 
-    new_flat_model = []
-    instantiation = []
-    base_name = ''
-    instances = None
-    inst_path = ''
     cont = True
 
     def extend_entry(new_entry, instance, name):
@@ -482,46 +478,52 @@ def expand_instances(flat_model):
     # repetition for nested instances
     while cont:
         cont = False
+        new_flat_model = []
+        elements_to_instantiate = []
+        base_name = ''
+        instances = None
+        current_inst_path = ''
 
         for elem in flat_model:
-            # collect elements, which belong under an instantiated branch
-            if inst_path and inst_path in "{}.{}".format(elem["$prefix$"], elem["$name$"]):
-                instantiation.append(elem)
-            # first node outside the instantiated branch
-            elif inst_path:
-                # add instantiation branches
-                for i in instances:
-                    # if multiple instances, only attach children under last instance
-                    # e.g. row1.left.{children}
-                    new_flat_model.append(extend_entry(dict(instantiation[0]), i[0], base_name))
-                    if i[1]:
-                        for e in instantiation[1:]:
-                            if isinstance(i[0], str):
-                                new_flat_model.append(extend_entry(dict(e), i[0], base_name))
-
-                inst_path = ''
-                instantiation = []
-                instances = None
-                base_name = ''
-
-                new_flat_model.append(elem)
-
+            # search for instantiations and related signals
+            # element that shall be affected by this instantiation (must start with <branch_name>.)
+            # only add "." if there actually is prefix to support instances on top level
+            elem_inst_path =  '.'.join([x for x in (elem["$prefix$"], elem["$name$"]) if x])
+            if current_inst_path and (current_inst_path + ".") in elem_inst_path:
+                elements_to_instantiate.append(elem)
+            # If not affected just keep it for next round
             else:
                 new_flat_model.append(elem)
 
+            # check if current item is an instantiated branch
             if 'instances' in elem.keys():
-                # ignore nested instances for now and do it in the next run
+                # ignore nested/other instances for now and do it in the next run
                 if instances:
-                    cont = True
+                    # check if this is a redefinition of the current branch to change instantiation
+                    if elem_inst_path == current_inst_path:
+                      instances = createInstantiationEntries([elem['instances']])
+                      del elem['instances']
+                    else:
+                      # continue iterations until all instantiations have been handled
+                      cont = True
                 else:
                     instances = createInstantiationEntries([elem['instances']])
                     del elem['instances']
-                    instantiation.append(elem)
+                    elements_to_instantiate.append(elem)
                     base_name = elem["$name$"]
-                    inst_path = "{}.{}".format(elem["$prefix$"], elem["$name$"])
+                    current_inst_path = elem_inst_path
+
+        # Now instantiate all items affected
+        for i in instances:
+            # if multiple instances, only attach children under last instance
+            # e.g. row1.left.{children}
+            new_flat_model.append(extend_entry(dict(elements_to_instantiate[0]), i[0], base_name))
+            if i[1]:
+                for e in elements_to_instantiate[1:]:
+                    if isinstance(i[0], str):
+                        new_flat_model.append(extend_entry(dict(e), i[0], base_name))
 
         flat_model = new_flat_model
-        new_flat_model = []
     return flat_model
 
 
