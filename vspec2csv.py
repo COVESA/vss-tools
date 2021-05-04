@@ -48,11 +48,18 @@ Usage: {sys.argv[0]} [options] vspec_file csv_file
 """)
     sys.exit(255)
 
+#Format a data or header line according to the CSV standard (IETF RFC 4180)
+def format_csv_line(*csv_fields):
+    formatted_csv_line = ""
+    for csv_field in csv_fields:
+        formatted_csv_line = formatted_csv_line + '"' + str(csv_field).replace('"', '""') + '",'
+    return formatted_csv_line[:-1] + '\n'
 
+#Write the header line
 def print_csv_header(file):
-    file.write("Signal,Type,DataType,Deprecated,Complex,Unit,Min,Max,Desc,Enum,Id,Instance\n")
+    file.write(format_csv_line("Signal","Type","DataType","Deprecated","Complex","Unit","Min","Max","Desc","Enum","Id","Instance"))
 
-
+#Write the data lines
 def print_csv_content(file, tree):
     tree_node: VSSNode
     for tree_node in PreOrderIter(tree):
@@ -61,11 +68,11 @@ def print_csv_content(file, tree):
 
         if tree_node.instances:
             for instance in tree_node.instances:
-                file.write(
-                    f"{tree_node.qualified_name('.')},{tree_node.type.value},{data_type_str},{tree_node.deprecation},true,{unit_str},{tree_node.min},{tree_node.max},{tree_node.description},{tree_node.enum},{tree_node.uuid},{instance}\n")
+                file.write(format_csv_line(
+                    tree_node.qualified_name('.'),tree_node.type.value,data_type_str,tree_node.deprecation,"true",unit_str,tree_node.min,tree_node.max,tree_node.description,tree_node.enum,tree_node.uuid,instance))
         else:
-            file.write(
-                f"{tree_node.qualified_name('.')},{tree_node.type.value},{data_type_str},{tree_node.deprecation},false,{unit_str},{tree_node.min},{tree_node.max},{tree_node.description},{tree_node.enum},{tree_node.uuid},""\n")
+            file.write(format_csv_line(
+                tree_node.qualified_name('.'),tree_node.type.value,data_type_str,tree_node.deprecation,"false",unit_str,tree_node.min,tree_node.max,tree_node.description,tree_node.enum,tree_node.uuid))
 
 
 if __name__ == "__main__":
