@@ -38,6 +38,8 @@ class VSSNode(Node):
     max = ""
     enum = ""
 
+    ttl_name = ""
+
     default_value = ""
 
     instances = None
