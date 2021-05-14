@@ -101,7 +101,8 @@ if __name__ == "__main__":
         usage()
 
     try:
-        tree = vspec.load_tree(args[0], include_dirs)
+        tree = vspec.load_tree(args[0], include_dirs, exclude_private=False, break_on_noncore_attribute=False,
+                               unsupported_vss_attributes=["arraysize"])
         csv_out = open(args[1], "w")
         print_csv_header(csv_out)
         print_csv_content(csv_out, tree)

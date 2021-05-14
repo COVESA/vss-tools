@@ -94,7 +94,7 @@ if __name__ == "__main__":
     proto_file.write("package vehicle;\n\n")
 
     try:
-        tree = vspec.load_tree(args[0], include_dirs)
+        tree = vspec.load_tree(args[0], include_dirs, exclude_private=False, break_on_noncore_attribute=False,unsupported_vss_attributes=["arraysize"])
         traverse_tree(tree, proto_file)
     except vspec.VSpecError as e:
         print("Error: {}".format(e))

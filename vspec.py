@@ -1,4 +1,5 @@
 #
+# (C) 2021 Robert Bosch GmbH
 # (C) 2018 Volvo Cars
 # (C) 2016 Jaguar Land Rover
 #
@@ -240,9 +241,13 @@ def convert_yaml_to_list(raw_yaml):
 
     return lst
 
-
-
-def load_tree(file_name, include_paths, exclude_private=False, break_on_noncore_attribute=False):
+# As of today the VSS language/metamodel specification contain some attributes (e.g. arraysize) 
+# that is ignored by most tools in this repository. A tool can specify which VSS core attributes that it
+# does not support by the parameter "unsupported_vss_attributes".
+# They will then be reported similar to non-core attributes, and if "break_on_noncore_attribute"
+# is set then processing will also break if a non-supported core attribute is found
+def load_tree(file_name, include_paths, exclude_private=False, break_on_noncore_attribute=False,
+              unsupported_vss_attributes=[]):
     flat_model = load_flat_model(file_name, "", include_paths)
     flat_model_instances = expand_instances(flat_model)
     absolute_path_flat_model = create_absolute_paths(flat_model_instances)
@@ -250,7 +255,8 @@ def load_tree(file_name, include_paths, exclude_private=False, break_on_noncore_
     deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
     dict_tree = deep_model["children"]
-    return render_tree(dict_tree, exclude_private, break_on_noncore_attribute=break_on_noncore_attribute)
+    return render_tree(dict_tree, exclude_private, break_on_noncore_attribute=break_on_noncore_attribute,
+                       unsupported_vss_attributes=unsupported_vss_attributes)
 
 
 def load_flat_model(file_name, prefix, include_paths):
@@ -784,31 +790,35 @@ $include$:
     return text
 
 
-def render_tree(tree_dict, merge_private=False, break_on_noncore_attribute=False) -> VSSNode:
+def render_tree(tree_dict, merge_private=False, break_on_noncore_attribute=False, unsupported_vss_attributes=[]) -> VSSNode:
     if len(tree_dict) != 1:
         raise Exception('Invalid VSS model, must have single root node')
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
-    tree_root = VSSNode(root_element_name, root_element, break_on_noncore_attribute=break_on_noncore_attribute)
+    tree_root = VSSNode(root_element_name, root_element, break_on_noncore_attribute=break_on_noncore_attribute,
+                        unsupported_vss_attributes=unsupported_vss_attributes)
 
     if "children" in root_element.keys():
         child_nodes = root_element["children"]
-        render_subtree(child_nodes, tree_root, break_on_noncore_attribute=break_on_noncore_attribute)
+        render_subtree(child_nodes, tree_root, break_on_noncore_attribute=break_on_noncore_attribute,
+                       unsupported_vss_attributes=unsupported_vss_attributes)
 
     if merge_private:
         merge_private_into_main_tree(tree_root)
     return tree_root
 
 
-def render_subtree(subtree, parent, break_on_noncore_attribute=False):
+def render_subtree(subtree, parent, break_on_noncore_attribute=False, unsupported_vss_attributes=[]):
     for element_name in subtree:
         current_element = subtree[element_name]
 
-        new_element = VSSNode(element_name, current_element, parent=parent, break_on_noncore_attribute=break_on_noncore_attribute)
+        new_element = VSSNode(element_name, current_element, parent=parent, break_on_noncore_attribute=break_on_noncore_attribute,
+                              unsupported_vss_attributes=unsupported_vss_attributes)
         if "children" in current_element.keys():
             child_nodes = current_element["children"]
-            render_subtree(child_nodes, new_element)
+            render_subtree(child_nodes, new_element, break_on_noncore_attribute=break_on_noncore_attribute,
+                              unsupported_vss_attributes=unsupported_vss_attributes)
 
 
 def merge_private_into_main_tree(tree_root: VSSNode):

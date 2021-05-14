@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-#
+# (C) 2021 Robert Bosch GmbH
 #
 # All files and artifacts in this repository are licensed under the
 # provisions of the license provided by the LICENSE file in this repository.
@@ -43,7 +43,8 @@ class VSSNode(Node):
     instances = None
     deprecation = ""
 
-    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False):
+    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False,
+                 unsupported_vss_attributes=[]):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
             Args:
@@ -59,7 +60,7 @@ class VSSNode(Node):
 
         super().__init__(name, parent, children)
         try:
-            VSSNode.validate_vss_element(source_dict, name)
+            VSSNode.validate_vss_element(source_dict, name, unsupported_vss_attributes)
         except NonCoreAttributeException as e:
             print("Warning: {}".format(e))
             if break_on_noncore_attribute:
@@ -229,8 +230,8 @@ class VSSNode(Node):
             return False
 
     @staticmethod
-    def validate_vss_element(element: dict, name: str):
-        """Validates a VSS object. Checks if it has the minimum paramaters (description, type, uuid) and if the optional
+    def validate_vss_element(element: dict, name: str, unsupported_vss_attributes: [str]):
+        """Validates a VSS object. Checks if it has the minimum parameters (description, type, uuid) and if the optional
         parameters are supported within the specification
             Args:
                 element: dict parsed from yaml representing one VSS instance
@@ -248,8 +249,11 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default" , "instances", "deprecation"]:
-                raise NonCoreAttributeException('Non-core attribute "%s" in elment %s found.' % (aKey, name))
+                            "aggregate", "default" , "instances", "deprecation", "arraysize"]:
+                raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
+
+            if aKey in unsupported_vss_attributes:
+                raise NonCoreAttributeException('Core attribute "%s" used in element %s is not supported in this context.' % (aKey, name))
 
 
 def camel_case(st):
