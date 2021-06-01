@@ -251,6 +251,9 @@ class VSSNode(Node):
                             "aggregate", "default" , "instances", "deprecation", "arraysize"]:
                 raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 
+        if "default" in element.keys():
+            if element["type"] != "attribute":
+                raise NonCoreAttributeException("Invalid VSS element %s, only attributes can use default" % name)
 
 def camel_case(st):
     """Camel case string conversion"""
