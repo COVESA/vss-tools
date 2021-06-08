@@ -50,12 +50,15 @@ indent = '   '
 def traverse_tree(tree, graphql_file):
     tree_node: VSSNode
     for tree_node in filter(lambda n: n.is_branch(), PreOrderIter(tree)):
-        graphql_file.write(indent + '"""\n')
-        graphql_file.write(indent + tree_node.description + "\n")
-        graphql_file.write(indent + '"""\n')
-        graphql_file.write(indent + f"type {tree_node.qualified_name('_')} {{" + "\n")
-        print_message_body(tree_node.children, graphql_file)
-        graphql_file.write(indent + "}\n\n")
+        if len(tree_node.children) == 0:
+            print(f"WARNING: Skipping branch with no children: {tree_node.qualified_name('.')}")
+        else:
+            graphql_file.write(indent + '"""\n')
+            graphql_file.write(indent + tree_node.description + "\n")
+            graphql_file.write(indent + '"""\n')
+            graphql_file.write(indent + f"type {tree_node.qualified_name('_')} {{" + "\n")
+            print_message_body(tree_node.children, graphql_file)
+            graphql_file.write(indent + "}\n\n")
 
 def print_message_body(nodes, graphql_file):
     for i, node in enumerate(nodes, 1):
@@ -67,13 +70,17 @@ def print_message_body(nodes, graphql_file):
                 print(f"WARNING: Could not map type {{dt_val}}!\n")
             if dt_val.endswith("[]"):  # Array type
                 data_type = f"[{data_type}]"
-        # Not sure if it matters but the example file we had, had
-        # CamelCase but starting lower case
-        name = node.name[0].lower() + node.name[1:]
-        graphql_file.write(indent * 2 + '"""\n')
-        graphql_file.write(indent * 2 + node.description + "\n")
-        graphql_file.write(indent * 2 + '"""\n')
-        graphql_file.write(indent * 2 + f"{name}: {data_type}\n\n")
+
+        if node.is_branch() and len(node.children) == 0:
+            pass  # Don't generate a member variable if its (branch) type is empty
+        else:
+            # Not sure if it matters but the example file we had, had
+            # CamelCase but starting lower case
+            name = node.name[0].lower() + node.name[1:]
+            graphql_file.write(indent * 2 + '"""\n')
+            graphql_file.write(indent * 2 + node.description + "\n")
+            graphql_file.write(indent * 2 + '"""\n')
+            graphql_file.write(indent * 2 + f"{name}: {data_type}\n\n")
 
 def usage():
     print(
