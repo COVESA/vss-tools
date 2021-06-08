@@ -77,7 +77,7 @@ def print_message_body(nodes, graphql_file):
 
 def usage():
     print(
-        """Usage: vspec2graphqlbuf.py [-I include_dir] ... [-i prefix:id_file] vspec_file output_file
+        """Usage: vspec2graphql.py [-I include_dir] ... [-i prefix:uuid_file] vspec_file output_file
   -I include_dir       Add include directory to search for included vspec
                        files. Can be used multiple times.
 
@@ -85,9 +85,9 @@ def usage():
                        a given path prefix. Can be used multiple times to store
                        UUIDs for signal sub-trees in different files.
 
- vspec_file            The vehicle specification file to parse.
- graphql_file            The file to output the graphql file to.)
-       """
+  vspec_file            The vehicle specification file to parse.
+  output_file           The file to write graphql schema to.)
+"""
     )
     sys.exit(255)
 
