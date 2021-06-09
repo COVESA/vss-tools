@@ -15,7 +15,7 @@ import sys
 import vspec
 import json
 import getopt
-from model.vsstree import VSSNode, VSSType
+from vspec.model.vsstree import VSSNode, VSSType
 
 
 def usage():

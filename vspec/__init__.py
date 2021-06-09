@@ -19,7 +19,7 @@ import re
 from anytree import (Resolver, ChildResolverError, LevelOrderIter)
 import deprecation
 
-from model.vsstree import VSSNode
+from .model.vsstree import VSSNode
 
 
 class VSpecError(Exception):
