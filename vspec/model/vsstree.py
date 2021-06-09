@@ -16,7 +16,7 @@ import re
 import stringcase
 from anytree import Node, Resolver, ChildResolverError
 
-from model.constants import VSSType, VSSDataType, StringStyle, Unit
+from .constants import VSSType, VSSDataType, StringStyle, Unit
 
 DEFAULT_SEPARATOR = "."
 

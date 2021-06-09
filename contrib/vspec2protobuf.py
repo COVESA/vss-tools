@@ -18,7 +18,7 @@ sys.path.append(os.path.join(myDir, ".."))
 import vspec
 import getopt
 from anytree import RenderTree, PreOrderIter
-from model.vsstree import VSSNode
+from vspec.model.vsstree import VSSNode
 
 mapped = {
     "uint16": "uint32",

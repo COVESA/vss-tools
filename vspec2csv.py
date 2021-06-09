@@ -18,7 +18,7 @@ from anytree import RenderTree, PreOrderIter
 import vspec
 import getopt
 
-from model.vsstree import VSSNode
+from vspec.model.vsstree import VSSNode
 
 
 def usage():
