@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+anytree = ">=2.8.0"
+stringcase = ">=1.2.0"
+deprecation = ">=2.1.0"
+pytest = ">=2.7.2"
+PyYAML = ">=5.1"
+vss-tools = {editable = true, path = "."}
+
+[dev-packages]
+
+[requires]
+python_version = "3.8.5"
