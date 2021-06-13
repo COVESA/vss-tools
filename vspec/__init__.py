@@ -15,6 +15,7 @@ import os
 import uuid
 import sys
 import re
+import collections
 
 from anytree import (Resolver, ChildResolverError, LevelOrderIter)
 import deprecation
