@@ -20,13 +20,9 @@ import getopt
 import ctypes
 
 def usage():
-    print(("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file franca_file"))
+    print(("Usage:", sys.argv[0], "[-I include_dir] ... vspec_file franca_file"))
     print ("  -I include_dir       Add include directory to search for included vspec")
     print ("                       files. Can be used multiple timees.")
-    print ("\n")
-    print ("  -i prefix:uuid_file  File to use for storing generated UUIDs for signals with")
-    print ("                       a given path prefix. Can be used multiple times to store")
-    print ("                       UUIDs for signal sub-trees in different files.")
     print ("\n")
     print (" vspec_file            The vehicle specification file to parse.")
     print (" franca_file           The file to output the Franca IDL spec to.")
@@ -137,7 +133,7 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args= getopt.getopt(sys.argv[1:], "I:i:v:")
+    opts, args= getopt.getopt(sys.argv[1:], "I:v:")
 
     # Always search current directory for include_file
     vss_version = "unspecified version"
@@ -147,14 +143,6 @@ if __name__ == "__main__":
             include_dirs.append(a)
         elif o == "-v":
             vss_version = a
-        elif o == "-i":
-            id_spec = a.split(":")
-            if len(id_spec) != 2:
-                print ("ERROR: -i needs a 'prefix:id_file' argument.")
-                usage()
-
-            [prefix, file_name] = id_spec
-            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 

@@ -49,14 +49,9 @@ def print_message_body(nodes, proto_file):
 
 def usage():
     print(
-        """Usage: vspec2protobuf.py [-I include_dir] ... [-i prefix:id_file] vspec_file output_file
+        """Usage: vspec2protobuf.py [-I include_dir] ... vspec_file output_file
   -I include_dir       Add include directory to search for included vspec
                        files. Can be used multiple times.
-
-  -i prefix:uuid_file  File to use for storing generated UUIDs for signals with
-                       a given path prefix. Can be used multiple times to store
-                       UUIDs for signal sub-trees in different files.
-
  vspec_file            The vehicle specification file to parse.
  proto_file            The file to output the proto file to.)
        """
@@ -68,21 +63,13 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args = getopt.getopt(sys.argv[1:], "I:i:")
+    opts, args = getopt.getopt(sys.argv[1:], "I:")
 
     # Always search current directory for include_file
     include_dirs = ["."]
     for o, a in opts:
         if o == "-I":
             include_dirs.append(a)
-        elif o == "-i":
-            id_spec = a.split(":")
-            if len(id_spec) != 2:
-                print("ERROR: -i needs a 'prefix:id_file' argument.")
-                usage()
-
-            [prefix, file_name] = id_spec
-            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 

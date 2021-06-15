@@ -79,21 +79,13 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args = getopt.getopt(sys.argv[1:], "I:i:")
+    opts, args = getopt.getopt(sys.argv[1:], "I:")
 
     # Always search current directory for include_file
     include_dirs = ["."]
     for o, a in opts:
         if o == "-I":
             include_dirs.append(a)
-        elif o == "-i":
-            id_spec = a.split(":")
-            if len(id_spec) != 2:
-                print("ERROR: -i needs a 'prefix:id_file' argument.")
-                usage()
-
-            [prefix, file_name] = id_spec
-            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 
