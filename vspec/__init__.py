@@ -41,56 +41,10 @@ class SignalUUIDManager:
     NAMESPACE = "vehicle_signal_specification"
 
     def __init__(self):
-        self.signal_uuid_db_set = {}
+        self.signal_uuid_db = SignalUUID_DB()
         self.namespace_uuid = uuid.uuid5(uuid.NAMESPACE_OID, self.NAMESPACE)
 
-    # Process a command line option with the format
-    #  [prefix]:filename
-    # If [prefix] is empty then all signals will match, regardless
-    # of their name.
-    #
-    def process_command_line_option(self, option):
-        try:
-            [prefix, uuid_db_file_name] = option.split(":")
-
-        except:
-            return False
-
-        self.create_signal_uuid_db(prefix, uuid_db_file_name, prefix)
-        return True
-
-    # Create a new SignalUUIDDB instance.
-    #
-    # 'prefix' is the prefix of the signal names that are to
-    # be assigned ID's by the new object.
-    #
-    # 'id_db_file_name' is the file to read existing IDs
-    # and store newly assigned IDs into forP prefix-matching signals.
-    def create_signal_uuid_db(self, prefix, uuid_db_file_name):
-        self.signal_uuid_db_set[prefix] = SignalUUID_DB(uuid_db_file_name)
-
-    def find_hosting_uuid_db(self, signal):
-        match_db = None
-        match_len = 0
-
-        # Find the longest matching prefix
-        for prefix, signal_db in self.signal_uuid_db_set.items():
-            prefix_len = len(prefix)
-            if signal.find(prefix, 0, prefix_len) == -1:
-                continue
-
-            # Is this a longer prefix match than the previous one
-            if prefix_len < match_len:
-                continue
-
-            match_db = signal_db
-            match_len = prefix_len
-
-        # match_db is None if no hosting uuid db was found for the
-        # signal
-        return match_db
-
-    # Return the parent of the provded signal
+    # Return the parent of the provided signal
     def parent_signal(self, signal_name):
         last_period = signal_name.rfind('.')
 
@@ -112,35 +66,18 @@ class SignalUUIDManager:
             return self.namespace_uuid
 
     # Locate and return an existing signal ID, or create and return a new one.
-    #
-    # All SignalUUID instances created by create_signal_uuid_db() will
-    # be prefix matched against the all prefix - SignalUUID mappings
-    # setup through create_signal_uuid_db() calls.
-    #
-    # The Signal UUID mapped against the longest prefix match against signal_name
-    # will be searched for an existing UUID assigned to signal_name.
     # If no UUID has been assigned, a new UUID is created and assigned to
     # 'signal_name' in the specified SignalUUID_DB object.
     #
     def get_or_assign_signal_uuid(self, signal_name):
-        uuid_db = self.find_hosting_uuid_db(signal_name)
-
-        if not uuid_db:
-            print("Could not find UUID DB for signal {}".format(signal_name))
-            sys.exit(255)
 
         try:
-            return uuid_db.db[signal_name]
+            return self.signal_uuid_db.db[signal_name]
         except:
             # Generate a new UUID, using the class namespace for UUID v5.
             uuid_val = uuid.uuid5(self.namespace_uuid, signal_name).hex
-            uuid_db.db[signal_name] = uuid_val
+            self.signal_uuid_db.db[signal_name] = uuid_val
             return uuid_val
-
-    # Go through all SignalUUID instances and save them to disk.
-    def save_all_signal_db(self):
-        for _key, signal_uuid_db in self.signal_uuid_db_set.items():
-            signal_uuid_db.save()
 
 
 #
@@ -148,34 +85,9 @@ class SignalUUIDManager:
 #
 class SignalUUID_DB:
     # Create a new SignalUUID object.
-    # id_db_file_name is the file to read existing IDs
-    # and store newly assined IDs into for all signals whose IDs
-    # are managed by this object.
-    def __init__(self, id_file_name):
-        self.id_file_name = id_file_name
-        if os.path.isfile(id_file_name):
-            with open(self.id_file_name, "r") as fp:
-                text = fp.read()
-                self.db = yaml.load(text, Loader=yaml.SafeLoader)
-                if not self.db:
-                    self.db = {}
-                fp.close()
-        else:
-            self.db = {}
+    def __init__(self):
+        self.db = {}
 
-    #
-    # Save all signal - ID mappings in self to a yaml file.  The file
-    # read at object construction will be used to store all mappings
-    # (including those added by get_or_assign_signal_uuid()).
-    #
-    def save(self):
-        try:
-            with open(self.id_file_name, "w") as fp:
-                yaml.safe_dump(self.db, fp, default_flow_style=False)
-                fp.close()
-                return True
-        except IOError as e:
-            pass
 
 
 # Try to open a file name that can reside
@@ -208,7 +120,6 @@ def assign_signal_uuids(flat_model):
     for elem in flat_model:
         elem["uuid"] = db_mgr.get_or_assign_signal_uuid(elem["$name$"])
 
-    db_mgr.save_all_signal_db()
     return flat_model
 
 

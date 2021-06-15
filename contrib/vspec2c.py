@@ -17,13 +17,9 @@ import getopt
 import hashlib
 import json
 def usage():
-    print("Usage:", sys.argv[0], "[-I include-dir] ... [-i prefix:id-file] vspec-file output-header-file output-macro-file")
+    print("Usage:", sys.argv[0], "[-I include-dir] ... vspec-file output-header-file output-macro-file")
     print("  -I include-dir       Add include directory to search for included vspec")
     print("                       files. Can be used multiple timees.")
-    print()
-    print("  -i prefix:uuid-file  File to use for storing generated UUIDs for signals with")
-    print("                       a given path prefix. Can be used multiple times to store")
-    print("                       UUIDs for signal sub-trees in different files.")
     print()
     print(" output-header-file    The file to output the signal spec-encoding header info to.")
     sys.exit(255)
@@ -283,21 +279,13 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args= getopt.getopt(sys.argv[1:], "I:i:")
+    opts, args= getopt.getopt(sys.argv[1:], "I:")
 
     # Always search current directory for include_file
     include_dirs = ["."]
     for o, a in opts:
         if o == "-I":
             include_dirs.append(a)
-        elif o == "-i":
-            id_spec = a.split(":")
-            if len(id_spec) != 2:
-                print("ERROR: -i needs a 'prefix:id_file' argument.")
-                usage()
-
-            [prefix, file_name] = id_spec
-            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 

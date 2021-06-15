@@ -45,18 +45,6 @@ Usage: {sys.argv[0]} [options] vspec_file ttl_file
   -I include_dir       Add include directory to search for included vspec
                        files. Can be used multiple timees.
 
-  -i prefix:uuid_file  "prefix" is an optional string that will be
-                       prepended to each signal name defined in the
-                       vspec file.
-
-                       "uuid_file" is the name of the file containing the
-                       static UUID values for the signals.  This file is
-                       read/write and will be updated if necessary.
-
-                       This option can be specified several times in
-                       to store the UUIDs of different parts of the
-                       signal tree in different files.
-
   vspec_file           The vehicle specification file to parse.
 
   ttl_file             The file to output the ttl data to.
@@ -288,21 +276,13 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args = getopt.getopt(sys.argv[1:], "I:i:")
+    opts, args = getopt.getopt(sys.argv[1:], "I:")
 
     # Always search current directory for include_file
     include_dirs = ["."]
     for o, a in opts:
         if o == "-I":
             include_dirs.append(a)
-        elif o == "-i":
-            id_spec = a.split(":")
-            if len(id_spec) != 2:
-                print("ERROR: -i needs a 'prefix:id_file' argument.")
-                usage()
-
-            [prefix, file_name] = id_spec
-            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         else:
             usage()
 

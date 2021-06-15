@@ -20,14 +20,10 @@ from vspec.model.vsstree import VSSNode, VSSType
 
 def usage():
     print(
-        "Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file] vspec_file [-s] json_file")
+        "Usage:", sys.argv[0], "[-I include_dir] ... vspec_file [-s] json_file")
     print("  -s                   Use strict checking: Terminate when non-core attribute is found")
     print("  -I include_dir       Add include directory to search for included vspec")
     print("                       files. Can be used multiple timees.")
-    print()
-    print("  -i prefix:uuid_file  File to use for storing generated UUIDs for signals with")
-    print("                       a given path prefix. Can be used multiple times to store")
-    print("                       UUIDs for signal sub-trees in different files.")
     print()
     print(" vspec_file            The vehicle specification file to parse.")
     print(" json_file             The file to output the JSON objects to.")
@@ -90,7 +86,7 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args = getopt.getopt(sys.argv[1:], "sI:i:")
+    opts, args = getopt.getopt(sys.argv[1:], "sI:")
     strict = False
 
     # Always search current directory for include_file
@@ -98,13 +94,6 @@ if __name__ == "__main__":
     for o, a in opts:
         if o == "-I":
             include_dirs.append(a)
-        elif o == "-i":
-            id_spec = a.split(":")
-            if len(id_spec) != 2:
-                print("ERROR: -i needs a 'prefix:id_file' argument.")
-                usage()
-            [prefix, file_name] = id_spec
-            vspec.db_mgr.create_signal_uuid_db(prefix, file_name)
         elif o == "-s":
             strict = True
         else:
