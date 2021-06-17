@@ -72,7 +72,7 @@ Folder structure for the example below
     ├── spec
     │   │   ├── VehicleSignalSpecification.id
     │   └── VehicleSignalSpecification.vspec
-    ├──vss-tools  
+    ├──vss-tools
     ├── vspec2c.py
     ├── vspec2binary.py
     ├── vspec2csv.py
@@ -82,5 +82,6 @@ Folder structure for the example below
 ```
 
 * CSV File generation -> vss.csv:
- ```python /vspec2csv.py -i:../vehicle_signal_specification/spec/VehicleSignalSpecification.id ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec vss.csv```
-
+```sh
+python ./vspec2csv.py -i:../tmp/asdasd ../spec/VehicleSignalSpecification.vspec vss.csv
+```
