@@ -1,0 +1,45 @@
+name: Standard Build Check
+
+on: [push, pull_request]
+
+jobs:
+  buildtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -V
+          pip install -r requirements.txt
+          python setup.py -q install
+
+      - name: Prepare vss-tools inside VSS
+        run: |
+          # Go up to parent dir and fetch VSS (master branch) there
+          cd ..
+          git clone https://github.com/GENIVI/vehicle_signal_specification
+
+          # In the parent dir we should find our dir, i.e. vss-tools with
+          # the version that is being tested now.  Put that inside of VSS
+          # dir where it is expected to be.
+          # (Later jobs fail if we remove the working dir entirely, so copy instead of move)
+          rm -rf vehicle_signal_specification/vss-tools
+          cp -a vss-tools vehicle_signal_specification/
+
+      - name: Test mandatory targets
+        run: |
+          # "Our" version of vss-tools was prepared inside VSS => go there and run tests
+          cd ../vehicle_signal_specification
+          make travis_targets
+
+      - name: Test optional targets. NOTE - always succeeds
+        run: |
+          cd ../vehicle_signal_specification
+          make -k travis_optional || true
+
