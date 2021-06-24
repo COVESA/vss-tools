@@ -1,5 +1,7 @@
 # VSS Tools Usage
 
+Additional information can be found in the official VSS documentation at: [VSS Tools](https://genivi.github.io/vehicle_signal_specification/tools/)
+
 ## Contents
 1. Prerequisites
 2. Project Setup
