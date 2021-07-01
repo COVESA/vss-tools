@@ -141,6 +141,8 @@ class VSSDataType(Enum):
     DOUBLE_ARRAY = "double[]"
     STRING_ARRAY = "string[]"
     UNIX_TIMESTAMP_ARRAY = "UNIX Timestamp[]"
+    DATETIME = "DateTime"
+    HSVCOLOR = "HSVColor"
 
     @staticmethod
     def from_str(name):
