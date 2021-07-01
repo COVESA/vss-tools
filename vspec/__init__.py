@@ -393,7 +393,7 @@ def expand_instances(flat_model):
         new_flat_model = []
         elements_to_instantiate = []
         base_name = ''
-        instances = None
+        instances = []
         current_inst_path = ''
 
         for elem in flat_model:
