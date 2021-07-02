@@ -105,6 +105,8 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(VSSDataType.DOUBLE, VSSDataType.from_str("double"))
         self.assertEqual(VSSDataType.STRING, VSSDataType.from_str("string"))
         self.assertEqual(VSSDataType.UNIX_TIMESTAMP, VSSDataType.from_str("UNIX Timestamp"))
+        self.assertEqual(VSSDataType.DATETIME, VSSDataType.from_str("DateTime"))
+        self.assertEqual(VSSDataType.HSVCOLOR, VSSDataType.from_str("HSVColor"))
 
     def test_invalid_vss_data_types(self):
         with self.assertRaises(Exception): VSSDataType.from_str("not_a_valid_case")
