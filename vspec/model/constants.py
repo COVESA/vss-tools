@@ -12,10 +12,36 @@
 #
 
 # noinspection PyPackageRequirements
-from enum import Enum
+from enum import Enum, EnumMeta
+from typing import Sequence, Type, TypeVar
 
 
-class StringStyle(Enum):
+T = TypeVar("T")
+
+
+class EnumMetaWithReverseLookup(EnumMeta):
+    """This class extends EnumMeta and adds:
+     - from_str(str): reverse lookup
+     - values(): sequence of values
+    """
+    def __new__(typ, *args, **kwargs):
+        cls = super().__new__(typ, *args, **kwargs)
+        if not hasattr(cls, "__reverse_lookup__"):
+            cls.__reverse_lookup__ = {
+                v.value: v for v in cls.__members__.values()
+            }
+        if not hasattr(cls, "__values__"):
+            cls.__values__ = tuple(v.value for v in cls.__members__.values())
+        return cls
+
+    def from_str(cls: Type[T], value: str) -> T:
+        return cls.__reverse_lookup__[value]
+
+    def values(cls: Type[T]) -> Sequence[str]:
+        return cls.__values__
+
+
+class StringStyle(Enum, metaclass=EnumMetaWithReverseLookup):
     NONE = "none"
     CAMEL_CASE = "camelCase"
     CAMEL_BACK = "camelBack"
@@ -31,19 +57,8 @@ class StringStyle(Enum):
     UPPER_CASE = "uppercase"
     ALPHANUM_CASE = "alphanumcase"
 
-    @staticmethod
-    def from_str(name):
-        for style in StringStyle:
-            if style.value == name:
-                return style
-        raise Exception("Invalid String style %s only support %s" % (name, StringStyle.values()))
 
-    @staticmethod
-    def values():
-        return list(map(lambda v: v.value, StringStyle))
-
-
-class Unit(Enum):
+class Unit(Enum, metaclass=EnumMetaWithReverseLookup):
     MILIMETER = "mm"
     CENTIMETER = "cm"
     METER = "m"
@@ -82,19 +97,8 @@ class Unit(Enum):
     INCH = "inch"
     RATIO = "ratio"
 
-    @staticmethod
-    def from_str(name):
-        for unit in Unit:
-            if unit.value == name:
-                return unit
-        raise Exception("Invalid Unit %s only support %s" % (name, Unit.values()))
 
-    @staticmethod
-    def values():
-        return list(map(lambda v: v.value, Unit))
-
-
-class VSSType(Enum):
+class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
     BRANCH = "branch"
     RBRANCH = "rbranch"
     ATTRIBUTE = "attribute"
@@ -102,19 +106,8 @@ class VSSType(Enum):
     ACTUATOR = "actuator"
     ELEMENT = "element"
 
-    @staticmethod
-    def from_str(name):
-        for vss_type in VSSType:
-            if vss_type.value == name:
-                return vss_type
-        raise Exception("Invalid VSS data type %s only support %s" % (name, VSSType.values()))
 
-    @staticmethod
-    def values():
-        return list(map(lambda v: v.value, VSSType))
-
-
-class VSSDataType(Enum):
+class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
     INT8 = "int8"
     UINT8 = "uint8"
     INT16 = "int16"
@@ -141,14 +134,3 @@ class VSSDataType(Enum):
     DOUBLE_ARRAY = "double[]"
     STRING_ARRAY = "string[]"
     UNIX_TIMESTAMP_ARRAY = "UNIX Timestamp[]"
-
-    @staticmethod
-    def from_str(name):
-        for vss_type in VSSDataType:
-            if vss_type.value == name:
-                return vss_type
-        raise Exception("Invalid VSS datatype %s, valid types (case-sensitive) are %s" % (name, VSSDataType.values()))
-
-    @staticmethod
-    def values():
-        return list(map(lambda v: v.value, VSSDataType))
