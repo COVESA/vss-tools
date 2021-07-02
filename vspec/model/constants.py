@@ -26,6 +26,23 @@ __all__ = (
 T = TypeVar("T")
 
 
+class VSSConstant(str):
+    """String subclass that can tag it with description and domain.
+    """
+    __slots__ = ("description", "domain")
+
+    def __new__(
+        cls,
+        value: str,
+        description: str = "",
+        domain: str = "",
+    ) -> None:
+        self = super().__new__(cls, value)
+        self.description = description
+        self.domain = domain
+        return self
+
+
 class EnumMetaWithReverseLookup(EnumMeta):
     """This class extends EnumMeta and adds:
      - from_str(str): reverse lookup
@@ -74,44 +91,63 @@ class Unit(Enum, metaclass=EnumMetaWithReverseLookup):
     [Specification](https://www.iso.org/standard/30669.html),
     [Wikipedia](https://en.wikipedia.org/wiki/International_System_of_Units)
     """
-    MILIMETER = "mm"
-    CENTIMETER = "cm"
-    METER = "m"
-    KILOMETER = "km"
-    KILOMETERPERHOUR = "km/h"
-    METERSPERSECONDSQUARED = "m/s^2"
-    LITER = "l"
-    DEGREECELCIUS = "celsius"
-    DEGREE = "degrees"
-    DEGREEPERSECOND = "degrees/s"
-    KILOWATT = "kW"
-    KILOWATTHOURS = "kWh"
-    KILOGRAMM = "kg"
-    VOLT = "V"
-    AMPERE = "A"
-    SECOND = "s"
-    MINUTE = "min"
-    WEEKS = "weeks"
-    MONTHS = "months"
-    UNIXTIMESTAMP = "UNIX Timestamp"
-    PASCAL = "Pa"
-    KILOPASCAL = "kPa"
-    PERCENT = "percent"
-    CUBICCENTIMETER = "cm^3"
-    HORSEPOWER = "PS"
-    STARS = "stars"
-    GRAMMPERSECOND = "g/s"
-    GRAMMPERKM = "g/km"
-    KILOWATTHOURSPER100KM = "kWh/100km"
-    LITERPER100KM = "l/100km"
-    LITERPERHOUR = "l/h"
-    MILESPERGALLON = "mpg"
-    POUND = "lbs"
-    NEWTONMETER = "Nm"
-    REVOLUTIONSPERMINUTE = "rpm"
-    INCH = "inch"
-    RATIO = "ratio"
-
+    MILIMETER = VSSConstant("mm", "Millimeter", "Distance")
+    CENTIMETER = VSSConstant("cm", "Centimeter", "Distance")
+    METER = VSSConstant("m", "Meter", "Distance")
+    KILOMETER = VSSConstant("km", "Kilometer", "Distance")
+    KILOMETERPERHOUR = VSSConstant("km/h", "Kilometers per hour", "Speed")
+    METERSPERSECONDSQUARED = VSSConstant(
+        "m/s^2",
+        "Acceleration in meters per second squared",
+        "Acceleration"
+    )
+    LITER = VSSConstant("l", "Liter", "Volume")
+    DEGREECELCIUS = VSSConstant("celsius", "Degrees Celsius", "Temperature")
+    DEGREE = VSSConstant("degrees", "Angle in degrees", "Angle")
+    DEGREEPERSECOND = VSSConstant(
+        "degrees/s",
+        "Angular speed in degrees/s",
+        "Angular Speed"
+    )
+    KILOWATT = VSSConstant("kW", "Kilowatt", "Power")
+    KILOWATTHOURS = VSSConstant("kWh", "Kilowatt hours", "Power")
+    KILOGRAMM = VSSConstant("kg", "Kilograms", "Weight")
+    VOLT = VSSConstant("V", "Potential difference in volt", "Electrical")
+    AMPERE = VSSConstant("A", "Current in amperes", "Electrical")
+    SECOND = VSSConstant("s", "Seconds", "Time")
+    MINUTE = VSSConstant("min", "Minutes", "Time")
+    WEEKS = VSSConstant("weeks", "Weeks", "Time")
+    MONTHS = VSSConstant("months", "Months", "Time")
+    UNIXTIMESTAMP = VSSConstant(
+        "UNIX Timestamp",
+        "Seconds since January 1st 1970 UTC",
+        "Time"
+    )
+    PASCAL = VSSConstant("Pa", "Pascal",  "Pressure")
+    KILOPASCAL = VSSConstant("kPa", "Kilo-Pascal", "Pressure")
+    PERCENT = VSSConstant("percent", "Percent", "Relation")
+    CUBICCENTIMETER = VSSConstant("cm^3", "Cubic Centimetres", "Volume")
+    HORSEPOWER = VSSConstant("PS", "Horsepower", "Power")
+    STARS = VSSConstant("stars", "?", "?")
+    GRAMMPERSECOND = VSSConstant("g/s", "Grams per second", "?")
+    GRAMMPERKM = VSSConstant("g/km", "Grams per Kilometer", "?")
+    KILOWATTHOURSPER100KM = VSSConstant(
+        "kWh/100km",
+        "Kilowatt hours per 100 Kilometers",
+        "?"
+    )
+    LITERPER100KM = VSSConstant("l/100km", "Liters per 100 Kilometers", "?")
+    LITERPERHOUR = VSSConstant("l/h", "Liters per hour", "?")
+    MILESPERGALLON = VSSConstant("mpg", "Miles per gallon", "?")
+    POUND = VSSConstant("lbs", "Pound", "Weight")
+    NEWTONMETER = VSSConstant("Nm", "Torque", "Force")
+    REVOLUTIONSPERMINUTE = VSSConstant(
+        "rpm",
+        "Rotations per minute",
+        "Frequency"
+    )
+    INCH = VSSConstant("inch", "Inches", "Distance")
+    RATIO = VSSConstant("ratio",  "Ratio", "Relation")
 
 class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
     """Node Types
