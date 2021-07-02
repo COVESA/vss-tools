@@ -15,6 +15,13 @@
 from enum import Enum, EnumMeta
 from typing import Sequence, Type, TypeVar
 
+__all__ = (
+    "StringStyle",
+    "Unit",
+    "VSSType",
+    "VSSDataType",
+)
+
 
 T = TypeVar("T")
 
@@ -59,6 +66,14 @@ class StringStyle(Enum, metaclass=EnumMetaWithReverseLookup):
 
 
 class Unit(Enum, metaclass=EnumMetaWithReverseLookup):
+    """Data Unit Types
+
+    A signal can optionally specify a unit of measurement from the
+    following set. This list composed with definition according to
+    International Units (SI) and few automotive specific units:
+    [Specification](https://www.iso.org/standard/30669.html),
+    [Wikipedia](https://en.wikipedia.org/wiki/International_System_of_Units)
+    """
     MILIMETER = "mm"
     CENTIMETER = "cm"
     METER = "m"
@@ -99,6 +114,11 @@ class Unit(Enum, metaclass=EnumMetaWithReverseLookup):
 
 
 class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
+    """Node Types
+
+    https://genivi.github.io/vehicle_signal_specification/rule_set/data_entry/
+    https://genivi.github.io/vehicle_signal_specification/rule_set/branches/
+    """
     BRANCH = "branch"
     RBRANCH = "rbranch"
     ATTRIBUTE = "attribute"
@@ -108,6 +128,14 @@ class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
 
 
 class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
+    """Data Types
+
+    Each
+    [data entry](https://genivi.github.io/vehicle_signal_specification/rule_set/data_entry)
+    specifies a `datatype` from the following set (from FrancaIDL).
+    Datatypes shall not be used in
+    [branch entry](https://genivi.github.io/vehicle_signal_specification/rule_set/branches)
+    """
     INT8 = "int8"
     UINT8 = "uint8"
     INT16 = "int16"
