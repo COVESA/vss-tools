@@ -747,11 +747,11 @@ def detect_and_merge(tree_root: VSSNode, private_root: VSSNode):
         if not private_element.is_private():
             continue
 
-        element_name = "/" + private_element.qualified_name()
+        element_name = "/" + private_element.qualified_name("/")
         candidate_name = element_name.replace("Private/", "")
 
         if not VSSNode.node_exists(tree_root, candidate_name):
-            new_parent_name = "/" + private_element.parent.qualified_name().replace("/Private", "")
+            new_parent_name = "/" + private_element.parent.qualified_name("/").replace("/Private", "")
             new_parent = r.get(tree_root, new_parent_name)
             private_element.parent = new_parent
 
