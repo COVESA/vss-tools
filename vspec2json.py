@@ -107,7 +107,7 @@ if __name__ == "__main__":
     try:
         print("Loading vspec...")
         tree = vspec.load_tree(
-            args[0], include_dirs, exclude_private=False, break_on_noncore_attribute=strict)
+            args[0], include_dirs, merge_private=False, break_on_noncore_attribute=strict)
         print("Recursing tree and creating JSON...")
         export_json(json_out, tree)
         print("All done.")
