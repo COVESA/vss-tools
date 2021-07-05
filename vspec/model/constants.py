@@ -60,9 +60,11 @@ class Unit(Enum):
     VOLT = "V"
     AMPERE = "A"
     SECOND = "s"
+    MILLISECOND = "ms"
     MINUTE = "min"
     WEEKS = "weeks"
     MONTHS = "months"
+    YEARS = "years"
     UNIXTIMESTAMP = "UNIX Timestamp"
     PASCAL = "Pa"
     KILOPASCAL = "kPa"
@@ -81,6 +83,9 @@ class Unit(Enum):
     REVOLUTIONSPERMINUTE = "rpm"
     INCH = "inch"
     RATIO = "ratio"
+    HERTZ = "Hz"
+    LUX = "lx"
+    MILLIBAR = "mbar"
 
     @staticmethod
     def from_str(name):
