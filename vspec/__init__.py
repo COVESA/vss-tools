@@ -155,7 +155,7 @@ def convert_yaml_to_list(raw_yaml):
 
 
 
-def load_tree(file_name, include_paths, exclude_private=False, break_on_noncore_attribute=False):
+def load_tree(file_name, include_paths, merge_private=False, break_on_noncore_attribute=False):
     flat_model = load_flat_model(file_name, "", include_paths)
     flat_model_instances = expand_instances(flat_model)
     absolute_path_flat_model = create_absolute_paths(flat_model_instances)
@@ -163,7 +163,7 @@ def load_tree(file_name, include_paths, exclude_private=False, break_on_noncore_
     deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
     dict_tree = deep_model["children"]
-    return render_tree(dict_tree, exclude_private, break_on_noncore_attribute=break_on_noncore_attribute)
+    return render_tree(dict_tree, merge_private, break_on_noncore_attribute=break_on_noncore_attribute)
 
 
 def load_flat_model(file_name, prefix, include_paths):
