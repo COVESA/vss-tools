@@ -47,6 +47,7 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(Unit.VOLT, Unit.from_str("V"))
         self.assertEqual(Unit.AMPERE, Unit.from_str("A"))
         self.assertEqual(Unit.SECOND, Unit.from_str("s"))
+        self.assertEqual(Unit.MILLISECOND, Unit.from_str("ms"))
         self.assertEqual(Unit.MINUTE, Unit.from_str("min"))
         self.assertEqual(Unit.WEEKS, Unit.from_str("weeks"))
         self.assertEqual(Unit.MONTHS, Unit.from_str("months"))
@@ -68,6 +69,9 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(Unit.REVOLUTIONSPERMINUTE, Unit.from_str("rpm"))
         self.assertEqual(Unit.INCH, Unit.from_str("inch"))
         self.assertEqual(Unit.RATIO, Unit.from_str("ratio"))
+        self.assertEqual(Unit.HERTZ, Unit.from_str("Hz"))
+        self.assertEqual(Unit.LUX, Unit.from_str("lx"))
+        self.assertEqual(Unit.MILLIBAR, Unit.from_str("mbar"))
 
     def test_invalid_unit(self):
         with self.assertRaises(Exception): Unit.from_str("not_a_valid_case")

@@ -60,6 +60,7 @@ class Unit(Enum):
     VOLT = "V"
     AMPERE = "A"
     SECOND = "s"
+    MILLISECOND = "ms"
     MINUTE = "min"
     WEEKS = "weeks"
     MONTHS = "months"
@@ -81,6 +82,9 @@ class Unit(Enum):
     REVOLUTIONSPERMINUTE = "rpm"
     INCH = "inch"
     RATIO = "ratio"
+    HERTZ = "Hz"
+    LUX = "lx"
+    MILLIBAR = "mbar"
 
     @staticmethod
     def from_str(name):
