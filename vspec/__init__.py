@@ -155,10 +155,11 @@ def convert_yaml_to_list(raw_yaml):
 
 
 
-def load_tree(file_name, include_paths, merge_private=False, break_on_noncore_attribute=False):
+def load_tree(file_name, include_paths, merge_private=False, break_on_noncore_attribute=False, expand_inst = True):
     flat_model = load_flat_model(file_name, "", include_paths)
-    flat_model_instances = expand_instances(flat_model)
-    absolute_path_flat_model = create_absolute_paths(flat_model_instances)
+    if expand_inst:
+        flat_model = expand_instances(flat_model)
+    absolute_path_flat_model = create_absolute_paths(flat_model)
     absolute_path_flat_model_with_id = assign_signal_uuids(absolute_path_flat_model)
     deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
