@@ -249,12 +249,6 @@ def print_ttl_content(file, tree):
             graph.add((belongs_to_comp, RDFS.label, Literal(f"belongsTo: {setTTLName(tree_node.parent)}",lang="en")))
 
 
-            if tree_node.has_data_type() and tree_node.data_type.value in DataTypes.keys():
-                graph.add((node, SDO.rangeIncludes, DataTypes[tree_node.data_type.value]))
-
-            if tree_node.has_unit() and tree_node.unit.value in DataUnits.keys():
-                graph.add((node, SDO.rangeIncludes, DataUnits[tree_node.unit.value]))
-            
             if VSSType.ATTRIBUTE == tree_node.type:
                 #graph.add((node, RDF.type, OWL.DatatypeProperty))
                 graph.add((node, RDF.type, OWL.Class))
