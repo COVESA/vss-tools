@@ -255,7 +255,9 @@ def load_flat_model(file_name, prefix, include_paths):
     check_yaml_usage(raw_yaml, file_name)
 
     # Recursively expand all include files.
-    expanded_includes = expand_includes(raw_yaml, prefix, list(set(include_paths + [directory])))
+    if directory not in include_paths:
+        include_paths = [directory] + include_paths
+    expanded_includes = expand_includes(raw_yaml, prefix, include_paths)
 
     # Add type: branch when type is missing.
     flat_model = cleanup_flat_entries(expanded_includes)
