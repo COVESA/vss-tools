@@ -205,7 +205,6 @@ if __name__ == "__main__":
     #
     opts, args= getopt.getopt(sys.argv[1:], "I:i:p:P:t:n:s:v:V:")
 
-    # Always search current directory for include_file
     package = None
     strip = "." # Default
     signal_patterns=[]
@@ -215,8 +214,6 @@ if __name__ == "__main__":
         # This just for "compatibility" with other converters:
         if o == "-I":
             print("WARNING: -I flag is not used in this command!\n")
-        elif o == "-i":
-            print("WARNING: -i flag is not used in this command!\n")
         elif o == "-p":
             package = a
         elif o == "-n":
