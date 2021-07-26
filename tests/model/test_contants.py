@@ -54,7 +54,7 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(Unit.PASCAL, Unit.from_str("Pa"))
         self.assertEqual(Unit.KILOPASCAL, Unit.from_str("kPa"))
         self.assertEqual(Unit.PERCENT, Unit.from_str("percent"))
-        self.assertEqual(Unit.CUBICMETER, Unit.from_str("cm^3"))
+        self.assertEqual(Unit.CUBICCENTIMETER, Unit.from_str("cm^3"))
         self.assertEqual(Unit.HORSEPOWER, Unit.from_str("PS"))
         self.assertEqual(Unit.STARS, Unit.from_str("stars"))
         self.assertEqual(Unit.GRAMMPERSECOND, Unit.from_str("g/s"))
