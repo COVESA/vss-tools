@@ -1,4 +1,5 @@
 #
+# (C) 2021 Robert Bosch GmbH
 # (C) 2018 Volvo Cars
 # (C) 2016 Jaguar Land Rover
 #
@@ -14,11 +15,12 @@ import os
 import uuid
 import sys
 import re
+import collections
 
 from anytree import (Resolver, ChildResolverError, LevelOrderIter)
 import deprecation
 
-from model.vsstree import VSSNode
+from .model.vsstree import VSSNode
 
 
 class VSpecError(Exception):
@@ -39,56 +41,10 @@ class SignalUUIDManager:
     NAMESPACE = "vehicle_signal_specification"
 
     def __init__(self):
-        self.signal_uuid_db_set = {}
+        self.signal_uuid_db = SignalUUID_DB()
         self.namespace_uuid = uuid.uuid5(uuid.NAMESPACE_OID, self.NAMESPACE)
 
-    # Process a command line option with the format
-    #  [prefix]:filename
-    # If [prefix] is empty then all signals will match, regardless
-    # of their name.
-    #
-    def process_command_line_option(self, option):
-        try:
-            [prefix, uuid_db_file_name] = option.split(":")
-
-        except:
-            return False
-
-        self.create_signal_uuid_db(prefix, uuid_db_file_name, prefix)
-        return True
-
-    # Create a new SignalUUIDDB instance.
-    #
-    # 'prefix' is the prefix of the signal names that are to
-    # be assigned ID's by the new object.
-    #
-    # 'id_db_file_name' is the file to read existing IDs
-    # and store newly assigned IDs into forP prefix-matching signals.
-    def create_signal_uuid_db(self, prefix, uuid_db_file_name):
-        self.signal_uuid_db_set[prefix] = SignalUUID_DB(uuid_db_file_name)
-
-    def find_hosting_uuid_db(self, signal):
-        match_db = None
-        match_len = 0
-
-        # Find the longest matching prefix
-        for prefix, signal_db in self.signal_uuid_db_set.items():
-            prefix_len = len(prefix)
-            if signal.find(prefix, 0, prefix_len) == -1:
-                continue
-
-            # Is this a longer prefix match than the previous one
-            if prefix_len < match_len:
-                continue
-
-            match_db = signal_db
-            match_len = prefix_len
-
-        # match_db is None if no hosting uuid db was found for the
-        # signal
-        return match_db
-
-    # Return the parent of the provded signal
+    # Return the parent of the provided signal
     def parent_signal(self, signal_name):
         last_period = signal_name.rfind('.')
 
@@ -110,35 +66,18 @@ class SignalUUIDManager:
             return self.namespace_uuid
 
     # Locate and return an existing signal ID, or create and return a new one.
-    #
-    # All SignalUUID instances created by create_signal_uuid_db() will
-    # be prefix matched against the all prefix - SignalUUID mappings
-    # setup through create_signal_uuid_db() calls.
-    #
-    # The Signal UUID mapped against the longest prefix match against signal_name
-    # will be searched for an existing UUID assigned to signal_name.
     # If no UUID has been assigned, a new UUID is created and assigned to
     # 'signal_name' in the specified SignalUUID_DB object.
     #
     def get_or_assign_signal_uuid(self, signal_name):
-        uuid_db = self.find_hosting_uuid_db(signal_name)
-
-        if not uuid_db:
-            print("Could not find UUID DB for signal {}".format(signal_name))
-            sys.exit(255)
 
         try:
-            return uuid_db.db[signal_name]
+            return self.signal_uuid_db.db[signal_name]
         except:
             # Generate a new UUID, using the class namespace for UUID v5.
             uuid_val = uuid.uuid5(self.namespace_uuid, signal_name).hex
-            uuid_db.db[signal_name] = uuid_val
+            self.signal_uuid_db.db[signal_name] = uuid_val
             return uuid_val
-
-    # Go through all SignalUUID instances and save them to disk.
-    def save_all_signal_db(self):
-        for _key, signal_uuid_db in self.signal_uuid_db_set.items():
-            signal_uuid_db.save()
 
 
 #
@@ -146,34 +85,9 @@ class SignalUUIDManager:
 #
 class SignalUUID_DB:
     # Create a new SignalUUID object.
-    # id_db_file_name is the file to read existing IDs
-    # and store newly assined IDs into for all signals whose IDs
-    # are managed by this object.
-    def __init__(self, id_file_name):
-        self.id_file_name = id_file_name
-        if os.path.isfile(id_file_name):
-            with open(self.id_file_name, "r") as fp:
-                text = fp.read()
-                self.db = yaml.load(text, Loader=yaml.SafeLoader)
-                if not self.db:
-                    self.db = {}
-                fp.close()
-        else:
-            self.db = {}
+    def __init__(self):
+        self.db = {}
 
-    #
-    # Save all signal - ID mappings in self to a yaml file.  The file
-    # read at object construction will be used to store all mappings
-    # (including those added by get_or_assign_signal_uuid()).
-    #
-    def save(self):
-        try:
-            with open(self.id_file_name, "w") as fp:
-                yaml.safe_dump(self.db, fp, default_flow_style=False)
-                fp.close()
-                return True
-        except IOError as e:
-            pass
 
 
 # Try to open a file name that can reside
@@ -206,7 +120,6 @@ def assign_signal_uuids(flat_model):
     for elem in flat_model:
         elem["uuid"] = db_mgr.get_or_assign_signal_uuid(elem["$name$"])
 
-    db_mgr.save_all_signal_db()
     return flat_model
 
 
@@ -242,15 +155,16 @@ def convert_yaml_to_list(raw_yaml):
 
 
 
-def load_tree(file_name, include_paths, exclude_private=False, break_on_noncore_attribute=False):
+def load_tree(file_name, include_paths, merge_private=False, break_on_noncore_attribute=False, expand_inst = True):
     flat_model = load_flat_model(file_name, "", include_paths)
-    flat_model_instances = expand_instances(flat_model)
-    absolute_path_flat_model = create_absolute_paths(flat_model_instances)
+    if expand_inst:
+        flat_model = expand_instances(flat_model)
+    absolute_path_flat_model = create_absolute_paths(flat_model)
     absolute_path_flat_model_with_id = assign_signal_uuids(absolute_path_flat_model)
     deep_model = create_nested_model(absolute_path_flat_model_with_id, file_name)
     cleanup_deep_model(deep_model)
     dict_tree = deep_model["children"]
-    return render_tree(dict_tree, exclude_private, break_on_noncore_attribute=break_on_noncore_attribute)
+    return render_tree(dict_tree, merge_private, break_on_noncore_attribute=break_on_noncore_attribute)
 
 
 def load_flat_model(file_name, prefix, include_paths):
@@ -342,7 +256,9 @@ def load_flat_model(file_name, prefix, include_paths):
     check_yaml_usage(raw_yaml, file_name)
 
     # Recursively expand all include files.
-    expanded_includes = expand_includes(raw_yaml, prefix, list(set(include_paths + [directory])))
+    if directory not in include_paths:
+        include_paths = [directory] + include_paths
+    expanded_includes = expand_includes(raw_yaml, prefix, include_paths)
 
     # Add type: branch when type is missing.
     flat_model = cleanup_flat_entries(expanded_includes)
@@ -464,11 +380,6 @@ def expand_includes(flat_model, prefix, include_paths):
 def expand_instances(flat_model):
     # create instances from specification
 
-    new_flat_model = []
-    instantiation = []
-    base_name = ''
-    instances = None
-    inst_path = ''
     cont = True
 
     def extend_entry(new_entry, instance, name):
@@ -482,46 +393,52 @@ def expand_instances(flat_model):
     # repetition for nested instances
     while cont:
         cont = False
+        new_flat_model = []
+        elements_to_instantiate = []
+        base_name = ''
+        instances = []
+        current_inst_path = ''
 
         for elem in flat_model:
-            # collect elements, which belong under an instantiated branch
-            if inst_path and inst_path in "{}.{}".format(elem["$prefix$"], elem["$name$"]):
-                instantiation.append(elem)
-            # first node outside the instantiated branch
-            elif inst_path:
-                # add instantiation branches
-                for i in instances:
-                    # if multiple instances, only attach children under last instance
-                    # e.g. row1.left.{children}
-                    new_flat_model.append(extend_entry(dict(instantiation[0]), i[0], base_name))
-                    if i[1]:
-                        for e in instantiation[1:]:
-                            if isinstance(i[0], str):
-                                new_flat_model.append(extend_entry(dict(e), i[0], base_name))
-
-                inst_path = ''
-                instantiation = []
-                instances = None
-                base_name = ''
-
-                new_flat_model.append(elem)
-
+            # search for instantiations and related signals
+            # element that shall be affected by this instantiation (must start with <branch_name>.)
+            # only add "." if there actually is prefix to support instances on top level
+            elem_inst_path =  '.'.join([x for x in (elem["$prefix$"], elem["$name$"]) if x])
+            if current_inst_path and (current_inst_path + ".") in elem_inst_path:
+                elements_to_instantiate.append(elem)
+            # If not affected just keep it for next round
             else:
                 new_flat_model.append(elem)
 
+            # check if current item is an instantiated branch
             if 'instances' in elem.keys():
-                # ignore nested instances for now and do it in the next run
+                # ignore nested/other instances for now and do it in the next run
                 if instances:
-                    cont = True
+                    # check if this is a redefinition of the current branch to change instantiation
+                    if elem_inst_path == current_inst_path:
+                      instances = createInstantiationEntries([elem['instances']])
+                      del elem['instances']
+                    else:
+                      # continue iterations until all instantiations have been handled
+                      cont = True
                 else:
                     instances = createInstantiationEntries([elem['instances']])
                     del elem['instances']
-                    instantiation.append(elem)
+                    elements_to_instantiate.append(elem)
                     base_name = elem["$name$"]
-                    inst_path = "{}.{}".format(elem["$prefix$"], elem["$name$"])
+                    current_inst_path = elem_inst_path
+
+        # Now instantiate all items affected
+        for i in instances:
+            # if multiple instances, only attach children under last instance
+            # e.g. row1.left.{children}
+            new_flat_model.append(extend_entry(dict(elements_to_instantiate[0]), i[0], base_name))
+            if i[1]:
+                for e in elements_to_instantiate[1:]:
+                    if isinstance(i[0], str):
+                        new_flat_model.append(extend_entry(dict(e), i[0], base_name))
 
         flat_model = new_flat_model
-        new_flat_model = []
     return flat_model
 
 
@@ -831,11 +748,11 @@ def detect_and_merge(tree_root: VSSNode, private_root: VSSNode):
         if not private_element.is_private():
             continue
 
-        element_name = "/" + private_element.qualified_name()
+        element_name = "/" + private_element.qualified_name("/")
         candidate_name = element_name.replace("Private/", "")
 
         if not VSSNode.node_exists(tree_root, candidate_name):
-            new_parent_name = "/" + private_element.parent.qualified_name().replace("/Private", "")
+            new_parent_name = "/" + private_element.parent.qualified_name("/").replace("/Private", "")
             new_parent = r.get(tree_root, new_parent_name)
             private_element.parent = new_parent
 

@@ -1,7 +1,7 @@
 import unittest
 
-from model.constants import VSSType, VSSDataType, Unit, StringStyle
-from model.vsstree import VSSNode
+from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle
+from vspec.model.vsstree import VSSNode
 
 
 class TestVSSNode(unittest.TestCase):

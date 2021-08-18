@@ -16,7 +16,7 @@ import re
 import stringcase
 from anytree import Node, Resolver, ChildResolverError
 
-from model.constants import VSSType, VSSDataType, StringStyle, Unit
+from .constants import VSSType, VSSDataType, StringStyle, Unit
 
 DEFAULT_SEPARATOR = "."
 
@@ -37,6 +37,8 @@ class VSSNode(Node):
     min = ""
     max = ""
     enum = ""
+
+    ttl_name = ""
 
     default_value = ""
 
@@ -230,7 +232,7 @@ class VSSNode(Node):
 
     @staticmethod
     def validate_vss_element(element: dict, name: str):
-        """Validates a VSS object. Checks if it has the minimum paramaters (description, type, uuid) and if the optional
+        """Validates a VSS object. Checks if it has the minimum parameters (description, type, uuid) and if the optional
         parameters are supported within the specification
             Args:
                 element: dict parsed from yaml representing one VSS instance
@@ -248,9 +250,12 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default" , "instances", "deprecation"]:
-                raise NonCoreAttributeException('Non-core attribute "%s" in elment %s found.' % (aKey, name))
+                            "aggregate", "default" , "instances", "deprecation", "arraysize"]:
+                raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 
+        if "default" in element.keys():
+            if element["type"] != "attribute":
+                raise NonCoreAttributeException("Invalid VSS element %s, only attributes can use default" % name)
 
 def camel_case(st):
     """Camel case string conversion"""

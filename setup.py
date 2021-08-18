@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from distutils.core import setup
+from setuptools import setup, find_packages
 import subprocess
 
 # Use tag as version, *if* it is a tagged commit...
@@ -17,7 +17,9 @@ setup(
     description='GENIVI Vehicle Signal Specification tooling.',
     url='https://github.com/GENIVI/vss-tools',
     license='Mozilla Public License v2',
-    py_modules=['vspec'],
-    scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py', 'vspec2c.py'],
-    python_requires='>=3.4'
+    packages=find_packages(exclude=('tests', 'contrib')),
+    scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py', 'contrib/vspec2c.py', 'contrib/vspec2protobuf.py', 'contrib/ocf/vspec2ocf.py'],
+    python_requires='>=3.7',
+    install_requires=['pyyaml>=5.1', 'anytree>=2.8.0', 'stringcase>=1.2.0', 'deprecation>=2.1.0'],
+    tests_require=['pytest>=2.7.2'],
 )
