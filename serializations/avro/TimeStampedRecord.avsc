@@ -1,0 +1,8 @@
+{
+  "type": "record",
+  "name": "TimeStampedRecord",
+  "fields" : [
+         { "name" : "ts", "type" : "long" },
+         { "name" : "value", "type" : [ "int", "long", "float", "double", "string", "boolean" ] }
+  ]
+}
