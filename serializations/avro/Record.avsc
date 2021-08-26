@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "Record",
+  "fields" : [
+         { "name" : "value", "type" : [ "int", "long", "float", "double",
+            "string", "boolean",
+            { "type" : "array",
+               { "type" : "record",
+                  "name" : "_arrayitems"
+                     "items" : { "name" : "value", "type" : [ "int", "long", "float", "double", "string", "boolean" ] }
+               }
+            }
+         ]
+      }
+  ]
+}
