@@ -11,6 +11,7 @@ pytest = ">=2.7.2"
 PyYAML = ">=5.1"
 rdflib = ">=6.0.0"
 vss-tools = {editable = true, path = "."}
+avro = ">1.10.2"
 
 [dev-packages]
 
