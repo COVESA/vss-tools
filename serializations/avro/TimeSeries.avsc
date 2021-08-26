@@ -4,7 +4,8 @@
   "fields" : [
     {"name": "signal", "type": "string"},   
     {"name": "count", "type": "int" },      
-    {"name": "values", "type": "array",
+    {"name": "values", "type": {
+      "type": "array",
          "items" : {
             "type" : "record",              
             "name" : "TimeStampedRecord",
@@ -12,7 +13,8 @@
                   { "name" : "ts", "type" : "string" },   
                   { "name" : "value", "type" : [ "int", "long", "float", "double", "string", "boolean" ] }
                ]
-             }
-            }
-          ] 
-} 
+          }
+      }
+    }
+  ] 
+}
