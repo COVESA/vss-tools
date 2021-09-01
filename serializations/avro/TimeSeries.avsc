@@ -1,20 +1,20 @@
 {
-  "type": "record",       
-  "name": "TimeSeries",   
+  "type": "record",
+  "name": "TimeSeries",
   "fields" : [
-    {"name": "signal", "type": "string"},   
-    {"name": "count", "type": "int" },      
+    {"name": "signal_identifier", "type": "string"},
+    {"name": "count", "type": "int" },
     {"name": "values", "type": {
       "type": "array",
          "items" : {
-            "type" : "record",              
+            "type" : "record",
             "name" : "TimeStampedRecord",
-            "fields" : [ 
-                  { "name" : "ts", "type" : "string" },   
+            "fields" : [
+                  { "name" : "ts", "type" : "long" },
                   { "name" : "value", "type" : [ "int", "long", "float", "double", "string", "boolean" ] }
                ]
           }
       }
     }
-  ] 
+  ]
 }
