@@ -22,7 +22,7 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/GEN
 [vspec2json.py](vspec2json.py) | Parses and expands a VSS and generates a JSON specification | Community Supported | - |
 [test_contants.py](tests/model/test_contants.py) | Tool used for internal testing  | Community Supported | - |
 [test_vsstree.py](tests/model/test_vsstree.py) | Tool used for internal testing | Community Supported | - |
-[vspec2yaml.py](vspec2yaml.py) | This tool converts the vspec files into a single YAML file with all instances expanded and UUID added. | (Community Supported) | - |
+[vspec2yaml.py](vspec2yaml.py) | This tool converts the vspec files into a single YAML file with all instances expanded and UUID added. | Community Supported | - |
 [vspec2c.py](contrib/vspec2c.py) | The vspec2c tooling allows a vehicle signal specification to be translated from its source YAML file to native C code that has the entire specification encoded in it. | Contrib (Obsolete, no longer functional) | [Documentation](contrib/vspec2c/README.md) |
 [vspec2ocf.py](contrib/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Contrib (Obsolete, no longer functional)  | - |
 [vspec2proto.py](contrib/vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib (Beta)  | - |
@@ -86,30 +86,3 @@ pipenv shell         # starts a shell configured to use the virtual environment
 * RUN  ```pip install -e .``` from the vss-tools project root directory
 * Run  ```pip install -r requirements.txt```  from the vss-tools project root directory
 
-## 3. Run Tests
-Run the following command in your root directory
-* RUN ```pytest tests ```
-
-## 4. Use Project
-
-Folder structure for the example below
-```bash
-.
-└── vehicle_signal_specification
-    ├── VERSION
-    ├── spec
-    │   │   ├── VehicleSignalSpecification.id
-    │   └── VehicleSignalSpecification.vspec
-    ├──vss-tools
-    ├── vspec2c.py
-    ├── vspec2binary.py
-    ├── vspec2csv.py
-    ├── vspec2franca.py
-    ├── vspec2json.py
-    └── vspec2yaml.py
-```
-
-* CSV File generation -> vss.csv:
-```sh
-python ./vspec2csv.py -i:../tmp/asdasd ../spec/VehicleSignalSpecification.vspec vss.csv
-```
