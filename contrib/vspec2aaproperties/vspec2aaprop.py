@@ -18,7 +18,6 @@ import type_hal_parser
 import read_mapping_layer
 import jinja2
 
-
 myDir= os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
 import vspec
@@ -98,7 +97,6 @@ def usage():
     )
     sys.exit(255)
 
-
 if __name__ == "__main__":
     #
     # Check that we have the correct arguments
@@ -116,21 +114,22 @@ if __name__ == "__main__":
     if len(args) != 5:
         usage()
 
+    map_tree = read_mapping_layer.load_tree(args[1])
+    type_table = type_hal_parser.type_table(args[2])
+
     try:
         vss_tree = vspec.load_tree(args[0], include_dirs)
     except vspec.VSpecError as e:
         print("Error: {}".format(e))
         exit(255)
 
-    map_tree = read_mapping_layer.load_tree(args[1])
-    type_table = type_hal_parser.get_vehicleproperty(args[2])
     #template=get_template(args[3]) #This is loaded in subroutines.
 
     jinja_env.globals.update(
     gen=generate_from_tree,
     vss_tree=vss_tree,
     map_tree=map_tree,
-    type_table=type_table 
+    type_table=type_table
     )
 
 #def generate_from_tree(vss_tree, map_tree, type_table, template, output_file):
