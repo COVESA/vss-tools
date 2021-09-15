@@ -30,18 +30,6 @@ Usage: {sys.argv[0]} [options] vspec_file csv_file
   -I include_dir       Add include directory to search for included vspec
                        files. Can be used multiple timees.
 
-  -i prefix:uuid_file  "prefix" is an optional string that will be
-                       prepended to each signal name defined in the
-                       vspec file.
-
-                       "uuid_file" is the name of the file containing the
-                       static UUID values for the signals.  This file is
-                       read/write and will be updated if necessary.
-
-                       This option can be specified several times in
-                       to store the UUIDs of different parts of the
-                       signal tree in different files.
-
   vspec_file           The vehicle specification file to parse.
 
   csv_file             The file to output the CSV data to.
