@@ -8,26 +8,15 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 #
-# Concert vspec file to JSON
+# Convert vspec files to JSON
 #
 
 import sys
 import vspec
 import json
-import getopt
+import argparse
+
 from vspec.model.vsstree import VSSNode, VSSType
-
-
-def usage():
-    print(
-        "Usage:", sys.argv[0], "[-I include_dir] ... vspec_file [-s] json_file")
-    print("  -s                   Use strict checking: Terminate when non-core attribute is found")
-    print("  -I include_dir       Add include directory to search for included vspec")
-    print("                       files. Can be used multiple timees.")
-    print()
-    print(" vspec_file            The vehicle specification file to parse.")
-    print(" json_file             The file to output the JSON objects to.")
-    sys.exit(255)
 
 
 def export_node(json_dict, node):
@@ -83,34 +72,32 @@ def export_json(file, root):
 
 
 if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args = getopt.getopt(sys.argv[1:], "sI:")
-    strict = False
+    # The arguments we accept
 
-    # Always search current directory for include_file
+    parser = argparse.ArgumentParser(description='Convert vspec to json.')
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,
+                    help='Add include directory to search for included vspec files.')
+    parser.add_argument('-s', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
+    parser.add_argument('json_file', metavar='<json file>', help='The file to output the JSON objects to.')
+
+
+    args = parser.parse_args()
+
+    strict=args.s
+
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        elif o == "-s":
-            strict = True
-        else:
-            usage()
+    include_dirs.extend(args.include_dir)
 
-    if len(args) != 2:
-        usage()
-
-    json_out = open(args[1], "w")
+    json_out = open(args.json_file, "w")
 
     try:
         print("Loading vspec...")
         tree = vspec.load_tree(
-            args[0], include_dirs, merge_private=False, break_on_noncore_attribute=strict)
+            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=strict)
         print("Recursing tree and creating JSON...")
         export_json(json_out, tree)
         print("All done.")
     except vspec.VSpecError as e:
         print(f"Error: {e}")
-        exit(255)
+        sys.exit(255)
