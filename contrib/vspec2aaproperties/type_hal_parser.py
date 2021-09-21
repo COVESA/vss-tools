@@ -21,9 +21,10 @@ class type_table:
 
     def __getitem__(self,name):
         typestr=self.table[name.split(":")[-1]]
-        print("getitem:",name,":",typestr)
+        #DEUG print: print("getitem:",name,":",typestr)
         return typestr
 
 
 if __name__ == "__main__":
+    #Debug main for standalone testing.
     get_vehicleproperty("contrib/vspec2aaproperties/types.hal")
