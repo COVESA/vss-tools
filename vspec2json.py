@@ -19,7 +19,7 @@ import argparse
 from vspec.model.vsstree import VSSNode, VSSType
 
 
-def export_node(json_dict, node):
+def export_node(json_dict, node, generate_uuid):
 
     json_dict[node.name] = {}
 
@@ -51,7 +51,9 @@ def export_node(json_dict, node):
         pass
 
     json_dict[node.name]["description"] = node.description
-    json_dict[node.name]["uuid"] = node.uuid
+
+    if generate_uuid:
+        json_dict[node.name]["uuid"] = node.uuid
 
     # Might be better to not generate child dict, if there are no children
     # if node.type == VSSType.BRANCH and len(node.children) != 0:
@@ -62,12 +64,12 @@ def export_node(json_dict, node):
         json_dict[node.name]["children"] = {}
 
     for child in node.children:
-        export_node(json_dict[node.name]["children"], child)
+        export_node(json_dict[node.name]["children"], child, generate_uuid)
 
 
-def export_json(file, root):
+def export_json(file, root, generate_uuids=True):
     json_dict = {}
-    export_node(json_dict, root)
+    export_node(json_dict, root, generate_uuids)
     json.dump(json_dict, file, indent=2, sort_keys=True)
 
 
@@ -77,14 +79,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert vspec to json.')
     parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,
                     help='Add include directory to search for included vspec files.')
-    parser.add_argument('-s', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('--no-uuid', action='store_true', help='Exclude uuids from generated json.' )
     parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
     parser.add_argument('json_file', metavar='<json file>', help='The file to output the JSON objects to.')
 
-
     args = parser.parse_args()
 
-    strict=args.s
+    strict=args.strict
+    generate_uuids=not args.no_uuid
 
     include_dirs = ["."]
     include_dirs.extend(args.include_dir)
@@ -96,7 +99,7 @@ if __name__ == "__main__":
         tree = vspec.load_tree(
             args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=strict)
         print("Recursing tree and creating JSON...")
-        export_json(json_out, tree)
+        export_json(json_out, tree, generate_uuids)
         print("All done.")
     except vspec.VSpecError as e:
         print(f"Error: {e}")
