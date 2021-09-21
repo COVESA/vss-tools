@@ -13,10 +13,10 @@
 import sys
 import os
 import getopt
-from anytree import PreOrderIter
 import type_hal_parser
 import read_mapping_layer
 import jinja2
+import vspec_helper
 
 myDir= os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
@@ -92,7 +92,15 @@ def usage():
   vspec_file           The top-level vehicle specification file to parse.
   mapping_file         The VSS-layer that defines mapping between VSS and AA properties
   types_hal_file       The Android types.hal header file for VHAL type information.
+  template_file        Jinja2 template for the code generation without path.
   output_file          The primary file name to write C++ generated code to.)
+
+  example:vss-tools$ python3 contrib/vspec2aaproperties/vspec2aaprop.py \
+      ../spec/VehicleSignalSpecification.vspec \
+      contrib/vspec2aaproperties/vspec2prop_mapping.yml \
+      contrib/vspec2aaproperties/types.hal \
+      android_vhal_mapping_cpp.tpl \
+      test.cpp
 """
     )
     sys.exit(255)
@@ -118,7 +126,8 @@ if __name__ == "__main__":
     type_table = type_hal_parser.type_table(args[2])
 
     try:
-        vss_tree = vspec.load_tree(args[0], include_dirs)
+        vss_tree = vspec_helper.VSpecHelper(vspec.load_tree(args[0], include_dirs))
+        # vss_tree = vspec.load_tree(args[0], include_dirs)
     except vspec.VSpecError as e:
         print("Error: {}".format(e))
         exit(255)
