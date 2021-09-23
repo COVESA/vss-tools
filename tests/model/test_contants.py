@@ -104,7 +104,6 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(VSSDataType.FLOAT, VSSDataType.from_str("float"))
         self.assertEqual(VSSDataType.DOUBLE, VSSDataType.from_str("double"))
         self.assertEqual(VSSDataType.STRING, VSSDataType.from_str("string"))
-        self.assertEqual(VSSDataType.UNIX_TIMESTAMP, VSSDataType.from_str("UNIX Timestamp"))
 
     def test_invalid_vss_data_types(self):
         with self.assertRaises(Exception): VSSDataType.from_str("not_a_valid_case")
