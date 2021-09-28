@@ -90,5 +90,5 @@ Vehicle.Powertrain.FuelSystem.Level:
   aospId: VehicleProperty::FUEL_LEVEL
   aospArea: VehicleArea::Global
   translation:
-    complex: „$INFO_FUEL_CAPACITY * _VAL_ / 100”
+    complex: "$INFO_FUEL_CAPACITY * _VAL_ / 100"
 
