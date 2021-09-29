@@ -29,10 +29,18 @@ VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::strin
 {% for key,item in map_tree.items() %}
 {% if item["translation"] %}
 static VehiclePropValue convert{{key.replace(".","_")}}(std::string value, VehicleProperty id, int32_t area, VehicleHal* vhal) {
+{% if False %}
 // {{item["translation"]["complex"]}}
 // float fuelCapacity = getVehiclePropertyFloatValue(toInt(VehicleProperty::INFO_FUEL_CAPACITY), vhal);
-   float value2 = getVehiclePropertyFloatValue(toInt({{item["aospArea"]}}::TODO_GET_ARGUMENT), vhal);
-   return convertFloatLinear(value,id,area,0,value2) 
+// input:{{item["translation"]["input"]}}
+{% endif %}
+{% for invalue in item["translation"]["input"] %}
+{% if False %}
+// typetable: {{type_table[invalue]}}
+{% endif %}
+   float value{{invalue}} = getVehiclePropertyFloatValue(toInt(VehicleProperty::{{invalue}}), vhal);
+{% endfor %}
+   return ({{item["translation"]["complex"].replace("$","value").replace("_VAL_","value")}})
 }
 {% endif %}
 {% endfor %}
