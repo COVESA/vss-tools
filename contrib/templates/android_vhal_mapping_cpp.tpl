@@ -54,9 +54,10 @@ void AndroidVssConverter::initConversionMap(VehicleHal* vhal) {
 {% for key,item in map_tree.items() %}
 {% if False %}
 // VSS item: {{ key }}
-// VSS Unit: {{ vss_tree[key].data_type }}
+// VSS type: {{ vss_tree[key].data_type }}
 // AOSP item: {{ item['aospId'] }}
 // AOSP area: {{ item['aospArea'] }}
+// Android type: {{ type_table['aospId'] }}
 {% endif %}
 {% if item["multiplier"] %}
     conversionMap["{{ key }}"] = std::bind(convertLinear{{ type_table[item['aospId']] }},
