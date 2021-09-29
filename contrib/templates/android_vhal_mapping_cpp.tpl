@@ -28,7 +28,7 @@ VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::strin
 /** BEGIN GENERATED SECTION **/
 {% for key,item in map_tree.items() %}
 {% if item["translation"] %}
-static VehiclePropValue convert{{key.replace(".","_")}}(std::string value, VehicleProperty id, int32_t area, VehicleHal* vhal) {
+static VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string value, VehicleProperty id, int32_t area, VehicleHal* vhal) {
 {% if False %}
 // {{item["translation"]["complex"]}}
 // float fuelCapacity = getVehiclePropertyFloatValue(toInt(VehicleProperty::INFO_FUEL_CAPACITY), vhal);
@@ -38,7 +38,7 @@ static VehiclePropValue convert{{key.replace(".","_")}}(std::string value, Vehic
 {% if False %}
 // typetable: {{type_table[invalue]}}
 {% endif %}
-   float value{{invalue}} = getVehiclePropertyFloatValue(toInt(VehicleProperty::{{invalue}}), vhal);
+   {{type_table[invalue]}} value{{invalue}} = getVehicleProperty{{type_table[invalue]}}Value(toInt(VehicleProperty::{{invalue}}), vhal);
 {% endfor %}
    return ({{item["translation"]["complex"].replace("$","value").replace("_VAL_","value")}})
 }
@@ -60,13 +60,13 @@ void AndroidVssConverter::initConversionMap(VehicleHal* vhal) {
 // Android type: {{ type_table['aospId'] }}
 {% endif %}
 {% if item["multiplier"] %}
-    conversionMap["{{ key }}"] = std::bind(convertLinear{{ type_table[item['aospId']] }},
+    conversionMap["{{ key }}"] = std::bind(convertLinear{{str(vss_tree[key].data_type).split(".")[-1]}}2{{ type_table[item['aospId']] }},
         std::placeholders::_1, {{ item['aospId'] }}, (int32_t) {{item['aospArea']}},{{item["multiplier"]}},{{item["offset"]}});
 {% elif item["translation"]%}
-    conversionMap["{{ key }}"] = std::bind(convert{{key.replace(".","_")}},
+    conversionMap["{{ key }}"] = std::bind(convert{{"_".join(key.split(".")[1:])}},
         std::placeholders::_1, {{ item['aospId'] }}, (int32_t) {{item['aospArea']}});
 {% else %}
-    conversionMap["{{ key }}"] = std::bind(convert{{ type_table[item['aospId']] }},
+    conversionMap["{{ key }}"] = std::bind(convert{{str(vss_tree[key].data_type).split(".")[-1]}}2{{ type_table[item['aospId']] }},
         std::placeholders::_1, {{ item['aospId'] }}, toInt({{item['aospArea']}}));
 {% endif %}
 {% endfor %}
