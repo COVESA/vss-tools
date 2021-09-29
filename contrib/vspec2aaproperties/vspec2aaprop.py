@@ -138,7 +138,8 @@ if __name__ == "__main__":
     gen=generate_from_tree,
     vss_tree=vss_tree,
     map_tree=map_tree,
-    type_table=type_table
+    type_table=type_table,
+    str=str
     )
 
 #def generate_from_tree(vss_tree, map_tree, type_table, template, output_file):
