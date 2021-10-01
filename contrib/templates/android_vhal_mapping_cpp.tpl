@@ -71,7 +71,7 @@ void AndroidVssConverter::initConversionMap(VehicleHal* vhal) {
 {% endif %}
 {% endfor %}
 }
- /** END GENERATED SECTION **/
+/** END GENERATED SECTION **/
 
 
 }  // impl
