@@ -82,3 +82,8 @@ export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, ot
 pipenv install --dev # install the development dependencies as well
 pipenv shell         # starts a shell configured to use the virtual environment
 ```
+## 5. CPP adaptation code generation
+You can run the CPP generator with following parameters:
+```
+python contrib/vspec2aaproperties/vspec2aaprop.py ../spec/VehicleSignalSpecification.vspec contrib/vspec2aaproperties/vspec2prop_mapping.yml contrib/vspec2aaproperties/types.hal android_vhal_mapping_cpp.tpl test.cpp
+```
