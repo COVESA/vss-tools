@@ -122,7 +122,9 @@ if __name__ == "__main__":
     if len(args) != 5:
         usage()
 
+    # Create cross-reference map between VSS and Android from the YAML file.
     map_tree = read_mapping_layer.load_tree(args[1])
+    # Create Android type table from the Android type.hal header file.
     type_table = type_hal_parser.type_table(args[2])
 
     try:
@@ -132,8 +134,7 @@ if __name__ == "__main__":
         print("Error: {}".format(e))
         exit(255)
 
-    #template=get_template(args[3]) #This is loaded in subroutines.
-
+    #MAP the trees for the Jinja
     jinja_env.globals.update(
     gen=generate_from_tree,
     vss_tree=vss_tree,
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     str=str
     )
 
-#def generate_from_tree(vss_tree, map_tree, type_table, template, output_file):
+    #Generate the output CPP file using Jinja2 generator (vss_tree, map_tree, type_table):
     with open(args[4], "w") as output_file:
         print(generate_from_tree(map_tree, args[3]),file=output_file)
         output_file.write("//DONE\n")
