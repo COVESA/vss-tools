@@ -121,7 +121,6 @@ pip install pipenv
 export PATH=/home/user/.local/bin:$PATH
 pipenv install --dev # install the development dependencies as well
 ```
-<<<<<<< HEAD
 
 Then the virtual environment can be started and tested using (`pipenv shell`):
 
@@ -143,10 +142,8 @@ This repository is set up to use pre-commit hooks. After you clone the project, 
 ## Building and installing with Pip
 
 For usage of VSS-Tools with Pip (PyPI) please see [README-PYPI.md](README-PYPI.md)
-=======
 ## 5. CPP adaptation code generation
 You can run the CPP generator with following parameters:
 ```
 python contrib/vspec2aaproperties/vspec2aaprop.py ../spec/VehicleSignalSpecification.vspec contrib/vspec2aaproperties/vspec2prop_mapping.yml contrib/vspec2aaproperties/types.hal android_vhal_mapping_cpp.tpl test.cpp
 ```
->>>>>>> c8879f5 (Updated README.md with generator call example (chapter 5))
