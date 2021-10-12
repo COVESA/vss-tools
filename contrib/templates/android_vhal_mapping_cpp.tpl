@@ -28,19 +28,24 @@ VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::strin
 /** BEGIN GENERATED SECTION **/
 {% set converters = {} %}
 {% for key,item in map_tree.items() %}
- {% if item["translation"] %}
-  {% for invalue in item["translation"]["input"] %}
-  {% set name = "str2"+str(vss_tree[key].data_type).split(".")[-1] %}
-  {% if name not in converters %}
-   {% set x=converters.__setitem__(name,name) %}
+ {% set name = "str2"+str(vss_tree[key].data_type).split(".")[-1] %}
+ {% if name not in converters %}
+  {% set x=converters.__setitem__(name,name) %}
 {{str(vss_tree[key].data_type).split(".")[-1]}} str2{{str(vss_tree[key].data_type).split(".")[-1]}}(std::string value);
-   {% endif %}
-  {% endfor %}
+ {% endif %}
+{% endfor %}
+{% for key,item in map_tree.items() %}
+ {% if item["translation"] %}
  {% elif item["multiplier"] %}
   {% set name = "convertLinear"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
   {% if name not in converters %}
    {% set x=converters.__setitem__(name,name) %}
-{{ type_table[item['aospId']] }} {{name}}(std::string value, VehicleProperty id, int32_t area, float K, float m);
+{{ type_table[item['aospId']] }} {{name}}(std::string value, VehicleProperty id, int32_t area, float K, float m)
+{
+   float v = (float)str2{{str(vss_tree[key].data_type).split(".")[-1]}}(value);
+   prop.value.floatValues = std::vector<float> { v * K + m }; 
+   return prop;
+}
   {% endif %}
  {% else %}
   {% set name = "convert"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
