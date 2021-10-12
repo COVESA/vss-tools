@@ -26,6 +26,31 @@ VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::strin
 }
 
 /** BEGIN GENERATED SECTION **/
+{% set converters = {} %}
+{% for key,item in map_tree.items() %}
+ {% if item["translation"] %}
+  {% for invalue in item["translation"]["input"] %}
+  {% set name = "str2"+str(vss_tree[key].data_type).split(".")[-1] %}
+  {% if name not in converters %}
+   {% set x=converters.__setitem__(name,name) %}
+{{str(vss_tree[key].data_type).split(".")[-1]}} str2{{str(vss_tree[key].data_type).split(".")[-1]}}(std::string value);
+   {% endif %}
+  {% endfor %}
+ {% elif item["multiplier"] %}
+  {% set name = "convertLinear"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
+  {% if name not in converters %}
+   {% set x=converters.__setitem__(name,name) %}
+{{ type_table[item['aospId']] }} {{name}}(std::string value, VehicleProperty id, int32_t area, float K, float m);
+  {% endif %}
+ {% else %}
+  {% set name = "convert"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
+  {% if name not in converters %}
+   {% set x=converters.__setitem__(name,name) %}
+{{ type_table[item['aospId']] }} {{name}}(std::string value, VehicleProperty id, int32_t area);
+  {% endif %}
+ {% endif %}
+{% endfor %}
+
 {% for key,item in map_tree.items() %}
 {% if item["translation"] %}
 static VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string value, VehicleProperty id, int32_t area, VehicleHal* vhal) {
@@ -40,7 +65,8 @@ static VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string valu
 {% endif %}
    {{type_table[invalue]}} value{{invalue}} = getVehicleProperty{{type_table[invalue]}}Value(toInt(VehicleProperty::{{invalue}}), vhal);
 {% endfor %}
-   return ({{item["translation"]["complex"].replace("$","value").replace("_VAL_","value")}})
+   {{str(vss_tree[key].data_type).split(".")[-1]}} v = str2{{str(vss_tree[key].data_type).split(".")[-1]}}(value);
+   return ({{item["translation"]["complex"].replace("$","value").replace("_VAL_","v")}})
 }
 {% endif %}
 {% endfor %}
@@ -64,7 +90,7 @@ void AndroidVssConverter::initConversionMap(VehicleHal* vhal) {
         std::placeholders::_1, {{ item['aospId'] }}, (int32_t) {{item['aospArea']}},{{item["multiplier"]}},{{item["offset"]}});
 {% elif item["translation"]%}
     conversionMap["{{ key }}"] = std::bind(convert{{"_".join(key.split(".")[1:])}},
-        std::placeholders::_1, {{ item['aospId'] }}, (int32_t) {{item['aospArea']}});
+        std::placeholders::_1, {{ item['aospId'] }}, (int32_t) {{item['aospArea']}}, vhal);
 {% else %}
     conversionMap["{{ key }}"] = std::bind(convert{{str(vss_tree[key].data_type).split(".")[-1]}}2{{ type_table[item['aospId']] }},
         std::placeholders::_1, {{ item['aospId'] }}, toInt({{item['aospArea']}}));
