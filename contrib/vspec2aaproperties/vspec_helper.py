@@ -1,7 +1,7 @@
-from anytree import Resolver
 '''
 vspec helper class to support tree[full.vspec.definition] for Jinja.
 '''
+from anytree import Resolver
 # Copyright (c) 2021 GENIVI Alliance
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,12 +13,24 @@ vspec helper class to support tree[full.vspec.definition] for Jinja.
 #
 
 class VSpecHelper:
+    '''
+    VSpecHelper class is a wrapper class for the vspec to enable tree[full.vspec.definition] for Jinja.
+    '''
+
     #__init__ input the vspec tree and stores it inside the helper class.
     def __init__(self,tree):
+        '''
+        tree: vspec tree to wrap
+        usage: vss_tree = vspec_helper.VSpecHelper(vspec.load_tree(args[0], include_dirs))
+        '''
         self.tree=tree
         #Create resolver for the anytree "name" tree.
         self.r=Resolver("name")
     def __getitem__(self,item):
+        '''
+        item: Ascii representation of the vspec item. e.g. "Vehicle.Chassis.Axle.Row2.Wheel.Left.Tire.Pressure"
+        returns vspec anytree object.
+        '''
         #Currently vspec uses hardcoded "/" as separator while YAML defines "." separated values. Map between these for the resolver.
         return self.r.get(self.tree,f'/{item.replace(".","/")}')
 
