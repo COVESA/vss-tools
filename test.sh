@@ -1,1 +1,0 @@
-python contrib/vspec2aaproperties/vspec2aaprop.py ../spec/VehicleSignalSpecification.vspec contrib/vspec2aaproperties/vspec2prop_mapping.yml contrib/vspec2aaproperties/types.hal android_vhal_mapping_cpp.tpl test.cpp
