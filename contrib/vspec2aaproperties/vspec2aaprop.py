@@ -27,7 +27,7 @@ from vspec.model.vsstree import VSSNode, VSSType
 jinja_env = jinja2.Environment(
         # Use the subdirectory 'templates' relative to this file's location
         loader =
-        jinja2.FileSystemLoader(myDir + '/../templates'),
+        jinja2.FileSystemLoader(myDir + '/templates'),
 
         # Templates with these extension gets automatic autoescape for HTML
         # It's more annoying for code generation, so passing empty list for now.
