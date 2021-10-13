@@ -21,7 +21,8 @@ from vspec.model.vsstree import VSSNode, VSSType
 
 def usage():
     print(
-        "Usage:", sys.argv[0], "[-I include_dir] ... vspec_file [-s] yaml_file")
+        "Usage:", sys.argv[0], "[-I include_dir] ... vspec_file [--no-uuid] [-s] yaml_file")
+    print("  --no-uuid            Do not output UUID metadata")
     print("  -s                   Use strict checking: Terminate when non-core attribute is found")
     print("  -I include_dir       Add include directory to search for included vspec")
     print("                       files. Can be used multiple timees.")
@@ -65,7 +66,8 @@ def export_node(yaml_dict, node):
         pass
 
     yaml_dict[node_path]["description"] = node.description
-    yaml_dict[node_path]["uuid"] = node.uuid
+    if output_uuid:
+        yaml_dict[node_path]["uuid"] = node.uuid
 
     for child in node.children:
         export_node(yaml_dict, child)
@@ -93,8 +95,9 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args = getopt.getopt(sys.argv[1:], "sI:")
+    opts, args = getopt.getopt(sys.argv[1:], "sI:", ["no-uuid"])
     strict = False
+    output_uuid = True
 
     # Always search current directory for include_file
     include_dirs = ["."]
@@ -103,6 +106,8 @@ if __name__ == "__main__":
             include_dirs.append(a)
         elif o == "-s":
             strict = True
+        elif o == "--no-uuid":
+            output_uuid = False
         else:
             usage()
 
