@@ -28,6 +28,7 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 [vspec2proto.py](contrib/vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib (Beta)  | - |
 [vspec2ttl.py](contrib/vspec2ttl/vspec2ttl.py) | Parses and expands a VSS and generates a TTL specification | Contrib  | - |
 [vspec2graphql.py](contrib/vspec2graphql.py) | Parses and expands a VSS and generates a GraphQL specification | Contrib  | - |
+[csv2pdf.sh](contrib/csv2pdf.sh) | Generate PDF from CSV tabular format.  NOTE! Requires **pandoc** tool to be installed. | Contrib  | - |
 
 ## Tool Architecture
 
