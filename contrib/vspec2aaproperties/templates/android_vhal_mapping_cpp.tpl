@@ -30,7 +30,7 @@ VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::strin
 {% for key,item in map_tree.items() %}
  {% set name = "str2"+str(vss_tree[key].data_type).split(".")[-1] %}
  {% if name not in converters %}
-  {% set x=converters.__setitem__(name,name) %}
+  {% set _ = converters.update({name:name}) %}
 {{str(vss_tree[key].data_type).split(".")[-1]}} str2{{str(vss_tree[key].data_type).split(".")[-1]}}(std::string value);
  {% endif %}
 {% endfor %}
@@ -39,7 +39,7 @@ VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::strin
  {% elif item["multiplier"] %}
   {% set name = "convertLinear"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
   {% if name not in converters %}
-   {% set x=converters.__setitem__(name,name) %}
+   {% set _ = converters.update({name:name}) %}
 {{ type_table[item['aospId']] }} {{name}}(std::string value, VehicleProperty id, int32_t area, float K, float m)
 {
    float v = (float)str2{{str(vss_tree[key].data_type).split(".")[-1]}}(value);
@@ -50,7 +50,7 @@ VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::strin
  {% else %}
   {% set name = "convert"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
   {% if name not in converters %}
-   {% set x=converters.__setitem__(name,name) %}
+   {% set _ = converters.update({name:name}) %}
 {{ type_table[item['aospId']] }} {{name}}(std::string value, VehicleProperty id, int32_t area);
   {% endif %}
  {% endif %}
