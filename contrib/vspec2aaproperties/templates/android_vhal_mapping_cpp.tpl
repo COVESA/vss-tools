@@ -1,10 +1,11 @@
+{% set prototypes = False %}
 #include "inc/AndroidVssConverter.h"
 
 #define LOG_TAG "AndroidVssConverter"
 
 #include <log/log.h>
 #include <vhal_v2_0/VehicleUtils.h>
-
+#include <utils/SystemClock.h>
 #include "inc/ConverterUtils.h"
 
 
@@ -16,6 +17,7 @@ namespace V2_0 {
 
 namespace impl {
 
+/** BEGIN Predefined Property helper functions **/
 VehiclePropValue AndroidVssConverter::convertProperty(std::string id, std::string value, VehicleHal* vhal) 
 {
     if (conversionMap.empty()) {
@@ -37,32 +39,42 @@ VehiclePropValue initializeProp(VehicleProperty id, int32_t area)
 
     return val;
 }
+/** BEGIN Predefined Property helper functions **/
 
+/** BEGIN Predefined type mapping **/
 typedef bool BOOLEAN;
-typedef int16 INT16;
-typedef uint16 UINT16;
+typedef int16_t INT16;
+typedef uint16_t UINT16;
 typedef float FLOAT;
-typedef uint8 UINT8;
-bool str2BOOLEAN(std::string value)
+typedef uint8_t UINT8;
+/** END Predefined type mapping **/
+
+/** BEGIN Predefined function name type mapping **/
+#define getVehiclePropertyFLOATValue getVehiclePropertyFloatValue
+/** END Predefined function name type mapping **/
+
+/** BEGIN Predefined str conversions **/
+BOOLEAN str2BOOLEAN(std::string value)
 {
     return (value == "true");
 }
-int16 str2INT16 (std::string value)
+INT16 str2INT16 (std::string value)
 {
-    return (int16)std::atoi(value);
+    return (INT16)std::stoi(value);
 }
-uint16 str2UINT16 (std::string value)
+UINT16 str2UINT16 (std::string value)
 {
-    return (uint16)std::atoi(value);
+    return (UINT16)std::stoi(value);
 }
-float str2FLOAT(std::string value)
+FLOAT str2FLOAT(std::string value)
 {
-    return (float)std::atof(value);
+    return (FLOAT)std::stof(value);
 }
-int8 str2UINT8(std::string value)
+UINT8 str2UINT8(std::string value)
 {
-    return (uint8)std::atoi(value);
+    return (UINT8)std::stoi(value);
 }
+/** END Predefined str conversions **/
 
 /** BEGIN GENERATED SECTION: STR CONVERSIONS REQUIRED **/
 {% set converters = {} %}
@@ -83,11 +95,11 @@ VehiclePropValue convertBOOLEAN2BOOLEAN(std::string value, VehicleProperty id, i
     return prop;
 }
 
-VehiclePropValue convertLinearINT162FLOAT(std::string value, VehicleProperty id, int32_t area, float K, float m)
+VehiclePropValue convertUINT162FLOAT(std::string value, VehicleProperty id, int32_t area)
 {
     VehiclePropValue prop = initializeProp(id, area);
     float v = (float)str2INT16(value);
-    prop.value.floatValues = std::vector<float> { v }; 
+    prop.value.floatValues = std::vector<float> { v };
     return prop;
 }
 
@@ -110,7 +122,9 @@ VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area, f
   {% set name = "convert"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
   {% if name not in converters %}
    {% set x=converters.__setitem__(name,name) %}
-{{ type_table[item['aospId']] }} {{name}}(std::string value, VehicleProperty id, int32_t area);
+   {% if prototypes %}
+VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area);
+   {% endif %}
   {% endif %}
  {% endif %}
 {% endfor %}
@@ -119,7 +133,7 @@ VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area, f
 /** BEGIN GENERATED SECTION: TRANSLATION CONVERTERS **/
 {% for key,item in map_tree.items() %}
 {% if item["translation"] %}
-static VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string value, VehicleProperty id, int32_t area, VehicleHal* vhal)
+VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string value, VehicleProperty id, int32_t area, VehicleHal* vhal)
 {
     VehiclePropValue prop = initializeProp(id, area);
 {% if False %}
