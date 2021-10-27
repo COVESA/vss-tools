@@ -1,20 +1,51 @@
-{
-  "type": "record",
-  "name": "TimeSeries",
-  "fields" : [
-    {"name": "signal_identifier", "type": "string"},
-    {"name": "count", "type": "int" },
-    {"name": "values", "type": {
-      "type": "array",
-         "items" : {
-            "type" : "record",
-            "name" : "TimeStampedRecord",
-            "fields" : [
-                  { "name" : "ts", "type" : "long" },
-                  { "name" : "value", "type" : [ "int", "long", "float", "double", "string", "boolean" ] }
-               ]
-          }
-      }
-    }
-  ]
-}
+[
+
+   {
+      "type" : "record",
+         "name" : "SimpleType",
+         "fields" : [
+            { "name" : "item", "type" : [ "int", "long", "float", "double", "string", "boolean" ] }
+         ]
+   },
+
+   {
+      "type" : "array",
+      "namespace" : "VSS",
+      "name" : "SimpleArray",
+      "items" : "SimpleType"
+   },
+
+   {
+      "type" : "record",
+      "name" : "Value",
+      "fields" : [
+         { "name" : "item", "type" : [ "SimpleType", "SimpleArray" ]  }
+      ]
+   },
+
+   {
+      "type" : "record",
+      "name" : "TimeStampedRecord",
+      "fields" : [
+         { "name" : "ts", "type" : "long" },
+         { "name" : "items", "type" : "Value" }
+      ]
+   },
+
+   {
+      "type" : "array",
+      "name" : "TimeStampedRecordArray",
+      "items" : "TimeStampedRecord"
+   },
+
+   {
+      "type" : "record",
+      "name" : "TimeSeries",
+      "fields" : [
+         {"name" : "signal_identifier", "type": "string"},
+         {"name" : "count", "type": "int" },
+         {"name" : "items", "type": "TimeStampedRecordArray" }
+      ]
+   }
+
+]
