@@ -1,0 +1,125 @@
+# This describes a signal type mapping between VSS/Android/C++/Vhal
+# It is formatted as a "VSS layer", i.e. it can be seen as adding metadata
+# to an existing vehicle signal type definition.
+
+#Each element defines source type and 
+#Conversion to type from string
+#C++ type definition
+#vhal type definition for VehicleProperty
+#conversions to different target types with to.TYPE
+
+BOOLEAN:
+  cpp: int32_t
+  vhal: int32
+  from:
+    string: (int32_t)((_val_) == "true")
+  to:
+    BOOLEAN: (int32_t)(bool(_val_))
+    INT32: (int32_t)(_val_)
+    UINT32: (uint32_t)(_val_)
+    INT16: (int16_t)(_val_)
+    UINT16: (uint16_t)(_val_)
+    INT8: (int8_t)(_val_)
+    UINT8: (uint8_t)(_val_)
+    FLOAT: float(_val_)
+
+INT32:
+  cpp: int32_t
+  vhal: int32
+  from:
+    string: std::stoi(_val_)
+  to:
+    BOOLEAN: bool(_val_)
+    INT32: (_val_)
+    UINT32: (uint32_t)(_val_)
+    INT16: (int16_t)(_val_)
+    UINT16: (uint16_t)(_val_)
+    UINT8: (uint8_t)(_val_)
+    FLOAT: float(_val_)
+
+UINT32:
+  cpp: uint32_t
+  vhal: int32
+  from:
+    string: (uint32_t)std::stoi(_val_)
+  to:
+    BOOLEAN: bool(_val_)
+    INT32: (int32_t)(_val_)
+    UINT32: (_val_)
+    INT16: (int16_t)(_val_)
+    UINT16: (uint16_t)(_val_)
+    UINT8: (uint8_t)(_val_)
+    FLOAT: float(_val_)
+
+INT16:
+  cpp: int16_t
+  vhal: int32
+  from:
+    string: (int16_t)std::stoi(_val_)
+  to:
+    BOOLEAN: bool(_val_)
+    INT32: (int32_t)(_val_)
+    UINT32: (uint32_t)(_val_)
+    INT16: (_val_)
+    UINT16: (uint16_t)(_val_)
+    UINT8: (uint8_t)(_val_)
+    FLOAT: float(_val_)
+
+UINT16:
+  cpp: uint16_t
+  vhal: int32
+  from:
+    string: (uint16_t)std::stoi(_val_)
+  to:
+    BOOLEAN: bool(_val_)
+    INT32: (int32_t)(_val_)
+    UINT32: (uint32_t)(_val_)
+    INT16: (int16_t)(_val_)
+    UINT16: (_val_)
+    UINT8: (uint8_t)(_val_)
+    FLOAT: float(_val_)
+
+INT8:
+  cpp: int8_t
+  vhal: int32
+  from:
+    string: (int8_t)std::stoi(_val_)
+  to:
+    BOOLEAN: bool(_val_)
+    INT32: (int32_t)(_val_)
+    UINT32: (uint32_t)(_val_)
+    INT16: (int16_t)(_val_)
+    UINT16: (uint16_t)(_val_)
+    INT8: (_val_)
+    UINT8: (uint8_t)(_val_)
+    FLOAT: float(_val_)
+
+UINT8:
+  cpp: uint8_t
+  vhal: int32
+  from:
+    string: (uint8_t)std::stoi(_val_)
+  to:
+    BOOLEAN: bool(_val_)
+    INT32: (int32_t)(_val_)
+    UINT32: (uint32_t)(_val_)
+    INT16: (int16_t)(_val_)
+    UINT16: (uint16_t)(_val_)
+    INT8: (int8_t)(_val_)
+    UINT8: (_val_)
+    FLOAT: float(_val_)
+
+FLOAT:
+  cpp: float
+  vhal: float
+  from:
+    string: std::stof(_val_)
+  to:
+    BOOLEAN: (int32_t)int(_val_)
+    INT32: (int32_t)int(_val_)
+    UINT32: (uint32_t)int(_val_)
+    INT16: (int16_t)int(_val_)
+    UINT16: (uint16_t)int(_val_)
+    INT8: (int8_t)int(_val_)
+    UINT8: (uint8_t)int(_val_)
+    FLOAT: (_val_)
