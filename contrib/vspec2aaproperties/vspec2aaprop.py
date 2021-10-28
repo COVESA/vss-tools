@@ -17,6 +17,7 @@ import type_hal_parser
 import read_mapping_layer
 import jinja2
 import vspec_helper
+import read_type_layer
 
 myDir= os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
@@ -93,6 +94,7 @@ def usage():
   mapping_file         The VSS-layer that defines mapping between VSS and AA properties
   types_hal_file       The Android types.hal header file for VHAL type information.
   template_file        Jinja2 template for the code generation without path.
+  typemap_file         Type mappings and type conversions (VSS, VHAL, C++)
   output_file          The primary file name to write C++ generated code to.)
 
   example:vss-tools$ python3 contrib/vspec2aaproperties/vspec2aaprop.py \
@@ -119,13 +121,15 @@ if __name__ == "__main__":
         else:
             usage()
 
-    if len(args) != 5:
+    if len(args) != 6:
         usage()
 
     # Create cross-reference map between VSS and Android from the YAML file.
     map_tree = read_mapping_layer.load_tree(args[1])
     # Create Android type table from the Android type.hal header file.
     type_table = type_hal_parser.type_table(args[2])
+
+    typemap = read_type_layer.load_map(args[4])
 
     try:
         vss_tree = vspec_helper.VSpecHelper(vspec.load_tree(args[0], include_dirs))
@@ -140,10 +144,11 @@ if __name__ == "__main__":
     vss_tree=vss_tree,
     map_tree=map_tree,
     type_table=type_table,
+    typemap=typemap,
     str=str
     )
 
     #Generate the output CPP file using Jinja2 generator (vss_tree, map_tree, type_table):
-    with open(args[4], "w") as output_file:
+    with open(args[5], "w") as output_file:
         print(generate_from_tree(map_tree, args[3]),file=output_file)
         output_file.write("//DONE\n")
