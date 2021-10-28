@@ -7,7 +7,7 @@ You can run the CPP generator with following parameters:
 ```
 
 The script runs the following generator
-python3 vspec2aaprop.py ../../../spec/VehicleSignalSpecification.vspec vspec2prop_mapping.yml types.hal android_vhal_mapping_cpp.tpl test.cpp
+python3 vspec2aaprop.py ../../../spec/VehicleSignalSpecification.vspec vspec2prop_mapping.yml types.hal android_vhal_mapping_cpp.tpl typemap.yml test.cpp
 
 Explanation of the parameters:
 vspec2aaprop.py:
@@ -20,6 +20,7 @@ types.hal:
 	Android header for the VHAL. Used to grab the Android variable type for the items.
 android_vhal_mapping_cpp.tpl:
 	Actual Jinja2 generator for generating the CPP conversion code.
+typemap:
+	Mapping of types and type conversions between VSS/vhal/C++.
 test.cpp: 
 	Name of the generated CPP file (output).
-

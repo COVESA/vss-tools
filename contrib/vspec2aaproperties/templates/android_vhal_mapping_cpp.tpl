@@ -1,4 +1,4 @@
-{% set prototypes = False %}
+{% set debug = False %}
 #include "inc/AndroidVssConverter.h"
 
 #define LOG_TAG "AndroidVssConverter"
@@ -39,42 +39,7 @@ VehiclePropValue initializeProp(VehicleProperty id, int32_t area)
 
     return val;
 }
-/** BEGIN Predefined Property helper functions **/
-
-/** BEGIN Predefined type mapping **/
-typedef bool BOOLEAN;
-typedef int16_t INT16;
-typedef uint16_t UINT16;
-typedef float FLOAT;
-typedef uint8_t UINT8;
-/** END Predefined type mapping **/
-
-/** BEGIN Predefined function name type mapping **/
-#define getVehiclePropertyFLOATValue getVehiclePropertyFloatValue
-/** END Predefined function name type mapping **/
-
-/** BEGIN Predefined str conversions **/
-BOOLEAN str2BOOLEAN(std::string value)
-{
-    return (value == "true");
-}
-INT16 str2INT16 (std::string value)
-{
-    return (INT16)std::stoi(value);
-}
-UINT16 str2UINT16 (std::string value)
-{
-    return (UINT16)std::stoi(value);
-}
-FLOAT str2FLOAT(std::string value)
-{
-    return (FLOAT)std::stof(value);
-}
-UINT8 str2UINT8(std::string value)
-{
-    return (UINT8)std::stoi(value);
-}
-/** END Predefined str conversions **/
+/** END Predefined Property helper functions **/
 
 /** BEGIN GENERATED SECTION: STR CONVERSIONS REQUIRED **/
 {% set converters = {} %}
@@ -82,26 +47,13 @@ UINT8 str2UINT8(std::string value)
  {% set name = "str2"+str(vss_tree[key].data_type).split(".")[-1] %}
  {% if name not in converters %}
   {% set x=converters.__setitem__(name,name) %}
-{{str(vss_tree[key].data_type).split(".")[-1]}} str2{{str(vss_tree[key].data_type).split(".")[-1]}}(std::string value);
+{{typemap[str(vss_tree[key].data_type).split(".")[-1]]["cpp"]}} str2{{str(vss_tree[key].data_type).split(".")[-1]}}(std::string _val_)
+{
+    return {{typemap[str(vss_tree[key].data_type).split(".")[-1]]["from"]["string"]}};
+};
  {% endif %}
 {% endfor %}
 /** END GENERATED SECTION: STR CONVERSIONS REQUIRED **/
-
-VehiclePropValue convertBOOLEAN2BOOLEAN(std::string value, VehicleProperty id, int32_t area)
-{
-    VehiclePropValue prop = initializeProp(id, area);
-    bool v = value == "true";
-    prop.value.int32Values = std::vector<int32_t> { v };
-    return prop;
-}
-
-VehiclePropValue convertUINT162FLOAT(std::string value, VehicleProperty id, int32_t area)
-{
-    VehiclePropValue prop = initializeProp(id, area);
-    float v = (float)str2INT16(value);
-    prop.value.floatValues = std::vector<float> { v };
-    return prop;
-}
 
 /** BEGIN GENERATED SECTION: TYPE CONVERTERS **/
 {% for key,item in map_tree.items() %}
@@ -112,9 +64,15 @@ VehiclePropValue convertUINT162FLOAT(std::string value, VehicleProperty id, int3
    {% set x=converters.__setitem__(name,name) %}
 VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area, float K, float m)
 {
+    {% if debug %}
+    // C++ type for {{item['aospId']}}: {{typemap[type_table[item['aospId']]]["cpp"]}}
+    // C++ type for vss: {{typemap[str(vss_tree[key].data_type).split(".")[-1]]["cpp"]}}
+    {% endif %}
     VehiclePropValue prop = initializeProp(id, area);
-    float v = (float)str2{{str(vss_tree[key].data_type).split(".")[-1]}}(value);
-    prop.value.floatValues = std::vector<float> { v * K + m }; 
+    {{typemap[str(vss_tree[key].data_type).split(".")[-1]]["cpp"]}} v = {{typemap[(str(vss_tree[key].data_type).split(".")[-1])]["from"]["string"].replace("_val_","value")}};
+    float _val_ = v * K + m;
+    {{typemap[type_table[item['aospId']]]["cpp"]}} result = {{typemap[str(vss_tree[key].data_type).split(".")[-1]]["to"][type_table[item['aospId']]]}};
+    prop.value.{{typemap[type_table[item['aospId']]]["vhal"]}}Values = std::vector<{{typemap[type_table[item['aospId']]]["cpp"]}}> { result }; 
     return prop;
 }
   {% endif %}
@@ -122,9 +80,13 @@ VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area, f
   {% set name = "convert"+str(str(vss_tree[key].data_type).split(".")[-1])+"2"+type_table[item['aospId']] %}
   {% if name not in converters %}
    {% set x=converters.__setitem__(name,name) %}
-   {% if prototypes %}
-VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area);
-   {% endif %}
+VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area) {
+    VehiclePropValue prop = initializeProp(id, area);
+    {{typemap[str(vss_tree[key].data_type).split(".")[-1]]["cpp"]}} _val_ = {{typemap[(str(vss_tree[key].data_type).split(".")[-1])]["from"]["string"].replace("_val_","value")}};
+    {{typemap[type_table[item['aospId']]]["cpp"]}} result = {{typemap[str(vss_tree[key].data_type).split(".")[-1]]["to"][type_table[item['aospId']]]}};
+    prop.value.{{typemap[type_table[item['aospId']]]["vhal"]}}Values = std::vector<{{typemap[type_table[item['aospId']]]["cpp"]}}> { result }; 
+    return prop;
+}
   {% endif %}
  {% endif %}
 {% endfor %}
@@ -136,19 +98,21 @@ VehiclePropValue {{name}}(std::string value, VehicleProperty id, int32_t area);
 VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string value, VehicleProperty id, int32_t area, VehicleHal* vhal)
 {
     VehiclePropValue prop = initializeProp(id, area);
-{% if False %}
+{% if debug %}
 // {{item["translation"]["complex"]}}
 // float fuelCapacity = getVehiclePropertyFloatValue(toInt(VehicleProperty::INFO_FUEL_CAPACITY), vhal);
 // input:{{item["translation"]["input"]}}
 {% endif %}
 {% for invalue in item["translation"]["input"] %}
-{% if False %}
+{% if debug %}
 // typetable: {{type_table[invalue]}}
 {% endif %}
-    {{type_table[invalue]}} value{{invalue}} = getVehicleProperty{{type_table[invalue]}}Value(toInt(VehicleProperty::{{invalue}}), vhal);
+    {{typemap[type_table[invalue]]["cpp"]}} value{{invalue}} = getVehicleProperty{{typemap[type_table[invalue]]["vhal"]}}Value(toInt(VehicleProperty::{{invalue}}), vhal);
 {% endfor %}
-    {{str(vss_tree[key].data_type).split(".")[-1]}} v = str2{{str(vss_tree[key].data_type).split(".")[-1]}}(value);
-    prop.value.floatValues = std::vector<float> { {{item["translation"]["complex"].replace("$","value").replace("_VAL_","((float)v)")}} };
+    {{typemap[str(vss_tree[key].data_type).split(".")[-1]]["cpp"]}} v = str2{{str(vss_tree[key].data_type).split(".")[-1]}}(value);
+    float _val_ = {{item["translation"]["complex"].replace("$","value").replace("_VAL_","((float)v)")}};
+    {{typemap[type_table[item['aospId']]]["cpp"]}} result = {{ typemap[str(vss_tree[key].data_type).split(".")[-1]]["to"][type_table[item['aospId']]] }};
+    prop.value.{{typemap[type_table[item['aospId']]]["vhal"]}}Values = std::vector<{{typemap[type_table[item['aospId']]]["vhal"]}}> { result };
     return prop;
 }
 {% endif %}
@@ -159,17 +123,17 @@ VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string value, Vehi
 /** BEGIN GENERATED SECTION: TRANSLATION TABLE **/
 void AndroidVssConverter::initConversionMap(VehicleHal* vhal) {
     conversionMap.clear();
-{% if False %}
+{% if debug %}
 //conversionMap["Vehicle.ADAS.ABS.IsActive"] = std::bind(convertBool,
 //            std::placeholders::_1, VehicleProperty::ABS_ACTIVE, toInt(VehicleArea::GLOBAL));
 {% endif %}
 {% for key,item in map_tree.items() %}
-{% if False %}
+{% if debug %}
 // VSS item: {{ key }}
 // VSS type: {{ vss_tree[key].data_type }}
 // AOSP item: {{ item['aospId'] }}
 // AOSP area: {{ item['aospArea'] }}
-// Android type: {{ type_table['aospId'] }}
+// Android type: {{ type_table[item['aospId']] }}
 {% endif %}
 {% if item["multiplier"] %}
     conversionMap["{{ key }}"] = std::bind(convertLinear{{str(vss_tree[key].data_type).split(".")[-1]}}2{{ type_table[item['aospId']] }},
