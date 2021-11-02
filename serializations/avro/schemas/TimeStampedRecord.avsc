@@ -1,10 +1,8 @@
-  {
-     "type" : "record",
-     "name" : "TimeStampedRecord",
-     "namespace" : "VSS",
-     "fields" : [
-        { "name" : "ts", "type" : "long" },
-        { "name" : "items", "type" : "Value" }
-     ]
-  }
-
+{
+  "type" : "record",
+  "name" : "TimeStampedRecord",
+  "fields" : [
+    { "name" : "ts", "type" : "long" },
+    { "name" : "value", "type" : "Value" }
+  ]
+}
