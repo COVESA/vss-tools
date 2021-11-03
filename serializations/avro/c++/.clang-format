@@ -1,0 +1,16 @@
+BasedOnStyle: Chromium
+AlignTrailingComments: true
+BreakBeforeBraces: Attach
+ColumnLimit: 0
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: false
+ObjCBlockIndentWidth: 4
+ObjCSpaceAfterProperty: true
+ObjCSpaceBeforeProtocolList: true
+PointerBindsToType: false
+SpacesBeforeTrailingComments: 1
+TabWidth: 0
+UseTab: Never
+SpacesInContainerLiterals: false
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine: true

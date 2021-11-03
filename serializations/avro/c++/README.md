@@ -9,3 +9,6 @@ decode AVRO-encoded VSS-value messages according to the "Data serialization
 This only builds the VSS + "Data serialization / value formats" mechanisms.
 It shall of course delegate any AVRO encoding/decoding work to existing C++
 AVRO implementation(s).
+
+Reference: https://avro.apache.org/docs/current/api/cpp/html/index.html
+README.md
