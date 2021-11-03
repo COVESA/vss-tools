@@ -1,0 +1,15 @@
+{
+  "type" : "record",
+  "name" : "Snapshot",
+  "fields" : [
+    { "name" : "count", "type" : "int" },
+    { "name" : "timeperiod", "type" : {
+        "type" : "record", "name" : "Timeperiod", "fields" : [
+          { "name" : "start", "type" : "long" },
+          { "name" : "end", "type" : "long" }
+        ]
+      }
+    },
+    { "name" : "values", "type" : { "type" : "array", "items" : "SpecifiedTimeStampedRecord" } }
+  ]
+}

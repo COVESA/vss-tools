@@ -1,0 +1,10 @@
+{
+  "type" : "record",
+  "name": "GeospatialRecord",
+  "fields" : [
+    { "name" : "signal_identifier", "type" : "string" },
+    { "name" : "pos", "type" : "GNSSPosition" },
+    { "name" : "ts", "type" : "long" },
+    { "name" : "value", "type" : "Value" }
+  ]
+}

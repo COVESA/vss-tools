@@ -1,0 +1,7 @@
+{
+   "type" : "record",
+   "name" : "Message",
+   "fields" : [
+      { "name" : "item", "type" : [ "SpecifiedTimeStampedRecord", "TimeSeries", "Snapshot" ] }
+   ]
+}

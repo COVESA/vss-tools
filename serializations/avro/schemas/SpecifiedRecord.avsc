@@ -1,0 +1,8 @@
+{
+  "type" : "record",
+  "name" : "SpecifiedRecord",
+  "fields" : [
+    { "name" : "signal_identifier", "type" : "string" },
+    { "name" : "value", "type" : "Value" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "type" : "record",
+  "name" : "GNSSPosition",
+  "fields" : [
+    { "name" : "lat", "type" : "float" },
+    { "name" : "long", "type" : "float" },
+    { "name" : "alt", "type" : "float" }
+  ]
+}

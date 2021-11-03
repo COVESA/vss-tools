@@ -1,0 +1,9 @@
+{
+  "type" : "record",
+  "name" : "SpecifiedTimeStampedRecord",
+  "fields" : [
+    { "name" : "signal_identifier", "type" : "string" },
+    { "name" : "ts", "type" : "long" },
+    { "name" : "value", "type" : "Value" }
+  ]
+}
