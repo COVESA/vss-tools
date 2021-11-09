@@ -2,17 +2,17 @@
 
 
 [![License](https://img.shields.io/badge/License-MPL%202.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
-[![Build Status](https://github.com/GENIVI/vss-tools/actions/workflows/buildcheck.yml/badge.svg)](https://github.com/GENIVI/vss-tools/actions/workflows/buildcheck.yml?query=branch%3Amaster)
+[![Build Status](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml/badge.svg)](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml?query=branch%3Amaster)
 
-The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [GENIVI VSS project](https://github.com/GENIVI/vehicle_signal_specification). VSS Tools is developed in parallel with VSS, please visit the [GENIVI VSS project](https://github.com/GENIVI/vehicle_signal_specification) for information on how to contribute.
+The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification). VSS Tools is developed in parallel with VSS, please visit the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification) for information on how to contribute.
 
 ## Available Tools
 
-This repository contains two types of tools. Community Supported Tools are tools that are actively maintained by the VSS community. They are run as part of the Continuous Integration process for both this repository and for the [GENIVI VSS project repository](https://github.com/GENIVI/vehicle_signal_specification), and pull request will normally not be merged if any of the tools fails. That assures that the tools always are compatible with the latest version of the GENIVI VSS.
+This repository contains two types of tools. Community Supported Tools are tools that are actively maintained by the VSS community. They are run as part of the Continuous Integration process for both this repository and for the [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification), and pull request will normally not be merged if any of the tools fails. That assures that the tools always are compatible with the latest version of the COVESA VSS.
 
 In addition this repository also contains contributed tools. These are tools that are not actively maintained by the VSS community. Instead they are maintained by individual contributors, or not maintained at all. Even if many of them are run as part of the continuous integration process, it is not a requirement that they must run successfully on the latest VSS version and a change in VSS may be merged even if it cause some contributed tools to fail. 
 
-Examples on tool usage can be found in the [VSS Makefile](https://github.com/GENIVI/vehicle_signal_specification/blob/master/Makefile) and in tool-specific documentation, if existing.
+Examples on tool usage can be found in the [VSS Makefile](https://github.com/COVESA/vehicle_signal_specification/blob/master/Makefile) and in tool-specific documentation, if existing.
 
  Tool | Description | Type of Tool | Documentation |
 | ------------------ | ----------- | -------------------- |-------------------- |
@@ -31,7 +31,7 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/GEN
 
 ## Tool Architecture
 
-All current tools are based on common Python functionality in the `vspec` folder to read, parse and expand a Vehicle Signal Specification files(*.vspec files). As an example, if the standard [VSS root file](https://github.com/GENIVI/vehicle_signal_specification/blob/master/spec/VehicleSignalSpecification.vspec) is given as input then the Python tooling will read all included files, do a validation of the content, expand any instances used and create an in-memory representation which then can be used by specialized tools to generate the wanted output.
+All current tools are based on common Python functionality in the `vspec` folder to read, parse and expand a Vehicle Signal Specification files(*.vspec files). As an example, if the standard [VSS root file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/VehicleSignalSpecification.vspec) is given as input then the Python tooling will read all included files, do a validation of the content, expand any instances used and create an in-memory representation which then can be used by specialized tools to generate the wanted output.
 
 ## Getting started
 
@@ -57,7 +57,7 @@ target=C:\SomeDir\Where\Your\Account\Can\Write\To
 ```
 ### Project Setup
 
-* Checkout vss-tools as submodule of the Vehicle Signal Specification repository (`git clone --recurse-submodules -j8 https://github.com/GENIVI/vehicle_signal_specification.git`)
+* Checkout vss-tools as submodule of the Vehicle Signal Specification repository (`git clone --recurse-submodules -j8 https://github.com/COVESA/vehicle_signal_specification.git`)
 * If you use a custom pip installation directory, set the `PYTHONPATH` environment variable to the directory that you set in the `pip.ini` file.
 
 ### Setup with `pipenv`

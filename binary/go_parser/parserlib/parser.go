@@ -11,7 +11,7 @@
 package parserlib
 
 import (
-    def "github.com/GENIVI/vss-tools/binary/go_parser/datamodel"
+    def "github.com/COVESA/vss-tools/binary/go_parser/datamodel"
     "os"
     "strings"
     "fmt"

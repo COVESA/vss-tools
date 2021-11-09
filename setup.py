@@ -14,8 +14,8 @@ if version == '':
 setup(
     name='vss-tools',
     version=version,
-    description='GENIVI Vehicle Signal Specification tooling.',
-    url='https://github.com/GENIVI/vss-tools',
+    description='COVESA Vehicle Signal Specification tooling.',
+    url='https://github.com/COVESA/vss-tools',
     license='Mozilla Public License v2',
     packages=find_packages(exclude=('tests', 'contrib')),
     scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py', 'vspec2yaml.py', 'contrib/vspec2c.py', 'contrib/vspec2protobuf.py', 'contrib/ocf/vspec2ocf.py'],
