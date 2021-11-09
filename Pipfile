@@ -9,6 +9,7 @@ stringcase = ">=1.2.0"
 deprecation = ">=2.1.0"
 pytest = ">=2.7.2"
 PyYAML = ">=5.1"
+rdflib = ">=6.0.0"
 vss-tools = {editable = true, path = "."}
 
 [dev-packages]
