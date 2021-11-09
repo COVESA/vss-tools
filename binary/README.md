@@ -1,7 +1,7 @@
 The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below), 
 and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go.<br>
 
-The translation tool can be invoked via the make file available on the VSS repo (https://github.com/GENIVI/vehicle_signal_specification):<br>
+The translation tool can be invoked via the make file available on the VSS repo (https://github.com/COVESA/vehicle_signal_specification):<br>
 $ make binary<br>
 or, by invoking all tools:<br>
 $ make all<br>
@@ -10,7 +10,7 @@ $ gcc -shared -o binarytool.so -fPIC binarytool.c<br>
 then the vspec2binary.py is executed in the root directory:<br>
 $ vspec2binary.py -i:./spec/VehicleSignalSpecification.id ./spec/VehicleSignalSpecification.vspec vss_rel_<current version>.binary<br>
 where vss_rel_<current version>.binary is the tre file in binary format.<br>
-Current version is found at https://github.com/GENIVI/vehicle_signal_specification/blob/master/VERSION.<br>
+Current version is found at https://github.com/COVESA/vehicle_signal_specification/blob/master/VERSION.<br>
 
 The two libraries provides the same set of methods, such as:
 <ul>

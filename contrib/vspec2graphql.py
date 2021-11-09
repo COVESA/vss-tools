@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2021 GENIVI Alliance
+# Copyright (c) 2021 COVESA Alliance
 # Copyright (c) 2021 Motius GmbH
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
