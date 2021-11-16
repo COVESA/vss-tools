@@ -13,28 +13,14 @@
 
 import sys
 
-from anytree import RenderTree, PreOrderIter
+from anytree import PreOrderIter
 
 import vspec
-import getopt
+import argparse
 
 from vspec.model.vsstree import VSSNode
 
 
-def usage():
-    print(f"""
-Usage: {sys.argv[0]} [options] vspec_file csv_file
-
-  where [options] are:
-
-  -I include_dir       Add include directory to search for included vspec
-                       files. Can be used multiple timees.
-
-  vspec_file           The vehicle specification file to parse.
-
-  csv_file             The file to output the CSV data to.
-""")
-    sys.exit(255)
 
 #Format a data or header line according to the CSV standard (IETF RFC 4180)
 def format_csv_line(*csv_fields):
@@ -64,29 +50,30 @@ def print_csv_content(file, tree):
 
 
 if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args = getopt.getopt(sys.argv[1:], "I:")
+    # The arguments we accept
 
-    # Always search current directory for include_file
+    parser = argparse.ArgumentParser(description='Convert vspec to csv.')
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,
+                    help='Add include directory to search for included vspec files.')
+    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
+    parser.add_argument('csv_file', metavar='<csv file>', help='The file to output the CSV data to.')
+
+    args = parser.parse_args()
+
+    strict=args.strict
+
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        else:
-            usage()
-
-    if len(args) != 2:
-        usage()
+    include_dirs.extend(args.include_dir)
 
     try:
-        tree = vspec.load_tree(args[0], include_dirs)
-        csv_out = open(args[1], "w")
-        print_csv_header(csv_out)
-        print_csv_content(csv_out, tree)
-        csv_out.write("\n")
-        csv_out.close()
+        tree = vspec.load_tree(
+            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=strict)
+        with open(args.csv_file, "w") as f:
+            print_csv_header(f)
+            print_csv_content(f, tree)
+            f.write("\n")
+
     except vspec.VSpecError as e:
         print(f"Error: {e}")
-        exit(255)
+        sys.exit(255)
