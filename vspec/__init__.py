@@ -725,7 +725,7 @@ def render_subtree(subtree, parent, break_on_noncore_attribute=False):
         new_element = VSSNode(element_name, current_element, parent=parent, break_on_noncore_attribute=break_on_noncore_attribute)
         if "children" in current_element.keys():
             child_nodes = current_element["children"]
-            render_subtree(child_nodes, new_element)
+            render_subtree(child_nodes, new_element, break_on_noncore_attribute)
 
 
 def merge_private_into_main_tree(tree_root: VSSNode):
