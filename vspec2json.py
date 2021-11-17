@@ -51,6 +51,8 @@ def export_node(json_dict, node, generate_uuid):
         pass
 
     json_dict[node.name]["description"] = node.description
+    if node.comment != "":
+        json_dict[node.name]["comment"] = node.comment
 
     if generate_uuid:
         json_dict[node.name]["uuid"] = node.uuid

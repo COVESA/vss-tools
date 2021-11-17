@@ -29,6 +29,7 @@ class NonCoreAttributeException(Exception):
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
     description = None
+    comment = ""
     uuid = None
     type: VSSType
     data_type: VSSDataType
@@ -98,6 +99,9 @@ class VSSNode(Node):
 
         if "deprecation" in source_dict.keys():
             self.deprecation = source_dict["deprecation"]
+            
+        if "comment" in source_dict.keys():
+            self.comment = source_dict["comment"]
 
     def is_private(self) -> bool:
         """Checks weather this instance is in private branch of VSS.
@@ -250,7 +254,7 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default" , "instances", "deprecation", "arraysize"]:
+                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment"]:
                 raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 
         if "default" in element.keys():
