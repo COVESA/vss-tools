@@ -12,17 +12,7 @@
 
 import sys
 import vspec
-import json
-import getopt
-
-def usage():
-    print("Usage:", sys.argv[0], "[-I include_dir] ... vspec_file franca_file")
-    print("  -I include_dir       Add include directory to search for included vspec")
-    print("                       files. Can be used multiple timees.")
-    print()
-    print(" vspec_file            The vehicle specification file to parse.")
-    print(" franca_file           The file to output the Franca IDL spec to.")
-    sys.exit(255)
+import argparse
 
 
 def traverse_tree(tree, outf, prefix_arr, is_first_element):
@@ -87,31 +77,31 @@ def traverse_tree(tree, outf, prefix_arr, is_first_element):
 
 
 if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args= getopt.getopt(sys.argv[1:], "I:v:")
+    # The arguments we accept
 
-    # Always search current directory for include_file
-    vss_version = "unspecified version"
+    parser = argparse.ArgumentParser(description='Convert vspec to franca.')
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str, default=[],
+                    help='Add include directory to search for included vspec files.')
+    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('-v', '--vssversion', type=str, default="unspecified version",  help='VSS version' )
+    parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
+    parser.add_argument('franca_file', metavar='<franca file>', help='The file to output the Franca IDL spec to.')
+
+    args = parser.parse_args()
+
+    strict=args.strict
+    
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        elif o == "-v":
-            vss_version = a
-        else:
-            usage()
+    include_dirs.extend(args.include_dir)
 
-    if len(args) != 2:
-        usage()
+    franca_out = open(args.franca_file, "w")
 
-    franca_out = open (args[1], "w")
+    
     try:
-        tree = vspec.load(args[0], include_dirs)
+        tree = vspec.load(args.vspec_file, include_dirs)
     except vspec.VSpecError as e:
         print("Error: {}".format(e))
-        exit(255)
+        sys.exit(255)
 
     franca_out.write(
 """// Copyright (C) 2016, GENIVI Alliance
@@ -130,7 +120,7 @@ struct SignalSpec {{
 }}
 
 const SignalSpec[] signal_spec = [
-""".format(vss_version))
+""".format(args.vssversion))
 
     traverse_tree(tree, franca_out, [], True)
 
