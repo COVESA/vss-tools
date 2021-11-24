@@ -149,11 +149,9 @@ class StringStyle(Enum, metaclass=EnumMetaWithReverseLookup):
 
 class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
     BRANCH = "branch"
-    RBRANCH = "rbranch"
     ATTRIBUTE = "attribute"
     SENSOR = "sensor"
     ACTUATOR = "actuator"
-    ELEMENT = "element"
 
 
 class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
