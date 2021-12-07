@@ -31,7 +31,7 @@ def format_csv_line(*csv_fields):
 
 #Write the header line
 def print_csv_header(file):
-    file.write(format_csv_line("Signal","Type","DataType","Deprecated","Complex","Unit","Min","Max","Desc","Comment","Enum","Id","Instance"))
+    file.write(format_csv_line("Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Enum","Id"))
 
 #Write the data lines
 def print_csv_content(file, tree):
@@ -40,13 +40,8 @@ def print_csv_content(file, tree):
         data_type_str = tree_node.data_type.value if tree_node.has_data_type() else ""
         unit_str = tree_node.unit.value if tree_node.has_unit() else ""
 
-        if tree_node.instances:
-            for instance in tree_node.instances:
-                file.write(format_csv_line(
-                    tree_node.qualified_name('.'),tree_node.type.value,data_type_str,tree_node.deprecation,"true",unit_str,tree_node.min,tree_node.max,tree_node.description,tree_node.comment,tree_node.enum,tree_node.uuid,instance))
-        else:
-            file.write(format_csv_line(
-                tree_node.qualified_name('.'),tree_node.type.value,data_type_str,tree_node.deprecation,"false",unit_str,tree_node.min,tree_node.max,tree_node.description,tree_node.comment,tree_node.enum,tree_node.uuid))
+        file.write(format_csv_line(
+            tree_node.qualified_name('.'),tree_node.type.value,data_type_str,tree_node.deprecation,unit_str,tree_node.min,tree_node.max,tree_node.description,tree_node.comment,tree_node.enum,tree_node.uuid))
 
 
 if __name__ == "__main__":
