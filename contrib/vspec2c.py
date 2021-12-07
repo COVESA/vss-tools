@@ -39,7 +39,6 @@ type_map =  {
     "bool": "VSS_BOOLEAN",
     "boolean": "VSS_BOOLEAN",
     "string": "VSS_STRING",
-    "stream": "VSS_STREAM",
     "na": "VSS_NA"
 }
 
@@ -47,9 +46,7 @@ element_map = {
     "attribute": "VSS_ATTRIBUTE",
     "branch": "VSS_BRANCH",
     "sensor": "VSS_SENSOR",
-    "actuator": "VSS_ACTUATOR",
-    "rbranch": "VSS_RBRANCH",
-    "element": "VSS_ELEMENT"
+    "actuator": "VSS_ACTUATOR"
 }
 
 signal_count = 0
@@ -84,7 +81,7 @@ def emit_signal(signal_name, vspec_data):
             print("Illegal data type: {}".format(e))
             print("Signal: {}".format(vspec_data['_signal_path_']))
             print("Try: int8 uint8 int16 uint16 int32 uint32 int64 uint64")
-            print("     float double string boolean stream")
+            print("     float double string boolean")
             exit(255)
 
         if 'min' in vspec_data:

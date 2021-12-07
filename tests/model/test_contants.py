@@ -79,11 +79,9 @@ class TestConstantsNode(unittest.TestCase):
         """
 
         self.assertEqual(VSSType.BRANCH, VSSType.from_str("branch"))
-        self.assertEqual(VSSType.RBRANCH, VSSType.from_str("rbranch"))
         self.assertEqual(VSSType.ATTRIBUTE, VSSType.from_str("attribute"))
         self.assertEqual(VSSType.SENSOR, VSSType.from_str("sensor"))
         self.assertEqual(VSSType.ACTUATOR, VSSType.from_str("actuator"))
-        self.assertEqual(VSSType.ELEMENT, VSSType.from_str("element"))
 
     def test_invalid_vss_types(self):
         with self.assertRaises(Exception): VSSType.from_str("not_a_valid_case")
