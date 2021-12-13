@@ -12,14 +12,15 @@ class VssoConcepts (Enum):
     HAS_SIGNAL =        "hasDynamicVehicleProperty"
     HAS_ATTRIBUTE =     "hasStaticVehicleProperty"
     PART_OF_VEHICLE =   "partOfVehicle"
-    PART_OF_VEH_COMP =  "partOf"
+    PART_OF_VEH_COMP =  "partOfVehicleComponent"
     HAS_COMP_INST =     "hasInstance"
     VEHICLE =           "Vehicle"
     VEHICLE_SIGNAL =    "ObservableVehicleProperty"
     VEHICLE_ACT =       "ActuatableVehicleProperty"
     VEHICLE_COMP =      "VehicleComponent"
-    VEHICLE_PROP =      "DynamicVehicleProperty"
-    VEHICLE_STAT =      "StaticVehicleProperty"
+    VEHICLE_PROP =      "VehicleProperty"
+    VEHICLE_PROP_DYN =  "DynamicVehicleProperty"
+    VEHICLE_PROP_STAT = "StaticVehicleProperty"
 
     def __init__ (self, vsso_name):
         self.ns = "https://github.com/danielwilms/vsso-demo/"
@@ -42,7 +43,7 @@ DataTypes = {'uint8': XSD.unsignedByte,
     'uint32': XSD.unsignedInt,
     'int32': XSD.int,
     'uint64': XSD.unsignedLong,
-    'uint64': XSD.long,
+    'int64': XSD.long,
     'boolean': XSD.boolean,
     'float': XSD.float,
     'double': XSD.double,
