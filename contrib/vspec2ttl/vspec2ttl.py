@@ -24,7 +24,7 @@ from anytree import RenderTree, PreOrderIter
 import vspec
 import getopt
 
-from vspec.model.vsstree import VSSNode, VSSType
+from vspec.model.vsstree import VSSNode, VSSType, VSSDataType
 
 from rdflib import Graph, Literal, RDF, URIRef, Namespace
 from rdflib.namespace import RDFS, XSD, OWL, XMLNS, RDF, FOAF, SKOS, SDO, NamespaceManager
@@ -78,6 +78,20 @@ def setup_graph():
     # g.add((partOfVehicle,RDFS.range, VssoConcepts.VEHICLE.uri))
     # g.add((partOfVehicle,RDFS.label, Literal(VssoConcepts.PART_OF_VEHICLE.value,lang="en")))
     #
+    dataType = VssoConcepts.DATA_TYPE.uri
+    g.add((dataType, RDF.type, OWL.ObjectProperty))
+    g.add((dataType, RDFS.subPropertyOf, OWL.topObjectProperty))
+    g.add((dataType, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((dataType, RDFS.range, RDFS.Datatype))
+    g.add((dataType, RDFS.label, Literal(VssoConcepts.DATA_TYPE.value, lang="en")))
+
+    baseDataType = VssoConcepts.BASE_DATA_TYPE.uri
+    g.add((baseDataType, RDF.type, OWL.ObjectProperty))
+    g.add((baseDataType, RDFS.subPropertyOf, OWL.topObjectProperty))
+    g.add((baseDataType, RDFS.domain, VssoConcepts.ARRAY_TYPE.uri))
+    g.add((baseDataType, RDFS.range, RDFS.Datatype))
+    g.add((baseDataType, RDFS.label, Literal(VssoConcepts.BASE_DATA_TYPE.value, lang="en")))
+
     partOfVehicleComponent = VssoConcepts.PART_OF_VEH_COMP.uri
     g.add((partOfVehicleComponent, RDF.type, OWL.ObjectProperty))
     g.add((partOfVehicleComponent,RDFS.subPropertyOf, OWL.topObjectProperty))
@@ -142,6 +156,12 @@ def setup_graph():
     g.add((vehicleAct, RDFS.subClassOf, VssoConcepts.VEHICLE_PROP_DYN.uri))
     g.add((vehicleAct, RDFS.label, Literal(VssoConcepts.VEHICLE_ACT.value, lang="en")))
 
+    # Datatype extension
+    arrayType = VssoConcepts.ARRAY_TYPE.uri
+    g.add((arrayType, RDF.type, OWL.Class))
+    g.add((arrayType, RDFS.subClassOf, RDFS.Datatype))
+    g.add((arrayType, RDFS.label, Literal(VssoConcepts.ARRAY_TYPE.value, lang="en")))
+
     # Bind the FOAF namespace to a prefix for more readable output
     g.bind("vsso", VssoConcepts.EMPTY.uri)
     g.bind("rdfs", RDFS)
@@ -158,6 +178,19 @@ def setup_graph():
     print(g.serialize(format='ttl'))
 
     return g
+
+
+array_types = {}
+
+
+def to_array_type(name: str, g: Graph):
+    baseuri = DataTypes[name.strip("[]")]
+    uri = URIRef(VssoConcepts.EMPTY.uri_string + baseuri.split("#")[1] + "Array")
+    if name not in array_types:
+        array_types[name] = uri
+        g.add((uri, RDF.type, VssoConcepts.ARRAY_TYPE.uri))
+        g.add((uri, VssoConcepts.BASE_DATA_TYPE.uri, baseuri))
+    return uri
 
 
 def set_ttl_name(node, name_dict):
@@ -216,6 +249,13 @@ def print_ttl_content(file, tree):
         # leafs (incl. restrictions)
         else:
             graph.add((node, VssoConcepts.BELONGS_TO.uri, URIRef(parent_name_space + set_ttl_name(tree_node.parent, name_dict))))
+
+            if type(tree_node.data_type)==VSSDataType:
+                dt = tree_node.data_type.value
+                if "[]" in dt:
+                    graph.add((node, VssoConcepts.DATA_TYPE.uri, to_array_type(dt, graph)))
+                else:
+                    graph.add((node, VssoConcepts.DATA_TYPE.uri, DataTypes[dt]))
 
             if hasattr(tree_node, "unit"):
                 if tree_node.unit in units.keys():
