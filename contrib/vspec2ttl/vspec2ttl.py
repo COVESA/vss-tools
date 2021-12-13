@@ -52,7 +52,12 @@ Usage: {sys.argv[0]} [options] vspec_file ttl_file
 def setup_graph():
     # create a Graph
     g = Graph()
-    
+
+    ontology = VssoConcepts.EMPTY.uri
+    g.add((ontology, RDF.type, OWL.Ontology))
+    g.add((ontology, OWL.versionInfo, Literal("1.0.0")))
+    g.add((ontology, RDFS.label, Literal("COVESA VSS ontology", lang="en")))
+
     belongsTo = VssoConcepts.BELONGS_TO.uri
     g.add((belongsTo, RDF.type, OWL.ObjectProperty))
     g.add((belongsTo, RDFS.subPropertyOf, OWL.topObjectProperty))
