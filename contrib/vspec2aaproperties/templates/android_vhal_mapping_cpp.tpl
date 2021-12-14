@@ -1,14 +1,6 @@
 {% set debug = False %}
 #include "inc/AndroidVssConverter.h"
 
-#define LOG_TAG "AndroidVssConverter"
-
-#include <log/log.h>
-#include <vhal_v2_0/VehicleUtils.h>
-#include <utils/SystemClock.h>
-#include "inc/ConverterUtils.h"
-
-
 namespace android {
 namespace hardware {
 namespace automotive {
