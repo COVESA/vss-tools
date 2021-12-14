@@ -131,7 +131,7 @@ VehiclePropValue convert{{"_".join(key.split(".")[1:])}}(std::string value, Vehi
     VehiclePropValue prop = initializeProp(id, area);
 {% if debug %}
 // {{item["translation"]["complex"]}}
-// float fuelCapacity = getVehiclePropertyFloatValue(toInt(VehicleProperty::INFO_FUEL_CAPACITY), vhal);
+// float fuelCapacity = getVehiclePropertyfloatValue(toInt(VehicleProperty::INFO_FUEL_CAPACITY), vhal);
 // input:{{item["translation"]["input"]}}
 {% endif %}
 {% for invalue in item["translation"]["input"] %}
