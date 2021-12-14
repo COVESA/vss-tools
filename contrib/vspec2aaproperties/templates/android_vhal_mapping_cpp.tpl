@@ -1,5 +1,8 @@
 {% set debug = False %}
 #include "inc/AndroidVssConverter.h"
+#include <functional> // for bind()
+#include <string>
+#include <vector>
 
 namespace android {
 namespace hardware {
