@@ -57,6 +57,7 @@ def setup_graph():
     g.add((ontology, RDF.type, OWL.Ontology))
     g.add((ontology, OWL.versionInfo, Literal("1.0.0")))
     g.add((ontology, RDFS.label, Literal("COVESA VSS ontology", lang="en")))
+    g.add((ontology, OWL.imports, URIRef("http://purl.oclc.org/NET/ssnx/qu/qu-rec20")))
 
     belongsTo = VssoConcepts.BELONGS_TO.uri
     g.add((belongsTo, RDF.type, OWL.ObjectProperty))
@@ -70,14 +71,21 @@ def setup_graph():
     # g.add((holdsValue,RDFS.subPropertyOf, OWL.topDataProperty))
     # g.add((holdsValue,RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
     # g.add((holdsValue,RDFS.label, Literal(VssoConcepts.HOLDS_VALUE.value,lang="en")))
-    #
+
     # partOfVehicle = VssoConcepts.PART_OF_VEHICLE.uri
     # g.add((partOfVehicle, RDF.type, OWL.ObjectProperty))
     # g.add((partOfVehicle,RDFS.subPropertyOf, OWL.topObjectProperty))
     # g.add((partOfVehicle,RDFS.domain, VssoConcepts.VEHICLE_COMP.uri))
     # g.add((partOfVehicle,RDFS.range, VssoConcepts.VEHICLE.uri))
     # g.add((partOfVehicle,RDFS.label, Literal(VssoConcepts.PART_OF_VEHICLE.value,lang="en")))
-    #
+
+    unit = VssoConcepts.UNIT.uri
+    g.add((unit, RDF.type, OWL.ObjectProperty))
+    g.add((unit, RDFS.subPropertyOf, OWL.topObjectProperty))
+    g.add((unit, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((unit, RDFS.range, URIRef(Namespaces["unit"] + "Unit")))
+    g.add((unit, RDFS.label, Literal(VssoConcepts.UNIT.value, lang="en")))
+
     dataType = VssoConcepts.DATA_TYPE.uri
     g.add((dataType, RDF.type, OWL.ObjectProperty))
     g.add((dataType, RDFS.subPropertyOf, OWL.topObjectProperty))
@@ -104,7 +112,6 @@ def setup_graph():
     # g.add((hasComponentInstance,RDFS.subPropertyOf, OWL.topDataProperty))
     # g.add((hasComponentInstance,RDFS.label, Literal(VssoConcepts.HAS_COMP_INST.value,lang="en")))
 
-
     # hasAttribute = VssoConcepts.HAS_ATTRIBUTE.uri
     # g.add((hasAttribute, RDF.type, OWL.ObjectProperty))
     # g.add((hasAttribute,RDFS.subPropertyOf, OWL.topObjectProperty))
@@ -118,7 +125,6 @@ def setup_graph():
     # g.add((hasDynProp, RDFS.domain, VssoConcepts.VEHICLE.uri))
     # g.add((hasDynProp, RDFS.range, VssoConcepts.VEHICLE_PROP.uri))
     # g.add((hasDynProp, RDFS.label, Literal(VssoConcepts.HAS_SIGNAL.value,lang="en")))
-
 
     ##
     # Classes
@@ -170,7 +176,7 @@ def setup_graph():
     g.bind("skos", SKOS)
     g.bind("schema", SDO)
     g.bind("xsd", XSD)
-    g.bind("qudt", URIRef(Namespaces["qudt"]))
+    g.bind("unit", URIRef(Namespaces["unit"]))
     g.bind("cdt", URIRef(Namespaces["cdt"]))
 
     # print all the data in the Notation3 format
@@ -258,6 +264,7 @@ def print_ttl_content(file, tree):
                     graph.add((node, VssoConcepts.DATA_TYPE.uri, DataTypes[dt]))
 
             if hasattr(tree_node, "unit"):
+                graph.add((node, VssoConcepts.UNIT.uri, DataUnits[tree_node.unit.value]))
                 if tree_node.unit in units.keys():
                     units[tree_node.unit] += 1
                 else:

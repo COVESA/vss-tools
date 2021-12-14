@@ -16,6 +16,7 @@ class VssoConcepts (Enum):
     HAS_COMP_INST =     "hasInstance"
     DATA_TYPE =         "vehiclePropertyDatatype"
     BASE_DATA_TYPE =    "baseDatatype"
+    UNIT =              "unit"
     VEHICLE =           "Vehicle"
     VEHICLE_SIGNAL =    "ObservableVehicleProperty"
     VEHICLE_ACT =       "ActuatableVehicleProperty"
@@ -54,50 +55,50 @@ DataTypes = {'uint8': XSD.unsignedByte,
 }
     
 Namespaces = {
-    'qudt': "http://qudt.org/schema/qudt/",
+    'unit': "http://purl.oclc.org/NET/ssnx/qu/unit#",
     'cdt': "http://w3id.org/lindt/custom_datatypes#"
 }
-DataUnits = {    
-    'N.m': URIRef(Namespaces["cdt"]+'ucum'),
-    'cm3': URIRef(Namespaces["cdt"]+'volume'),
-    'cm^3': URIRef(Namespaces["cdt"]+'volume'),
-    'kw': URIRef(Namespaces["cdt"]+'power'),
-    'l': URIRef(Namespaces["cdt"]+'volume'),
-    'mm': URIRef(Namespaces["cdt"]+'length'),
-    'kg': URIRef(Namespaces["cdt"]+'mass'),
-    'inch': URIRef(Namespaces["cdt"]+'length'),
-    'A': URIRef(Namespaces["qudt"]+'ElectricCurrentUnit'),
-    'Nm': URIRef(Namespaces["qudt"]+'BendingMomentOrTorqueUnit'),
-    'N.m': URIRef(Namespaces["qudt"]+'BendingMomentOrTorqueUnit'),
-    'V': URIRef(Namespaces["qudt"]+'EnergyPerElectricChargeUnit'),
-    'celsius': URIRef(Namespaces["qudt"]+'TemperatureUnit'),
-    'cm/s': URIRef(Namespaces["qudt"]+'LinearVelocityUnit'),
-    'degree': URIRef(Namespaces["qudt"]+'AngleUnit'),
-    'degrees': URIRef(Namespaces["qudt"]+'AngleUnit'),
-    'degrees/s': URIRef(Namespaces["qudt"]+'AngularVelocityUnit'),
-    'g/s': URIRef(Namespaces["qudt"]+'MassPerTimeUnit'),
-    'inch': URIRef(Namespaces["qudt"]+'LengthUnit'),
-    'kW': URIRef(Namespaces["qudt"]+'PowerUnit'),
-    'kilometer': URIRef(Namespaces["qudt"]+'LengthUnit'),
-    'km': URIRef(Namespaces["qudt"]+'LengthUnit'),
-    'km/h': URIRef(Namespaces["qudt"]+'LinearVelocityUnit'),
-    'kpa': URIRef(Namespaces["qudt"]+'PressureOrStressUnit'),
-    'kPa': URIRef(Namespaces["qudt"]+'PressureOrStressUnit'),
-    'l': URIRef(Namespaces["qudt"]+'VolumeUnit'),
-    'l/h': URIRef(Namespaces["qudt"]+'VolumePerTimeUnit'),
-    'm': URIRef(Namespaces["qudt"]+'LengthUnit'),
-    'm/s': URIRef(Namespaces["qudt"]+'LinearVelocityUnit'),
-    'm/s2': URIRef(Namespaces["qudt"]+'LinearAccelerationUnit'),
-    'm/s^2': URIRef(Namespaces["qudt"]+'LinearAccelerationUnit'),
-    'mbar': URIRef(Namespaces["qudt"]+'PressureOrStressUnit'),
-    'min': URIRef(Namespaces["qudt"]+'TimeUnit'),
-    'ml': URIRef(Namespaces["qudt"]+'VolumeUnit'),
-    'mm': URIRef(Namespaces["qudt"]+'LengthUnit'),
-    'pa': URIRef(Namespaces["qudt"]+'PressureOrStressUnit'),
-    'Pa': URIRef(Namespaces["qudt"]+'PressureOrStressUnit'),
-    'percent': URIRef(Namespaces["qudt"]+'DimensionlessUnit'),
-    'percentage': URIRef(Namespaces["qudt"]+'DimensionlessUnit'),
-    'ratio': URIRef(Namespaces["qudt"]+'DimensionlessUnit'),
-    'rpm': URIRef(Namespaces["qudt"]+'AngularVelocityUnit'),
-    's': URIRef(Namespaces["qudt"]+'TimeUnit')
+
+DataUnits = {
+    'A': URIRef(Namespaces["unit"] + "ampere"),
+    'celsius': URIRef(Namespaces["unit"] + "degreeCelsius"),
+    'cm/s': URIRef(Namespaces["unit"] + "centimetrePerSecond"),
+    'cm^3': URIRef(Namespaces["unit"] + "cubicCentimetre"),
+    'cm3': URIRef(Namespaces["unit"] + "cubicCentimetre"),
+    'degree': URIRef(Namespaces["unit"] + "degreeUnitOfAngle"),
+    'degrees': URIRef(Namespaces["unit"] + "degreeUnitOfAngle"),
+    'degrees/s': URIRef(Namespaces["unit"] + "degreePerSecond"),
+    'g/km': URIRef(Namespaces["unit"] + "gramPerKilometre"),  # Not available in qu-rec20
+    'g/s': URIRef(Namespaces["unit"] + "gramPerSecond"),
+    'inch': URIRef(Namespaces["unit"] + "inch"),
+    'kg': URIRef(Namespaces["unit"] + "kilogram"),
+    'kilometer': URIRef(Namespaces["unit"] + "kilometre"),
+    'km/h': URIRef(Namespaces["unit"] + "kilometrePerHour"),
+    'km': URIRef(Namespaces["unit"] + "kilometre"),
+    'kpa': URIRef(Namespaces["unit"] + "kilopascal"),
+    'kPa': URIRef(Namespaces["unit"] + "kilopascal"),
+    'kw': URIRef(Namespaces["unit"] + "kilowatt"),
+    'kW': URIRef(Namespaces["unit"] + "kilowatt"),
+    'kWh': URIRef(Namespaces["unit"] + "kilowattHour"),
+    'l/100km': URIRef(Namespaces["unit"] + "litrePerHundredKilometre"),  # Not available in qu-rec20
+    'l/h': URIRef(Namespaces["unit"] + "litrePerHour"),  # Not available in qu-rec20
+    'l': URIRef(Namespaces["unit"] + "litre"),
+    'm/s': URIRef(Namespaces["unit"] + "metrePerSecond"),
+    'm/s^2': URIRef(Namespaces["unit"] + "metrePerSecondSquared"),
+    'm/s2': URIRef(Namespaces["unit"] + "metrePerSecondSquared"),
+    'm': URIRef(Namespaces["unit"] + "metre"),
+    'mbar': URIRef(Namespaces["unit"] + "millibar"),
+    'min': URIRef(Namespaces["unit"] + "minuteUnitOfTime"),
+    'ml': URIRef(Namespaces["unit"] + "millilitre"),
+    'mm': URIRef(Namespaces["unit"] + "millimetre"),
+    'N.m': URIRef(Namespaces["unit"] + "newtonMetre"),
+    'Nm': URIRef(Namespaces["unit"] + "newtonMetre"),
+    'pa': URIRef(Namespaces["unit"] + "pascal"),
+    'Pa': URIRef(Namespaces["unit"] + "pascal"),
+    'percent': URIRef(Namespaces["unit"] + "percent"),
+    'percentage': URIRef(Namespaces["unit"] + "percent"),
+    'ratio': URIRef(Namespaces["unit"] + "ratio"),
+    'rpm': URIRef(Namespaces["unit"] + "revolutionPerMinute"),  # Not available in qu-rec20
+    's': URIRef(Namespaces["unit"] + "secondUnitOfTime"),
+    'V': URIRef(Namespaces["unit"] + "volt")
 }
