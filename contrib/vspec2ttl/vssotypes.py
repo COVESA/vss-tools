@@ -14,6 +14,8 @@ class VssoConcepts (Enum):
     PART_OF_VEHICLE =   "partOfVehicle"
     PART_OF_VEH_COMP =  "partOfVehicleComponent"
     HAS_COMP_INST =     "hasInstance"
+    HAS_ENUM_VALUE =    "hasEnumerationValue"
+    HAS_ENUM_DEF =      "hasDefaultEnumerationValue"
     DATA_TYPE =         "vehiclePropertyDatatype"
     BASE_DATA_TYPE =    "baseDatatype"
     UNIT =              "unit"
@@ -27,9 +29,15 @@ class VssoConcepts (Enum):
     VEHICLE_PROP =      "VehicleProperty"
     VEHICLE_PROP_DYN =  "DynamicVehicleProperty"
     VEHICLE_PROP_STAT = "StaticVehicleProperty"
+    VEHICLE_PROP_NUM =  "NumericVehicleProperty"
+    VEHICLE_PROP_ENUM = "EnumeratedVehicleProperty"
+    ENUM_VALUE =        "EnumerationValue"
     ARRAY_TYPE =        "ArrayType"
     VEHICLE_PROP_NAME=  "vehiclePropertyName"
     VEHICLE_COMP_NAME=  "vehicleComponentName"
+    ENUM_NAME =         "enumerationName"
+    ENUM_DESC =         "enumerationDescription"
+
 
     def __init__ (self, vsso_name):
         self.ns = "https://github.com/danielwilms/vsso-demo/"

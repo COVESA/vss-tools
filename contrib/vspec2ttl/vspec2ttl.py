@@ -15,8 +15,10 @@
 #
 import os
 import sys
-#Add path to main py vspec  parser
-myDir= os.path.dirname(os.path.realpath(__file__))
+import re
+
+# Add path to main py vspec  parser
+myDir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
 
 from anytree import RenderTree, PreOrderIter
@@ -25,6 +27,7 @@ import vspec
 import getopt
 
 from vspec.model.vsstree import VSSNode, VSSType, VSSDataType
+from vspec.model.constants import VSSConstant
 
 from rdflib import Graph, Literal, RDF, URIRef, Namespace
 from rdflib.namespace import RDFS, XSD, OWL, XMLNS, RDF, FOAF, SKOS, SDO, NamespaceManager
@@ -82,14 +85,14 @@ def setup_graph():
     unit = VssoConcepts.UNIT.uri
     g.add((unit, RDF.type, OWL.ObjectProperty))
     g.add((unit, RDFS.subPropertyOf, OWL.topObjectProperty))
-    g.add((unit, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((unit, RDFS.domain, VssoConcepts.VEHICLE_PROP_NUM.uri))
     g.add((unit, RDFS.range, URIRef(Namespaces["unit"] + "Unit")))
     g.add((unit, RDFS.label, Literal(VssoConcepts.UNIT.value, lang="en")))
 
     dataType = VssoConcepts.DATA_TYPE.uri
     g.add((dataType, RDF.type, OWL.ObjectProperty))
     g.add((dataType, RDFS.subPropertyOf, OWL.topObjectProperty))
-    g.add((dataType, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((dataType, RDFS.domain, VssoConcepts.VEHICLE_PROP_NUM.uri))
     g.add((dataType, RDFS.range, RDFS.Datatype))
     g.add((dataType, RDFS.label, Literal(VssoConcepts.DATA_TYPE.value, lang="en")))
 
@@ -99,6 +102,20 @@ def setup_graph():
     g.add((baseDataType, RDFS.domain, VssoConcepts.ARRAY_TYPE.uri))
     g.add((baseDataType, RDFS.range, RDFS.Datatype))
     g.add((baseDataType, RDFS.label, Literal(VssoConcepts.BASE_DATA_TYPE.value, lang="en")))
+
+    hasEnumerationValue = VssoConcepts.HAS_ENUM_VALUE.uri
+    g.add((hasEnumerationValue, RDF.type, OWL.ObjectProperty))
+    g.add((hasEnumerationValue, RDFS.subPropertyOf, OWL.topObjectProperty))
+    g.add((hasEnumerationValue, RDFS.domain, VssoConcepts.VEHICLE_PROP_ENUM.uri))
+    g.add((hasEnumerationValue, RDFS.range, VssoConcepts.ENUM_VALUE.uri))
+    g.add((hasEnumerationValue, RDFS.label, Literal(VssoConcepts.HAS_ENUM_VALUE.value, lang="en")))
+
+    hasDefaultEnumerationValue = VssoConcepts.HAS_ENUM_DEF.uri
+    g.add((hasDefaultEnumerationValue, RDF.type, OWL.ObjectProperty))
+    g.add((hasDefaultEnumerationValue, RDFS.subPropertyOf, OWL.topObjectProperty))
+    g.add((hasDefaultEnumerationValue, RDFS.domain, VssoConcepts.VEHICLE_PROP_ENUM.uri))
+    g.add((hasDefaultEnumerationValue, RDFS.range, VssoConcepts.ENUM_VALUE.uri))
+    g.add((hasDefaultEnumerationValue, RDFS.label, Literal(VssoConcepts.HAS_ENUM_DEF.value, lang="en")))
 
     partOfVehicleComponent = VssoConcepts.PART_OF_VEH_COMP.uri
     g.add((partOfVehicleComponent, RDF.type, OWL.ObjectProperty))
@@ -110,14 +127,14 @@ def setup_graph():
     vehiclePropertyName = VssoConcepts.VEHICLE_PROP_NAME.uri
     g.add((vehiclePropertyName, RDF.type, OWL.DatatypeProperty))
     g.add((vehiclePropertyName, RDFS.subPropertyOf, OWL.topDataProperty))
-    g.add((vehiclePropertyName, RDFS.label, Literal(VssoConcepts.VEHICLE_PROP_NAME.value, lang="en")))
+    g.add((vehiclePropertyName, RDFS.label, Literal(VssoConcepts.VEHICLE_PROP_NAME.value,lang="en")))
     g.add((vehiclePropertyName, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
     g.add((vehiclePropertyName, RDFS.range, XSD.string))
 
     vehicleComponentName = VssoConcepts.VEHICLE_COMP_NAME.uri
     g.add((vehicleComponentName, RDF.type, OWL.DatatypeProperty))
     g.add((vehicleComponentName, RDFS.subPropertyOf, OWL.topDataProperty))
-    g.add((vehicleComponentName, RDFS.label, Literal(VssoConcepts.VEHICLE_COMP_NAME.value, lang="en")))
+    g.add((vehicleComponentName, RDFS.label, Literal(VssoConcepts.VEHICLE_COMP_NAME.value,lang="en")))
     g.add((vehicleComponentName, RDFS.domain, VssoConcepts.VEHICLE_COMP.uri))
     g.add((vehicleComponentName, RDFS.range, XSD.string))
 
@@ -125,22 +142,36 @@ def setup_graph():
     g.add((minValue, RDF.type, OWL.DatatypeProperty))
     g.add((minValue, RDFS.subPropertyOf, OWL.topDataProperty))
     g.add((minValue, RDFS.label, Literal(VssoConcepts.MIN.value, lang="en")))
-    g.add((minValue, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((minValue, RDFS.domain, VssoConcepts.VEHICLE_PROP_NUM.uri))
     g.add((minValue, RDFS.range, XSD.double))
 
     maxValue = VssoConcepts.MAX.uri
     g.add((maxValue, RDF.type, OWL.DatatypeProperty))
     g.add((maxValue, RDFS.subPropertyOf, OWL.topDataProperty))
     g.add((maxValue, RDFS.label, Literal(VssoConcepts.MAX.value, lang="en")))
-    g.add((maxValue, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((maxValue, RDFS.domain, VssoConcepts.VEHICLE_PROP_NUM.uri))
     g.add((maxValue, RDFS.range, XSD.double))
 
     resolution = VssoConcepts.RES.uri
     g.add((resolution, RDF.type, OWL.DatatypeProperty))
     g.add((resolution, RDFS.subPropertyOf, OWL.topDataProperty))
     g.add((resolution, RDFS.label, Literal(VssoConcepts.RES.value, lang="en")))
-    g.add((resolution, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((resolution, RDFS.domain, VssoConcepts.VEHICLE_PROP_NUM.uri))
     g.add((resolution, RDFS.range, XSD.double))
+
+    enumerationName = VssoConcepts.ENUM_NAME.uri
+    g.add((enumerationName, RDF.type, OWL.DatatypeProperty))
+    g.add((enumerationName, RDFS.subPropertyOf, OWL.topDataProperty))
+    g.add((enumerationName, RDFS.label, Literal(VssoConcepts.ENUM_NAME.value, lang="en")))
+    g.add((enumerationName, RDFS.domain, VssoConcepts.ENUM_VALUE.uri))
+    g.add((enumerationName, RDFS.range, XSD.string))
+
+    enumerationDescription = VssoConcepts.ENUM_DESC.uri
+    g.add((enumerationDescription, RDF.type, OWL.DatatypeProperty))
+    g.add((enumerationDescription, RDFS.subPropertyOf, OWL.topDataProperty))
+    g.add((enumerationDescription, RDFS.label, Literal(VssoConcepts.ENUM_DESC.value, lang="en")))
+    g.add((enumerationDescription, RDFS.domain, VssoConcepts.ENUM_VALUE.uri))
+    g.add((enumerationDescription, RDFS.range, XSD.string))
 
     # hasComponentInstance = VssoConcepts.HAS_COMP_INST.uri
     # g.add((hasComponentInstance, RDF.type, OWL.DatatypeProperty))
@@ -182,6 +213,20 @@ def setup_graph():
     g.add((staticVehicleProperty, RDF.type, OWL.Class))
     g.add((staticVehicleProperty, RDFS.subClassOf, vehicleProperty))
     g.add((staticVehicleProperty, RDFS.label, Literal(VssoConcepts.VEHICLE_PROP_STAT.value, lang="en")))
+
+    numericVehicleProperty = VssoConcepts.VEHICLE_PROP_NUM.uri
+    g.add((numericVehicleProperty, RDF.type, OWL.Class))
+    g.add((numericVehicleProperty, RDFS.subClassOf, vehicleProperty))
+    g.add((numericVehicleProperty, RDFS.label, Literal(VssoConcepts.VEHICLE_PROP_NUM.value, lang="en")))
+
+    enumeratedVehicleProperty = VssoConcepts.VEHICLE_PROP_ENUM.uri
+    g.add((enumeratedVehicleProperty, RDF.type, OWL.Class))
+    g.add((enumeratedVehicleProperty, RDFS.subClassOf, vehicleProperty))
+    g.add((enumeratedVehicleProperty, RDFS.label, Literal(VssoConcepts.VEHICLE_PROP_ENUM.value, lang="en")))
+
+    enumerationValue = VssoConcepts.ENUM_VALUE.uri
+    g.add((enumerationValue, RDF.type, OWL.Class))
+    g.add((enumerationValue, RDFS.label, Literal(VssoConcepts.ENUM_VALUE.value, lang="en")))
 
     vehicleComp = VssoConcepts.VEHICLE_COMP.uri
     g.add((vehicleComp, RDF.type, OWL.Class))
@@ -302,10 +347,21 @@ def print_ttl_content(file, tree):
 
             if hasattr(tree_node, "unit"):
                 graph.add((node, VssoConcepts.UNIT.uri, DataUnits[tree_node.unit.value]))
+                graph.add((node, RDF.type, VssoConcepts.VEHICLE_PROP_NUM.uri))
                 if tree_node.unit in units.keys():
                     units[tree_node.unit] += 1
                 else:
                     units[tree_node.unit] = 1
+
+            if type(tree_node.enum) == list:
+                graph.add((node, RDF.type, VssoConcepts.VEHICLE_PROP_ENUM.uri))
+                for item in tree_node.enum:
+                    enum_name = tree_node.name + "_" + re.sub(r'[^\w]', '', item)
+                    enum_item = URIRef(name_space + enum_name)
+                    graph.add((enum_item, RDF.type, VssoConcepts.ENUM_VALUE.uri))
+                    graph.add((enum_item, RDFS.label, Literal(item, "en")))
+                    graph.add((enum_item, VssoConcepts.ENUM_NAME.uri, Literal(item, "en")))
+                    graph.add((node, VssoConcepts.HAS_ENUM_VALUE.uri, enum_item))
 
             if tree_node.min != "":
                 graph.add((node, VssoConcepts.MIN.uri, Literal(tree_node.min, datatype=XSD.int)))
