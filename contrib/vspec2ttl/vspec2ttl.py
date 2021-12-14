@@ -107,6 +107,41 @@ def setup_graph():
     g.add((partOfVehicleComponent,RDFS.range, VssoConcepts.VEHICLE_COMP.uri))
     g.add((partOfVehicleComponent,RDFS.label, Literal(VssoConcepts.PART_OF_VEH_COMP.value,lang="en")))
 
+    vehiclePropertyName = VssoConcepts.VEHICLE_PROP_NAME.uri
+    g.add((vehiclePropertyName, RDF.type, OWL.DatatypeProperty))
+    g.add((vehiclePropertyName, RDFS.subPropertyOf, OWL.topDataProperty))
+    g.add((vehiclePropertyName, RDFS.label, Literal(VssoConcepts.VEHICLE_PROP_NAME.value, lang="en")))
+    g.add((vehiclePropertyName, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((vehiclePropertyName, RDFS.range, XSD.string))
+
+    vehicleComponentName = VssoConcepts.VEHICLE_COMP_NAME.uri
+    g.add((vehicleComponentName, RDF.type, OWL.DatatypeProperty))
+    g.add((vehicleComponentName, RDFS.subPropertyOf, OWL.topDataProperty))
+    g.add((vehicleComponentName, RDFS.label, Literal(VssoConcepts.VEHICLE_COMP_NAME.value, lang="en")))
+    g.add((vehicleComponentName, RDFS.domain, VssoConcepts.VEHICLE_COMP.uri))
+    g.add((vehicleComponentName, RDFS.range, XSD.string))
+
+    minValue = VssoConcepts.MIN.uri
+    g.add((minValue, RDF.type, OWL.DatatypeProperty))
+    g.add((minValue, RDFS.subPropertyOf, OWL.topDataProperty))
+    g.add((minValue, RDFS.label, Literal(VssoConcepts.MIN.value, lang="en")))
+    g.add((minValue, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((minValue, RDFS.range, XSD.double))
+
+    maxValue = VssoConcepts.MAX.uri
+    g.add((maxValue, RDF.type, OWL.DatatypeProperty))
+    g.add((maxValue, RDFS.subPropertyOf, OWL.topDataProperty))
+    g.add((maxValue, RDFS.label, Literal(VssoConcepts.MAX.value, lang="en")))
+    g.add((maxValue, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((maxValue, RDFS.range, XSD.double))
+
+    resolution = VssoConcepts.RES.uri
+    g.add((resolution, RDF.type, OWL.DatatypeProperty))
+    g.add((resolution, RDFS.subPropertyOf, OWL.topDataProperty))
+    g.add((resolution, RDFS.label, Literal(VssoConcepts.RES.value, lang="en")))
+    g.add((resolution, RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
+    g.add((resolution, RDFS.range, XSD.double))
+
     # hasComponentInstance = VssoConcepts.HAS_COMP_INST.uri
     # g.add((hasComponentInstance, RDF.type, OWL.DatatypeProperty))
     # g.add((hasComponentInstance,RDFS.subPropertyOf, OWL.topDataProperty))
@@ -250,11 +285,13 @@ def print_ttl_content(file, tree):
         # branch nodes (incl. instance handling)
         if VSSType.BRANCH == tree_node.type:
             graph.add((node, RDF.type, VssoConcepts.VEHICLE_COMP.uri))
+            graph.add((node, VssoConcepts.VEHICLE_COMP_NAME.uri, Literal(name, "en")))
             if tree_node.parent:
                 graph.add((node, VssoConcepts.PART_OF_VEH_COMP.uri, URIRef(parent_name_space + set_ttl_name(tree_node.parent, name_dict))))
         # leafs (incl. restrictions)
         else:
             graph.add((node, VssoConcepts.BELONGS_TO.uri, URIRef(parent_name_space + set_ttl_name(tree_node.parent, name_dict))))
+            graph.add((node, VssoConcepts.VEHICLE_PROP_NAME.uri, Literal(name, "en")))
 
             if type(tree_node.data_type)==VSSDataType:
                 dt = tree_node.data_type.value
@@ -269,6 +306,12 @@ def print_ttl_content(file, tree):
                     units[tree_node.unit] += 1
                 else:
                     units[tree_node.unit] = 1
+
+            if tree_node.min != "":
+                graph.add((node, VssoConcepts.MIN.uri, Literal(tree_node.min, datatype=XSD.int)))
+
+            if tree_node.max != "":
+                graph.add((node, VssoConcepts.MAX.uri, Literal(tree_node.max, datatype=XSD.int)))
 
             if VSSType.ATTRIBUTE == tree_node.type:
                 graph.add((node, RDF.type, VssoConcepts.VEHICLE_PROP_STAT.uri))

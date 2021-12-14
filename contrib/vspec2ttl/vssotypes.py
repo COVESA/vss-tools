@@ -17,6 +17,9 @@ class VssoConcepts (Enum):
     DATA_TYPE =         "vehiclePropertyDatatype"
     BASE_DATA_TYPE =    "baseDatatype"
     UNIT =              "unit"
+    MIN =               "minValue"
+    MAX =               "maxValue"
+    RES =               "resolution"
     VEHICLE =           "Vehicle"
     VEHICLE_SIGNAL =    "ObservableVehicleProperty"
     VEHICLE_ACT =       "ActuatableVehicleProperty"
@@ -25,6 +28,8 @@ class VssoConcepts (Enum):
     VEHICLE_PROP_DYN =  "DynamicVehicleProperty"
     VEHICLE_PROP_STAT = "StaticVehicleProperty"
     ARRAY_TYPE =        "ArrayType"
+    VEHICLE_PROP_NAME=  "vehiclePropertyName"
+    VEHICLE_COMP_NAME=  "vehicleComponentName"
 
     def __init__ (self, vsso_name):
         self.ns = "https://github.com/danielwilms/vsso-demo/"
