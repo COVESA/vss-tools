@@ -308,9 +308,7 @@ def cleanup_flat_entries(flat_model):
 def cleanup_deep_model(deep_model):
     # Traverse the flat list of the parsed specification
     # Is this an include element?
-    if "$file_name$" in deep_model:
-        del deep_model["$file_name$"]
-
+    
     if "$line$" in deep_model:
         del deep_model["$line$"]
 
