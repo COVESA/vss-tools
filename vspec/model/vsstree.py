@@ -73,6 +73,9 @@ class VSSNode(Node):
         self.type = VSSType.from_str(source_dict["type"])
         self.uuid = source_dict["uuid"]
 
+        if "$file_name$" not in source_dict.keys():
+            source_dict["$file_name$"]="UNKNOWN"
+
         if "datatype" in source_dict.keys():
             self.data_type = VSSDataType.from_str(source_dict["datatype"])
 
@@ -277,14 +280,11 @@ class VSSNode(Node):
             if element["type"] != "attribute":
                 raise NonCoreAttributeException("Invalid VSS element %s, only attributes can use default" % name)
 
-
-
 def camel_case(st):
     """Camel case string conversion"""
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', st)
     s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
     return re.sub(r'(?:^|_)([a-z])', lambda x: x.group(1).upper(), s2)
-
 
 def camel_back(st):
     """Camel back string conversion"""

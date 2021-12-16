@@ -9,11 +9,11 @@ class TestVSSNode(unittest.TestCase):
         """
         Test minimal object construction.
         """
-        source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
+        source = {"description": "some desc", "type": "branch", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
         node = VSSNode("test", source)
         self.assertIsNotNone(node)
         self.assertEqual("some desc", node.description)
-        self.assertEqual(VSSType.SENSOR, node.type)
+        self.assertEqual(VSSType.BRANCH, node.type)
         self.assertEqual("26d6e362-a422-11ea-bb37-0242ac130002", node.uuid)
         self.assertFalse(node.has_unit())
         self.assertFalse(node.has_data_type())
@@ -62,15 +62,15 @@ class TestVSSNode(unittest.TestCase):
         Tests if merging two nodes works as expected
         """
 
-        target = {"description": "some desc", "type": "sensor", "uuid": "e36a1d8c-4d06-4c22-ba69-e8b39434a7a3"}
+        target = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "e36a1d8c-4d06-4c22-ba69-e8b39434a7a3"}
 
-        source = {"description": "some desc", "type": "sensor", "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
                   "datatype": "uint8", "unit": "km", "min": 0, "max": 100}
 
         node_target = VSSNode("MyNode", target)
         node_source = VSSNode("Private", source)
         self.assertEqual("e36a1d8c-4d06-4c22-ba69-e8b39434a7a3", node_target.uuid)
-        self.assertFalse(node_target.has_data_type())
+        self.assertTrue(node_target.has_data_type())
         self.assertEqual("2cc90035-e1c2-43bf-a394-1a439addc8ad", node_source.uuid)
 
         node_target.merge(node_source)
@@ -85,14 +85,14 @@ class TestVSSNode(unittest.TestCase):
         """
         Tests string style conversion
         """
-        source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
+        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
         node = VSSNode("test", source)
 
         self.assertEqual("TEST", node.qualified_name(".", StringStyle.UPPER_CASE))
         self.assertEqual("Test", node.qualified_name(".", StringStyle.CAPITAL_CASE))
         self.assertEqual("test", node.qualified_name(".", StringStyle.LOWER_CASE))
 
-        source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
+        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
         node = VSSNode("LongerTestName", source)
         self.assertEqual("LONGERTESTNAME", node.qualified_name(".", StringStyle.UPPER_CASE))
         self.assertEqual("LongerTestName", node.qualified_name(".", StringStyle.CAPITAL_CASE))
