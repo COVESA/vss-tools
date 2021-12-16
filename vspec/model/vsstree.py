@@ -103,6 +103,22 @@ class VSSNode(Node):
         if "comment" in source_dict.keys():
             self.comment = source_dict["comment"]
 
+        self.check_style(source_dict)
+
+    def check_style(self,source_dict):
+        """Checks wether this node is adhering to VSS style conventions.
+
+            Just prints a warning when deviations are detected. A VSS model violating
+            this conventions can still be a valid model.
+
+        """
+        camel_regexp=p = re.compile('[A-Z][A-Za-z0-9]*$')
+        if self.type != VSSType.BRANCH and self.data_type==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
+            print(f'WARNING: Boolean node "{self.name}" found in file "{source_dict["$file_name$"]}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
+        if not camel_regexp.match(self.name):
+            print(f'WARNING: Node "{self.name}" found in file "{source_dict["$file_name$"]}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
+        
+
     def is_private(self) -> bool:
         """Checks weather this instance is in private branch of VSS.
 
@@ -254,12 +270,14 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment"]:
+                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]:
                 raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 
         if "default" in element.keys():
             if element["type"] != "attribute":
                 raise NonCoreAttributeException("Invalid VSS element %s, only attributes can use default" % name)
+
+
 
 def camel_case(st):
     """Camel case string conversion"""
