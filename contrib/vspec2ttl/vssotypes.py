@@ -76,13 +76,18 @@ DataUnits = {
     'A': URIRef(Namespaces["unit"] + "ampere"),
     'celsius': URIRef(Namespaces["unit"] + "degreeCelsius"),
     'cm/s': URIRef(Namespaces["unit"] + "centimetrePerSecond"),
+    'cm/s^2': URIRef(Namespaces["unit"] + "centimetrePerSecondSquared"),  # Not available in qu-rec20
     'cm^3': URIRef(Namespaces["unit"] + "cubicCentimetre"),
     'cm3': URIRef(Namespaces["unit"] + "cubicCentimetre"),
     'degree': URIRef(Namespaces["unit"] + "degreeUnitOfAngle"),
-    'degrees': URIRef(Namespaces["unit"] + "degreeUnitOfAngle"),
     'degrees/s': URIRef(Namespaces["unit"] + "degreePerSecond"),
+    'degrees': URIRef(Namespaces["unit"] + "degreeUnitOfAngle"),
     'g/km': URIRef(Namespaces["unit"] + "gramPerKilometre"),  # Not available in qu-rec20
     'g/s': URIRef(Namespaces["unit"] + "gramPerSecond"),
+    'g': URIRef(Namespaces["unit"] + "gram"),
+    'h': URIRef(Namespaces["unit"] + "hour"),
+    'Hz': URIRef(Namespaces["unit"] + "hertz"),
+    'hz': URIRef(Namespaces["unit"] + "hertz"),
     'inch': URIRef(Namespaces["unit"] + "inch"),
     'kg': URIRef(Namespaces["unit"] + "kilogram"),
     'kilometer': URIRef(Namespaces["unit"] + "kilometre"),
@@ -96,15 +101,20 @@ DataUnits = {
     'l/100km': URIRef(Namespaces["unit"] + "litrePerHundredKilometre"),  # Not available in qu-rec20
     'l/h': URIRef(Namespaces["unit"] + "litrePerHour"),  # Not available in qu-rec20
     'l': URIRef(Namespaces["unit"] + "litre"),
+    'lat': URIRef(Namespaces["unit"] + "degreeUnitOfAngle"),
+    'lon': URIRef(Namespaces["unit"] + "degreeUnitOfAngle"),
     'm/s': URIRef(Namespaces["unit"] + "metrePerSecond"),
     'm/s^2': URIRef(Namespaces["unit"] + "metrePerSecondSquared"),
     'm/s2': URIRef(Namespaces["unit"] + "metrePerSecondSquared"),
     'm': URIRef(Namespaces["unit"] + "metre"),
     'mbar': URIRef(Namespaces["unit"] + "millibar"),
     'min': URIRef(Namespaces["unit"] + "minuteUnitOfTime"),
+    'ml/100km': URIRef(Namespaces["unit"] + "millilitrePerHundredKilometre"),  # Not available in qu-rec20
     'ml': URIRef(Namespaces["unit"] + "millilitre"),
     'mm': URIRef(Namespaces["unit"] + "millimetre"),
+    'ms': URIRef(Namespaces["unit"] + "millisecond"),
     'N.m': URIRef(Namespaces["unit"] + "newtonMetre"),
+    'N': URIRef(Namespaces["unit"] + "newton"),
     'Nm': URIRef(Namespaces["unit"] + "newtonMetre"),
     'pa': URIRef(Namespaces["unit"] + "pascal"),
     'Pa': URIRef(Namespaces["unit"] + "pascal"),
@@ -113,5 +123,7 @@ DataUnits = {
     'ratio': URIRef(Namespaces["unit"] + "ratio"),
     'rpm': URIRef(Namespaces["unit"] + "revolutionPerMinute"),  # Not available in qu-rec20
     's': URIRef(Namespaces["unit"] + "secondUnitOfTime"),
-    'V': URIRef(Namespaces["unit"] + "volt")
+    'V': URIRef(Namespaces["unit"] + "volt"),
+    'w': URIRef(Namespaces["unit"] + "watt"),
+    'W': URIRef(Namespaces["unit"] + "watt")
 }
