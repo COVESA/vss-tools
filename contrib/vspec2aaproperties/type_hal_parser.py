@@ -13,7 +13,7 @@ Android types.hal parser to create the Android VHAL item type table.
 # vehicle properties.
 #
 
-class type_table:
+class VhalType:
     #__init__ reads the types.hal file and uses regex to convert the header file to type table.
     def __init__(self,file):
         with open(file,"r") as f:
