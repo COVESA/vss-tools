@@ -12,7 +12,7 @@
 
 import sys
 import os
-import getopt
+import argparse
 import type_hal_parser
 import read_mapping_layer
 import jinja2
@@ -111,44 +111,44 @@ if __name__ == "__main__":
     #
     # Check that we have the correct arguments
     #
-    opts, args = getopt.getopt(sys.argv[1:], "I:i:")
+    parser = argparse.ArgumentParser(prog="vspec2aaprop",description="Convert vss specification to Android Auto properties according to the input map file.")
+    parser.add_argument("output",nargs="?",type=str,default="AndroidVssConverter.cpp",help="Ouput .cpp file name")
+    parser.add_argument("-v","--vspec",type=str,default="../../../spec/VehicleSignalSpecification.vspec",help="Vehicle Signal Specification")
+    parser.add_argument("-m","--map",type=str,default="vspec2prop_mapping.yml",help="Conversion Item Map File")
+    parser.add_argument("-a","--android",type=str,default="types.hal",help="Android Type Mapping (Android types.hal file)")
+    parser.add_argument("-t","--typemap",type=str,default="typemap.yml",help="VSS/VHAL/Android CPP type mapping")
+    parser.add_argument("-j","--jinja",type=str,default="android_vhal_mapping_cpp.tpl",help="Jinja2 generator file")
+    parser.add_argument("-I","--include",nargs="+",type=str,default=["templates"],help="Include directories")
+    args = parser.parse_args()
 
     # Always search current directory for include_file
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        else:
-            usage()
-
-    if len(args) != 6:
-        usage()
+    include_dirs.extend(args.include)
 
     # Create cross-reference map between VSS and Android from the YAML file.
-    map_tree = read_mapping_layer.load_tree(args[1])
+    map_tree = read_mapping_layer.load_tree(args.map)
     # Create Android type table from the Android type.hal header file.
-    type_table = type_hal_parser.type_table(args[2])
-
-    typemap = read_type_layer.load_map(args[4])
+    vhal_type = type_hal_parser.VhalType(args.android)
 
     try:
-        vss_tree = vspec_helper.VSpecHelper(vspec.load_tree(args[0], include_dirs))
+        vss_tree = vspec_helper.VSpecHelper(vspec.load_tree(args.vspec, include_dirs))
         # vss_tree = vspec.load_tree(args[0], include_dirs)
     except vspec.VSpecError as e:
         print("Error: {}".format(e))
         exit(255)
+
+    typemap = read_type_layer.TypeMap(map_tree,args.typemap,vss_tree,vhal_type)
 
     #MAP the trees for the Jinja
     jinja_env.globals.update(
     gen=generate_from_tree,
     vss_tree=vss_tree,
     map_tree=map_tree,
-    type_table=type_table,
+    vhal_type=vhal_type,
     typemap=typemap,
-    str=str
     )
 
     #Generate the output CPP file using Jinja2 generator (vss_tree, map_tree, type_table):
-    with open(args[5], "w") as output_file:
-        print(generate_from_tree(map_tree, args[3]),file=output_file)
+    with open(args.output, "w") as output_file:
+        print(generate_from_tree(map_tree, args.jinja),file=output_file)
         output_file.write("//DONE\n")

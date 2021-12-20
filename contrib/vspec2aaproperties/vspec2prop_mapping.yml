@@ -52,7 +52,7 @@ Vehicle.ADAS.ABS.IsActive:
   aospId: VehicleProperty::ABS_ACTIVE
   aospArea: VehicleArea::GLOBAL
 
-Vehicle.Powertrain.CombustionEngine.EOT:
+Vehicle.Powertrain.CombustionEngine.Engine.EOT:
   #convertFloatLinear
   aospId: VehicleProperty::ENGINE_OIL_TEMP
   aospArea: VehicleArea::GLOBAL
