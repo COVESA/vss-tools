@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2021 GENIVI Alliance
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -98,30 +97,6 @@ def _gen_tmpl(node, templatefile: str):
 
 def get_template(filename):
     return jinja_env.get_template(filename)
-
-
-def usage():
-    print(
-        """Usage: vspec2aaprop.py [-I include_dir] vspec_file mapping_file types_hal_file template_file output_file
-  -I include_dir       Add include directory to search for included vspec
-                       files. Can be used multiple times.
-  vspec_file           The top-level vehicle specification file to parse.
-  mapping_file         The VSS-layer that defines mapping between VSS and AA properties
-  types_hal_file       The Android types.hal header file for VHAL type information.
-  template_file        Jinja2 template for the code generation without path.
-  typemap_file         Type mappings and type conversions (VSS, VHAL, C++)
-  output_file          The primary file name to write C++ generated code to.)
-
-  example:vss-tools$ python3 contrib/vspec2aaproperties/vspec2aaprop.py \
-      ../spec/VehicleSignalSpecification.vspec \
-      contrib/vspec2aaproperties/vspec2prop_mapping.yml \
-      contrib/vspec2aaproperties/types.hal \
-      android_vhal_mapping_cpp.tpl \
-      test.cpp
-"""
-    )
-    sys.exit(255)
-
 
 if __name__ == "__main__":
     #
