@@ -10,13 +10,102 @@
 #
 # Constant Types and Mappings
 #
-
 # noinspection PyPackageRequirements
+import re
 from enum import Enum, EnumMeta
-from typing import Sequence, Type, TypeVar
+import pkg_resources
+from typing import (
+    Sequence, Type, TypeVar, Optional, Dict, Tuple, Iterator,
+)
 
+import yaml
+
+
+NON_ALPHANUMERIC_WORD = re.compile('[^A-Za-z0-9]+')
 
 T = TypeVar("T")
+
+
+class VSSConstant(str):
+    """String subclass that can tag it with description and domain.
+    """
+    label: str
+    value: str
+    description: Optional[str] = None
+    domain: Optional[str] = None
+
+    def __new__(cls, label: str, value: str, description: str = "", domain: str = "") -> 'VSSConstant':
+        self = super().__new__(cls, value)
+        self.label = label
+        self.description = description
+        self.domain = domain
+        return self
+
+    @property
+    def value(self):
+        return self
+
+
+def dict_to_constant_config(name: str, info: Dict[str, str]) -> Tuple[str, VSSConstant]:
+    label = info['label']
+    label = NON_ALPHANUMERIC_WORD.sub('', label).upper()
+    description = info.get('description', None)
+    domain = info.get('domain', None)
+    return label, VSSConstant(info['label'], name, description, domain)
+
+
+def iterate_config_members(config: Dict[str, Dict[str, str]]) -> Iterator[Tuple[str, VSSConstant]]:
+    for u, v in config.items():
+        yield dict_to_constant_config(u, v)
+
+
+def get_members_from_default_config(key: str) -> Dict[str, VSSConstant]:
+    with pkg_resources.resource_stream('vspec', 'config.yaml') as config_file:
+        yaml_config = yaml.safe_load(config_file)
+    configs = yaml_config.get(key, {})
+    return dict(iterate_config_members(configs))
+
+
+class VSSRepositoryMeta(type):
+    """This class defines the enumeration behavior for vss:
+     - Access through Class.ATTRIBUTE
+     - Class.add_config(Dict[str, Dict[str, str]]): Adds values from file
+     - from_str(str): reverse lookup
+     - values(): sequence of values
+    """
+
+    def __new__(mcs, cls, bases, classdict):
+        cls = super().__new__(mcs, cls, bases, classdict)
+
+        if not hasattr(cls, '__reverse_lookup__'):
+            cls.__reverse_lookup__ = {
+                v.value: v for v in cls.__members__.values()
+            }
+        if not hasattr(cls, '__values__'):
+            cls.__values__ = list(cls.__reverse_lookup__.keys())
+
+        return cls
+
+    def __getattr__(cls, key: str) -> str:
+        try:
+            return cls.__members__[key]
+        except KeyError as e:
+            raise AttributeError(
+                f"type object '{cls.__name__}' has no attribute '{key}'"
+            ) from e
+
+    def add_config(cls, config: Dict[str, Dict[str, str]]):
+        for k, v in iterate_config_members(config):
+            if v.value not in cls.__reverse_lookup__ and k not in cls.__members__:
+                cls.__members__[k] = v
+                cls.__reverse_lookup__[v.value] = v
+                cls.__values__.append(v.value)
+
+    def from_str(cls: Type[T], value: str) -> T:
+        return cls.__reverse_lookup__[value]
+
+    def values(cls: Type[T]) -> Sequence[str]:
+        return cls.__values__
 
 
 class EnumMetaWithReverseLookup(EnumMeta):
@@ -58,53 +147,11 @@ class StringStyle(Enum, metaclass=EnumMetaWithReverseLookup):
     ALPHANUM_CASE = "alphanumcase"
 
 
-class Unit(Enum, metaclass=EnumMetaWithReverseLookup):
-    MILIMETER = "mm"
-    CENTIMETER = "cm"
-    METER = "m"
-    KILOMETER = "km"
-    KILOMETERPERHOUR = "km/h"
-    METERSPERSECONDSQUARED = "m/s^2"
-    LITER = "l"
-    DEGREECELCIUS = "celsius"
-    DEGREE = "degrees"
-    DEGREEPERSECOND = "degrees/s"
-    KILOWATT = "kW"
-    KILOWATTHOURS = "kWh"
-    KILOGRAMM = "kg"
-    VOLT = "V"
-    AMPERE = "A"
-    SECOND = "s"
-    MINUTE = "min"
-    WEEKS = "weeks"
-    MONTHS = "months"
-    UNIXTIMESTAMP = "UNIX Timestamp"
-    PASCAL = "Pa"
-    KILOPASCAL = "kPa"
-    PERCENT = "percent"
-    CUBICMETER = "cm^3"
-    HORSEPOWER = "PS"
-    STARS = "stars"
-    GRAMMPERSECOND = "g/s"
-    GRAMMPERKM = "g/km"
-    KILOWATTHOURSPER100KM = "kWh/100km"
-    LITERPER100KM = "l/100km"
-    LITERPERHOUR = "l/h"
-    MILESPERGALLON = "mpg"
-    POUND = "lbs"
-    NEWTONMETER = "Nm"
-    REVOLUTIONSPERMINUTE = "rpm"
-    INCH = "inch"
-    RATIO = "ratio"
-
-
 class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
     BRANCH = "branch"
-    RBRANCH = "rbranch"
     ATTRIBUTE = "attribute"
     SENSOR = "sensor"
     ACTUATOR = "actuator"
-    ELEMENT = "element"
 
 
 class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
@@ -120,7 +167,6 @@ class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
     FLOAT = "float"
     DOUBLE = "double"
     STRING = "string"
-    UNIX_TIMESTAMP = "UNIX Timestamp"
     INT8_ARRAY = "int8[]"
     UINT8_ARRAY = "uint8[]"
     INT16_ARRAY = "int16[]"
@@ -133,4 +179,7 @@ class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
     FLOAT_ARRAY = "float[]"
     DOUBLE_ARRAY = "double[]"
     STRING_ARRAY = "string[]"
-    UNIX_TIMESTAMP_ARRAY = "UNIX Timestamp[]"
+
+
+class Unit(metaclass=VSSRepositoryMeta):
+    __members__ = get_members_from_default_config('units')

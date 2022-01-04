@@ -16,22 +16,16 @@ import sys
 import os
 import vspec
 import json
-import getopt
+import argparse
 import ctypes
-
-def usage():
-    print(("Usage:", sys.argv[0], "[-I include_dir] ... vspec_file franca_file"))
-    print ("  -I include_dir       Add include directory to search for included vspec")
-    print ("                       files. Can be used multiple timees.")
-    print ("\n")
-    print (" vspec_file            The vehicle specification file to parse.")
-    print (" franca_file           The file to output the Franca IDL spec to.")
-    sys.exit(255)
-
 import os.path
+
 dllName = "binary/binarytool.so"
 dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
 _cbinary = ctypes.CDLL(dllAbsPath)
+
+
+out_file="undefined"
 
 #void createBinaryCnode(char* fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* enums, char* defaultEnum, char* validate, int children);
 _cbinary.createBinaryCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int)
@@ -97,7 +91,7 @@ def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodeuuid, b_nodedescr
     b_nodedefault = nodedefault.encode('utf-8')
     b_nodevalidate = nodevalidate.encode('utf-8')
 
-    b_fname = args[1].encode('utf-8')
+    b_fname = out_file.encode('utf-8')
 
     createBinaryCnode(b_fname, b_nodename, b_nodetype, b_nodeuuid, b_nodedescription, b_nodedatatype, b_nodemin, b_nodemax, b_nodeunit, b_nodeenum, b_nodedefault, b_nodevalidate, children)
 
@@ -129,30 +123,36 @@ def traverse_tree(tree):
         create_node(key, val)
 
 
+
 if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args= getopt.getopt(sys.argv[1:], "I:v:")
+    # The arguments we accept
 
-    # Always search current directory for include_file
-    vss_version = "unspecified version"
+    parser = argparse.ArgumentParser(description='Convert vspec to binary.')
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str, default=[],
+                    help='Add include directory to search for included vspec files.')
+    #parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
+    parser.add_argument('bin_file', metavar='<bin file>', help='The file to output the binary representation to.')
+
+    args = parser.parse_args()
+
+    #strict=args.strict
+    
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        elif o == "-v":
-            vss_version = a
-        else:
-            usage()
+    include_dirs.extend(args.include_dir)
 
-    if len(args) != 2:
-        usage()
+    out_file=args.bin_file
 
     try:
-        tree = vspec.load(args[0], include_dirs)
+        #This will break traverse_tree
+        #tree = vspec.load_tree(
+        #    args.vspec_file, include_dirs,  break_on_noncore_attribute=strict)
+        #Using deprecated parser instead
+        tree = vspec.load(args.vspec_file, include_dirs)
+
+
     except vspec.VSpecError as e:
         print(("Error: {}".format(e)))
-        exit(255)
+        sys.exit(255)
 
     traverse_tree(tree)

@@ -15,23 +15,11 @@
 import sys
 import vspec
 import yaml
-import getopt
+import argparse
 from vspec.model.vsstree import VSSNode, VSSType
 
 
-def usage():
-    print(
-        "Usage:", sys.argv[0], "[-I include_dir] ... vspec_file [-s] yaml_file")
-    print("  -s                   Use strict checking: Terminate when non-core attribute is found")
-    print("  -I include_dir       Add include directory to search for included vspec")
-    print("                       files. Can be used multiple timees.")
-    print()
-    print(" vspec_file            The vehicle specification file to parse.")
-    print(" yaml_file             The file to output the YAML objects to.")
-    sys.exit(255)
-
-
-def export_node(yaml_dict, node):
+def export_node(yaml_dict, node, generate_uuid):
 
     node_path = node.qualified_name()
 
@@ -65,15 +53,16 @@ def export_node(yaml_dict, node):
         pass
 
     yaml_dict[node_path]["description"] = node.description
-    yaml_dict[node_path]["uuid"] = node.uuid
+    if generate_uuid:
+        yaml_dict[node_path]["uuid"] = node.uuid
 
     for child in node.children:
-        export_node(yaml_dict, child)
+        export_node(yaml_dict, child, generate_uuid)
 
 
-def export_yaml(file, root):
+def export_yaml(file, root, generate_uuids):
     yaml_dict = {}
-    export_node(yaml_dict, root)
+    export_node(yaml_dict, root, generate_uuids)
     yaml.dump(yaml_dict, file, default_flow_style=False, Dumper=NoAliasDumper,
               sort_keys=False, width=1024, indent=2, encoding='utf-8', allow_unicode=True)
 
@@ -90,33 +79,33 @@ class NoAliasDumper(yaml.SafeDumper):
 
 
 if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args = getopt.getopt(sys.argv[1:], "sI:")
-    strict = False
+    # The arguments we accept
 
-    # Always search current directory for include_file
+    parser = argparse.ArgumentParser(description='Convert vspec to yaml.')
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,
+                    help='Add include directory to search for included vspec files.')
+    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('--no-uuid', action='store_true', help='Exclude uuids from generated yaml.' )
+    parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
+    parser.add_argument('yaml_file', metavar='<yaml file>', help='The file to output the YAML objects to.')
+
+    args = parser.parse_args()
+
+    strict = args.strict
+    generate_uuids = not args.no_uuid
+
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        elif o == "-s":
-            strict = True
-        else:
-            usage()
+    include_dirs.extend(args.include_dir)
 
-    if len(args) != 2:
-        usage()
+    yaml_out = open(args.yaml_file, "w", encoding="utf-8")
 
-    yaml_out = open(args[1], "w", encoding="utf-8")
 
     try:
         print("Loading vspec...")
         tree = vspec.load_tree(
-            args[0], include_dirs, merge_private=False, break_on_noncore_attribute=strict)
+            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=strict)
         print("Recursing tree and creating YAML...")
-        export_yaml(yaml_out, tree)
+        export_yaml(yaml_out, tree, generate_uuids)
         print("All done.")
     except vspec.VSpecError as e:
         print(f"Error: {e}")

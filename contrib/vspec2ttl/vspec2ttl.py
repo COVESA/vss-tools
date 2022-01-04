@@ -65,7 +65,7 @@ def setup_graph():
 
     holdsValue = VssoConcepts.HOLDS_VALUE.uri
     g.add((holdsValue, RDF.type, OWL.DatatypeProperty))
-    g.add((holdsValue,RDFS.subPropertyOf, OWL.topDatatypeProperty))
+    g.add((holdsValue,RDFS.subPropertyOf, OWL.topDataProperty))
     g.add((holdsValue,RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
     g.add((holdsValue,RDFS.label, Literal(VssoConcepts.HOLDS_VALUE.value,lang="en")))
 
@@ -85,7 +85,7 @@ def setup_graph():
 
     hasComponentInstance = VssoConcepts.HAS_COMP_INST.uri
     g.add((hasComponentInstance, RDF.type, OWL.DatatypeProperty))
-    g.add((hasComponentInstance,RDFS.subPropertyOf, OWL.topDatatypeProperty))
+    g.add((hasComponentInstance,RDFS.subPropertyOf, OWL.topDataProperty))
     g.add((hasComponentInstance,RDFS.label, Literal(VssoConcepts.HAS_COMP_INST.value,lang="en")))
 
 
@@ -156,7 +156,7 @@ def setup_graph():
 
     # print all the data in the Notation3 format
     print("--- printing mboxes ---")
-    print(g.serialize(format='ttl').decode("utf-8"))
+    print(g.serialize(format='ttl'))
 
     return g
 
@@ -271,7 +271,7 @@ def print_ttl_content(file, tree):
                 enums += 1
 
 
-    file.write(graph.serialize(format='ttl').decode("utf-8"))
+    file.write(graph.serialize(format='ttl'))
 
     print (duplication)
     print (duplication_vsso)

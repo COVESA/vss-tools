@@ -29,6 +29,7 @@ class NonCoreAttributeException(Exception):
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
     description = None
+    comment = ""
     uuid = None
     type: VSSType
     data_type: VSSDataType
@@ -98,6 +99,9 @@ class VSSNode(Node):
 
         if "deprecation" in source_dict.keys():
             self.deprecation = source_dict["deprecation"]
+            
+        if "comment" in source_dict.keys():
+            self.comment = source_dict["comment"]
 
     def is_private(self) -> bool:
         """Checks weather this instance is in private branch of VSS.
@@ -178,15 +182,15 @@ class VSSNode(Node):
         return name
 
     def is_branch(self):
-        return self.type == VSSType.BRANCH or self.type == VSSType.RBRANCH
+        return self.type == VSSType.BRANCH
 
     def is_orphan(self) -> bool:
-        """Checks if this instance is a (r)branch without any child nodes
+        """Checks if this instance is a branch without any child nodes
 
             Returns:
-                True if this instance is a (r)branch and has no children.
+                True if this instance is a branch and has no children.
         """
-        if self.type == VSSType.BRANCH or self.type == VSSType.RBRANCH:
+        if self.type == VSSType.BRANCH:
             return self.is_leaf
         return False
 
@@ -250,7 +254,7 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default" , "instances", "deprecation", "arraysize"]:
+                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment"]:
                 raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 
         if "default" in element.keys():

@@ -1,0 +1,161 @@
+units:
+  mm:
+    label: millimeter
+    description: Distance measured in millimeters
+    domain: distance
+  cm:
+    label: centimeter
+    description: Distance measured in centimeters
+    domain: distance
+  m:
+    label: meter
+    description: Distance measured in meters
+    domain: distance
+  km:
+    label: kilometer
+    description: Distance measured in kilometers
+    domain: distance
+  inch:
+    label: inch
+    description: Distance measured in inches
+    domain: distance
+  km/h:
+    label: kilometer per hour
+    description: Speed measured in kilometers per hours
+    domain: speed
+  m/s^2:
+    label: meters per second squared
+    description: Acceleration measured in meters per second squared
+    domain: acceleration
+  l:
+    label: liter
+    description: Volume measured as liter
+    domain: volume
+  celsius:
+    label: degree celsius
+    description: Temperature measured in degree celsius
+    domain: temperature
+  degrees:
+    label: degree
+    description: Angle measured in degrees
+    domain: angle
+  degrees/s:
+    label: degree per second
+    description: Angular speed measured in degrees per second
+    domain: angular speed
+  kW:
+    label: kilowatt
+    description: Energy measured in kilowatt
+    domain: energy
+  kWh:
+    label: kilowatt hours
+    description: Energy consumption measured in kilowatt hours
+    domain: energy consumption
+  kg:
+    label: kilogram
+    description: Mass measured in kilogram
+    domain: mass
+  lbs:
+    label: pound
+    description: Mass measured in pounds
+    domain: mass
+  V:
+    label: volt
+    description: Electric potential measured in volts
+    domain: electric potential
+  A:
+    label: ampere
+    description: Electric current measured in amperes
+    domain: electric current
+  s:
+    label: second
+    description: Time measured in seconds
+    domain: time
+  min:
+    label: minute
+    description: Time measured in minutes
+    domain: time
+  h:
+    label: hour
+    description: Time measured in hours
+    domain: time
+  day:
+    label: days
+    description: Time measured in days
+    domain: time
+  weeks:
+    label: weeks
+    description: Time measured in weeks
+    domain: time
+  months:
+    label: months
+    description: Time measured in months
+    domain: time
+  years:
+    label: years
+    description: Time measured in years
+    domain: time
+  UNIX Timestamp:
+    label: UNIX Timestamp
+    description: Unix time is a system for describing a point in time. It is the number of seconds that have elapsed since the Unix epoch, excluding leap seconds.
+    domain: point in time
+  Pa:
+    label: pascal
+    description: Pressure measured in pascal
+    domain: pressure
+  kPa:
+    label: kilopascal
+    description: Pressure measured in kilopascal
+    domain: pressure
+  cm^3:
+    label: cubic centimeters
+    description: Volume measured in cubic centimiters
+    domain: volume
+  PS:
+    label: horsepower
+    description: power measured in horsepower
+    domain: power
+  stars:
+    label: stars
+    description: Rating measured in stars
+    domain: rating
+  g/s:
+    label: grams per second
+    description: Mass per time measured in grams per second
+    domain: mass per time
+  g/km:
+    label: grams per kilometer
+    description: Mass per distance measured in grams per kilometers
+    domain: mass per distance
+  kWh/100km:
+    label: kilowatt hours per 100 kilometers
+    description: Energy consumption per distance measured in kilowatt hour per 100 kilometers
+    domain: energy consumption per distance
+  l/100km:
+    label: liter per 100 kilometers
+    description: Volume per distance measured in liters per 100 kilometers
+    domain: volume per distance
+  l/h:
+    label: liter per hour
+    description:
+    domain:
+  mpg:
+    label: miles per gallon
+    description: Distance per volume measured in miles per gallon
+    domain: distance per volume
+  Nm:
+    label: newton meter
+    description: Torque measured in newton meters
+    domain: torque
+  rpm:
+    label: revolutions per minute
+    description:
+    domain: rotational speed
+  ratio:
+    label: ratio
+    description:
+    domain: relation
+  percent:
+    label: percent
+    description: Relation measured in percent
+    domain: relation
