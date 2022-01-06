@@ -81,8 +81,3 @@ export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, ot
 pipenv install --dev # install the development dependencies as well
 pipenv shell         # starts a shell configured to use the virtual environment
 ```
-
-### Setup using plain `pip install`
-* RUN  ```pip install -e .``` from the vss-tools project root directory
-* Run  ```pip install -r requirements.txt```  from the vss-tools project root directory
-
