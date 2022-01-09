@@ -14,7 +14,7 @@ jobs:
           # required in `Pipfile`.
           curl https://pyenv.run | bash
           export PATH="$HOME/.pyenv/bin:$PATH"
-          pyenv install 3.8.5
+          pyenv install 3.8.12
       - name: Install dependencies
         run: |
           python -V
