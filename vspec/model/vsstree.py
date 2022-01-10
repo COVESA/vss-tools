@@ -106,9 +106,9 @@ class VSSNode(Node):
         if "comment" in source_dict.keys():
             self.comment = source_dict["comment"]
 
-        self.check_style(source_dict)
+        self.validate_name_style(source_dict["$file_name$"])
 
-    def check_style(self,source_dict):
+    def validate_name_style(self,sourcefile):
         """Checks wether this node is adhering to VSS style conventions.
 
             Just prints a warning when deviations are detected. A VSS model violating
@@ -117,9 +117,9 @@ class VSSNode(Node):
         """
         camel_regexp=p = re.compile('[A-Z][A-Za-z0-9]*$')
         if self.type != VSSType.BRANCH and self.data_type==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
-            print(f'WARNING: Boolean node "{self.name}" found in file "{source_dict["$file_name$"]}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
+            print(f'WARNING: Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
         if not camel_regexp.match(self.name):
-            print(f'WARNING: Node "{self.name}" found in file "{source_dict["$file_name$"]}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
+            print(f'WARNING: Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
         
 
     def is_private(self) -> bool:
