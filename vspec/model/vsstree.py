@@ -78,9 +78,6 @@ class VSSNode(Node):
         self.type = VSSType.from_str(source_dict["type"])
         self.uuid = source_dict["uuid"]
 
-        if "$file_name$" not in source_dict.keys():
-            source_dict["$file_name$"]="UNKNOWN"
-
         if "datatype" in source_dict.keys():
             self.data_type = VSSDataType.from_str(source_dict["datatype"])
 
