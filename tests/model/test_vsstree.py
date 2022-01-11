@@ -9,7 +9,7 @@ class TestVSSNode(unittest.TestCase):
         """
         Test minimal object construction.
         """
-        source = {"description": "some desc", "type": "branch", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
+        source = {"description": "some desc", "type": "branch", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002", "$file_name$": "testfile" }
         node = VSSNode("test", source)
         self.assertIsNotNone(node)
         self.assertEqual("some desc", node.description)
@@ -25,7 +25,7 @@ class TestVSSNode(unittest.TestCase):
         """
         source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
                   "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "enum": ["one", "two"], "aggregate": False,
-                  "default": "test-default", "instances": ["i1", "i2"]}
+                  "default": "test-default", "instances": ["i1", "i2"], "$file_name$": "testfile" }
         node = VSSNode("test", source)
         self.assertIsNotNone(node)
         self.assertEqual("some desc", node.description)
@@ -47,9 +47,9 @@ class TestVSSNode(unittest.TestCase):
         """
         Test if private attribute construction is correctly working.
         """
-        source_root = {"description": "High-level vehicle data.", "type": "branch", "uuid": "f6750f15-ba2f-4eab-adcc-19a500982293"}
-        source_private = {"description": "Private vehicle data.", "type": "branch", "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b"}
-        source_private_element = {"description": "Private vehicle data.", "type": "sensor", "datatype": "string", "uuid": "9101bbea-aeb6-4b0e-8cec-d8b126e77898"}
+        source_root = {"description": "High-level vehicle data.", "type": "branch", "uuid": "f6750f15-ba2f-4eab-adcc-19a500982293", "$file_name$": "testfile"}
+        source_private = {"description": "Private vehicle data.", "type": "branch", "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b", "$file_name$": "testfile"}
+        source_private_element = {"description": "Private vehicle data.", "type": "sensor", "datatype": "string", "uuid": "9101bbea-aeb6-4b0e-8cec-d8b126e77898", "$file_name$": "testfile"}
         node_root = VSSNode("Vehicle", source_root)
         node_private = VSSNode("Private", source_private, node_root)
         node_private_element = VSSNode("Element", source_private_element, node_private)
@@ -62,10 +62,10 @@ class TestVSSNode(unittest.TestCase):
         Tests if merging two nodes works as expected
         """
 
-        target = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "e36a1d8c-4d06-4c22-ba69-e8b39434a7a3"}
+        target = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "e36a1d8c-4d06-4c22-ba69-e8b39434a7a3","$file_name$": "testfile"}
 
         source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
-                  "datatype": "uint8", "unit": "km", "min": 0, "max": 100}
+                  "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "$file_name$": "testfile"}
 
         node_target = VSSNode("MyNode", target)
         node_source = VSSNode("Private", source)
@@ -85,14 +85,14 @@ class TestVSSNode(unittest.TestCase):
         """
         Tests string style conversion
         """
-        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
+        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002", "$file_name$": "testfile"}
         node = VSSNode("test", source)
 
         self.assertEqual("TEST", node.qualified_name(".", StringStyle.UPPER_CASE))
         self.assertEqual("Test", node.qualified_name(".", StringStyle.CAPITAL_CASE))
         self.assertEqual("test", node.qualified_name(".", StringStyle.LOWER_CASE))
 
-        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002"}
+        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002", "$file_name$": "testfile"}
         node = VSSNode("LongerTestName", source)
         self.assertEqual("LONGERTESTNAME", node.qualified_name(".", StringStyle.UPPER_CASE))
         self.assertEqual("LongerTestName", node.qualified_name(".", StringStyle.CAPITAL_CASE))
@@ -104,9 +104,9 @@ class TestVSSNode(unittest.TestCase):
         """
         Test if tree can be found withing VSS tree
         """
-        source_root = {"description": "High-level vehicle data.", "type": "branch", "uuid": "f6750f15-ba2f-4eab-adcc-19a500982293"}
-        source_drivetrain = {"description": "Drivetrain branch.", "type": "branch", "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b"}
-        source_drivetrain_element = {"description": "Some Drivetrain element.", "type": "sensor", "datatype": "string", "uuid": "9101bbea-aeb6-4b0e-8cec-d8b126e77898"}
+        source_root = {"description": "High-level vehicle data.", "type": "branch", "uuid": "f6750f15-ba2f-4eab-adcc-19a500982293", "$file_name$": "testfile"}
+        source_drivetrain = {"description": "Drivetrain branch.", "type": "branch", "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b", "$file_name$": "testfile"}
+        source_drivetrain_element = {"description": "Some Drivetrain element.", "type": "sensor", "datatype": "string", "uuid": "9101bbea-aeb6-4b0e-8cec-d8b126e77898", "$file_name$": "testfile"}
         node_root = VSSNode("Vehicle", source_root)
         node_drivetrain = VSSNode("Drivetrain", source_drivetrain, node_root)
         node_drivetrain_element = VSSNode("SomeElement", source_drivetrain_element, node_drivetrain)
@@ -118,8 +118,8 @@ class TestVSSNode(unittest.TestCase):
         """
         Test if vssnode finds orphan (r)branches.
         """
-        source_root = {"description": "High-level vehicle data.", "type": "branch", "uuid": "f6750f15-ba2f-4eab-adcc-19a500982293"}
-        source_drivetrain = {"description": "Drivetrain branch.", "type": "branch", "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b"}
+        source_root = {"description": "High-level vehicle data.", "type": "branch", "uuid": "f6750f15-ba2f-4eab-adcc-19a500982293", "$file_name$": "testfile"}
+        source_drivetrain = {"description": "Drivetrain branch.", "type": "branch", "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b", "$file_name$": "testfile"}
         node_root = VSSNode("Vehicle", source_root)
         node_drivetrain = VSSNode("Drivetrain", source_drivetrain, node_root)
 
