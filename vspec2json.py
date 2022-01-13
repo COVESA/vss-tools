@@ -33,8 +33,8 @@ def export_node(json_dict, node, generate_uuid):
         json_dict[node.name]["min"] = node.min
     if node.max != "":
         json_dict[node.name]["max"] = node.max
-    if node.enum != "":
-        json_dict[node.name]["enum"] = node.enum
+    if node.allowed != "":
+        json_dict[node.name]["allowed"] = node.allowed
     if node.default_value != "":
         json_dict[node.name]["default"] = node.default_value
     if node.deprecation != "":

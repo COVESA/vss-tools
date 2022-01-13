@@ -63,8 +63,8 @@ def traverse_tree(tree, outf, prefix_arr, is_first_element):
         if "unit" in val:
             outf.write("    unit: {}\n".format(val["unit"]))
 
-        if "enum" in val:
-            outf.write("    enum: {}\n".format(val["enum"]))
+        if "allowed" in val:
+            outf.write("    allowed: {}\n".format(val["allowed"]))
 
         if "sensor" in val:
             outf.write("    sensor: {}\n".format(val["sensor"]))

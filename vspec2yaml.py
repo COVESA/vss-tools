@@ -35,8 +35,8 @@ def export_node(yaml_dict, node, generate_uuid):
         yaml_dict[node_path]["min"] = node.min
     if node.max != "":
         yaml_dict[node_path]["max"] = node.max
-    if node.enum != "":
-        yaml_dict[node_path]["enum"] = node.enum
+    if node.allowed != "":
+        yaml_dict[node_path]["allowed"] = node.allowed
     if node.default_value != "":
         yaml_dict[node_path]["default"] = node.default_value
     if node.deprecation != "":

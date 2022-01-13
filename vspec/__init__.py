@@ -270,7 +270,7 @@ def load_flat_model(file_name, prefix, include_paths):
 # 1. If no type is specified, default it to "branch".
 # 2. Check that the declared type is a FrancaIDL.
 # 3. Correct the  casing of type.
-# 4, Check that enums are provided as arrays.
+# 4, Check that allowed values are provided as arrays.
 #
 def cleanup_flat_entries(flat_model):
     available_types = ["sensor", "actuator", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
@@ -296,8 +296,8 @@ def cleanup_flat_entries(flat_model):
         # Get the correct casing for the type.
         elem["type"] = available_types[available_downcase_types.index(elem["type"].lower())]
 
-        if "enum" in elem and not isinstance(elem["enum"], list):
-            raise VSpecError(elem["$file_name$"], elem["$line$"], "Enum is not an array.")
+        if "allowed" in elem and not isinstance(elem["allowed"], list):
+            raise VSpecError(elem["$file_name$"], elem["$line$"], "Allowed values are not represented as array.")
 
     return flat_model
 
