@@ -79,16 +79,17 @@ if __name__ == "__main__":
     # The arguments we accept
 
     parser = argparse.ArgumentParser(description='Convert vspec to json.')
-    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,  default=[],
                     help='Add include directory to search for included vspec files.')
-    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when anything not covered or not recommended by the core VSS specs is found.')
+    parser.add_argument('--abort-on-non-core-attribute', action='store_true', help=" Terminate when non-core attribute is found.")
+    parser.add_argument('--abort-on-name-style', action='store_true', help=" Terminate naming style not follows recommendations.")
     parser.add_argument('--no-uuid', action='store_true', help='Exclude uuids from generated json.' )
     parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
     parser.add_argument('json_file', metavar='<json file>', help='The file to output the JSON objects to.')
 
     args = parser.parse_args()
 
-    strict=args.strict
     generate_uuids=not args.no_uuid
 
     include_dirs = ["."]
@@ -96,10 +97,19 @@ if __name__ == "__main__":
 
     json_out = open(args.json_file, "w")
 
+    abort_on_non_core_attribute = False
+    abort_on_namestyle = False
+
+    if args.abort_on_non_core_attribute  or args.strict:
+        abort_on_non_core_attribute = True
+    if args.abort_on_name_style or args.strict:
+        abort_on_namestyle = True
+
+
     try:
         print("Loading vspec...")
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=strict)
+            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle)
         print("Recursing tree and creating JSON...")
         export_json(json_out, tree, generate_uuids)
         print("All done.")

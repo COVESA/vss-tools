@@ -36,7 +36,7 @@ All current tools are based on common Python functionality in the `vspec` folder
 ## Getting started
 
 ### Prerequisites
-* Python 3.7 installed
+* Python 3.8.12 installed
 * If the installation (pip install) is executed behind a (corporate) proxy, the following environments variables must be set: `http_proxy` and `https_proxy` (including authentication e.g., `http://${proxy_username):$(proxy_password)@yourproxy.yourdomain`)
 * If you do not run with administration rights, you may need to configure pip target path to write to your user home directory or consider [using the `pipenv` method](#setup-with-pipenv).
 
@@ -70,9 +70,9 @@ curl https://pyenv.run | bash  # download and install
 exec $SHELL                    # restart your shell using the new $PATH
 ```
 
-Make sure Python version 3.8.5 is installed:
+Make sure Python version 3.8.12 is installed:
 ```sh
-pyenv install 3.8.5  # install the versions required by Pipfile
+pyenv install 3.8.12  # install the versions required by Pipfile
 ```
 
 Install this project and its dependencies in the local `.venv` folder in this project, then use it (`pipenv shell`):
@@ -81,8 +81,3 @@ export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, ot
 pipenv install --dev # install the development dependencies as well
 pipenv shell         # starts a shell configured to use the virtual environment
 ```
-
-### Setup using plain `pip install`
-* RUN  ```pip install -e .``` from the vss-tools project root directory
-* Run  ```pip install -r requirements.txt```  from the vss-tools project root directory
-
