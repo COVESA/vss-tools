@@ -7,9 +7,6 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-#
-# Convert vspec file to GraphQL
-#
 
 import sys
 import re
@@ -21,6 +18,12 @@ from .constants import VSSType, VSSDataType, StringStyle, Unit
 DEFAULT_SEPARATOR = "."
 
 class NonCoreAttributeException(Exception):
+    def __init__(self, message):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+class NameStyleValidationException(Exception):
     def __init__(self, message):
 
         # Call the base class constructor with the parameters it needs
@@ -46,7 +49,7 @@ class VSSNode(Node):
     instances = None
     deprecation = ""
 
-    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False):
+    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False, break_on_name_style_violation=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
             Args:
@@ -54,6 +57,8 @@ class VSSNode(Node):
                 source_dict: VSS instance represented as dict from yaml parsing.
                 parent: Optional parent of this node instance.
                 children: Optional children instances of this node.
+                break_on_noncore_attribute: Throw an exception if the node contains attributes not in core VSS specification
+                break_on_name_style_vioation: Throw an exception if this node's name is not follwing th VSS recommended style
 
             Returns:
                 VSSNode object according to the Vehicle Signal Specification.
@@ -102,6 +107,28 @@ class VSSNode(Node):
             
         if "comment" in source_dict.keys():
             self.comment = source_dict["comment"]
+
+        try:
+            self.validate_name_style(source_dict["$file_name$"])
+        except NameStyleValidationException as e:
+            print(f"Warning: {e}")
+            if break_on_name_style_violation:
+                print("You asked for strict checking. Terminating.")
+                sys.exit(-1)
+            
+    def validate_name_style(self,sourcefile):
+        """Checks wether this node is adhering to VSS style conventions.
+
+            Throws NameStyleValidationException when deviations are detected. A VSS model violating
+            this conventions can still be a valid model.
+
+        """
+        camel_regexp=p = re.compile('[A-Z][A-Za-z0-9]*$')
+        if self.type != VSSType.BRANCH and self.data_type==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
+            raise NameStyleValidationException(f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
+        if not camel_regexp.match(self.name):
+            raise NameStyleValidationException(f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
+        
 
     def is_private(self) -> bool:
         """Checks weather this instance is in private branch of VSS.
@@ -254,7 +281,7 @@ class VSSNode(Node):
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
-                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment"]:
+                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]:
                 raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 
         if "default" in element.keys():
@@ -266,7 +293,6 @@ def camel_case(st):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', st)
     s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
     return re.sub(r'(?:^|_)([a-z])', lambda x: x.group(1).upper(), s2)
-
 
 def camel_back(st):
     """Camel back string conversion"""
