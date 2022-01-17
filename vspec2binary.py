@@ -27,23 +27,23 @@ _cbinary = ctypes.CDLL(dllAbsPath)
 
 out_file="undefined"
 
-#void createBinaryCnode(char* fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* enums, char* defaultEnum, char* validate, int children);
+#void createBinaryCnode(char* fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* allowed, char* defaultAllowed, char* validate, int children);
 _cbinary.createBinaryCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int)
 
-def createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, enums, defaultEnum, validate, children):
+def createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, allowed, defaultAllowed, validate, children):
     global _cbinary
-    _cbinary.createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, enums, defaultEnum, validate, children)
+    _cbinary.createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, allowed, defaultAllowed, validate, children)
 
-def enumString(enumList):
-    enumStr = ""
-    for elem in enumList:
-        enumStr += hexEnumLen(elem) + elem
-#    print("enumstr=" + enumStr + "\n")
-    return enumStr
+def allowedString(allowedList):
+    allowedStr = ""
+    for elem in allowedList:
+        allowedStr += hexAllowedLen(elem) + elem
+#    print("allowedstr=" + allowedStr + "\n")
+    return allowedStr
 
-def hexEnumLen(enum):
-    hexDigit1 = len(enum) // 16
-    hexDigit2 = len(enum) - hexDigit1*16
+def hexAllowedLen(allowed):
+    hexDigit1 = len(allowed) // 16
+    hexDigit2 = len(allowed) - hexDigit1*16
 #    print("Hexdigs:" + str(hexDigit1) + str(hexDigit2))
     return "".join([intToHexChar(hexDigit1), intToHexChar(hexDigit2)])
 
@@ -58,7 +58,7 @@ def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodeuuid, b_nodedescr
     nodemin = ""
     nodemax = ""
     nodeunit = ""
-    nodeenum = ""
+    nodeallowed = ""
     nodedefault = ""
     nodevalidate = ""
 
@@ -74,8 +74,8 @@ def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodeuuid, b_nodedescr
     if "unit" in val:
         nodeunit = val["unit"]
 
-    if "enum" in val:
-        nodeenum = enumString(val["enum"])
+    if "allowed" in val:
+        nodeallowed = allowedString(val["allowed"])
 
     if "default" in val:
         nodedefault = str(val["default"])
@@ -87,13 +87,13 @@ def create_node_legacy(key, val, b_nodename, b_nodetype, b_nodeuuid, b_nodedescr
     b_nodemin = nodemin.encode('utf-8')
     b_nodemax = nodemax.encode('utf-8')
     b_nodeunit = nodeunit.encode('utf-8')
-    b_nodeenum = nodeenum.encode('utf-8')
+    b_nodeallowed = nodeallowed.encode('utf-8')
     b_nodedefault = nodedefault.encode('utf-8')
     b_nodevalidate = nodevalidate.encode('utf-8')
 
     b_fname = out_file.encode('utf-8')
 
-    createBinaryCnode(b_fname, b_nodename, b_nodetype, b_nodeuuid, b_nodedescription, b_nodedatatype, b_nodemin, b_nodemax, b_nodeunit, b_nodeenum, b_nodedefault, b_nodevalidate, children)
+    createBinaryCnode(b_fname, b_nodename, b_nodetype, b_nodeuuid, b_nodedescription, b_nodedatatype, b_nodemin, b_nodemax, b_nodeunit, b_nodeallowed, b_nodedefault, b_nodevalidate, children)
 
 def create_node(key, val):
     nodename = key
