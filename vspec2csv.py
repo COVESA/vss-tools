@@ -48,22 +48,22 @@ if __name__ == "__main__":
     # The arguments we accept
 
     parser = argparse.ArgumentParser(description='Convert vspec to csv.')
-    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str, default=[],
                     help='Add include directory to search for included vspec files.')
-    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when non-core attribute is found.' )
+    parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when anything not covered or not recommended by the core VSS specs is found.' )
     parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
     parser.add_argument('csv_file', metavar='<csv file>', help='The file to output the CSV data to.')
 
     args = parser.parse_args()
 
-    strict=args.strict
+    strict = args.strict
 
     include_dirs = ["."]
     include_dirs.extend(args.include_dir)
 
     try:
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=strict)
+            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=strict, break_on_name_style_violation=strict)
         with open(args.csv_file, "w") as f:
             print_csv_header(f)
             print_csv_content(f, tree)

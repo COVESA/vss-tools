@@ -8,16 +8,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
-
+      - name: Install pyenv
+        run: |
+          # Needed for using exact python version, which is
+          # required in `Pipfile`.
+          curl https://pyenv.run | bash
+          export PATH="$HOME/.pyenv/bin:$PATH"
+          pyenv install 3.8.12
       - name: Install dependencies
         run: |
           python -V
-          pip install -r requirements.txt
-          python setup.py -q install
+          python -m pip --quiet --no-input install --upgrade pip 
+          python -m pip --quiet --no-input install --upgrade pipenv wheel
+          pipenv install
+          pipenv run python setup.py -q install
+        env:
+          PIPENV_VENV_IN_PROJECT: 1
 
       - name: Prepare vss-tools inside VSS
         run: |
@@ -36,10 +42,16 @@ jobs:
         run: |
           # "Our" version of vss-tools was prepared inside VSS => go there and run tests
           cd ../vehicle_signal_specification
-          make travis_targets
-
+          pipenv install
+          pipenv run make travis_targets
+        env:
+          PIPENV_PIPFILE: ./vss-tools/Pipfile
+          PIPENV_VENV_IN_PROJECT: 1
       - name: Test optional targets. NOTE - always succeeds
         run: |
           cd ../vehicle_signal_specification
-          make -k travis_optional || true
-
+          pipenv install
+          pipenv run make -k travis_optional || true
+        env:
+          PIPENV_PIPFILE: ./vss-tools/Pipfile
+          PIPENV_VENV_IN_PROJECT: 1
