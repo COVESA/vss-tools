@@ -370,15 +370,15 @@ int hexToInt(char hexDigit) {
     return (int)(hexDigit - 'A' + 10);
 }
 
-int countEnumElements(char* enumStr) {  // enum string has format "XXenum1XXenum2...XXenumx", where XX are hex values; X=[0-9,A-F]
-    int enums = 0;
-    for (int index = 0 ; index < strlen(enumStr) ; ) {
-        char* hexLen = &(enumStr[index]);
-        int enumLen = hexToInt(hexLen[0]) * 16 + hexToInt(hexLen[1]);
-        index += enumLen + 2;
-        enums++;
+int countAllowedElements(char* allowedStr) {  // allowed string has format "XXallowed1XXallowed2...XXallowedx", where XX are hex values; X=[0-9,A-F]
+    int allowed = 0;
+    for (int index = 0 ; index < strlen(allowedStr) ; ) {
+        char* hexLen = &(allowedStr[index]);
+        int allowedLen = hexToInt(hexLen[0]) * 16 + hexToInt(hexLen[1]);
+        index += allowedLen + 2;
+        allowed++;
     }
-    return enums;
+    return allowed;
 }
 
 char hexDigit(int value) {
@@ -399,20 +399,20 @@ char* intToHex(int intVal) {
     return hexVal;
 }
 
-enum_t enumElement;  // only used by extractEnumElement
-char* extractEnumElement(char* enumBuf, int elemIndex) {
-    int enumstart;
-    int enumLen;
+allowed_t allowedElement;  // only used by extractAllowedElement
+char* extractAllowedElement(char* allowedBuf, int elemIndex) {
+    int allowedstart;
+    int allowedLen;
     int bufIndex = 0;
-    for (int enums = 0 ; enums <= elemIndex ; enums++) {
-        char* hexLen = &(enumBuf[bufIndex]);
-        enumLen = hexToInt(hexLen[0]) * 16 + hexToInt(hexLen[1]);
-        enumstart = bufIndex + 2;
-        bufIndex += enumLen + 2;
+    for (int alloweds = 0 ; alloweds <= elemIndex ; alloweds++) {
+        char* hexLen = &(allowedBuf[bufIndex]);
+        allowedLen = hexToInt(hexLen[0]) * 16 + hexToInt(hexLen[1]);
+        allowedstart = bufIndex + 2;
+        bufIndex += allowedLen + 2;
     }
-    strncpy(enumElement, &(enumBuf[enumstart]), enumLen);
-    enumElement[enumLen] = 0;
-    return (char*)&enumElement;
+    strncpy(allowedElement, &(allowedBuf[allowedstart]), allowedLen);
+    allowedElement[allowedLen] = 0;
+    return (char*)&allowedElement;
 }
 
 void populateNode(node_t* thisNode) {
@@ -477,29 +477,29 @@ printf("max: %s\n", thisNode->max);
 printf("unit: %s\n", thisNode->unit);
 	}
 
-	uint8_t enumLen;
-	ret = fread(&enumLen, sizeof(uint8_t), 1, treeFp);
-	if (enumLen > 0) {
-		char* enumStr = (char*) malloc(sizeof(char)*(enumLen+1));
-		ret = fread(enumStr, sizeof(char)*enumLen, 1, treeFp);
-		enumStr[enumLen] = '\0';
- 	        thisNode->enums = (uint8_t)countEnumElements(enumStr);
-	        if (thisNode->enums > 0) {
-		        thisNode->enumDef = (enum_t*) malloc(sizeof(enum_t)*(thisNode->enums));
+	uint8_t allowedLen;
+	ret = fread(&allowedLen, sizeof(uint8_t), 1, treeFp);
+	if (allowedLen > 0) {
+		char* allowedStr = (char*) malloc(sizeof(char)*(allowedLen+1));
+		ret = fread(allowedStr, sizeof(char)*allowedLen, 1, treeFp);
+		allowedStr[allowedLen] = '\0';
+ 	        thisNode->allowed = (uint8_t)countAllowedElements(allowedStr);
+	        if (thisNode->allowed > 0) {
+		        thisNode->allowedDef = (allowed_t*) malloc(sizeof(allowed_t)*(thisNode->allowed));
                 }
-	        for (int i = 0 ; i < thisNode->enums ; i++) {
-	            strcpy(thisNode->enumDef[i], extractEnumElement(enumStr, i));
+	        for (int i = 0 ; i < thisNode->allowed ; i++) {
+	            strcpy(thisNode->allowedDef[i], extractAllowedElement(allowedStr, i));
 	        }
 	} else {
-	    thisNode->enums = 0;
+	    thisNode->allowed = 0;
 	}
 
 	ret = fread(&(thisNode->defaultLen), sizeof(uint8_t), 1, treeFp);
 	if (thisNode->defaultLen > 0) {
-		thisNode->defaultEnum = (char*) malloc(sizeof(char)*(thisNode->defaultLen+1));
-		ret = fread(thisNode->defaultEnum, sizeof(char)*thisNode->defaultLen, 1, treeFp);
-		thisNode->defaultEnum[thisNode->defaultLen] = '\0';
-printf("default: %s\n", thisNode->defaultEnum);
+		thisNode->defaultAllowed = (char*) malloc(sizeof(char)*(thisNode->defaultLen+1));
+		ret = fread(thisNode->defaultAllowed, sizeof(char)*thisNode->defaultLen, 1, treeFp);
+		thisNode->defaultAllowed[thisNode->defaultLen] = '\0';
+printf("default: %s\n", thisNode->defaultAllowed);
 	}
 
 	uint8_t validateLen;
@@ -520,17 +520,17 @@ printf("children: %d\n", thisNode->children);
 	printf("populateNode: %s\n", thisNode->name);
 }
 
-int calculatEnumStrLen(uint8_t enums, enum_t* enumDef) {
+int calculatAllowedStrLen(uint8_t alloweds, allowed_t* allowedDef) {
     int strLen = 0;
-    for (int i = 0 ; i < enums ; i++) {
-        strLen += strlen((char*)(enumDef[i])) + 2;
+    for (int i = 0 ; i < alloweds ; i++) {
+        strLen += strlen((char*)(allowedDef[i])) + 2;
     }
     return strLen;
 }
 
-void enumWrite(char* theEnum) {
-    fwrite(intToHex(strlen(theEnum)), 2, 1, treeFp);
-    fwrite(theEnum, sizeof(char)*strlen(theEnum), 1, treeFp);
+void allowedWrite(char* theAllowed) {
+    fwrite(intToHex(strlen(theAllowed)), 2, 1, treeFp);
+    fwrite(theAllowed, sizeof(char)*strlen(theAllowed), 1, treeFp);
 }
 
 void writeNode(struct node_t* node) {
@@ -578,21 +578,21 @@ printf("dataType: %s\n", dataType);
 		fwrite(node->unit, sizeof(char)*node->unitLen, 1, treeFp);
 	}
 
-        int enumStrLen = 0;
-        if (node->enums > 0) {
-            enumStrLen = calculatEnumStrLen(node->enums, node->enumDef);
-            fwrite(&enumStrLen, sizeof(uint8_t), 1, treeFp);
-printf("enumStrLen: %d\n", enumStrLen);
-	    for (int i = 0 ; i < node->enums ; i++) {
-	        enumWrite((char*)(node->enumDef[i]));
+        int allowedStrLen = 0;
+        if (node->allowed > 0) {
+            allowedStrLen = calculatAllowedStrLen(node->allowed, node->allowedDef);
+            fwrite(&allowedStrLen, sizeof(uint8_t), 1, treeFp);
+printf("allowedStrLen: %d\n", allowedStrLen);
+	    for (int i = 0 ; i < node->allowed ; i++) {
+	        allowedWrite((char*)(node->allowedDef[i]));
 	    }
         } else {
-            fwrite(&enumStrLen, sizeof(uint8_t), 1, treeFp);
+            fwrite(&allowedStrLen, sizeof(uint8_t), 1, treeFp);
         }
 
 	fwrite(&(node->defaultLen), sizeof(uint8_t), 1, treeFp);
 	if (node->defaultLen > 0) {
-		fwrite(node->defaultEnum, sizeof(char)*node->defaultLen, 1, treeFp);
+		fwrite(node->defaultAllowed, sizeof(char)*node->defaultLen, 1, treeFp);
 	}
 
 	char* validate = validateToString(node->validate);
@@ -825,15 +825,15 @@ char* VSSgetDescr(long nodeHandle) {
 	return ((node_t*)((intptr_t)nodeHandle))->description;
 }
 
-int VSSgetNumOfEnumElements(long nodeHandle) {
+int VSSgetNumOfAllowedElements(long nodeHandle) {
 	nodeTypes_t type = VSSgetType(nodeHandle);
 	if (type != BRANCH)
-		return (int)(((node_t*)((intptr_t)nodeHandle))->enums);
+		return (int)(((node_t*)((intptr_t)nodeHandle))->allowed);
 	return 0;
 }
 
-char* VSSgetEnumElement(long nodeHandle, int index) {
-	return (char*)(((node_t*)((intptr_t)nodeHandle))->enumDef[index]);
+char* VSSgetAllowedElement(long nodeHandle, int index) {
+	return (char*)(((node_t*)((intptr_t)nodeHandle))->allowedDef[index]);
 }
 
 char* VSSgetUnit(long nodeHandle) {
