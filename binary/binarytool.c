@@ -19,8 +19,8 @@
 
 FILE* treeFp;
 
-void writeNodeData(char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* enums, char* defaultEnum, char* validate, int children) {
-printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Enums=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, enums);
+void writeNodeData(char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* allowed, char* defaultAllowed, char* validate, int children) {
+printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Allowed=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, allowed);
     uint8_t nameLen  = (uint8_t)strlen(name);
     uint8_t typeLen = (uint8_t)strlen(type);
     uint8_t uuidLen  = (uint8_t)strlen(uuid);
@@ -29,17 +29,17 @@ printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=
     uint8_t minLen = (uint8_t)strlen(min);
     uint8_t maxLen = (uint8_t)strlen(max);
     uint8_t unitLen = (uint8_t)strlen(unit);
-    uint8_t enumsLen = (uint8_t)strlen(enums);
-    uint8_t defaultEnumLen = (uint8_t)strlen(defaultEnum);
+    uint8_t allowedLen = (uint8_t)strlen(allowed);
+    uint8_t defaultAllowedLen = (uint8_t)strlen(defaultAllowed);
     uint8_t validateLen = (uint8_t)strlen(validate);
     
     if (descrLen > 255) {
         printf("Description length=%d, is larger than 255.\n", descrLen);
         descrLen = 255;
     }
-    if (enumsLen > 255) {
-        printf("Enums length=%d, is larger than 255.\n", enumsLen);
-        enumsLen = 255;
+    if (allowedLen > 255) {
+        printf("Allowed length=%d, is larger than 255.\n", allowedLen);
+        allowedLen = 255;
     }
 
     fwrite(&nameLen, sizeof(uint8_t), 1, treeFp);
@@ -66,13 +66,13 @@ printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=
     if (unitLen > 0) {
         fwrite(unit, sizeof(char)*unitLen, 1, treeFp);
     }
-    fwrite(&enumsLen, sizeof(uint8_t), 1, treeFp);
-    if (enumsLen > 0) {
-        fwrite(enums, sizeof(char)*enumsLen, 1, treeFp);
+    fwrite(&allowedLen, sizeof(uint8_t), 1, treeFp);
+    if (allowedLen > 0) {
+        fwrite(allowed, sizeof(char)*allowedLen, 1, treeFp);
     }
-    fwrite(&defaultEnumLen, sizeof(uint8_t), 1, treeFp);
-    if (defaultEnumLen > 0) {
-        fwrite(defaultEnum, sizeof(char)*defaultEnumLen, 1, treeFp);
+    fwrite(&defaultAllowedLen, sizeof(uint8_t), 1, treeFp);
+    if (defaultAllowedLen > 0) {
+        fwrite(defaultAllowed, sizeof(char)*defaultAllowedLen, 1, treeFp);
     }
     fwrite(&validateLen, sizeof(uint8_t), 1, treeFp);
     if (validateLen > 0) {
@@ -81,13 +81,13 @@ printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=
     fwrite(&children, sizeof(uint8_t), 1, treeFp);
 }
 
-void createBinaryCnode(char*fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* enums, char* defaultEnum, char* validate, int children) {
+void createBinaryCnode(char*fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* allowed, char* defaultAllowed, char* validate, int children) {
     treeFp = fopen(fname, "a");
     if (treeFp == NULL) {
         printf("Could not open file for writing of tree.\n");
         return;
     }
-    writeNodeData(name, type, uuid, descr, datatype, min, max, unit, enums, defaultEnum, validate, children);
+    writeNodeData(name, type, uuid, descr, datatype, min, max, unit, allowed, defaultAllowed, validate, children);
     fclose(treeFp);
 }
 

@@ -41,8 +41,8 @@ func showNodeData(currentNode *def.Node_t, currentChild int) {
         if (parser.VSSgetNumOfChildren(currentNode) > 0) {
             fmt.Printf("Node child[%d]=%s\n", currentChild, parser.VSSgetName(parser.VSSgetChild(currentNode, currentChild)))
         }
-        for i := 0 ; i < parser.VSSgetNumOfEnumElements(currentNode) ; i++ {
-            fmt.Printf("Enum[%d]=%s\n", i, parser.VSSgetEnumElement(currentNode, i))
+        for i := 0 ; i < parser.VSSgetNumOfAllowedElements(currentNode) ; i++ {
+            fmt.Printf("Allowed[%d]=%s\n", i, parser.VSSgetAllowedElement(currentNode, i))
         }
         dtype := parser.VSSgetDatatype(currentNode)
         if (dtype != 0) {

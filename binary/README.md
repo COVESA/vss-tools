@@ -54,16 +54,16 @@ The binary node file format is as follows:<br>
     Max         | chararray | MaxLen<br>
     UnitLen     | uint8     | 1<br>
     Unit        | chararray | UnitLen<br>
-    EnumLen     | uint8     | 1<br>
-    Enums       | chararray | EnumLen<br>
+    AllowedLen  | uint8     | 1<br>
+    Allowed     | chararray | AllowedLen<br>
     DefaultLen  | uint8     | 1<br>
-    Default     | chararray | EnumLen<br>
+    Default     | chararray | AllowedLen<br>
     ValidateLen | uint8     | 1<br>
     Validate    | chararray | ValidateLen<br>
     Children    | uint8     | 1<br><br>
 
-The Enums string contains an array of enums, each enum is preceeded by two characters holding the size of the enum sub-string. 
-The size is in hex format, with values from "01" to "FF". An example is "03abc0A012345678902cd" which contains the three enums "abc", "0123456789", and "cd".<br><br>
+The Allowed string contains an array of allowed, each Allowed is preceeded by two characters holding the size of the Allowed sub-string. 
+The size is in hex format, with values from "01" to "FF". An example is "03abc0A012345678902cd" which contains the three Alloweds "abc", "0123456789", and "cd".<br><br>
 
 The nodes are written into the file in the order given by an iterative method as shown in the following pseudocode.<br>
 def traverseAndWriteNode(thisNode):<br>

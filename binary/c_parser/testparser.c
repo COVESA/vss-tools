@@ -91,9 +91,9 @@ void showNodeData(long currentNode, int currentChild) {
         printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d,\ndescription = %s\n", VSSgetName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), VSSgetValidation(currentNode), VSSgetNumOfChildren(currentNode), VSSgetDescr(currentNode));
         if (VSSgetNumOfChildren(currentNode) > 0)
             printf("Node child[%d]=%s\n", currentChild, VSSgetName(VSSgetChild(currentNode, currentChild)));
-//        for (int i = 0 ; i < VSSgetNumOfEnumElements(currentNode) ; i++)
-//            printf("Enum[%d]=%s\n", i, VSSgetEnumElement(currentNode, i));
-        printf("#enums=%d\n", VSSgetNumOfEnumElements(currentNode));
+//        for (int i = 0 ; i < VSSgetNumOfAllowedElements(currentNode) ; i++)
+//            printf("Allowed[%d]=%s\n", i, VSSgetAllowedElement(currentNode, i));
+        printf("#allowed=%d\n", VSSgetNumOfAllowedElements(currentNode));
         nodeDatatypes_t dtype = VSSgetDatatype(currentNode);
         if (dtype != -1)
             printf("Datatype = %d\n", dtype);

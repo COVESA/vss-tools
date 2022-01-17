@@ -14,7 +14,7 @@ import "fmt"
 
 type NodeTypes_t uint8
 
-const (   // enum elements of nodeTypes_t
+const (   // allowed elements of nodeTypes_t
     SENSOR = 1
     ACTUATOR = 2
     ATTRIBUTE = 3
@@ -23,7 +23,7 @@ const (   // enum elements of nodeTypes_t
 
 type NodeDatatypes_t uint8
 
-const (   // enum elements of nodeDatatypes_t
+const (   // allowed elements of nodeDatatypes_t
     INT8 = 1
     UINT8 = 2
     INT16 = 3
@@ -55,9 +55,9 @@ type Node_t struct {
     Min string
     Max string
     Unit string
-    Enums uint8
-    EnumDef []string
-    DefaultEnum string
+    Allowed uint8
+    AllowedDef []string
+    DefaultAllowed string
     Validate uint8
     Children uint8
     Parent *Node_t

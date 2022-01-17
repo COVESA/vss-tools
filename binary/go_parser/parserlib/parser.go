@@ -76,16 +76,16 @@ func printReadMetadata() {
 	fmt.Printf("Max depth of VSS tree = %d\n", readTreeMetadata.MaxTreeDepth)
 }
 
-func countEnumElements(enumStr string) int {  // enum string has format "XXenum1XXenum2...XXenumx", where XX are hex values; X=[0-9,A-F]
-    enums := 0
+func countAllowedElements(allowedStr string) int {  // allowed string has format "XXallowed1XXallowed2...XXallowedx", where XX are hex values; X=[0-9,A-F]
+    nrOfAllowed := 0
     index := 0
-    for  index < len(enumStr) {
-        hexLen := enumStr[index:index+2]
-        enumLen := hexToInt(byte(hexLen[0])) * 16 + hexToInt(byte(hexLen[1]))
-        index += enumLen + 2
-        enums++
+    for  index < len(allowedStr) {
+        hexLen := allowedStr[index:index+2]
+        allowedLen := hexToInt(byte(hexLen[0])) * 16 + hexToInt(byte(hexLen[1]))
+        index += allowedLen + 2
+        nrOfAllowed++
     }
-    return enums
+    return nrOfAllowed
 }
 
 func hexToInt(hexDigit byte) int {
@@ -112,18 +112,18 @@ func hexDigit(value int) byte {
     return byte(value - 10 + 'A')
 }
 
-func extractEnumElement(enumBuf string, elemIndex int) string {
-    var enumstart int
-    var enumend int
+func extractAllowedElement(allowedBuf string, elemIndex int) string {
+    var allowedstart int
+    var allowedend int
     bufIndex := 0
-    for enums := 0 ; enums <= elemIndex ; enums++ {
-        hexLen := enumBuf[bufIndex:bufIndex+2]
-        enumLen := hexToInt(byte(hexLen[0])) * 16 + hexToInt(byte(hexLen[1]))
-        enumstart = bufIndex + 2
-        enumend = enumstart + enumLen
-        bufIndex += enumLen + 2
+    for alloweds := 0 ; alloweds <= elemIndex ; alloweds++ {
+        hexLen := allowedBuf[bufIndex:bufIndex+2]
+        allowedLen := hexToInt(byte(hexLen[0])) * 16 + hexToInt(byte(hexLen[1]))
+        allowedstart = bufIndex + 2
+        allowedend = allowedstart + allowedLen
+        bufIndex += allowedLen + 2
     }
-    return enumBuf[enumstart:enumend]
+    return allowedBuf[allowedstart:allowedend]
 }
 
 func traverseAndReadNode(parentNode *def.Node_t) *def.Node_t {
@@ -339,18 +339,18 @@ func populateNode(thisNode *def.Node_t) {
 	UnitLen := deSerializeUInt(readBytes(1)).(uint8)
 	thisNode.Unit = string(readBytes((uint32)(UnitLen)))
 
-	enumStrLen := deSerializeUInt(readBytes(1)).(uint8)
-	enumStr := string(readBytes((uint32)(enumStrLen)))
-	thisNode.Enums = (uint8)(countEnumElements(enumStr))
-	if (thisNode.Enums > 0) {
-            thisNode.EnumDef = make([]string, thisNode.Enums)
+	allowedStrLen := deSerializeUInt(readBytes(1)).(uint8)
+	allowedStr := string(readBytes((uint32)(allowedStrLen)))
+	thisNode.Allowed = (uint8)(countAllowedElements(allowedStr))
+	if (thisNode.Allowed > 0) {
+            thisNode.AllowedDef = make([]string, thisNode.Allowed)
         }
-	for i := 0 ; i < (int)(thisNode.Enums) ; i++ {
-	    thisNode.EnumDef[i] = extractEnumElement(enumStr, i)
+	for i := 0 ; i < (int)(thisNode.Allowed) ; i++ {
+	    thisNode.AllowedDef[i] = extractAllowedElement(allowedStr, i)
 	}
 
 	DefaultLen := deSerializeUInt(readBytes(1)).(uint8)
-	thisNode.DefaultEnum = string(readBytes((uint32)(DefaultLen)))
+	thisNode.DefaultAllowed = string(readBytes((uint32)(DefaultLen)))
 
 	ValidateLen := deSerializeUInt(readBytes(1)).(uint8)
 	Validate := string(readBytes((uint32)(ValidateLen)))
@@ -397,17 +397,17 @@ func writeNode(thisNode *def.Node_t) {
         treeFp.Write([]byte(thisNode.Unit))
     }
 
-    enumStrLen := calculatEnumStrLen(thisNode.EnumDef)
-    treeFp.Write(serializeUInt((uint8)(enumStrLen)))
-    if (thisNode.Enums > 0) {
-	for i := 0 ; i < (int)(thisNode.Enums) ; i++ {
-	    enumWrite(thisNode.EnumDef[i])
+    allowedStrLen := calculatAllowedStrLen(thisNode.AllowedDef)
+    treeFp.Write(serializeUInt((uint8)(allowedStrLen)))
+    if (thisNode.Allowed > 0) {
+	for i := 0 ; i < (int)(thisNode.Allowed) ; i++ {
+	    allowedWrite(thisNode.AllowedDef[i])
 	}
     }
 
-    treeFp.Write(serializeUInt((uint8)(len(thisNode.DefaultEnum))))
-    if (len(thisNode.DefaultEnum) > 0) {
-        treeFp.Write([]byte(thisNode.DefaultEnum))
+    treeFp.Write(serializeUInt((uint8)(len(thisNode.DefaultAllowed))))
+    if (len(thisNode.DefaultAllowed) > 0) {
+        treeFp.Write([]byte(thisNode.DefaultAllowed))
     }
 
     Validate := def.ValidateToString(thisNode.Validate)
@@ -421,18 +421,18 @@ func writeNode(thisNode *def.Node_t) {
     fmt.Printf("writeNode: %s\n", thisNode.Name)
 }
 
-func calculatEnumStrLen(enumDef []string) int {
+func calculatAllowedStrLen(allowedDef []string) int {
     strLen := 0
-    for i := 0 ; i < len(enumDef) ; i++ {
-        strLen += len(enumDef[i]) + 2
+    for i := 0 ; i < len(allowedDef) ; i++ {
+        strLen += len(allowedDef[i]) + 2
     }
     return strLen
 }
 
-func enumWrite(enum string) {
-    treeFp.Write(intToHex(len(enum)))
-fmt.Printf("enumHexLen: %s\n", string(intToHex(len(enum))))
-    treeFp.Write([]byte(enum))
+func allowedWrite(allowed string) {
+    treeFp.Write(intToHex(len(allowed)))
+fmt.Printf("allowedHexLen: %s\n", string(intToHex(len(allowed))))
+    treeFp.Write([]byte(allowed))
 }
 
 func serializeUInt(intVal interface{}) []byte {
@@ -657,16 +657,16 @@ func VSSgetDescr(nodeHandle *def.Node_t) string {
 	return nodeHandle.Description
 }
 
-func VSSgetNumOfEnumElements(nodeHandle *def.Node_t) int {
+func VSSgetNumOfAllowedElements(nodeHandle *def.Node_t) int {
 	nodeType := VSSgetType(nodeHandle);
 	if (nodeType != def.BRANCH) {
-		return (int)(nodeHandle.Enums)
+		return (int)(nodeHandle.Allowed)
 	}
 	return 0
 }
 
-func VSSgetEnumElement(nodeHandle *def.Node_t, index int) string {
-	return nodeHandle.EnumDef[index]
+func VSSgetAllowedElement(nodeHandle *def.Node_t, index int) string {
+	return nodeHandle.AllowedDef[index]
 }
 
 func VSSgetUnit(nodeHandle *def.Node_t) string {
