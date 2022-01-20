@@ -19,21 +19,46 @@ import sys
 myDir= os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
 
-from anytree import RenderTree, PreOrderIter
+from anytree import PreOrderIter
 
 import vspec
 import getopt
 
 from vspec.model.vsstree import VSSNode, VSSType
 
-from rdflib import Graph, Literal, RDF, URIRef, Namespace
-from rdflib.namespace import RDFS, XSD, OWL, XMLNS, RDF, FOAF, SKOS, SDO, NamespaceManager
+from rdflib import Graph, Literal, RDF, URIRef, BNode
+from rdflib.namespace import RDFS, OWL, RDF,  SKOS
 from enum import Enum
 
-from vssotypes import VssoConcepts, DataTypes, DataUnits, Namespaces
 
+class VssoCoreConcepts (Enum):
+    
+    EMPTY =             ""
+    BELONGS_TO =        "belongsToVehicleComponent"
+    HOLDS_VALUE =       "vehiclePropertyValue"
+    HAS_SIGNAL =        "hasDynamicVehicleProperty"
+    HAS_ATTRIBUTE =     "hasStaticVehicleProperty"
+    PART_OF_VEHICLE =   "partOfVehicle"
+    PART_OF_VEH_COMP =  "partOf"
+    HAS_COMP_INST =     "postionedAt"
+    VEHICLE =           "Vehicle"
+    VEHICLE_SIGNAL =    "ObservableVehicleProperty"
+    VEHICLE_ACT =       "ActuatableVehicleProperty"
+    VEHICLE_COMP =      "VehicleComponent"
+    VEHICLE_PROP =      "DynamicVehicleProperty"
+    VEHICLE_STAT =      "StaticVehicleProperty"
 
+    def __init__ (self, vsso_name):
+        self.ns = "https://github.com/w3c/vsso-core#"
+        self.vsso_name = vsso_name
 
+    @property
+    def uri(self):
+        return URIRef(f'{self.ns}{self.value}')
+
+    @property
+    def uri_string(self):
+        return f'{self.ns}{self.value}'
 
 
 def usage():
@@ -55,109 +80,45 @@ Usage: {sys.argv[0]} [options] vspec_file ttl_file
 def setup_graph():
     # create a Graph
     g = Graph()
+
+    ontology_description_ttl = """
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        @prefix owl: <http://www.w3.org/2002/07/owl#> .
+        @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+        @prefix dcterms: <http://purl.org/dc/terms/> .
+        @prefix vann: <http://purl.org/vocab/vann/> .
+        @prefix vsso-core: <https://github.com/w3c/vsso-core#> .
+        @prefix vsso: <https://github.com/w3c/vsso#> .
+
+
+        vsso: rdf:type owl:Ontology ;
+            dcterms:title "VSSo: Vehicle Signal Specification Ontology";
+            vann:preferredNamespaceUri "https://github.com/w3c/vsso#" ;
+            dcterms:description "This ontology describes the car's attributes, branches and signals defined in the Vehicle Signal Specification." ;
+            dcterms:license <http://creativecommons.org/licenses/by/4.0/> ;
+            dcterms:creator "Benjamin Klotz"^^xsd:string ;
+            dcterms:creator "Raphael Troncy"^^xsd:string ;
+            dcterms:creator "Daniel Wilms"^^xsd:string;
+            dcterms:contributor "Daniel Alvarez-Coello"^^xsd:string ;
+            dcterms:contributor "Felix Loesch"^^xsd:string ;
+            owl:versionInfo "v2.2"@en ;
+            rdfs:seeAlso "https://github.com/COVESA/vehicle_signal_specification";
+            vann:preferredNamespacePrefix "vsso";
+            dcterms:abstract \"\"\"
+            As the core ontology defined the structure, VSSo holds the vocabulary as defined by the standard catalogue.
+            The main objective is, that VSSo doesn't diverege from the standard catalogue, so this is done automatically
+            through tooling provided in the corresponding repository. The tooling takes the standard catalogue and maps it to
+            concepts defined in the core ontology. The result is an OWL complient ontology, following the standard catalogue of VSS.
+            \"\"\"@en .
+        """
+
+    g.parse(data=ontology_description_ttl, format="turtle")
     
-    belongsTo = VssoConcepts.BELONGS_TO.uri
-    g.add((belongsTo, RDF.type, OWL.ObjectProperty))
-    g.add((belongsTo,RDFS.label, Literal(VssoConcepts.BELONGS_TO.value,lang="en")))
-    g.add((belongsTo,RDFS.range, VssoConcepts.VEHICLE_COMP.uri))
-    g.add((belongsTo,RDFS.domain, VssoConcepts.VEHICLE_STAT.uri))
-    g.add((belongsTo,RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
-
-    holdsValue = VssoConcepts.HOLDS_VALUE.uri
-    g.add((holdsValue, RDF.type, OWL.DatatypeProperty))
-    g.add((holdsValue,RDFS.subPropertyOf, OWL.topDataProperty))
-    g.add((holdsValue,RDFS.domain, VssoConcepts.VEHICLE_PROP.uri))
-    g.add((holdsValue,RDFS.label, Literal(VssoConcepts.HOLDS_VALUE.value,lang="en")))
-
-    partOf = VssoConcepts.PART_OF_VEHICLE.uri
-    g.add((partOf, RDF.type, OWL.ObjectProperty))
-    g.add((partOf,RDFS.subPropertyOf, OWL.topObjectProperty))
-    g.add((partOf,RDFS.domain, VssoConcepts.VEHICLE_COMP.uri))
-    g.add((partOf,RDFS.range, URIRef(f"{VssoConcepts.EMPTY.uri_string}Vehicle")))
-    g.add((partOf,RDFS.label, Literal("partOf Vehicle",lang="en")))
-    
-    partOf = VssoConcepts.PART_OF_VEH_COMP.uri
-    g.add((partOf, RDF.type, OWL.ObjectProperty))
-    g.add((partOf,RDFS.subPropertyOf, OWL.topObjectProperty))
-    g.add((partOf,RDFS.domain, VssoConcepts.VEHICLE_COMP.uri))
-    g.add((partOf,RDFS.range, VssoConcepts.VEHICLE_COMP.uri))
-    g.add((partOf,RDFS.label, Literal("partOf Vehicle Component",lang="en")))
-
-    hasComponentInstance = VssoConcepts.HAS_COMP_INST.uri
-    g.add((hasComponentInstance, RDF.type, OWL.DatatypeProperty))
-    g.add((hasComponentInstance,RDFS.subPropertyOf, OWL.topDataProperty))
-    g.add((hasComponentInstance,RDFS.label, Literal(VssoConcepts.HAS_COMP_INST.value,lang="en")))
-
-
-    hasAttribute = VssoConcepts.HAS_ATTRIBUTE.uri
-    g.add((hasAttribute, RDF.type, OWL.ObjectProperty))
-    g.add((hasAttribute,RDFS.subPropertyOf, OWL.topObjectProperty))
-    g.add((hasAttribute, RDFS.domain, VssoConcepts.VEHICLE.uri))
-    g.add((hasAttribute, RDFS.range, VssoConcepts.VEHICLE_STAT.uri))
-    g.add((hasAttribute, RDFS.label, Literal(VssoConcepts.HAS_ATTRIBUTE.value,lang="en")))
-
-    hasDynProp = VssoConcepts.HAS_SIGNAL.uri
-    g.add((hasDynProp, RDF.type, OWL.ObjectProperty))
-    g.add((hasDynProp,RDFS.subPropertyOf, OWL.topObjectProperty))
-    g.add((hasDynProp, RDFS.domain, VssoConcepts.VEHICLE.uri))
-    g.add((hasDynProp, RDFS.range, VssoConcepts.VEHICLE_PROP.uri))
-    g.add((hasDynProp, RDFS.label, Literal(VssoConcepts.HAS_SIGNAL.value,lang="en")))
-
-
-    ##
-    # Classes
-    ##
-    vehicle = VssoConcepts.VEHICLE.uri
-    g.add((vehicle, RDF.type, OWL.Class))
-    g.add((vehicle, RDF.type, RDFS.Class))
-    g.add((vehicle,RDFS.label, Literal(VssoConcepts.VEHICLE.value,lang="en")))
-
-
-    staticVehicleProperty = VssoConcepts.VEHICLE_STAT.uri
-    g.add((staticVehicleProperty, RDF.type, OWL.Class))
-    g.add((staticVehicleProperty, RDF.type, RDFS.Class))
-    g.add((staticVehicleProperty, RDFS.label, Literal(VssoConcepts.VEHICLE_STAT.value,lang="en")))
-    
-    vehicleComp = VssoConcepts.VEHICLE_COMP.uri
-    g.add((vehicleComp, RDF.type, OWL.Class))
-    g.add((vehicleComp, RDF.type, RDFS.Class))
-    g.add((vehicleComp,RDFS.label, Literal(VssoConcepts.VEHICLE_COMP.value,lang="en")))
-
-
-    vehicleProp = VssoConcepts.VEHICLE_PROP.uri
-    g.add((vehicleProp, RDF.type, OWL.Class))
-    g.add((vehicleProp,RDFS.label, Literal(VssoConcepts.VEHICLE_PROP.value,lang="en")))
-
-
-    vehicleSignal = VssoConcepts.VEHICLE_SIGNAL.uri
-    g.add((vehicleSignal, RDF.type, OWL.Class))
-    g.add((vehicleSignal, RDFS.subClassOf, VssoConcepts.VEHICLE_PROP.uri))
-    g.add((vehicleSignal,RDFS.label, Literal(VssoConcepts.VEHICLE_SIGNAL.value,lang="en")))
-
-
-    vehicleAct = VssoConcepts.VEHICLE_ACT.uri
-    g.add((vehicleAct, RDF.type, OWL.Class))
-    g.add((vehicleAct, RDFS.subClassOf, VssoConcepts.VEHICLE_PROP.uri))
-    g.add((vehicleAct,RDFS.label, Literal(VssoConcepts.VEHICLE_ACT.value,lang="en")))
-
-
-
-    # Bind the FOAF namespace to a prefix for more readable output
-    g.bind("vsso", VssoConcepts.EMPTY.uri)
-    g.bind("rdfs",RDFS)
-    g.bind("rdf", RDF)
-    g.bind("owl", OWL)
-    g.bind("skos", SKOS)
-    g.bind("schema", SDO)
-    g.bind("xsd", XSD)
-    g.bind("qudt", URIRef(Namespaces["qudt"]))
-    g.bind("cdt", URIRef(Namespaces["cdt"]))
-    
-
-    # print all the data in the Notation3 format
+    g.bind ("skos", SKOS)
+    g.bind ("rdfs", RDFS)
     print("--- printing mboxes ---")
     print(g.serialize(format='ttl'))
-
     return g
 
 def setUniqueNodeName (name):
@@ -194,8 +155,8 @@ def print_ttl_content(file, tree):
         
         name = setTTLName(tree_node)
         if tree_node.name in name_list:
-            print (f"** warning: {tree_node.name}" )
-            print (f"** VSSO warning Replaced by: {name}" )
+            # print (f"** warning: {tree_node.name}" )
+            # print (f"** VSSO warning Replaced by: {name}" )
             if tree_node.name in duplication.keys():
                 duplication [tree_node.name] += 1
             else:
@@ -203,13 +164,11 @@ def print_ttl_content(file, tree):
         else:
             name_list.append (tree_node.name)
 
-        extension = ''
-        
         
         if name in vsso_name_list:
-            print (f"** VSSO warning: {name}" )
+            # print (f"** VSSO warning: {name}" )
             name = setTTLName(tree_node.parent) + tree_node.name
-            print (f"** VSSO warning Replaced by: {name}" )
+            # print (f"** VSSO warning Replaced by: {name}" )
             
             if name in duplication_vsso.keys():
                 duplication_vsso [name] += 1
@@ -218,41 +177,51 @@ def print_ttl_content(file, tree):
         else:
             vsso_name_list.append (name)
 
-        name_space = VssoConcepts.EMPTY.uri_string
+        namespace = "https://github.com/w3c/vsso#"
 
-        node = URIRef(name_space + name)
+        node = URIRef(namespace + name)
 
         # not needed, in case we use classes
         # if VSSType.ATTRIBUTE == tree_node.type:
-        #     node = URIRef(f"{VssoConcepts.EMPTY.uri_string}has{name}")
+        #     node = URIRef(f"{VssoCoreConcepts.EMPTY.uri_string}has{name}")
         
         graph.add((node, RDFS.label, Literal(name,"en")))
         graph.add((node, SKOS.altLabel, Literal(tree_node.qualified_name('.'),"en")))
         graph.add((node, RDFS.comment, Literal(tree_node.description,"en")))
         
-        parent_name_space = VssoConcepts.EMPTY.uri_string
-        
+        parent_namespace = "https://github.com/w3c/vsso#"
         # branch nodes (incl. instance handling)
         if VSSType.BRANCH == tree_node.type:
             if tree_node.parent:
                 graph.add((node, RDF.type, OWL.Class))
-                graph.add((node, RDFS.subClassOf, VssoConcepts.VEHICLE_COMP.uri))
-            # if tree_node.instances:
-            #     print (instances)
-        # leafs (incl. restrictions)
+                graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_COMP.uri))
+
+                b = BNode()
+                graph.add((b, RDF.type, OWL.Restriction))
+                graph.add((b, OWL.onProperty, VssoCoreConcepts.PART_OF_VEH_COMP.uri))
+                if "Vehicle" == setTTLName(tree_node.parent):
+                    graph.add((b, OWL.allValuesFrom, VssoCoreConcepts.VEHICLE.uri))
+                else:
+                    graph.add((b, OWL.allValuesFrom, URIRef(parent_namespace + setTTLName(tree_node.parent))))
+
+                graph.add((node, RDFS.subClassOf, b))
+                print( [x.name if x.type != VSSType.BRANCH else None for x in tree_node.children])
+
+                
         else: 
-            belongs_to_comp = URIRef(f"belongsTo{setTTLName(tree_node.parent).capitalize()}")
-            graph.add((belongs_to_comp, RDF.type, OWL.ObjectProperty))
-            graph.add((belongs_to_comp, RDFS.subPropertyOf, VssoConcepts.BELONGS_TO.uri))
-            graph.add((belongs_to_comp, RDFS.domain, node))
-            graph.add((belongs_to_comp, RDFS.range, URIRef(parent_name_space + setTTLName(tree_node.parent))))
-            graph.add((belongs_to_comp, RDFS.label, Literal(f"belongsTo: {setTTLName(tree_node.parent)}",lang="en")))
+            b = BNode()
+            graph.add((b, RDF.type, OWL.Restriction))
+            graph.add((b, OWL.onProperty, VssoCoreConcepts.BELONGS_TO.uri))
+            if "Vehicle" == setTTLName(tree_node.parent):
+                graph.add((b, OWL.allValuesFrom, VssoCoreConcepts.VEHICLE.uri))
+            else:
+                graph.add((b, OWL.allValuesFrom, URIRef(parent_namespace + setTTLName(tree_node.parent))))
 
-
+            graph.add((node, RDFS.subClassOf, b))
+            
             if VSSType.ATTRIBUTE == tree_node.type:
-                #graph.add((node, RDF.type, OWL.DatatypeProperty))
                 graph.add((node, RDF.type, OWL.Class))
-                graph.add((node, RDFS.subClassOf, VssoConcepts.VEHICLE_STAT.uri))
+                graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_STAT.uri))
                 
             else:
 
@@ -262,13 +231,10 @@ def print_ttl_content(file, tree):
                     datatypes[tree_node.data_type] = 1
 
                 graph.add((node, RDF.type, OWL.Class))
-                graph.add((node, RDFS.subClassOf, VssoConcepts.VEHICLE_SIGNAL.uri))
+                graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_SIGNAL.uri))
 
                 if VSSType.ACTUATOR == tree_node.type:
-                    graph.add((node, RDFS.subClassOf, VssoConcepts.VEHICLE_ACT.uri))
-
-            if (tree_node.enum):
-                enums += 1
+                    graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_ACT.uri))
 
 
     file.write(graph.serialize(format='ttl'))
@@ -276,7 +242,6 @@ def print_ttl_content(file, tree):
     print (duplication)
     print (duplication_vsso)
     print (datatypes)
-    print (enums)
 
 
 
