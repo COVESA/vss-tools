@@ -8,7 +8,9 @@
 # Generate code that can convert VSS signals to Android Automotive
 # vehicle properties.
 #
-
+"""
+C++ Generator from COVESA Vehicle Signal Specification to Android VHAL representation.
+"""
 
 import sys
 import os
@@ -50,11 +52,17 @@ default_templates = {}
 
 
 class GeneratorError(BaseException):
+    """
+    General exception for the generator.
+    """
     def __init__(self, m):
         self.msg = m
 
 
 def generate_from_tree(node, second=None):
+    """
+    VSS Tree generator.
+    """
     if type(node) == list or type(node) == tuple:
         # Generate each node and return a list of results.
         # A list is not intended to be printed directly as output, but to be
@@ -78,6 +86,9 @@ def generate_from_tree(node, second=None):
 
 
 def _gen_type(node):
+    """
+    _gen_type
+    """
     nodetype = type(node).__name__
     tpl = default_templates.get(nodetype)
     if tpl is None:
@@ -99,6 +110,21 @@ def get_template(filename):
     return jinja_env.get_template(filename)
 
 if __name__ == "__main__":
+    """
+    Generator main routine.
+    - Parse arguments
+    - Read and parse map (vspec2prop_mapping.yml) to map_tree
+      - uses read_mapping_layer.py function load_tree()
+    - Read and parse Android VHAL header (types.hal) to vhal_type
+      - uses type_hal_parser.py class VhalType
+    - Read and parse VSS (../../../spec/VehicleSignalSpecification.vspec) to vss_tree
+      - uses vspec_helper.py wrapper class VSpecHelper for direct access to VSS items (anytree.Resolver)
+    - Creates TypeMaptypemap helper class by reading (typemap.yml) and combining all other classes under typemap
+      - uses read_type_layer.py TypeMap helper class which provides helper functions for Jinja
+    - Creates Jinja2 environment with provided maps.
+    - Creates output with selected Jinja2 file (android_vhal_mapping_cpp.tpl)
+    - Writes out single .cpp file (AndroidVssConverter.cpp)
+    """
     #
     # Check that we have the correct arguments
     #
@@ -131,13 +157,13 @@ if __name__ == "__main__":
     # Create Android type table from the Android type.hal header file.
     vhal_type = type_hal_parser.VhalType(args.android)
 
-    try:
-        vss_tree = vspec_helper.VSpecHelper(
+#    try:
+    vss_tree = vspec_helper.VSpecHelper(
             vspec.load_tree(args.vspec, include_dirs))
         # vss_tree = vspec.load_tree(args[0], include_dirs)
-    except vspec.VSpecError as e:
-        print("Error: {}".format(e))
-        exit(255)
+#    except vspec.VSpecError as e:
+#        print("Error: {}".format(e))
+#        exit(255)
 
     typemap = read_type_layer.TypeMap(
         map_tree, args.typemap, vss_tree, vhal_type)

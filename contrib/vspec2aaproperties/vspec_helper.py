@@ -33,10 +33,16 @@ class VSpecHelper:
         self.r=Resolver("name")
 
     def vsstype(self,key):
+        '''
+        vsstype(self,key)
+        Helper function to deliver the actual type from VSS specification.
+        '''
         return str(self[key].data_type).split(".")[-1]
 
     def __getitem__(self,item):
         '''
+        __getitem__(self,item)
+        Helper function to directly access VSS item utilizing anytree Resolver.
         item: Ascii representation of the vspec item. e.g. "Vehicle.Chassis.Axle.Row2.Wheel.Left.Tire.Pressure"
         returns vspec anytree object.
         '''
