@@ -14,6 +14,12 @@ YAML loader for the mapping table.
 #
 
 def load_tree(filepath):
+    """
+    load_tree(filepath)
+    Loads and returns the yaml map file filepath
+    Mapping file maps the VSS signals to VHAL signals with possible conversions.
+    Breaks the possible elements in conversion formulas to the tree structure for easier utilization in Jinja.
+    """
     with open(filepath, "r") as f:
         tree = yaml.load(f.read(), Loader=yaml.SafeLoader)
         # Create input items for the complex yaml formulas - remove arithmetic from the formula for variable evaluation.
@@ -26,5 +32,8 @@ def load_tree(filepath):
     return tree
 
 if __name__ == "__main__":
+    """
+    Simple main program to load the example map to the tree (very basic test)
+    """
     tree=load_tree("vspec2prop_mapping.yml")
     print(tree)
