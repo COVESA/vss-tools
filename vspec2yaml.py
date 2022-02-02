@@ -64,7 +64,7 @@ def export_yaml(file, root, generate_uuids):
     yaml_dict = {}
     export_node(yaml_dict, root, generate_uuids)
     yaml.dump(yaml_dict, file, default_flow_style=False, Dumper=NoAliasDumper,
-              sort_keys=False, width=1024, indent=2, encoding='utf-8', allow_unicode=True)
+              sort_keys=True, width=1024, indent=2, encoding='utf-8', allow_unicode=True)
 
 
 # create dumper to remove aliases from output and to add nice new line after each object for a better readability
