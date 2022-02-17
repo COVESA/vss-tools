@@ -17,11 +17,12 @@ import vspec
 
 from vspec.model.vsstree import VSSNode, VSSType
 
-from vssexporters import vss2json, vss2csv
+from vssexporters import vss2json, vss2csv, vss2yaml
 
 class Exporter(Enum):
     json = vss2json
     csv = vss2csv
+    yaml = vss2yaml
 
     def __str__(self):
         return self.name
@@ -52,6 +53,8 @@ if __name__ == "__main__":
 
     vss2json.add_arguments(parser.add_argument_group("JSON arguments", ""))
     vss2csv.add_arguments(parser.add_argument_group("CSV arguments", ""))
+    vss2yaml.add_arguments(parser.add_argument_group("YAML arguments", ""))
+
 
 
     args = parser.parse_args()
