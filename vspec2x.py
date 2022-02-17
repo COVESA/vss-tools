@@ -38,9 +38,9 @@ class Exporter(Enum):
 
 parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
 
-if __name__ == "__main__":
-    # The arguments we accept
 
+
+def main(arguments):
     parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,  default=[],
                     help='Add include directory to search for included vspec files.')
     parser.add_argument('-s', '--strict', action='store_true', help='Use strict checking: Terminate when anything not covered or not recommended by the core VSS specs is found.')
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
 
 
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
 
     #Figure out output format
     if args.format != None: # User has given format parameter
@@ -99,3 +99,6 @@ if __name__ == "__main__":
     except vspec.VSpecError as e:
         print(f"Error: {e}")
         sys.exit(255)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
