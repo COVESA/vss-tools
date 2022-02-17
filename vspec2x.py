@@ -17,11 +17,11 @@ import vspec
 
 from vspec.model.vsstree import VSSNode, VSSType
 
-from vssexporters import vss2json
+from vssexporters import vss2json, vss2csv
 
 class Exporter(Enum):
     json = vss2json
-    csv = "jjj"
+    csv = vss2csv
 
     def __str__(self):
         return self.name
@@ -51,6 +51,8 @@ if __name__ == "__main__":
     parser.add_argument('output_file', metavar='<output_file>', help='The file to write output to.')
 
     vss2json.add_arguments(parser.add_argument_group("JSON arguments", ""))
+    vss2csv.add_arguments(parser.add_argument_group("CSV arguments", ""))
+
 
     args = parser.parse_args()
 
