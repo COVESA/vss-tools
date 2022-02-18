@@ -51,11 +51,8 @@ def main(arguments):
     parser.add_argument('vspec_file', metavar='<vspec_file>', help='The vehicle specification file to convert.')
     parser.add_argument('output_file', metavar='<output_file>', help='The file to write output to.')
 
-    vss2json.add_arguments(parser.add_argument_group("JSON arguments", ""))
-    vss2csv.add_arguments(parser.add_argument_group("CSV arguments", ""))
-    vss2yaml.add_arguments(parser.add_argument_group("YAML arguments", ""))
-
-
+    for entry in Exporter:
+        entry.value.add_arguments(parser.add_argument_group(f"{entry.name.upper()} arguments", ""))
 
     args = parser.parse_args(arguments)
 
