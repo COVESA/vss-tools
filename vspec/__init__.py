@@ -441,7 +441,7 @@ def expand_instances(flat_model):
 def createInstantiationEntries(instances, prefix=''):
     # create instances according to the spec
 
-    reg_ex = "\w+\[\d+,(\d+)\]"
+    reg_ex = r"\w+\[\d+,(\d+)\]"
 
     if not instances:
         return
@@ -463,7 +463,7 @@ def createInstantiationEntries(instances, prefix=''):
     if isinstance(i, str):
         if re.match(reg_ex, i):
 
-            inst_range_arr = re.split("\[+|,+|\]", i)
+            inst_range_arr = re.split(r"\[+|,+|\]", i)
 
             for r in range(int(inst_range_arr[1]), int(inst_range_arr[2]) + 1):
                 next_prefix = prefix + inst_range_arr[0] + str(r)
