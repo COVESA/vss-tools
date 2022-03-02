@@ -16,13 +16,14 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 
  Tool | Description | Type of Tool | Documentation |
 | ------------------ | ----------- | -------------------- |-------------------- |
+| [vspec2x.py](vspec2x.py) | Parses and expands VSS into different text based output formats. Currently supports `json`, `yaml`,`csv` | Community Supported | `./vspec2x --help` | 
+[vspec2csv.py](vspec2csv.py) | Shortcut for [vspec2x.py](vspec2x.py) generating CSV output | Community Supported | -
+[vspec2json.py](vspec2json.py) |  Shortcut for [vspec2x.py](vspec2x.py) generating JSON output | Community Supported | - |
+[vspec2yaml.py](vspec2yaml.py) | Shortcut for [vspec2x.py](vspec2x.py) generating flattened YAML output | Community Supported | - |
 | [vspec2binary.py](vspec2binary.py) | The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below), and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go | Community Supported | [Documentation](binary/README.md) | 
-[vspec2csv.py](vspec2csv.py) | Parses and expands a VSS and generates a text file with comma separated values, one line for each signal | Community Supported | - |
 [vspec2franca.py](vspec2franca.py) | Parses and expands a VSS and generates a Franca IDL specification | Community Supported | - |
-[vspec2json.py](vspec2json.py) | Parses and expands a VSS and generates a JSON specification | Community Supported | - |
 [test_contants.py](tests/model/test_contants.py) | Tool used for internal testing  | Community Supported | - |
 [test_vsstree.py](tests/model/test_vsstree.py) | Tool used for internal testing | Community Supported | - |
-[vspec2yaml.py](vspec2yaml.py) | This tool converts the vspec files into a single YAML file with all instances expanded and UUID added. | Community Supported | - |
 [vspec2c.py](contrib/vspec2c.py) | The vspec2c tooling allows a vehicle signal specification to be translated from its source YAML file to native C code that has the entire specification encoded in it. | Contrib (Obsolete, no longer functional) | [Documentation](contrib/vspec2c/README.md) |
 [vspec2ocf.py](contrib/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Contrib (Obsolete, no longer functional)  | - |
 [vspec2proto.py](contrib/vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib (Beta)  | - |
