@@ -10,7 +10,14 @@
 # Convert vspec file to graphql schema
 #
 
+
+
 import sys
+import os
+#Add path to main py vspec  parser
+myDir= os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(myDir, ".."))
+
 import vspec
 import getopt
 from vspec2graphql.traverse_tree import get_schema_from_tree

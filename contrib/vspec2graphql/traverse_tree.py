@@ -7,8 +7,8 @@
 
 import re
 from anytree import RenderTree, PreOrderIter
-from model.vsstree import VSSNode, camel_back
-from model.constants import GRAPHQL_TYPE_MAPPING
+from vspec.model.vsstree import VSSNode, camel_back
+from vspec.model.constants import VSSDataType
 from anytree import PostOrderIter
 from typing import Dict
 
@@ -21,14 +21,40 @@ from graphql import (
     GraphQLString,
     GraphQLList,
     print_schema,
-    GraphQLInputField,
-    GraphQLInputObjectType,
     GraphQLSchema,
     GraphQLObjectType,
     GraphQLField,
-    GraphQLString,
+    GraphQLInt,
+    GraphQLFloat,
+    GraphQLBoolean,
 )
 
+GRAPHQL_TYPE_MAPPING = {
+    VSSDataType.INT8: GraphQLInt,
+    VSSDataType.INT8_ARRAY: GraphQLList(GraphQLInt),
+    VSSDataType.UINT8: GraphQLInt,
+    VSSDataType.UINT8_ARRAY: GraphQLList(GraphQLInt),
+    VSSDataType.INT16: GraphQLInt,
+    VSSDataType.INT16_ARRAY: GraphQLList(GraphQLInt),
+    VSSDataType.UINT16: GraphQLInt,
+    VSSDataType.UINT16_ARRAY: GraphQLList(GraphQLInt),
+    VSSDataType.INT32: GraphQLInt,
+    VSSDataType.INT32_ARRAY: GraphQLList(GraphQLInt),
+    VSSDataType.UINT32: GraphQLInt,
+    VSSDataType.UINT32_ARRAY: GraphQLList(GraphQLInt),
+    VSSDataType.INT64: GraphQLFloat,
+    VSSDataType.INT64_ARRAY: GraphQLList(GraphQLFloat),
+    VSSDataType.UINT64: GraphQLFloat,
+    VSSDataType.UINT64_ARRAY: GraphQLList(GraphQLFloat),
+    VSSDataType.FLOAT: GraphQLFloat,
+    VSSDataType.FLOAT_ARRAY: GraphQLList(GraphQLFloat),
+    VSSDataType.DOUBLE: GraphQLFloat,
+    VSSDataType.DOUBLE_ARRAY: GraphQLList(GraphQLFloat),
+    VSSDataType.BOOLEAN: GraphQLBoolean,
+    VSSDataType.BOOLEAN_ARRAY: GraphQLList(GraphQLBoolean),
+    VSSDataType.STRING: GraphQLString,
+    VSSDataType.STRING_ARRAY: GraphQLList(GraphQLString),
+}
 
 def get_schema_from_tree(root_node: VSSNode) -> str:
     """Takes a VSSNode. Returns a graphql schema as string."""
