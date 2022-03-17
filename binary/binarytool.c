@@ -20,7 +20,7 @@
 FILE* treeFp;
 
 void writeNodeData(char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* allowed, char* defaultAllowed, char* validate, int children) {
-printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Allowed=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, allowed);
+//printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=%s, min=%s, max=%s Unit=%s, Allowed=%s\n", name, type, uuid, validate, children, descr, datatype, min, max, unit, allowed);
     uint8_t nameLen  = (uint8_t)strlen(name);
     uint8_t typeLen = (uint8_t)strlen(type);
     uint8_t uuidLen  = (uint8_t)strlen(uuid);
@@ -84,7 +84,7 @@ printf("Name=%s, Type=%s, uuid=%s, validate=%s, children=%d, Descr=%s, datatype=
 void createBinaryCnode(char*fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* allowed, char* defaultAllowed, char* validate, int children) {
     treeFp = fopen(fname, "a");
     if (treeFp == NULL) {
-        printf("Could not open file for writing of tree.\n");
+        printf("Could not open file=%s for writing of tree.\n", fname);
         return;
     }
     writeNodeData(name, type, uuid, descr, datatype, min, max, unit, allowed, defaultAllowed, validate, children);
