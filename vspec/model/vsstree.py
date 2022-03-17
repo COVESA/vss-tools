@@ -40,7 +40,7 @@ class VSSNode(Node):
     unit: Unit
     min = ""
     max = ""
-    enum = ""
+    allowed = ""
 
     ttl_name = ""
 
@@ -90,8 +90,8 @@ class VSSNode(Node):
         if "max" in source_dict.keys():
             self.max = source_dict["max"]
 
-        if "enum" in source_dict.keys():
-            self.enum = source_dict["enum"]
+        if "allowed" in source_dict.keys():
+            self.allowed = source_dict["allowed"]
 
         if "aggregate" in source_dict.keys():
             self.aggregate = source_dict["aggregate"]
@@ -280,7 +280,7 @@ class VSSNode(Node):
             raise Exception("Invalid VSS element %s, must have UUID" % name)
 
         for aKey in element.keys():
-            if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "enum",
+            if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
                             "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]:
                 raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 

@@ -24,7 +24,7 @@ class TestVSSNode(unittest.TestCase):
         Test complex object construction.
         """
         source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
-                  "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "enum": ["one", "two"], "aggregate": False,
+                  "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "allowed": ["one", "two"], "aggregate": False,
                   "default": "test-default", "instances": ["i1", "i2"], "$file_name$": "testfile" }
         node = VSSNode("test", source)
         self.assertIsNotNone(node)
@@ -35,7 +35,7 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual(Unit.KILOMETER, node.unit)
         self.assertEqual(0, node.min)
         self.assertEqual(100, node.max)
-        self.assertEqual(["one", "two"], node.enum)
+        self.assertEqual(["one", "two"], node.allowed)
         self.assertEqual(False, node.aggregate)
         self.assertEqual("test-default", node.default_value)
         self.assertEqual(["i1", "i2"], node.instances)

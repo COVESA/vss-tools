@@ -270,7 +270,7 @@ def load_flat_model(file_name, prefix, include_paths):
 # 1. If no type is specified, default it to "branch".
 # 2. Check that the declared type is a FrancaIDL.
 # 3. Correct the  casing of type.
-# 4, Check that enums are provided as arrays.
+# 4, Check that allowed values are provided as arrays.
 #
 def cleanup_flat_entries(flat_model):
     available_types = ["sensor", "actuator", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
@@ -296,8 +296,8 @@ def cleanup_flat_entries(flat_model):
         # Get the correct casing for the type.
         elem["type"] = available_types[available_downcase_types.index(elem["type"].lower())]
 
-        if "enum" in elem and not isinstance(elem["enum"], list):
-            raise VSpecError(elem["$file_name$"], elem["$line$"], "Enum is not an array.")
+        if "allowed" in elem and not isinstance(elem["allowed"], list):
+            raise VSpecError(elem["$file_name$"], elem["$line$"], "Allowed values are not represented as array.")
 
     return flat_model
 
@@ -379,11 +379,21 @@ def expand_instances(flat_model):
     cont = True
 
     def extend_entry(new_entry, instance, name):
+        # It is expected that name exist in new_entry, either in "name" or "prefix", so two use-cases exist
+        # 1. Name part shall be refactored, e.g. Axle.TireAspectRatio -> Axle.Row1.TireAspectRatio
+        # 2. Prefix part shall be instantiated, e.g. Vehicle.Chassis.Axle.Wheel -> Vehicle.Chassis.Axle.Row2.Wheel
 
-        if base_name in new_entry["$name$"]:
+        if (name==new_entry["$name$"]) or new_entry["$name$"].startswith(name + "."):
             new_entry["$name$"] = new_entry["$name$"].replace(name, "{}.{}".format(name, instance), 1)
         else:
-            new_entry["$prefix$"] = new_entry["$prefix$"].replace(name, "{}.{}".format(name, instance), 1)
+            tmp = new_entry["$prefix$"]
+            search_str = "." + name
+            if tmp.endswith(search_str):
+              # If base is "Seat" and prefix "Vehicle.CabinSeat.Seat" then we want to match last Seat
+              new_entry["$prefix$"] = tmp[:-len(search_str)] + "." + "{}.{}".format(name, instance)
+            else:
+              # If base is "Axle" and prefix "Vehicle.ChassisAxle.Axle.Wheel" then we want to match last Axle
+              new_entry["$prefix$"] = new_entry["$prefix$"].replace("." + name + ".", "." + "{}.{}".format(name, instance) + ".", 1)
         return new_entry
 
     # repetition for nested instances
@@ -441,7 +451,7 @@ def expand_instances(flat_model):
 def createInstantiationEntries(instances, prefix=''):
     # create instances according to the spec
 
-    reg_ex = "\w+\[\d+,(\d+)\]"
+    reg_ex = r"\w+\[\d+,(\d+)\]"
 
     if not instances:
         return
@@ -458,12 +468,11 @@ def createInstantiationEntries(instances, prefix=''):
 
     if prefix and not prefix.endswith("."):
         prefix += "."
-
     # parse string instantiation elements (e.g. Row[1,5])
     if isinstance(i, str):
         if re.match(reg_ex, i):
 
-            inst_range_arr = re.split("\[+|,+|\]", i)
+            inst_range_arr = re.split(r"\[+|,+|\]", i)
 
             for r in range(int(inst_range_arr[1]), int(inst_range_arr[2]) + 1):
                 next_prefix = prefix + inst_range_arr[0] + str(r)
@@ -579,14 +588,12 @@ def create_nested_model(flat_model, file_name):
         # we update its fields with the fields from the new element
         if name in parent_branch["children"]:
             old_elem = parent_branch["children"][name]
-            # print "Found: " + str(old_elem)
             # never update the type
             elem.pop("type", None)
             # concatenate file names
             fname = "{}:{}".format(old_elem["$file_name$"], elem["$file_name$"])
             old_elem.update(elem)
             old_elem["$file_name$"] = fname
-            # print "Set: " + str(parent_branch["children"][name])
         else:
             parent_branch["children"][name] = elem
 
