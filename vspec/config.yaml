@@ -95,6 +95,10 @@ units:
     label: ampere
     description: Electric current measured in amperes
     domain: electric current
+  Ah:
+    label: ampere hours
+    description: Electric charge measured in ampere hours
+    domain: electric charge
   ms:
     label: millisecond
     description: Time measured in milliseconds
