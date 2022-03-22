@@ -47,12 +47,12 @@
 # an empty stub function will be generated, for a human programmer to later
 # fill in with any desired code logic.
 
-Vehicle.ADAS.ABS.IsActive:
+Vehicle.ADAS.ABS.IsEngaged:
   #convertBool
   aospId: VehicleProperty::ABS_ACTIVE
   aospArea: VehicleArea::GLOBAL
 
-Vehicle.Powertrain.CombustionEngine.Engine.EOT:
+Vehicle.Powertrain.CombustionEngine.EOT:
   #convertFloatLinear
   aospId: VehicleProperty::ENGINE_OIL_TEMP
   aospArea: VehicleArea::GLOBAL
