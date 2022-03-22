@@ -108,7 +108,13 @@ vals2 = [
 
 # Write data to avro encoded (binary) file
 fn = 'testoutput.avro'
-os.remove(fn)
+
+# Remove output file if it exists
+try:
+    os.remove(fn)
+except FileNotFoundError:
+    pass
+
 with open(fn, 'wb') as fout:
      fastavro.writer(fout, schema_TimeSeries , vals + vals2)
 
