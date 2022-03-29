@@ -14,13 +14,7 @@ import os.path
 from vspec.model.vsstree import VSSNode, VSSType
 
 out_file=""
-
-dllName = "../binary/binarytool.so"
-dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
-_cbinary = ctypes.CDLL(dllAbsPath)
-
-#void createBinaryCnode(char* fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* allowed, char* defaultAllowed, char* validate, int children);
-_cbinary.createBinaryCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int)
+_cbinary=None
 
 def createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, allowed, defaultAllowed, validate, children):
     global _cbinary
@@ -131,6 +125,14 @@ def export_node(node, generate_uuid, out_file):
 
 
 def export(config: argparse.Namespace, root: VSSNode):
+    global _cbinary
+    dllName = "../binary/binarytool.so"
+    dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
+    _cbinary = ctypes.CDLL(dllAbsPath)
+
+    #void createBinaryCnode(char* fname, char* name, char* type, char* uuid, char* descr, char* datatype, char* min, char* max, char* unit, char* allowed, char* defaultAllowed, char* validate, int children);
+    _cbinary.createBinaryCnode.argtypes = (ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int)
+    
     print("Generating binary output...")
     out_file = config.output_file
     export_node(root, not config.no_uuid, out_file)
