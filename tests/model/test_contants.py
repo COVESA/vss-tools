@@ -69,6 +69,9 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(Unit.REVOLUTIONSPERMINUTE, Unit.from_str("rpm"))
         self.assertEqual(Unit.INCH, Unit.from_str("inch"))
         self.assertEqual(Unit.RATIO, Unit.from_str("ratio"))
+        self.assertEqual(Unit.NANOMETERPERKILOMETER, Unit.from_str("nm/km"))
+        self.assertEqual(Unit.DECIBELMILLIWATT, Unit.from_str("dBm"))
+        self.assertEqual(Unit.KILONEWTON, Unit.from_str("kN"))
 
     def test_invalid_unit(self):
         with self.assertRaises(Exception): Unit.from_str("not_a_valid_case")

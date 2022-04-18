@@ -203,3 +203,16 @@ units:
     label: percent
     description: Relation measured in percent
     domain: relation
+  nm/km:
+    label: nano meter per kilometer
+    description: nm/km
+    domain: nm/km
+  dBm:
+    label: decibel milliwatt
+    description: Wear of tire tread depth
+    domain: relation
+  kN:
+    label: kilo newton
+    description: force measured in kilo newton
+    domain: force
+  
