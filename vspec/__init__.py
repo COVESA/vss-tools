@@ -762,6 +762,22 @@ def detect_and_merge(tree_root: VSSNode, private_root: VSSNode):
             private_element.parent = None
 
 
+def merge_tree(base: VSSNode, overlay: VSSNode):
+    r = Resolver()
+    overlay_element: VSSNode
+    for overlay_element in LevelOrderIter(overlay):
+        element_name = "/" + overlay_element.qualified_name("/")
+
+        if not VSSNode.node_exists(base, element_name):
+            new_parent_name = "/" + overlay_element.parent.qualified_name("/")
+            new_parent = r.get(base, new_parent_name)
+            overlay_element.parent = new_parent
+
+        elif overlay_element.is_leaf:
+            other_node = r.get(base, element_name)
+            other_node.merge(overlay_element)
+            overlay_element.parent = None
+
 db_mgr = SignalUUIDManager()
 
 load_flat_model.include_index = 1
