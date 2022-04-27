@@ -62,6 +62,8 @@ def main(arguments):
                         help='Output format, choose one from '+str(Exporter._member_names_)+". If omitted we try to guess form output_file suffix.")
     parser.add_argument('--no-uuid', action='store_true',
                         help='Exclude uuids from generated files.')
+    parser.add_argument('-o', '--overlays', action='append',  metavar='overlays', type=str,  default=[],
+                        help='Add overlays that will be layered on top of the VSS file in the order they appear.')
     parser.add_argument('vspec_file', metavar='<vspec_file>',
                         help='The vehicle specification file to convert.')
     parser.add_argument('output_file', metavar='<output_file>',
@@ -103,9 +105,17 @@ def main(arguments):
     exporter = args.format.value
 
     try:
-        print("Loading vspec...")
+        print(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle)
+            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+
+        for overlay in args.overlays:
+            print(f"Applying VSS overlay from {overlay}...")
+            othertree = vspec.load_tree(overlay,include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+            vspec.merge_tree(tree, othertree)
+        
+        vspec.expand_tree_instances(tree)
+
         print("Calling exporter...")
         exporter.export(args, tree)
         print("All done.")

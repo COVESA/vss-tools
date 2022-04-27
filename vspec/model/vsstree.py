@@ -11,6 +11,7 @@
 import sys
 import re
 import stringcase
+import copy
 from anytree import Node, Resolver, ChildResolverError
 
 from .constants import VSSType, VSSDataType, StringStyle, Unit
@@ -49,6 +50,9 @@ class VSSNode(Node):
     instances = None
     deprecation = ""
 
+    def __deepcopy__(self,memo):
+        return VSSNode(self.name, self.source_dict, parent=self.parent, children=copy.deepcopy(self.children,memo))
+
     def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False, break_on_name_style_violation=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
@@ -74,9 +78,16 @@ class VSSNode(Node):
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
-        self.description = source_dict["description"]
+        self.source_dict=source_dict
+
+
         self.type = VSSType.from_str(source_dict["type"])
-        self.uuid = source_dict["uuid"]
+
+        if "uuid" in source_dict.keys():
+            self.uuid = source_dict["uuid"]
+
+        if "description" in source_dict.keys():
+            self.description = source_dict["description"]
 
         if "datatype" in source_dict.keys():
             self.data_type = VSSDataType.from_str(source_dict["datatype"])
@@ -115,6 +126,10 @@ class VSSNode(Node):
             if break_on_name_style_violation:
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
+
+        if self.has_instances() and not self.is_branch():
+            print(f"Error: Only branches can be instantiated. {self.qualified_name()} is of type {self.type}")
+            sys.exit(-1)
             
     def validate_name_style(self,sourcefile):
         """Checks wether this node is adhering to VSS style conventions.
@@ -237,13 +252,22 @@ class VSSNode(Node):
         """
         return hasattr(self, "data_type") and self.data_type is not None
 
+    def has_instances(self) -> bool:
+        """Check if this instance has a VSS instances
+
+            Returns:
+                True if this instance declares instances, False otherwise
+        """
+        return hasattr(self, "instances") and self.instances is not None
+
     def merge(self, other: "VSSNode"):
-        """Merges two VSSNode, other parameter overwrites the caller object
+        """Merges two VSSNode, other parameter overwrites the caller object,
+           if it is not None
             Args:
                 other: other node to merge into the caller object
         """
-        for prop in other.__dir__():
-            if not prop.startswith("_") and not hasattr(super(), prop):
+        for prop in vars(other):
+            if not prop.startswith("_") and not getattr(other, prop) is None and not hasattr(super(), prop):
                 if hasattr(other, prop):
                     setattr(self, prop, getattr(other, prop))
 
@@ -270,14 +294,8 @@ class VSSNode(Node):
                 name: name of the VSS instances
         """
 
-        if "description" not in element.keys():
-            raise Exception("Invalid VSS element %s, must have description" % name)
-
         if "type" not in element.keys():
             raise Exception("Invalid VSS element %s, must have type" % name)
-
-        if "uuid" not in element.keys():
-            raise Exception("Invalid VSS element %s, must have UUID" % name)
 
         for aKey in element.keys():
             if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
@@ -287,6 +305,7 @@ class VSSNode(Node):
         if "default" in element.keys():
             if element["type"] != "attribute":
                 raise NonCoreAttributeException("Invalid VSS element %s, only attributes can use default" % name)
+
 
 def camel_case(st):
     """Camel case string conversion"""
