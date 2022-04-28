@@ -21,7 +21,6 @@ jobs:
           python -m pip --quiet --no-input install --upgrade pip 
           python -m pip --quiet --no-input install --upgrade pipenv wheel
           pipenv install
-          pipenv run python setup.py -q install
         env:
           PIPENV_VENV_IN_PROJECT: 1
 
