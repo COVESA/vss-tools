@@ -96,12 +96,12 @@ func main() {
                 var searchPath string
                 fmt.Printf("\nPath to resource(s): ")
                 fmt.Scanf("%s", &searchPath)
-                searchData, foundResponses := parser.VSSsearchNodes(searchPath, root, parser.MAXFOUNDNODES, true, true, nil)
+                searchData, foundResponses := parser.VSSsearchNodes(searchPath, root, parser.MAXFOUNDNODES, true, true, 0, nil, nil)
                 fmt.Printf("\nNumber of elements found=%d\n", foundResponses)
                 for i := 0 ; i < foundResponses ; i++ {
-                    fmt.Printf("Found node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].FoundNodeHandles)))
-                    fmt.Printf("Found node datatype=%d\n", parser.VSSgetDatatype(searchData[i].FoundNodeHandles))
-                    fmt.Printf("Found path=%s\n", searchData[i].ResponsePaths)
+                    fmt.Printf("Found node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].NodeHandle)))
+                    fmt.Printf("Found node datatype=%d\n", parser.VSSgetDatatype(searchData[i].NodeHandle))
+                    fmt.Printf("Found path=%s\n", searchData[i].NodePath)
                 }
             }
             case 'n':  //create node list file "nodelist.txt"
@@ -123,19 +123,19 @@ func main() {
                 var depth int
                 fmt.Printf("\nSubtree depth: ")
                 fmt.Scanf("%d", &depth)
-                searchData, foundResponses := parser.VSSsearchNodes(subTreePath, root, parser.MAXFOUNDNODES, false, false, nil)
-                subtreeNode := searchData[foundResponses-1].FoundNodeHandles
-                subTreeRootName := parser.VSSgetName(searchData[foundResponses-1].FoundNodeHandles)
+                searchData, foundResponses := parser.VSSsearchNodes(subTreePath, root, parser.MAXFOUNDNODES, false, false, 0, nil, nil)
+                subtreeNode := searchData[foundResponses-1].NodeHandle
+                subTreeRootName := parser.VSSgetName(searchData[foundResponses-1].NodeHandle)
                 for i := 1 ; i < depth ; i++ {
                     subTreeRootName += ".*"
                 }
                 fmt.Printf("\nsubTreeRootName=%s\n", subTreeRootName)
-                searchData, foundResponses = parser.VSSsearchNodes(subTreeRootName, subtreeNode, parser.MAXFOUNDNODES, false, false, nil)
+                searchData, foundResponses = parser.VSSsearchNodes(subTreeRootName, subtreeNode, parser.MAXFOUNDNODES, false, false, 0, nil, nil)
                 fmt.Printf("\nNumber of elements found=%d\n", foundResponses)
                 for i := 0 ; i < foundResponses ; i++ {
-                    fmt.Printf("Node type=%d\n", parser.VSSgetType(searchData[i].FoundNodeHandles))
-                    fmt.Printf("Node path=%s\n", searchData[i].ResponsePaths)
-                    fmt.Printf("Node validation=%d\n", parser.VSSgetValidation(searchData[i].FoundNodeHandles))
+                    fmt.Printf("Node type=%d\n", parser.VSSgetType(searchData[i].NodeHandle))
+                    fmt.Printf("Node path=%s\n", searchData[i].NodePath)
+                    fmt.Printf("Node validation=%d\n", parser.VSSgetValidation(searchData[i].NodeHandle))
                 }
             }
             case 'h':  //help
