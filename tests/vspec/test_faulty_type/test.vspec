@@ -1,0 +1,10 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalWithFaultyType:
+  datatype: float
+  type: bosch
+  unit: km
+  description: A sensor.

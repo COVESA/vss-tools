@@ -1,0 +1,3 @@
+# Ignore files produced during testing, if any
+**/out.json
+**/out.txt
