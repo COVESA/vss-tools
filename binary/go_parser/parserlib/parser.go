@@ -328,7 +328,7 @@ func populateNode(thisNode *def.Node_t) {
 
 	DatatypeLen := deSerializeUInt(readBytes(1)).(uint8)
 	Datatype := string(readBytes((uint32)(DatatypeLen)))
-	if (thisNode.NodeType != "branch") {
+	if (thisNode.NodeType != def.BRANCH) {
 	    thisNode.Datatype = (def.NodeDatatypes_t)(def.StringToDataType(Datatype))
 	}
 
