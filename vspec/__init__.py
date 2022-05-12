@@ -664,14 +664,18 @@ def merge_tree(base: VSSNode, overlay: VSSNode):
         element_name = "/" + overlay_element.qualified_name("/")
 
         if not VSSNode.node_exists(base, element_name):
+            #The node in the overlay does not exist, so we connect it
+            #print(f"Not exists {overlay_element.qualified_name()} does not exist, creating.")
             new_parent_name = "/" + overlay_element.parent.qualified_name("/")
             new_parent = r.get(base, new_parent_name)
             overlay_element.parent = new_parent
 
-        elif overlay_element.is_leaf:
+        else:
+            # else we merge the node. The merge function of VSSNode is not recursive
+            # so children in base will not be overwritten
+            #print(f"Merging {overlay_element.qualified_name()}")
             other_node: VSSNode = r.get(base, element_name)
             other_node.merge(overlay_element)
-            overlay_element.parent = None
 
 
 def create_tree_uuids(root: VSSNode):
