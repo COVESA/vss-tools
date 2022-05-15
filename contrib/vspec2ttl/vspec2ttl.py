@@ -41,12 +41,14 @@ class VssoCoreConcepts (Enum):
     PART_OF_VEHICLE =   "partOfVehicle"
     PART_OF_VEH_COMP =  "partOf"
     HAS_COMP_INST =     "postionedAt"
+    VSS_CLASSIFICATION ="vssFacetedClassification"
     VEHICLE =           "Vehicle"
     VEHICLE_SIGNAL =    "ObservableVehicleProperty"
     VEHICLE_ACT =       "ActuatableVehicleProperty"
     VEHICLE_COMP =      "VehicleComponent"
     VEHICLE_PROP =      "DynamicVehicleProperty"
     VEHICLE_STAT =      "StaticVehicleProperty"
+    
 
     def __init__ (self, vsso_name):
         self.ns = "https://github.com/w3c/vsso-core#"
@@ -186,7 +188,7 @@ def print_ttl_content(file, tree):
         #     node = URIRef(f"{VssoCoreConcepts.EMPTY.uri_string}has{name}")
         
         graph.add((node, RDFS.label, Literal(name,"en")))
-        graph.add((node, SKOS.altLabel, Literal(tree_node.qualified_name('.'),"en")))
+        graph.add((node, VssoCoreConcepts.VSS_CLASSIFICATION.uri, Literal(tree_node.qualified_name('.'),"en")))
         graph.add((node, SKOS.definition, Literal(tree_node.description,"en")))
 
         if tree_node.comment:
@@ -225,7 +227,7 @@ def print_ttl_content(file, tree):
 
                 graph.add((node, RDFS.subClassOf, b))
                 
-            else: # < vss acturators & sensors 
+            else: # < vss actuators & sensors 
 
                 if (tree_node.data_type in datatypes.keys()):
                     datatypes[tree_node.data_type] += 1
