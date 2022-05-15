@@ -187,7 +187,10 @@ def print_ttl_content(file, tree):
         
         graph.add((node, RDFS.label, Literal(name,"en")))
         graph.add((node, SKOS.altLabel, Literal(tree_node.qualified_name('.'),"en")))
-        graph.add((node, RDFS.comment, Literal(tree_node.description,"en")))
+        graph.add((node, SKOS.definition, Literal(tree_node.description,"en")))
+
+        if tree_node.comment:
+            graph.add((node, RDFS.comment, Literal(tree_node.comment,"en")))
         
         parent_namespace = "https://github.com/w3c/vsso#"
         # branch nodes (incl. instance handling)
@@ -208,33 +211,31 @@ def print_ttl_content(file, tree):
                 print( [x.name if x.type != VSSType.BRANCH else None for x in tree_node.children])
 
                 
-        else: 
-            b = BNode()
-            graph.add((b, RDF.type, OWL.Restriction))
-            graph.add((b, OWL.onProperty, VssoCoreConcepts.BELONGS_TO.uri))
-            if "Vehicle" == setTTLName(tree_node.parent):
-                graph.add((b, OWL.allValuesFrom, VssoCoreConcepts.VEHICLE.uri))
-            else:
-                graph.add((b, OWL.allValuesFrom, URIRef(parent_namespace + setTTLName(tree_node.parent))))
-
-            graph.add((node, RDFS.subClassOf, b))
-            
+        else:             
             if VSSType.ATTRIBUTE == tree_node.type:
                 graph.add((node, RDF.type, OWL.Class))
                 graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_STAT.uri))
+                b = BNode()
+                graph.add((b, RDF.type, OWL.Restriction))
+                graph.add((b, OWL.onProperty, VssoCoreConcepts.BELONGS_TO.uri))
+                if "Vehicle" == setTTLName(tree_node.parent):
+                    graph.add((b, OWL.allValuesFrom, VssoCoreConcepts.VEHICLE.uri))
+                else:
+                    graph.add((b, OWL.allValuesFrom, URIRef(parent_namespace + setTTLName(tree_node.parent))))
+
+                graph.add((node, RDFS.subClassOf, b))
                 
-            else:
+            else: # < vss acturators & sensors 
 
                 if (tree_node.data_type in datatypes.keys()):
                     datatypes[tree_node.data_type] += 1
                 else:
                     datatypes[tree_node.data_type] = 1
 
-                graph.add((node, RDF.type, OWL.Class))
-                graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_SIGNAL.uri))
-
+                graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_SIGNAL.uri))
+                
                 if VSSType.ACTUATOR == tree_node.type:
-                    graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_ACT.uri))
+                    graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_ACT.uri))
 
 
     file.write(graph.serialize(format='ttl'))
