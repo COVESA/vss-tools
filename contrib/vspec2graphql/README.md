@@ -48,6 +48,8 @@ type Vehicle_VehicleIdentification_Brand {
 }
 ```
 
+Above, `source` and `channel` are free text fields which can be used to include information on the origin of the data. Content is implementation specific. `timestamp` shall be the timestamp of the observation formatted according to ISO 8601 with UTC time zone.
+
 Every leaf has a timestamp. This is supposed to contain the date of the last modification of the value. 
 Queries can then filter data that has been recorded after a given timestamp.
 
