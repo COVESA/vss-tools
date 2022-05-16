@@ -74,6 +74,12 @@ class VSSNode(Node):
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
+        # keeping the source dict allows to:
+        #   - create a deep copy of a VSSNode at a later point in time
+        #      by instantiating a new VSSNode with the same source dict
+        #   - trace from which spec file the VSSNode originated
+        self.source_dict = source_dict
+
         self.description = source_dict["description"]
         self.type = VSSType.from_str(source_dict["type"])
         self.uuid = source_dict["uuid"]
