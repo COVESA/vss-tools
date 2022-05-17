@@ -328,7 +328,9 @@ func populateNode(thisNode *def.Node_t) {
 
 	DatatypeLen := deSerializeUInt(readBytes(1)).(uint8)
 	Datatype := string(readBytes((uint32)(DatatypeLen)))
-	thisNode.Datatype = (def.NodeDatatypes_t)(def.StringToDataType(Datatype))
+	if (thisNode.NodeType != def.BRANCH) {
+	    thisNode.Datatype = (def.NodeDatatypes_t)(def.StringToDataType(Datatype))
+	}
 
 	MinLen := deSerializeUInt(readBytes(1)).(uint8)
 	thisNode.Min = string(readBytes((uint32)(MinLen)))
@@ -358,7 +360,7 @@ func populateNode(thisNode *def.Node_t) {
 
 	thisNode.Children = deSerializeUInt(readBytes(1)).(uint8)
 
-	fmt.Printf("populateNode: %s\n", thisNode.Name)
+//	fmt.Printf("populateNode: %s\n", thisNode.Name)
 }
 
 // The reading order must be synchronized with the writing order in the binary tool

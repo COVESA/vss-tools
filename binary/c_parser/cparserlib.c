@@ -227,7 +227,6 @@ void popPathSegment(SearchContext_t* context) {
 }
 
 void incDepth(long thisNode, SearchContext_t* context) {
-	//printf("incDepth()\n");
 	pushPathSegment(VSSgetName(thisNode), context);
 	context->currentDepth++;
 }
@@ -274,7 +273,6 @@ int countSegments(char* path) {
 }
 
 bool compareNodeName(char* nodeName, char* pathName) {
-	//printf("compareNodeName(): nodeName=%s, pathName=%s\n", nodeName, pathName);
 	if (strcmp(nodeName, pathName) == 0 || strcmp(pathName, "*") == 0) {
 		return true;
 	}
@@ -349,7 +347,6 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
  * decDepth() shall reverse speculative wildcard matches that have failed, and also decrement currentDepth.
  **/
 void decDepth(int speculationSucceded, SearchContext_t* context) {
-	//printf("decDepth():speculationSucceded=%d\n", speculationSucceded);
 	if (context->speculationIndex >= 0 && context->speculativeMatches[context->speculationIndex] > 0) {
 		if (speculationSucceded == 0) {  // it failed so remove a saved match
 			context->numOfMatches--;
@@ -427,20 +424,17 @@ void populateNode(node_t* thisNode) {
 	ret = fread(type, sizeof(char)*typeLen, 1, treeFp);
 	type[typeLen] = '\0';
 	thisNode->type = stringToNodeType(type);
-printf("type: %s\n", type);
 	free(type);
 
 	ret = fread(&(thisNode->uuidLen), sizeof(uint8_t), 1, treeFp);
 	thisNode->uuid = (char*) malloc(sizeof(char)*(thisNode->uuidLen+1));
 	ret = fread(thisNode->uuid, sizeof(char)*thisNode->uuidLen, 1, treeFp);
 	thisNode->uuid[thisNode->uuidLen] = '\0';
-printf("uuid: %s\n", thisNode->uuid);
 
 	ret = fread(&(thisNode->descrLen), sizeof(uint8_t), 1, treeFp);
 	thisNode->description = (char*) malloc(sizeof(char)*(thisNode->descrLen+1));
 	ret = fread(thisNode->description, sizeof(char)*thisNode->descrLen, 1, treeFp);
 	thisNode->description[thisNode->descrLen] = '\0';
-printf("description: %s\n", thisNode->description);
 
 	uint8_t dataTypeLen;
 	ret = fread(&dataTypeLen, sizeof(uint8_t), 1, treeFp);
@@ -449,7 +443,6 @@ printf("description: %s\n", thisNode->description);
 		ret = fread(dataType, sizeof(char)*dataTypeLen, 1, treeFp);
 		dataType[dataTypeLen] = '\0';
 		thisNode->datatype = (uint8_t)stringToDataType(dataType);
-printf("datatype: %s\n", dataType);
 		free(dataType);
 	}
 
@@ -458,7 +451,6 @@ printf("datatype: %s\n", dataType);
 		thisNode->min = (char*) malloc(sizeof(char)*(thisNode->minLen+1));
 		ret = fread(thisNode->min, sizeof(char)*thisNode->minLen, 1, treeFp);
 		thisNode->min[thisNode->minLen] = '\0';
-printf("min: %s\n", thisNode->min);
 	}
 
 	ret = fread(&(thisNode->maxLen), sizeof(uint8_t), 1, treeFp);
@@ -466,7 +458,6 @@ printf("min: %s\n", thisNode->min);
 		thisNode->max = (char*) malloc(sizeof(char)*(thisNode->maxLen+1));
 		ret = fread(thisNode->max, sizeof(char)*thisNode->maxLen, 1, treeFp);
 		thisNode->max[thisNode->maxLen] = '\0';
-printf("max: %s\n", thisNode->max);
 	}
 
 	ret = fread(&(thisNode->unitLen), sizeof(uint8_t), 1, treeFp);
@@ -474,7 +465,6 @@ printf("max: %s\n", thisNode->max);
 		thisNode->unit = (char*) malloc(sizeof(char)*(thisNode->unitLen+1));
 		ret = fread(thisNode->unit, sizeof(char)*thisNode->unitLen, 1, treeFp);
 		thisNode->unit[thisNode->unitLen] = '\0';
-printf("unit: %s\n", thisNode->unit);
 	}
 
 	uint8_t allowedLen;
@@ -499,7 +489,6 @@ printf("unit: %s\n", thisNode->unit);
 		thisNode->defaultAllowed = (char*) malloc(sizeof(char)*(thisNode->defaultLen+1));
 		ret = fread(thisNode->defaultAllowed, sizeof(char)*thisNode->defaultLen, 1, treeFp);
 		thisNode->defaultAllowed[thisNode->defaultLen] = '\0';
-printf("default: %s\n", thisNode->defaultAllowed);
 	}
 
 	uint8_t validateLen;
@@ -509,15 +498,13 @@ printf("default: %s\n", thisNode->defaultAllowed);
 		ret = fread(validate, sizeof(char)*validateLen, 1, treeFp);
 		validate[validateLen] = '\0';
 		thisNode->validate = validateToUint8(validate);
-printf("validate: %s\n", validate);
 	} else {
 	    thisNode->validate = 0;
 	}
 
 	ret = fread(&(thisNode->children), sizeof(uint8_t), 1, treeFp);
-printf("children: %d\n", thisNode->children);
 
-	printf("populateNode: %s\n", thisNode->name);
+//	printf("populateNode: %s\n", thisNode->name);
 }
 
 int calculatAllowedStrLen(uint8_t alloweds, allowed_t* allowedDef) {
@@ -544,15 +531,12 @@ void writeNode(struct node_t* node) {
         if (nodeTypeLen > 0) {
 	    fwrite(nodeType, sizeof(char)*nodeTypeLen, 1, treeFp);
 	}
-printf("type: %s\n", nodeType);
 
 	fwrite(&(node->uuidLen), sizeof(uint8_t), 1, treeFp);
 	fwrite(node->uuid, sizeof(char)*node->uuidLen, 1, treeFp);
-printf("uuid: %s\n", node->uuid);
 
 	fwrite(&(node->descrLen), sizeof(uint8_t), 1, treeFp);
 	fwrite(node->description, sizeof(char)*node->descrLen, 1, treeFp);
-printf("uuid: %s\n", node->uuid);
 
         char dataType[50];
         strcpy(dataType, dataTypeToString(node->datatype));
@@ -561,7 +545,6 @@ printf("uuid: %s\n", node->uuid);
         if (dataTypeLen > 0) {
 	    fwrite(dataType, sizeof(char)*dataTypeLen, 1, treeFp);
 	}
-printf("dataType: %s\n", dataType);
 
 	fwrite(&(node->minLen), sizeof(uint8_t), 1, treeFp);
 	if (node->minLen > 0) {
@@ -582,7 +565,6 @@ printf("dataType: %s\n", dataType);
         if (node->allowed > 0) {
             allowedStrLen = calculatAllowedStrLen(node->allowed, node->allowedDef);
             fwrite(&allowedStrLen, sizeof(uint8_t), 1, treeFp);
-printf("allowedStrLen: %d\n", allowedStrLen);
 	    for (int i = 0 ; i < node->allowed ; i++) {
 	        allowedWrite((char*)(node->allowedDef[i]));
 	    }
@@ -603,9 +585,8 @@ printf("allowedStrLen: %d\n", allowedStrLen);
 	}
 
 	fwrite(&(node->children), sizeof(uint8_t), 1, treeFp);
-printf("children: %d\n", node->children);
 
-        printf("writeNode: %s\n", node->name);
+//        printf("writeNode: %s\n", node->name);
 }
 
 struct node_t* traverseAndReadNode(struct node_t* parentNode) {
@@ -625,7 +606,6 @@ struct node_t* traverseAndReadNode(struct node_t* parentNode) {
 }
 
 void traverseAndWriteNode(struct node_t* node) {
-	printf("Node name = %s, type=%d\n", node->name, node->type);
 	writeNode(node);
 	for (int childNo = 0 ; childNo < node->children ; childNo++) {
 		traverseAndWriteNode(node->child[childNo]);
@@ -636,7 +616,6 @@ int traverseNode(long thisNode, SearchContext_t* context) {
 	int speculationSucceded = 0;
 
 	incDepth(thisNode, context);
-	//printf("before compareNodeName():VSSnodename=%s, pathnodename=%s\n", VSSgetName(thisNode), getPathSegment(0, context));
 	if (compareNodeName(VSSgetName(thisNode), getPathSegment(0, context)) == true) {
 		bool done;
 		speculationSucceded = saveMatchingNode(thisNode, context, &done);
