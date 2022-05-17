@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# (c) 2022 BMW Group
 # (c) 2022 Robert Bosch GmbH
 # (c) 2016 Jaguar Land Rover
 #
@@ -15,7 +16,7 @@ from enum import Enum
 import sys
 import vspec
 
-from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary
+from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca
 
 
 
@@ -32,6 +33,7 @@ class Exporter(Enum):
     csv = vss2csv
     yaml = vss2yaml
     binary = vss2binary
+    franca = vss2franca
 
     def __str__(self):
         return self.name
