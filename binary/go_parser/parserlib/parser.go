@@ -323,7 +323,7 @@ func populateNode(thisNode *def.Node_t) {
 	UuidLen := deSerializeUInt(readBytes(1)).(uint8)
 	thisNode.Uuid = string(readBytes((uint32)(UuidLen)))
 
-	DescrLen := deSerializeUInt(readBytes(1)).(uint8)
+	DescrLen := deSerializeUInt(readBytes(2)).(uint16)
 	thisNode.Description = string(readBytes((uint32)(DescrLen)))
 
 	DatatypeLen := deSerializeUInt(readBytes(1)).(uint8)
@@ -341,7 +341,7 @@ func populateNode(thisNode *def.Node_t) {
 	UnitLen := deSerializeUInt(readBytes(1)).(uint8)
 	thisNode.Unit = string(readBytes((uint32)(UnitLen)))
 
-	allowedStrLen := deSerializeUInt(readBytes(1)).(uint8)
+	allowedStrLen := deSerializeUInt(readBytes(2)).(uint16)
 	allowedStr := string(readBytes((uint32)(allowedStrLen)))
 	thisNode.Allowed = (uint8)(countAllowedElements(allowedStr))
 	if (thisNode.Allowed > 0) {
@@ -375,7 +375,7 @@ func writeNode(thisNode *def.Node_t) {
     treeFp.Write(serializeUInt((uint8)(len(thisNode.Uuid))))
     treeFp.Write([]byte(thisNode.Uuid))
 
-    treeFp.Write(serializeUInt((uint8)(len(thisNode.Description))))
+    treeFp.Write(serializeUInt((uint16)(len(thisNode.Description))))
     treeFp.Write([]byte(thisNode.Description))
 
     Datatype := def.DataTypeToString(thisNode.Datatype)
@@ -400,7 +400,7 @@ func writeNode(thisNode *def.Node_t) {
     }
 
     allowedStrLen := calculatAllowedStrLen(thisNode.AllowedDef)
-    treeFp.Write(serializeUInt((uint8)(allowedStrLen)))
+    treeFp.Write(serializeUInt((uint16)(allowedStrLen)))
     if (thisNode.Allowed > 0) {
 	for i := 0 ; i < (int)(thisNode.Allowed) ; i++ {
 	    allowedWrite(thisNode.AllowedDef[i])
@@ -420,7 +420,7 @@ func writeNode(thisNode *def.Node_t) {
 
     treeFp.Write(serializeUInt((uint8)(thisNode.Children)))
 
-    fmt.Printf("writeNode: %s\n", thisNode.Name)
+//    fmt.Printf("writeNode: %s\n", thisNode.Name)
 }
 
 func calculatAllowedStrLen(allowedDef []string) int {
@@ -445,15 +445,15 @@ func serializeUInt(intVal interface{}) []byte {
         return buf
       case uint16:
         buf := make([]byte, 2)
-        buf[0] = byte((intVal.(uint16) & 0xFF00)/256)
-        buf[1] = byte(intVal.(uint16) & 0x00FF)
+        buf[1] = byte((intVal.(uint16) & 0xFF00)/256)
+        buf[0] = byte(intVal.(uint16) & 0x00FF)
         return buf
       case uint32:
         buf := make([]byte, 4)
-        buf[0] = byte((intVal.(uint32) & 0xFF000000)/16777216)
-        buf[1] = byte((intVal.(uint32) & 0xFF0000)/65536)
-        buf[2] = byte((intVal.(uint32) & 0xFF00)/256)
-        buf[3] = byte(intVal.(uint32) & 0x00FF)
+        buf[3] = byte((intVal.(uint32) & 0xFF000000)/16777216)
+        buf[2] = byte((intVal.(uint32) & 0xFF0000)/65536)
+        buf[1] = byte((intVal.(uint32) & 0xFF00)/256)
+        buf[0] = byte(intVal.(uint32) & 0x00FF)
         return buf
       default:
         fmt.Println(intVal, "is of an unknown type")
@@ -469,11 +469,11 @@ func deSerializeUInt(buf []byte) interface{} {
         return intVal
       case 2:
         var intVal uint16
-        intVal = (uint16)((uint16)(buf[0])*256 + (uint16)(buf[1]))
+        intVal = (uint16)((uint16)((uint16)(buf[1])*256) + (uint16)(buf[0]))
         return intVal
       case 4:
         var intVal uint32
-        intVal = (uint32)((uint32)(buf[0])*16777216 + (uint32)(buf[1])*65536 + (uint32)(buf[2])*256 + (uint32)(buf[3]))
+        intVal = (uint32)((uint32)((uint32)(buf[3])*16777216) + (uint32)((uint32)(buf[2])*65536) + (uint32)((uint32)(buf[1])*256) + (uint32)(buf[0]))
         return intVal
       default:
         fmt.Printf("Buffer length=%d is of an unknown size", len(buf))

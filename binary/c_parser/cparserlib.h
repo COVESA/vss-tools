@@ -13,7 +13,7 @@
 typedef enum {SENSOR=1, ACTUATOR, ATTRIBUTE, BRANCH } nodeTypes_t;
 typedef enum {INT8=1, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, INT8ARRAY, UINT8ARRAY, INT16ARRAY, UINT16ARRAY, INT32ARRAY, UINT32ARRAY, DOUBLEARRAY, FLOATARRAY, BOOLEANARRAY, STRINGARRAY} nodeDatatypes_t;
 
-#define MAXALLOWEDELEMENTLEN 20
+#define MAXALLOWEDELEMENTLEN 64
 typedef char allowed_t[MAXALLOWEDELEMENTLEN];
 
 typedef struct node_t {
@@ -22,7 +22,7 @@ typedef struct node_t {
     nodeTypes_t type;
     uint8_t uuidLen;
     char* uuid;
-    uint8_t descrLen;
+    uint16_t descrLen;
     char* description;
     nodeDatatypes_t datatype;
     uint8_t maxLen;

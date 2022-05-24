@@ -431,7 +431,7 @@ void populateNode(node_t* thisNode) {
 	ret = fread(thisNode->uuid, sizeof(char)*thisNode->uuidLen, 1, treeFp);
 	thisNode->uuid[thisNode->uuidLen] = '\0';
 
-	ret = fread(&(thisNode->descrLen), sizeof(uint8_t), 1, treeFp);
+	ret = fread(&(thisNode->descrLen), sizeof(uint16_t), 1, treeFp);
 	thisNode->description = (char*) malloc(sizeof(char)*(thisNode->descrLen+1));
 	ret = fread(thisNode->description, sizeof(char)*thisNode->descrLen, 1, treeFp);
 	thisNode->description[thisNode->descrLen] = '\0';
@@ -467,8 +467,8 @@ void populateNode(node_t* thisNode) {
 		thisNode->unit[thisNode->unitLen] = '\0';
 	}
 
-	uint8_t allowedLen;
-	ret = fread(&allowedLen, sizeof(uint8_t), 1, treeFp);
+	uint16_t allowedLen;
+	ret = fread(&allowedLen, sizeof(uint16_t), 1, treeFp);
 	if (allowedLen > 0) {
 		char* allowedStr = (char*) malloc(sizeof(char)*(allowedLen+1));
 		ret = fread(allowedStr, sizeof(char)*allowedLen, 1, treeFp);
@@ -535,7 +535,7 @@ void writeNode(struct node_t* node) {
 	fwrite(&(node->uuidLen), sizeof(uint8_t), 1, treeFp);
 	fwrite(node->uuid, sizeof(char)*node->uuidLen, 1, treeFp);
 
-	fwrite(&(node->descrLen), sizeof(uint8_t), 1, treeFp);
+	fwrite(&(node->descrLen), sizeof(uint16_t), 1, treeFp);
 	fwrite(node->description, sizeof(char)*node->descrLen, 1, treeFp);
 
         char dataType[50];
@@ -564,12 +564,12 @@ void writeNode(struct node_t* node) {
         int allowedStrLen = 0;
         if (node->allowed > 0) {
             allowedStrLen = calculatAllowedStrLen(node->allowed, node->allowedDef);
-            fwrite(&allowedStrLen, sizeof(uint8_t), 1, treeFp);
+            fwrite(&allowedStrLen, sizeof(uint16_t), 1, treeFp);
 	    for (int i = 0 ; i < node->allowed ; i++) {
 	        allowedWrite((char*)(node->allowedDef[i]));
 	    }
         } else {
-            fwrite(&allowedStrLen, sizeof(uint8_t), 1, treeFp);
+            fwrite(&allowedStrLen, sizeof(uint16_t), 1, treeFp);
         }
 
 	fwrite(&(node->defaultLen), sizeof(uint8_t), 1, treeFp);
