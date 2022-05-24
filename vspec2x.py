@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# (c) 2022 BMW Group
 # (c) 2022 Robert Bosch GmbH
 # (c) 2016 Jaguar Land Rover
 #
@@ -15,7 +16,7 @@ from enum import Enum
 import sys
 import vspec
 
-from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary
+from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca
 
 
 
@@ -32,6 +33,7 @@ class Exporter(Enum):
     csv = vss2csv
     yaml = vss2yaml
     binary = vss2binary
+    franca = vss2franca
 
     def __str__(self):
         return self.name
@@ -60,6 +62,8 @@ def main(arguments):
                         help='Output format, choose one from '+str(Exporter._member_names_)+". If omitted we try to guess form output_file suffix.")
     parser.add_argument('--no-uuid', action='store_true',
                         help='Exclude uuids from generated files.')
+    parser.add_argument('-o', '--overlays', action='append',  metavar='overlays', type=str,  default=[],
+                        help='Add overlays that will be layered on top of the VSS file in the order they appear.')
     parser.add_argument('vspec_file', metavar='<vspec_file>',
                         help='The vehicle specification file to convert.')
     parser.add_argument('output_file', metavar='<output_file>',
@@ -101,9 +105,17 @@ def main(arguments):
     exporter = args.format.value
 
     try:
-        print("Loading vspec...")
+        print(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle)
+            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+
+        for overlay in args.overlays:
+            print(f"Applying VSS overlay from {overlay}...")
+            othertree = vspec.load_tree(overlay,include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+            vspec.merge_tree(tree, othertree)
+        
+        vspec.expand_tree_instances(tree)
+
         print("Calling exporter...")
         exporter.export(args, tree)
         print("All done.")

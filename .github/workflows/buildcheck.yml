@@ -1,57 +1,61 @@
 name: Standard Build Check
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+concurrency:
+  group: ci-check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VSS_PATH: ${{ github.workspace }}/vehicle_signal_specification
+  VSS_TOOLS_PATH: ${{ github.workspace }}/vehicle_signal_specification/vss-tools
+  PYTHON_VERSION: "3.8.12"  # keep in sync with vss-tools/Pipfile!
+  CI: 1  # shall any script needs to know if it's running in the CI
 
 jobs:
   buildtest:
+    if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Install pyenv
+      - name: Checkout VSS as parent
+        uses: actions/checkout@v3
+        with:
+          repository: COVESA/vehicle_signal_specification
+          path: ${{ env.VSS_PATH }}
+          submodules: false
+      - name: Remove VSS vss-tools from parent
         run: |
-          # Needed for using exact python version, which is
-          # required in `Pipfile`.
-          curl https://pyenv.run | bash
-          export PATH="$HOME/.pyenv/bin:$PATH"
-          pyenv install 3.8.12
-      - name: Install dependencies
+          rm -rf ${{ env.VSS_TOOLS_PATH }}
+      - name: Checkout vss-tools inside vehicle_signal_specification/
+        uses: actions/checkout@v3
+        with:
+          path: ${{ env.VSS_TOOLS_PATH }}
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pipenv
+      - name: Install pipenv
         run: |
-          python -V
-          python -m pip --quiet --no-input install --upgrade pip 
+          python -m pip --quiet --no-input install --upgrade pip
           python -m pip --quiet --no-input install --upgrade pipenv wheel
-          pipenv install
-          pipenv run python setup.py -q install
-        env:
-          PIPENV_VENV_IN_PROJECT: 1
-
-      - name: Prepare vss-tools inside VSS
+      - name: Install dependencies with pipenv
         run: |
-          # Go up to parent dir and fetch VSS (master branch) there
-          cd ..
-          git clone https://github.com/GENIVI/vehicle_signal_specification
-
-          # In the parent dir we should find our dir, i.e. vss-tools with
-          # the version that is being tested now.  Put that inside of VSS
-          # dir where it is expected to be.
-          # (Later jobs fail if we remove the working dir entirely, so copy instead of move)
-          rm -rf vehicle_signal_specification/vss-tools
-          cp -a vss-tools vehicle_signal_specification/
-
+          cd ${{ env.VSS_TOOLS_PATH }}
+          pipenv install --deploy --dev
       - name: Test mandatory targets
         run: |
-          # "Our" version of vss-tools was prepared inside VSS => go there and run tests
-          cd ../vehicle_signal_specification
-          pipenv install
-          pipenv run make travis_targets
-        env:
-          PIPENV_PIPFILE: ./vss-tools/Pipfile
-          PIPENV_VENV_IN_PROJECT: 1
-      - name: Test optional targets. NOTE - always succeeds
+          cd ${{ env.VSS_TOOLS_PATH }}
+          pipenv run make -C "${{ env.VSS_PATH }}" travis_targets
+      - name: Test optional targets.
         run: |
-          cd ../vehicle_signal_specification
-          pipenv install
-          pipenv run make -k travis_optional || true
-        env:
-          PIPENV_PIPFILE: ./vss-tools/Pipfile
-          PIPENV_VENV_IN_PROJECT: 1
+          cd ${{ env.VSS_TOOLS_PATH }}
+          pipenv run make -C "${{ env.VSS_PATH }}" -k travis_optional ||
+            echo "::warning title=travis_optional::optional targets FAILED"
