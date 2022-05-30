@@ -77,15 +77,6 @@ def export_node( node, generate_uuid,generate_all_idl_features):
             if str(node.data_type.value) in dataTypesMap_covesa_dds:
                 datatype= str(dataTypesMap_covesa_dds[str(node.data_type.value)])
             elif '[' in str(node.data_type.value):
-                #example : datatype: float[] arraysize:10
-                #fetch arraysize value
-                try:
-                    arraysize=node.arraysize
-                    print("Array size: "+arraysize)
-                except AttributeError:
-                    print("Warning : Arraysize value can not be fetched from node: "+str(node.name))
-                    #arraysize=str(99)
-                    pass
                 nodevalueArray=str(node.data_type.value).split("[",1)
                 if str(nodevalueArray[0]) in dataTypesMap_covesa_dds :
                     datatype= str(dataTypesMap_covesa_dds[str(nodevalueArray[0])])
