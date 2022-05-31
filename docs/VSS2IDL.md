@@ -40,7 +40,7 @@ Below elements are considered only if the switch ***--all-idl-features*** is sup
 | double  | double            |
 | string  | string            |
 
-## Examples of VSS data and conveted DDS-IDL data
+## Examples of VSS data and converted DDS-IDL data
 
 ### Input VSS block with "arraysize" attribute
 | VSS    | DDS-IDL         |
