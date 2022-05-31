@@ -24,31 +24,22 @@ void writeNodeData(char* name, char* type, char* uuid, char* descr, char* dataty
     uint8_t nameLen  = (uint8_t)strlen(name);
     uint8_t typeLen = (uint8_t)strlen(type);
     uint8_t uuidLen  = (uint8_t)strlen(uuid);
-    uint8_t descrLen = (uint8_t)strlen(descr);
+    uint16_t descrLen = (uint16_t)strlen(descr);
     uint8_t datatypeLen = (uint8_t)strlen(datatype);
     uint8_t minLen = (uint8_t)strlen(min);
     uint8_t maxLen = (uint8_t)strlen(max);
     uint8_t unitLen = (uint8_t)strlen(unit);
-    uint8_t allowedLen = (uint8_t)strlen(allowed);
+    uint16_t allowedLen = (uint16_t)strlen(allowed);
     uint8_t defaultAllowedLen = (uint8_t)strlen(defaultAllowed);
     uint8_t validateLen = (uint8_t)strlen(validate);
     
-    if (descrLen > 255) {
-        printf("Description length=%d, is larger than 255.\n", descrLen);
-        descrLen = 255;
-    }
-    if (allowedLen > 255) {
-        printf("Allowed length=%d, is larger than 255.\n", allowedLen);
-        allowedLen = 255;
-    }
-
     fwrite(&nameLen, sizeof(uint8_t), 1, treeFp);
     fwrite(name, sizeof(char)*nameLen, 1, treeFp);
     fwrite(&typeLen, sizeof(uint8_t), 1, treeFp);
     fwrite(type, sizeof(char)*typeLen, 1, treeFp);
     fwrite(&uuidLen, sizeof(uint8_t), 1, treeFp);
     fwrite(uuid, sizeof(char)*uuidLen, 1, treeFp);
-    fwrite(&descrLen, sizeof(uint8_t), 1, treeFp);
+    fwrite(&descrLen, sizeof(uint16_t), 1, treeFp);
     fwrite(descr, sizeof(char)*descrLen, 1, treeFp);
     fwrite(&datatypeLen, sizeof(uint8_t), 1, treeFp);
     if (datatypeLen > 0) {
@@ -66,7 +57,7 @@ void writeNodeData(char* name, char* type, char* uuid, char* descr, char* dataty
     if (unitLen > 0) {
         fwrite(unit, sizeof(char)*unitLen, 1, treeFp);
     }
-    fwrite(&allowedLen, sizeof(uint8_t), 1, treeFp);
+    fwrite(&allowedLen, sizeof(uint16_t), 1, treeFp);
     if (allowedLen > 0) {
         fwrite(allowed, sizeof(char)*allowedLen, 1, treeFp);
     }
