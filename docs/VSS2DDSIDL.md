@@ -1,4 +1,4 @@
-VSS2IDL converter is used to export VSS file data to DDS IDL file _(4.2 version)_
+VSS2DDSIDL converter is used to export VSS file data to DDS IDL file _(4.2 version)_
 
 ## Acronyms used:
 - DDS : Data Distribution Service
@@ -10,7 +10,7 @@ VSS2IDL converter is used to export VSS file data to DDS IDL file _(4.2 version)
 - VSS description can be found at : [link](https://covesa.github.io/vehicle_signal_specification/introduction/)
 - DDS  IDL specification can be found at : [link](https://www.omg.org/spec/IDL/4.2/PDF)
 
-## Various VVS elements considered for conversion:
+## Various VSS elements considered for conversion:
 - Name
 - datatype (also single dimensional array is supported)
 - allowed
