@@ -1,0 +1,9 @@
+Vehicle:
+  type: branch
+  instances: Test[1,3]
+  description: High-level vehicle data.
+
+Vehicle.SomeThing:
+  type: sensor
+  description: "test"
+  datatype: string

@@ -1,0 +1,14 @@
+Vehicle:
+  type: branch
+  instances: 
+    - ["Test1"]
+    - ["Test2", "Test3"]
+    - ["Test4", "Test5", "Test6"]
+    - ["Test7", "Test8", "Test9", "Test10"]
+    - ["Test11"]
+  description: High-level vehicle data.
+
+Vehicle.SomeThing:
+  type: sensor
+  description: "test"
+  datatype: string
