@@ -22,7 +22,7 @@ def export_node(json_dict, node, generate_uuid):
     json_dict[node.name] = {}
 
     if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
-        json_dict[node.name]["datatype"] = str(node.data_type.value)
+        json_dict[node.name]["datatype"] = str(node.datatype.value)
 
     json_dict[node.name]["type"] = str(node.type.value)
 

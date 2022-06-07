@@ -36,7 +36,10 @@ class VSSNode(Node):
     comment = ""
     uuid = None
     type: VSSType
-    data_type: VSSDataType
+    datatype: VSSDataType
+
+    core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
+                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]
 
     unit: Unit
     min = ""
@@ -80,44 +83,26 @@ class VSSNode(Node):
 
         self.source_dict=source_dict
 
+        self.extended_attributes =  source_dict.copy()
+
+        # Clean special cases
+        if "children" in self.extended_attributes:
+            del self.extended_attributes["children"]
+        if "type" in self.extended_attributes:
+            del self.extended_attributes["type"]
+
+        def extractCoreAttribute(name: str):
+            if name != "children" and name != "type" and name in source_dict.keys():
+                setattr(self,name, source_dict[name])
+                del self.extended_attributes[name]
 
         self.type = VSSType.from_str(source_dict["type"])
 
-        if "uuid" in source_dict.keys():
-            self.uuid = source_dict["uuid"]
-
-        if "description" in source_dict.keys():
-            self.description = source_dict["description"]
+        for attribute in VSSNode.core_attributes:
+            extractCoreAttribute(attribute)
 
         if "datatype" in source_dict.keys():
-            self.data_type = VSSDataType.from_str(source_dict["datatype"])
-
-        if "unit" in source_dict.keys():
-            self.unit = Unit.from_str(source_dict["unit"])
-
-        if "min" in source_dict.keys():
-            self.min = source_dict["min"]
-
-        if "max" in source_dict.keys():
-            self.max = source_dict["max"]
-
-        if "allowed" in source_dict.keys():
-            self.allowed = source_dict["allowed"]
-
-        if "aggregate" in source_dict.keys():
-            self.aggregate = source_dict["aggregate"]
-
-        if "default" in source_dict.keys():
-            self.default_value = source_dict["default"]
-
-        if "instances" in source_dict.keys():
-            self.instances = source_dict["instances"]
-
-        if "deprecation" in source_dict.keys():
-            self.deprecation = source_dict["deprecation"]
-            
-        if "comment" in source_dict.keys():
-            self.comment = source_dict["comment"]
+            self.datatype = VSSDataType.from_str(source_dict["datatype"])
 
         try:
             self.validate_name_style(source_dict["$file_name$"])
@@ -139,7 +124,7 @@ class VSSNode(Node):
 
         """
         camel_regexp=p = re.compile('[A-Z][A-Za-z0-9]*$')
-        if self.type != VSSType.BRANCH and self.data_type==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
+        if self.type != VSSType.BRANCH and self.datatype==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
             raise NameStyleValidationException(f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
         if not camel_regexp.match(self.name):
             raise NameStyleValidationException(f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
@@ -244,13 +229,13 @@ class VSSNode(Node):
         """
         return hasattr(self, "unit") and self.unit is not None
 
-    def has_data_type(self) -> bool:
-        """Check if this instance has a data_type
+    def has_datatype(self) -> bool:
+        """Check if this instance has a datatype
 
             Returns:
                 True if this instance has a data type, False otherwise
         """
-        return hasattr(self, "data_type") and self.data_type is not None
+        return hasattr(self, "datatype") and self.datatype is not None
 
     def has_instances(self) -> bool:
         """Check if this instance has a VSS instances
@@ -298,8 +283,7 @@ class VSSNode(Node):
             raise Exception("Invalid VSS element %s, must have type" % name)
 
         for aKey in element.keys():
-            if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
-                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]:
+            if aKey not in VSSNode.core_attributes:
                 raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
 
         if "default" in element.keys():
