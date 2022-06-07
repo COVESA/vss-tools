@@ -1,0 +1,31 @@
+Vehicle:
+  type: branch
+  instances: Test[1,4]
+  description: High-level vehicle data.
+
+Vehicle.SomeThing:
+  type: Branch
+  description: "SomeThing description"
+  datatype: string
+
+Vehicle.SomeThing.SomethingLeaf:
+  type: sensor
+  description: "SomethingLeaf description"
+  datatype: string
+
+Vehicle.ExcludeSomeThing:
+  type: Branch
+  description: "ExcludeSomeThing description"
+  datatype: string
+  instantiate: False
+
+Vehicle.ExcludeSomeThing.ExcludeSomethingLeaf:
+  type: actuator
+  description: "ExcludeSomethingLeaf description"
+  datatype: string
+
+Vehicle.ExcludeNode:
+  type: attribute
+  description: "ExcludeNode description"
+  datatype: string
+  instantiate: False
