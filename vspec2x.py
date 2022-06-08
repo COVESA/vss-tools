@@ -16,7 +16,7 @@ from enum import Enum
 import sys
 import vspec
 
-from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl
+from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
 
 
 
@@ -34,6 +34,7 @@ class Exporter(Enum):
     binary = vss2binary
     franca = vss2franca
     idl = vss2ddsidl
+    graphql = vss2graphql
 
     def __str__(self):
         return self.name

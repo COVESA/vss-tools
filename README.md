@@ -29,7 +29,7 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 [vspec2ocf.py](contrib/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Contrib (Obsolete, no longer functional)  | - |
 [vspec2proto.py](contrib/vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib (Beta)  | - |
 [vspec2ttl.py](contrib/vspec2ttl/vspec2ttl.py) | Parses and expands a VSS and generates a TTL specification | Contrib  | - |
-[vspec2graphql.py](contrib/vspec2graphql.py) | Parses and expands a VSS and generates a GraphQL specification | Contrib  | - |
+[vspec2graphql.py](contrib/vspec2graphql.py) | Parses and expands a VSS and generates a GraphQL specification | Community Supported  | [Documentation](docs/VSS2GRAPHQL.md) |
 
 ## Tool Architecture
 
