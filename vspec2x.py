@@ -106,7 +106,7 @@ def main(arguments):
 
     known_extended_attributes_list = args.extended_attributes.split(",")
     if len(known_extended_attributes_list) > 0:
-        vspec.model.vsstree.VSSNode.extended_attributes = known_extended_attributes_list
+        vspec.model.vsstree.VSSNode.whitelisted_extended_attributes = known_extended_attributes_list
         print(
             f"Known extended attributes: {', '.join(known_extended_attributes_list)}")
 

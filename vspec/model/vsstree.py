@@ -18,7 +18,7 @@ from .constants import VSSType, VSSDataType, StringStyle, Unit
 
 DEFAULT_SEPARATOR = "."
 
-class NonCoreAttributeException(Exception):
+class UnknownAttributeException(Exception):
     def __init__(self, message):
 
         # Call the base class constructor with the parameters it needs
@@ -40,6 +40,10 @@ class VSSNode(Node):
 
     core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
                             "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]
+
+    # List of accepted extended attributes. In strict terminate if an attribtute is 
+    # neither in core or extended, 
+    whitelisted_extended_attributes = []
 
     unit: Unit
     min = ""
@@ -75,7 +79,7 @@ class VSSNode(Node):
         super().__init__(name, parent, children)
         try:
             VSSNode.validate_vss_element(source_dict, name)
-        except NonCoreAttributeException as e:
+        except UnknownAttributeException as e:
             print("Warning: {}".format(e))
             if break_on_noncore_attribute:
                 print("You asked for strict checking. Terminating.")
@@ -283,12 +287,12 @@ class VSSNode(Node):
             raise Exception("Invalid VSS element %s, must have type" % name)
 
         for aKey in element.keys():
-            if aKey not in VSSNode.core_attributes:
-                raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
+            if aKey not in VSSNode.core_attributes and aKey not in VSSNode.whitelisted_extended_attributes:
+                raise UnknownAttributeException('Attribute "%s" in element %s is not a core or known extended attribute.' % (aKey, name))
 
         if "default" in element.keys():
             if element["type"] != "attribute":
-                raise NonCoreAttributeException("Invalid VSS element %s, only attributes can use default" % name)
+                raise UnknownAttributeException("Invalid VSS element %s, only attributes can use default" % name)
 
 
 def camel_case(st):

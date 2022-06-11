@@ -12,12 +12,17 @@ import argparse
 import json
 from vspec.model.vsstree import VSSNode, VSSType
 
+
 def add_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument('--json-pretty', action='store_true', help=" Pretty print JSON output.")
+    parser.add_argument('--json-no-extended-attributes',
+                        action='store_true', help="Generate no extended attributes.")
+    parser.add_argument('--json-all-extended-attributes', action='store_true',
+                        help="Generate all extended attributes found in the model (default is generating only those given by the -e/--extended-attributes parameter).")
+    parser.add_argument('--json-pretty', action='store_true',
+                        help=" Pretty print JSON output.")
 
 
-
-def export_node(json_dict, node, generate_uuid):
+def export_node(json_dict, node, config):
 
     json_dict[node.name] = {}
 
@@ -52,8 +57,14 @@ def export_node(json_dict, node, generate_uuid):
     if node.comment != "":
         json_dict[node.name]["comment"] = node.comment
 
-    if generate_uuid:
+    if not config.no_uuid:
         json_dict[node.name]["uuid"] = node.uuid
+
+    if not config.json_no_extended_attributes:
+        for k, v in node.extended_attributes.items():
+            if not config.json_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
+                continue
+            json_dict[node.name][k] = v
 
     # Might be better to not generate child dict, if there are no children
     # if node.type == VSSType.BRANCH and len(node.children) != 0:
@@ -64,22 +75,17 @@ def export_node(json_dict, node, generate_uuid):
         json_dict[node.name]["children"] = {}
 
     for child in node.children:
-        export_node(json_dict[node.name]["children"], child, generate_uuid)
+        export_node(json_dict[node.name]["children"], child, config)
+
 
 def export(config: argparse.Namespace, root: VSSNode):
     print("Generating JSON output...")
     json_dict = {}
-    export_node(json_dict, root, not config.no_uuid)
-    outfile=open(config.output_file,'w')
+    export_node(json_dict, root, config)
+    outfile = open(config.output_file, 'w')
     if config.json_pretty:
         print("Serializing pretty JSON...")
         json.dump(json_dict, outfile, indent=2, sort_keys=True)
     else:
         print("Serializing compact JSON...")
         json.dump(json_dict, outfile, indent=None, sort_keys=True)
-
-
-
-
-
-
