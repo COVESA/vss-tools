@@ -18,11 +18,15 @@ import argparse
 from vspec.model.vsstree import VSSNode, VSSType
 import yaml
 
-def add_arguments(parser: argparse.ArgumentParser):
-   #no additional output for YAML at this moment
-   parser.description="The YAML exporter does not have additional options"
 
-def export_node(yaml_dict, node, generate_uuid):
+def add_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument('--yaml-no-extended-attributes',
+                        action='store_true', help="Generate no extended attributes.")
+    parser.add_argument('--yaml-all-extended-attributes', action='store_true',
+                        help="Generate all extended attributes found in the model (default is generating only those given by the -e/--extended-attributes parameter).")
+
+
+def export_node(yaml_dict, node, config):
 
     node_path = node.qualified_name()
 
@@ -31,7 +35,7 @@ def export_node(yaml_dict, node, generate_uuid):
     yaml_dict[node_path]["type"] = str(node.type.value)
 
     if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
-        yaml_dict[node_path]["datatype"] = str(node.data_type.value)
+        yaml_dict[node_path]["datatype"] = str(node.datatype.value)
 
     # many optional attributes are initilized to "" in vsstree.py
     if node.min != "":
@@ -56,11 +60,17 @@ def export_node(yaml_dict, node, generate_uuid):
         pass
 
     yaml_dict[node_path]["description"] = node.description
-    if generate_uuid:
+    if not config.no_uuid:
         yaml_dict[node_path]["uuid"] = node.uuid
 
+    if not config.yaml_no_extended_attributes:
+        for k, v in node.extended_attributes.items():
+            if not config.yaml_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
+                continue
+            yaml_dict[node_path][k] = v
+
     for child in node.children:
-        export_node(yaml_dict, child, generate_uuid)
+        export_node(yaml_dict, child, config)
 
 
 def export_yaml(file, root, generate_uuids):
@@ -81,8 +91,7 @@ class NoAliasDumper(yaml.SafeDumper):
             super().write_line_break()
 
 
-
 def export(config: argparse.Namespace, root: VSSNode):
     print("Generating YAML output...")
-    yaml_out=open(config.output_file,'w')
-    export_yaml(yaml_out, root, not config.no_uuid)
+    yaml_out = open(config.output_file, 'w')
+    export_yaml(yaml_out, root, config)

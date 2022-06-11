@@ -53,7 +53,7 @@ def main(arguments):
     parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,  default=[],
                         help='Add include directory to search for included vspec files.')
     parser.add_argument('-e', '--extended-attributes', type=str,  default="",
-                        help='Known extended attributes. Comma sperated list')
+                        help='Whitelisted extended attributes as comma sperated list. Note, that not all exporters will support (all) extended attributes.')
     parser.add_argument('-s', '--strict', action='store_true',
                         help='Use strict checking: Terminate when anything not covered or not recommended by the core VSS specs is found.')
     parser.add_argument('--abort-on-non-core-attribute', action='store_true',
