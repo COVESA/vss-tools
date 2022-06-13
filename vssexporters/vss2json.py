@@ -38,8 +38,8 @@ def export_node(json_dict, node, config):
         json_dict[node.name]["max"] = node.max
     if node.allowed != "":
         json_dict[node.name]["allowed"] = node.allowed
-    if node.default_value != "":
-        json_dict[node.name]["default"] = node.default_value
+    if node.default != "":
+        json_dict[node.name]["default"] = node.default
     if node.deprecation != "":
         json_dict[node.name]["deprecation"] = node.deprecation
 

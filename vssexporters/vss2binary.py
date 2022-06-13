@@ -85,8 +85,8 @@ def export_node(node, generate_uuid, out_file):
         nodeallowed = allowedString(node.allowed)
     b_nodeallowed = nodeallowed.encode('utf-8')
 
-    if node.default_value != "":
-        nodedefault = str(node.default_value)
+    if node.default != "":
+        nodedefault = str(node.default)
     b_nodedefault = nodedefault.encode('utf-8')
 
     if node.deprecation != "":

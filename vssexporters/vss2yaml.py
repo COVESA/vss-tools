@@ -44,8 +44,8 @@ def export_node(yaml_dict, node, config):
         yaml_dict[node_path]["max"] = node.max
     if node.allowed != "":
         yaml_dict[node_path]["allowed"] = node.allowed
-    if node.default_value != "":
-        yaml_dict[node_path]["default"] = node.default_value
+    if node.default != "":
+        yaml_dict[node_path]["default"] = node.default
     if node.deprecation != "":
         yaml_dict[node_path]["deprecation"] = node.deprecation
 

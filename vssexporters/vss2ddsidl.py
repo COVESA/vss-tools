@@ -94,8 +94,8 @@ def export_node( node, generate_uuid,generate_all_idl_features):
             min=str(node.min)
         if node.max!="":
             max=str(node.max)
-        if node.default_value != "":
-            defaultValue=node.default_value
+        if node.default != "":
+            defaultValue=node.default
             if isinstance(defaultValue,str) and isEnumCreated==False:
                 defaultValue="\""+defaultValue+"\""
 

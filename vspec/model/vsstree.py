@@ -52,7 +52,7 @@ class VSSNode(Node):
 
     ttl_name = ""
 
-    default_value = ""
+    default = ""
 
     instances = None
     deprecation = ""
