@@ -64,7 +64,7 @@ def print_message_body(nodes, graphql_file):
     for i, node in enumerate(nodes, 1):
         data_type = node.qualified_name('_')
         if not node.is_branch():
-            dt_val = node.data_type.value
+            dt_val = node.datatype.value
             data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
             if data_type is None:
                 print(f"WARNING: Could not map type {{dt_val}}!\n")
