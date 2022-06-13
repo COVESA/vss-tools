@@ -1,15 +1,4 @@
-#!/usr/bin/env python3
-
-# (C) 2021 BMW Group - All rights reserved.
-# AUTHOR: Daniel Wilms BMW Group;
-
-#
-#
-#
-# All files and artifacts in this repository are licensed under the
-# provisions of the license provided by the LICENSE file in this repository.
-#
-
+import argparse
 #
 # Convert vspec file to TTL
 #
@@ -75,6 +64,10 @@ class VssoCoreConcepts (Enum):
     def uri_string(self):
         return f'{self.ns}{self.value}'
 
+
+def add_arguments(parser: argparse.ArgumentParser):
+   #no additional output for TTL at this moment
+   parser.description="The TTL exporter does not currently support the no-uuid option."
 
 def setup_graph():
     ###
@@ -250,44 +243,11 @@ def print_ttl_content(file, tree):
     print (duplication_vsso)
     print (datatypes)
 
-def usage():
-    print(f"""
-Usage: {sys.argv[0]} [options] vspec_file ttl_file
 
-  where [options] are:
 
-  -I include_dir       Add include directory to search for included vspec
-                       files. Can be used multiple timees.
 
-  vspec_file           The vehicle specification file to parse.
-
-  ttl_file             The file to output the ttl data to.
-""")
-    sys.exit(255)
-
-if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args = getopt.getopt(sys.argv[1:], "I:")
-
-    # Always search current directory for include_file
-    include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        else:
-            usage()
-
-    if len(args) != 2:
-        usage()
-
-    try:
-        tree = vspec.load_tree(args[0], include_dirs, False, expand_inst=False)
-        ttl_out = open(args[1], "w")
-        print_ttl_content(ttl_out, tree)
-        ttl_out.write("\n")
-        ttl_out.close()
-    except vspec.VSpecError as e:
-        print(f"Error: {e}")
-        exit(255)
+def export(config: argparse.Namespace, root: VSSNode):
+    print("Generating ttl output...")
+    outfile=open(config.output_file,'w')
+    print_ttl_content(outfile, root)
+    outfile.close()

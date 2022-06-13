@@ -17,8 +17,7 @@ import sys
 import vspec
 
 from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
-
-
+from vssexporters.contrib import vss2ttl
 
 class Exporter(Enum):
     """
@@ -35,6 +34,7 @@ class Exporter(Enum):
     franca = vss2franca
     idl = vss2ddsidl
     graphql = vss2graphql
+    contrib_ttl = vss2ttl
 
     def __str__(self):
         return self.name
