@@ -105,8 +105,12 @@ class VSSNode(Node):
         for attribute in VSSNode.core_attributes:
             extractCoreAttribute(attribute)
 
+        # Datatype and unit need special handling, so we extract them again
         if "datatype" in source_dict.keys():
             self.datatype = VSSDataType.from_str(source_dict["datatype"])
+
+        if "unit" in source_dict.keys():
+            self.unit = Unit.from_str(source_dict["unit"])
 
         try:
             self.validate_name_style(source_dict["$file_name$"])
