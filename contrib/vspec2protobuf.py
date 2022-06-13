@@ -41,7 +41,7 @@ def print_message_body(nodes, proto_file):
     for i, node in enumerate(nodes, 1):
         data_type = node.qualified_name("")
         if not node.is_branch():
-            dt_val = node.data_type.value
+            dt_val = node.datatype.value
             data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
             data_type = ("repeated " if dt_val.endswith("[]") else "") + data_type
         proto_file.write(f"  {data_type} {node.name} = {i};" + "\n")
