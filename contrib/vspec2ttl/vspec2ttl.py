@@ -210,9 +210,11 @@ def print_ttl_content(file, tree):
                 print( [x.name if x.type != VSSType.BRANCH else None for x in tree_node.children])
         # branch nodes as vsso:VehicleComponent instances if variable is set accordingly
         elif VSSType.BRANCH == tree_node.type and not COMPONENTS_AS_CLASSES:
+            graph.add ((node, RDF.type, VssoCoreConcepts.VEHICLE_COMP.uri))
             if tree_node.parent:
-                graph.add ((node, RDF.type, VssoCoreConcepts.VEHICLE_COMP.uri))
                 graph.add((node, VssoCoreConcepts.PART_OF_VEH_COMP.uri, URIRef(namespace + setTTLName(tree_node.parent))))
+            
+                
         # attributes, sensors & actuators
         else:             
             if VSSType.ATTRIBUTE == tree_node.type:
