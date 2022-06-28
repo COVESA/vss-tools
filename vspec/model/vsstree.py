@@ -36,6 +36,13 @@ class ImpossibleMergeException(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
+class IncompleteElementException(Exception):
+    def __init__(self, message):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
     description = None
@@ -91,10 +98,11 @@ class VSSNode(Node):
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
-
-
         self.source_dict=source_dict
         self.unpack_source_dict()
+
+        if not self.is_branch() and ("datatype" not in self.source_dict.keys()):
+            raise IncompleteElementException(f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: Elements of type {self.type.value} need to have a datatype declared.")
 
         try:
             self.validate_name_style(self.source_dict["$file_name$"])
