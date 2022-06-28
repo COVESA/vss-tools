@@ -25,7 +25,7 @@ from anytree.importer import DictImporter
 
 import deprecation
 
-from .model.vsstree import ImpossibleMergeException, VSSNode
+from .model.vsstree import ImpossibleMergeException, IncompleteElementException, VSSNode
 
 
 class VSpecError(Exception):
@@ -613,8 +613,13 @@ def render_subtree(subtree, parent, break_on_unknown_attribute=False, break_on_n
     for element_name in subtree:
         current_element = subtree[element_name]
 
-        new_element = VSSNode(element_name, current_element, parent=parent, break_on_unknown_attribute=break_on_unknown_attribute,
+        try:
+            new_element = VSSNode(element_name, current_element, parent=parent, break_on_unknown_attribute=break_on_unknown_attribute,
                               break_on_name_style_violation=break_on_name_style_violation)
+        except IncompleteElementException as e:
+            print(f"Invalid VSS: {e}")
+            print("Terminating.")
+            sys.exit(-1)
         if "children" in current_element.keys():
             child_nodes = current_element["children"]
             render_subtree(child_nodes, new_element, break_on_unknown_attribute,
