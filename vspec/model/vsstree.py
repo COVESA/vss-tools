@@ -30,6 +30,12 @@ class NameStyleValidationException(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
+class ImpossibleMergeException(Exception):
+    def __init__(self, message):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
     description = None
@@ -85,9 +91,21 @@ class VSSNode(Node):
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
-        self.source_dict=source_dict
 
-        self.extended_attributes =  source_dict.copy()
+
+        self.source_dict=source_dict
+        self.unpack_source_dict()
+
+        try:
+            self.validate_name_style(self.source_dict["$file_name$"])
+        except NameStyleValidationException as e:
+            print(f"Warning: {e}")
+            if break_on_name_style_violation:
+                print("You asked for strict checking. Terminating.")
+                sys.exit(-1)
+    
+    def unpack_source_dict(self):
+        self.extended_attributes =  self.source_dict.copy()
 
         # Clean special cases
         if "children" in self.extended_attributes:
@@ -96,29 +114,21 @@ class VSSNode(Node):
             del self.extended_attributes["type"]
 
         def extractCoreAttribute(name: str):
-            if name != "children" and name != "type" and name in source_dict.keys():
-                setattr(self,name, source_dict[name])
+            if name != "children" and name != "type" and name in self.source_dict.keys():
+                setattr(self,name, self.source_dict[name])
                 del self.extended_attributes[name]
 
-        self.type = VSSType.from_str(source_dict["type"])
+        self.type = VSSType.from_str(self.source_dict["type"])
 
         for attribute in VSSNode.core_attributes:
             extractCoreAttribute(attribute)
 
         # Datatype and unit need special handling, so we extract them again
-        if "datatype" in source_dict.keys():
-            self.datatype = VSSDataType.from_str(source_dict["datatype"])
+        if "datatype" in self.source_dict.keys():
+            self.datatype = VSSDataType.from_str(self.source_dict["datatype"])
 
-        if "unit" in source_dict.keys():
-            self.unit = Unit.from_str(source_dict["unit"])
-
-        try:
-            self.validate_name_style(source_dict["$file_name$"])
-        except NameStyleValidationException as e:
-            print(f"Warning: {e}")
-            if break_on_name_style_violation:
-                print("You asked for strict checking. Terminating.")
-                sys.exit(-1)
+        if "unit" in self.source_dict.keys():
+            self.unit = Unit.from_str(self.source_dict["unit"])
 
         if self.has_instances() and not self.is_branch():
             print(f"Error: Only branches can be instantiated. {self.qualified_name()} is of type {self.type}")
@@ -259,10 +269,14 @@ class VSSNode(Node):
             Args:
                 other: other node to merge into the caller object
         """
-        for prop in vars(other):
-            if not prop.startswith("_") and not getattr(other, prop) is None and not hasattr(super(), prop):
-                if hasattr(other, prop):
-                    setattr(self, prop, getattr(other, prop))
+        if self.is_branch() and not other.is_branch():
+            raise ImpossibleMergeException(f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} from {other.source_dict['$file_name$']}, can not change branch to {other.type.value}.")
+        elif not self.is_branch() and  other.is_branch():
+            raise ImpossibleMergeException(f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} from {other.source_dict['$file_name$']}, can not change {self.type.value} to branch.")
+
+        self.source_dict.update(other.source_dict)
+        self.unpack_source_dict()
+        
 
     @staticmethod
     def node_exists(root, node_name) -> bool:
