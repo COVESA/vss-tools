@@ -41,7 +41,7 @@ class VSSNode(Node):
     core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
                             "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]
 
-    # List of accepted extended attributes. In strict terminate if an attribtute is 
+    # List of accepted extended attributes. In strict terminate if an attribute is 
     # neither in core or extended, 
     whitelisted_extended_attributes = []
 
@@ -60,7 +60,7 @@ class VSSNode(Node):
     def __deepcopy__(self,memo):
         return VSSNode(self.name, self.source_dict, parent=self.parent, children=copy.deepcopy(self.children,memo))
 
-    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False, break_on_name_style_violation=False):
+    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_unknown_attribute=False, break_on_name_style_violation=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
             Args:
@@ -68,7 +68,7 @@ class VSSNode(Node):
                 source_dict: VSS instance represented as dict from yaml parsing.
                 parent: Optional parent of this node instance.
                 children: Optional children instances of this node.
-                break_on_noncore_attribute: Throw an exception if the node contains attributes not in core VSS specification
+                break_on_unknown_attribute: Throw an exception if the node contains attributes not in core VSS specification
                 break_on_name_style_vioation: Throw an exception if this node's name is not follwing th VSS recommended style
 
             Returns:
@@ -81,7 +81,7 @@ class VSSNode(Node):
             VSSNode.validate_vss_element(source_dict, name)
         except UnknownAttributeException as e:
             print("Warning: {}".format(e))
-            if break_on_noncore_attribute:
+            if break_on_unknown_attribute:
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
