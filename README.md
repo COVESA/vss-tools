@@ -16,7 +16,7 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 
  Tool | Description | Type of Tool | Documentation |
 | ------------------ | ----------- | -------------------- |-------------------- |
-| [vspec2x.py](vspec2x.py) | Parses and expands VSS into different text based output formats. Currently supports `json`, `yaml`,`csv`,`idl`  | Community Supported | `./vspec2x --help` |
+| [vspec2x.py](vspec2x.py) | Parses and expands VSS into different text based output formats. Currently supports `json`, `yaml`,`csv`,`idl`  | Community Supported | Try `./vspec2x --help` or check [vspec2x documentation](docs/vspec2x.md) |
 [vspec2csv.py](vspec2csv.py) | Shortcut for [vspec2x.py](vspec2x.py) generating CSV output | Community Supported | -|
 [vspec2ddsidl.py](vspec2ddsidl.py) | Shortcut for [vspec2x.py](vspec2x.py) generating DDS-IDL output | Community Supported | [Documentation](docs/VSS2DDSIDL.md) |
 [vspec2json.py](vspec2json.py) |  Shortcut for [vspec2x.py](vspec2x.py) generating JSON output | Community Supported | - |
