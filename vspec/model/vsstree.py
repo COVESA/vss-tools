@@ -290,9 +290,13 @@ class VSSNode(Node):
         if "type" not in element.keys():
             raise Exception("Invalid VSS element %s, must have type" % name)
 
+        unknown = []
         for aKey in element.keys():
             if aKey not in VSSNode.core_attributes and aKey not in VSSNode.whitelisted_extended_attributes:
-                raise UnknownAttributeException('Attribute "%s" in element %s is not a core or known extended attribute.' % (aKey, name))
+                unknown.append(aKey)
+            
+        if len(unknown) > 0:
+            raise UnknownAttributeException(f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core or known extended attribute." )
 
         if "default" in element.keys():
             if element["type"] != "attribute":
