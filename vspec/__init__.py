@@ -25,7 +25,7 @@ from anytree.importer import DictImporter
 
 import deprecation
 
-from .model.vsstree import VSSNode
+from .model.vsstree import ImpossibleMergeException, VSSNode
 
 
 class VSpecError(Exception):
@@ -675,7 +675,11 @@ def merge_tree(base: VSSNode, overlay: VSSNode):
             # so children in base will not be overwritten
             #print(f"Merging {overlay_element.qualified_name()}")
             other_node: VSSNode = r.get(base, element_name)
-            other_node.merge(overlay_element)
+            try:
+                other_node.merge(overlay_element)
+            except ImpossibleMergeException as e:
+                print(f"Merging impossible: {e}")
+                sys.exit(-1)
 
 
 def create_tree_uuids(root: VSSNode):
