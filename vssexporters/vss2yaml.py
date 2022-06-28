@@ -20,8 +20,6 @@ import yaml
 
 
 def add_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument('--yaml-no-extended-attributes',
-                        action='store_true', help="Generate no extended attributes.")
     parser.add_argument('--yaml-all-extended-attributes', action='store_true',
                         help="Generate all extended attributes found in the model (default is generating only those given by the -e/--extended-attributes parameter).")
 
@@ -63,11 +61,10 @@ def export_node(yaml_dict, node, config):
     if not config.no_uuid:
         yaml_dict[node_path]["uuid"] = node.uuid
 
-    if not config.yaml_no_extended_attributes:
-        for k, v in node.extended_attributes.items():
-            if not config.yaml_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
-                continue
-            yaml_dict[node_path][k] = v
+    for k, v in node.extended_attributes.items():
+        if not config.yaml_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
+            continue
+        yaml_dict[node_path][k] = v
 
     for child in node.children:
         export_node(yaml_dict, child, config)

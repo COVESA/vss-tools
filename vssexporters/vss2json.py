@@ -14,8 +14,6 @@ from vspec.model.vsstree import VSSNode, VSSType
 
 
 def add_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument('--json-no-extended-attributes',
-                        action='store_true', help="Generate no extended attributes.")
     parser.add_argument('--json-all-extended-attributes', action='store_true',
                         help="Generate all extended attributes found in the model (default is generating only those given by the -e/--extended-attributes parameter).")
     parser.add_argument('--json-pretty', action='store_true',
@@ -60,11 +58,10 @@ def export_node(json_dict, node, config):
     if not config.no_uuid:
         json_dict[node.name]["uuid"] = node.uuid
 
-    if not config.json_no_extended_attributes:
-        for k, v in node.extended_attributes.items():
-            if not config.json_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
-                continue
-            json_dict[node.name][k] = v
+    for k, v in node.extended_attributes.items():
+        if not config.json_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
+            continue
+        json_dict[node.name][k] = v
 
     # Might be better to not generate child dict, if there are no children
     # if node.type == VSSType.BRANCH and len(node.children) != 0:
