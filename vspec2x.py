@@ -58,7 +58,7 @@ def main(arguments):
     parser.add_argument('-s', '--strict', action='store_true',
                         help='Use strict checking: Terminate when anything not covered or not recommended by VSS language or extensions is found.')
     parser.add_argument('--abort-on-unknown-attribute', action='store_true',
-                        help=" Terminate when non-core attribute is found.")
+                        help=" Terminate when an unknown attribute is found.")
     parser.add_argument('--abort-on-name-style', action='store_true',
                         help=" Terminate naming style not follows recommendations.")
     parser.add_argument('--format', metavar='format', type=Exporter.from_string, choices=list(Exporter),
