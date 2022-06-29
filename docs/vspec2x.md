@@ -6,7 +6,7 @@ As a consequence it provides general commndline parameters guidng the parsing of
 
 You can get a description of supported commandlines parameters by running `vspec2x.py --help`.
 
-This documentation will give some examples and eloboarate more on specific parameters.
+This documentation will give some examples and elaborate more on specific parameters.
 
 The supported arguments might look like this
  ```
@@ -129,7 +129,7 @@ The Franca exporter does not currently support the no-uuid option.
 ## DDS-IDL exporter notes
 
 ### --all-idl-features
-Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out becasue at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](VSS2DDSIDL.md).
+Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out because at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](VSS2DDSIDL.md).
 
 ## GRAPHQL exporter notes
 
@@ -137,7 +137,7 @@ Will also generate non-payload const attributes such as unit/datatype. Default i
 Add additional fields to the nodes in the graphql schema. use: <field_name> <description>
 
 
-## Writing yor own exporter
+## Writing your own exporter
 This is easy. Put the code in file in the [vssexporters directory](../vssexporters/). 
 
 Mandatory functions to be implemented are
