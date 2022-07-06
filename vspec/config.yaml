@@ -209,10 +209,10 @@ units:
     domain: nm/km
   dBm:
     label: decibel milliwatt
-    description: Wear of tire tread depth
+    description: Power level expressed in decibels with reference to one milliwatt
     domain: relation
   kN:
     label: kilo newton
-    description: force measured in kilo newton
+    description: Force measured in kilo newton
     domain: force
   
