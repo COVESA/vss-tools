@@ -18,11 +18,13 @@ from .constants import VSSType, VSSDataType, StringStyle, Unit
 
 DEFAULT_SEPARATOR = "."
 
-class NonCoreAttributeException(Exception):
+
+class UnknownAttributeException(Exception):
     def __init__(self, message):
 
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
+
 
 class NameStyleValidationException(Exception):
     def __init__(self, message):
@@ -30,13 +32,35 @@ class NameStyleValidationException(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
+
+class ImpossibleMergeException(Exception):
+    def __init__(self, message):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+
+class IncompleteElementException(Exception):
+    def __init__(self, message):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
     description = None
     comment = ""
     uuid = None
     type: VSSType
-    data_type: VSSDataType
+    datatype: VSSDataType
+
+    core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
+                       "aggregate", "default", "instances", "deprecation", "arraysize", "comment", "$file_name$"]
+
+    # List of accepted extended attributes. In strict terminate if an attribute is
+    # neither in core or extended,
+    whitelisted_extended_attributes = []
 
     unit: Unit
     min = ""
@@ -45,15 +69,15 @@ class VSSNode(Node):
 
     ttl_name = ""
 
-    default_value = ""
+    default = ""
 
     instances = None
     deprecation = ""
 
-    def __deepcopy__(self,memo):
-        return VSSNode(self.name, self.source_dict, parent=self.parent, children=copy.deepcopy(self.children,memo))
+    def __deepcopy__(self, memo):
+        return VSSNode(self.name, self.source_dict, parent=self.parent, children=copy.deepcopy(self.children, memo))
 
-    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_noncore_attribute=False, break_on_name_style_violation=False):
+    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_unknown_attribute=False, break_on_name_style_violation=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
             Args:
@@ -61,7 +85,7 @@ class VSSNode(Node):
                 source_dict: VSS instance represented as dict from yaml parsing.
                 parent: Optional parent of this node instance.
                 children: Optional children instances of this node.
-                break_on_noncore_attribute: Throw an exception if the node contains attributes not in core VSS specification
+                break_on_unknown_attribute: Throw an exception if the node contains attributes not in core VSS specification
                 break_on_name_style_vioation: Throw an exception if this node's name is not follwing th VSS recommended style
 
             Returns:
@@ -72,78 +96,72 @@ class VSSNode(Node):
         super().__init__(name, parent, children)
         try:
             VSSNode.validate_vss_element(source_dict, name)
-        except NonCoreAttributeException as e:
+        except UnknownAttributeException as e:
             print("Warning: {}".format(e))
-            if break_on_noncore_attribute:
+            if break_on_unknown_attribute:
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
-        self.source_dict=source_dict
+        self.source_dict = source_dict
+        self.unpack_source_dict()
 
-
-        self.type = VSSType.from_str(source_dict["type"])
-
-        if "uuid" in source_dict.keys():
-            self.uuid = source_dict["uuid"]
-
-        if "description" in source_dict.keys():
-            self.description = source_dict["description"]
-
-        if "datatype" in source_dict.keys():
-            self.data_type = VSSDataType.from_str(source_dict["datatype"])
-
-        if "unit" in source_dict.keys():
-            self.unit = Unit.from_str(source_dict["unit"])
-
-        if "min" in source_dict.keys():
-            self.min = source_dict["min"]
-
-        if "max" in source_dict.keys():
-            self.max = source_dict["max"]
-
-        if "allowed" in source_dict.keys():
-            self.allowed = source_dict["allowed"]
-
-        if "aggregate" in source_dict.keys():
-            self.aggregate = source_dict["aggregate"]
-
-        if "default" in source_dict.keys():
-            self.default_value = source_dict["default"]
-
-        if "instances" in source_dict.keys():
-            self.instances = source_dict["instances"]
-
-        if "deprecation" in source_dict.keys():
-            self.deprecation = source_dict["deprecation"]
-            
-        if "comment" in source_dict.keys():
-            self.comment = source_dict["comment"]
+        if not self.is_branch() and ("datatype" not in self.source_dict.keys()):
+            raise IncompleteElementException(
+                f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: Elements of type {self.type.value} need to have a datatype declared.")
 
         try:
-            self.validate_name_style(source_dict["$file_name$"])
+            self.validate_name_style(self.source_dict["$file_name$"])
         except NameStyleValidationException as e:
             print(f"Warning: {e}")
             if break_on_name_style_violation:
                 print("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
+    def unpack_source_dict(self):
+        self.extended_attributes = self.source_dict.copy()
+
+        # Clean special cases
+        if "children" in self.extended_attributes:
+            del self.extended_attributes["children"]
+        if "type" in self.extended_attributes:
+            del self.extended_attributes["type"]
+
+        def extractCoreAttribute(name: str):
+            if name != "children" and name != "type" and name in self.source_dict.keys():
+                setattr(self, name, self.source_dict[name])
+                del self.extended_attributes[name]
+
+        self.type = VSSType.from_str(self.source_dict["type"])
+
+        for attribute in VSSNode.core_attributes:
+            extractCoreAttribute(attribute)
+
+        # Datatype and unit need special handling, so we extract them again
+        if "datatype" in self.source_dict.keys():
+            self.datatype = VSSDataType.from_str(self.source_dict["datatype"])
+
+        if "unit" in self.source_dict.keys():
+            self.unit = Unit.from_str(self.source_dict["unit"])
+
         if self.has_instances() and not self.is_branch():
-            print(f"Error: Only branches can be instantiated. {self.qualified_name()} is of type {self.type}")
+            print(
+                f"Error: Only branches can be instantiated. {self.qualified_name()} is of type {self.type}")
             sys.exit(-1)
-            
-    def validate_name_style(self,sourcefile):
+
+    def validate_name_style(self, sourcefile):
         """Checks wether this node is adhering to VSS style conventions.
 
             Throws NameStyleValidationException when deviations are detected. A VSS model violating
             this conventions can still be a valid model.
 
         """
-        camel_regexp=p = re.compile('[A-Z][A-Za-z0-9]*$')
-        if self.type != VSSType.BRANCH and self.data_type==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
-            raise NameStyleValidationException(f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
+        camel_regexp = p = re.compile('[A-Z][A-Za-z0-9]*$')
+        if self.type != VSSType.BRANCH and self.datatype == VSSDataType.BOOLEAN and not self.name.startswith("Is"):
+            raise NameStyleValidationException(
+                f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
         if not camel_regexp.match(self.name):
-            raise NameStyleValidationException(f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
-        
+            raise NameStyleValidationException(
+                f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
 
     def is_private(self) -> bool:
         """Checks weather this instance is in private branch of VSS.
@@ -244,13 +262,13 @@ class VSSNode(Node):
         """
         return hasattr(self, "unit") and self.unit is not None
 
-    def has_data_type(self) -> bool:
-        """Check if this instance has a data_type
+    def has_datatype(self) -> bool:
+        """Check if this instance has a datatype
 
             Returns:
                 True if this instance has a data type, False otherwise
         """
-        return hasattr(self, "data_type") and self.data_type is not None
+        return hasattr(self, "datatype") and self.datatype is not None
 
     def has_instances(self) -> bool:
         """Check if this instance has a VSS instances
@@ -266,10 +284,15 @@ class VSSNode(Node):
             Args:
                 other: other node to merge into the caller object
         """
-        for prop in vars(other):
-            if not prop.startswith("_") and not getattr(other, prop) is None and not hasattr(super(), prop):
-                if hasattr(other, prop):
-                    setattr(self, prop, getattr(other, prop))
+        if self.is_branch() and not other.is_branch():
+            raise ImpossibleMergeException(
+                f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} from {other.source_dict['$file_name$']}, can not change branch to {other.type.value}.")
+        elif not self.is_branch() and other.is_branch():
+            raise ImpossibleMergeException(
+                f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} from {other.source_dict['$file_name$']}, can not change {self.type.value} to branch.")
+
+        self.source_dict.update(other.source_dict)
+        self.unpack_source_dict()
 
     @staticmethod
     def node_exists(root, node_name) -> bool:
@@ -297,14 +320,19 @@ class VSSNode(Node):
         if "type" not in element.keys():
             raise Exception("Invalid VSS element %s, must have type" % name)
 
+        unknown = []
         for aKey in element.keys():
-            if aKey not in ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
-                            "aggregate", "default" , "instances", "deprecation", "arraysize", "comment", "$file_name$"]:
-                raise NonCoreAttributeException('Non-core attribute "%s" in element %s found.' % (aKey, name))
+            if aKey not in VSSNode.core_attributes and aKey not in VSSNode.whitelisted_extended_attributes:
+                unknown.append(aKey)
+
+        if len(unknown) > 0:
+            raise UnknownAttributeException(
+                f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core or known extended attribute.")
 
         if "default" in element.keys():
             if element["type"] != "attribute":
-                raise NonCoreAttributeException("Invalid VSS element %s, only attributes can use default" % name)
+                raise UnknownAttributeException(
+                    "Invalid VSS element %s, only attributes can use default" % name)
 
 
 def camel_case(st):
@@ -312,6 +340,7 @@ def camel_case(st):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', st)
     s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
     return re.sub(r'(?:^|_)([a-z])', lambda x: x.group(1).upper(), s2)
+
 
 def camel_back(st):
     """Camel back string conversion"""

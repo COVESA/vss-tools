@@ -69,7 +69,7 @@ def export_node(node, generate_uuid, out_file):
     nodevalidate = ""
 
     if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
-        nodedatatype = str(node.data_type.value)
+        nodedatatype = str(node.datatype.value)
     b_nodedatatype = nodedatatype.encode('utf-8')
 
     # many optional attributes are initilized to "" in vsstree.py
@@ -85,8 +85,8 @@ def export_node(node, generate_uuid, out_file):
         nodeallowed = allowedString(node.allowed)
     b_nodeallowed = nodeallowed.encode('utf-8')
 
-    if node.default_value != "":
-        nodedefault = str(node.default_value)
+    if node.default != "":
+        nodedefault = str(node.default)
     b_nodedefault = nodedefault.encode('utf-8')
 
     if node.deprecation != "":

@@ -25,7 +25,7 @@ from anytree.importer import DictImporter
 
 import deprecation
 
-from .model.vsstree import VSSNode
+from .model.vsstree import ImpossibleMergeException, IncompleteElementException, VSSNode
 
 
 class VSpecError(Exception):
@@ -84,13 +84,13 @@ def convert_yaml_to_list(raw_yaml):
     return lst
 
 
-def load_tree(file_name, include_paths, merge_private=False, break_on_noncore_attribute=False, break_on_name_style_violation=False, expand_inst=True):
+def load_tree(file_name, include_paths, merge_private=False, break_on_unknown_attribute=False, break_on_name_style_violation=False, expand_inst=True):
     flat_model = load_flat_model(file_name, "", include_paths)
     absolute_path_flat_model = create_absolute_paths(flat_model)
     deep_model = create_nested_model(absolute_path_flat_model, file_name)
     cleanup_deep_model(deep_model)
     dict_tree = deep_model["children"]
-    tree = render_tree(dict_tree, merge_private, break_on_noncore_attribute=break_on_noncore_attribute,
+    tree = render_tree(dict_tree, merge_private, break_on_unknown_attribute=break_on_unknown_attribute,
                        break_on_name_style_violation=break_on_name_style_violation)
     if expand_inst:
         expand_tree_instances(tree)
@@ -588,18 +588,18 @@ $include$:
     return text
 
 
-def render_tree(tree_dict, merge_private=False, break_on_noncore_attribute=False, break_on_name_style_violation=False) -> VSSNode:
+def render_tree(tree_dict, merge_private=False, break_on_unknown_attribute=False, break_on_name_style_violation=False) -> VSSNode:
     if len(tree_dict) != 1:
         raise Exception('Invalid VSS model, must have single root node')
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
-    tree_root = VSSNode(root_element_name, root_element, break_on_noncore_attribute=break_on_noncore_attribute,
+    tree_root = VSSNode(root_element_name, root_element, break_on_unknown_attribute=break_on_unknown_attribute,
                         break_on_name_style_violation=break_on_name_style_violation)
 
     if "children" in root_element.keys():
         child_nodes = root_element["children"]
-        render_subtree(child_nodes, tree_root, break_on_noncore_attribute=break_on_noncore_attribute,
+        render_subtree(child_nodes, tree_root, break_on_unknown_attribute=break_on_unknown_attribute,
                        break_on_name_style_violation=break_on_name_style_violation)
 
     if merge_private:
@@ -609,15 +609,20 @@ def render_tree(tree_dict, merge_private=False, break_on_noncore_attribute=False
     return tree_root
 
 
-def render_subtree(subtree, parent, break_on_noncore_attribute=False, break_on_name_style_violation=False):
+def render_subtree(subtree, parent, break_on_unknown_attribute=False, break_on_name_style_violation=False):
     for element_name in subtree:
         current_element = subtree[element_name]
 
-        new_element = VSSNode(element_name, current_element, parent=parent, break_on_noncore_attribute=break_on_noncore_attribute,
+        try:
+            new_element = VSSNode(element_name, current_element, parent=parent, break_on_unknown_attribute=break_on_unknown_attribute,
                               break_on_name_style_violation=break_on_name_style_violation)
+        except IncompleteElementException as e:
+            print(f"Invalid VSS: {e}")
+            print("Terminating.")
+            sys.exit(-1)
         if "children" in current_element.keys():
             child_nodes = current_element["children"]
-            render_subtree(child_nodes, new_element, break_on_noncore_attribute,
+            render_subtree(child_nodes, new_element, break_on_unknown_attribute,
                            break_on_name_style_violation=break_on_name_style_violation)
 
 
@@ -675,7 +680,11 @@ def merge_tree(base: VSSNode, overlay: VSSNode):
             # so children in base will not be overwritten
             #print(f"Merging {overlay_element.qualified_name()}")
             other_node: VSSNode = r.get(base, element_name)
-            other_node.merge(overlay_element)
+            try:
+                other_node.merge(overlay_element)
+            except ImpossibleMergeException as e:
+                print(f"Merging impossible: {e}")
+                sys.exit(-1)
 
 
 def create_tree_uuids(root: VSSNode):

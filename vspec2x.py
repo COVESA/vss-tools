@@ -15,9 +15,9 @@ import argparse
 from enum import Enum
 import sys
 import vspec
+from vspec.model.vsstree import VSSNode
 
 from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
-
 
 
 class Exporter(Enum):
@@ -53,10 +53,12 @@ parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
 def main(arguments):
     parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,  default=[],
                         help='Add include directory to search for included vspec files.')
+    parser.add_argument('-e', '--extended-attributes', type=str,  default="",
+                        help='Whitelisted extended attributes as comma separated list. Note, that not all exporters will support (all) extended attributes.')
     parser.add_argument('-s', '--strict', action='store_true',
-                        help='Use strict checking: Terminate when anything not covered or not recommended by the core VSS specs is found.')
-    parser.add_argument('--abort-on-non-core-attribute', action='store_true',
-                        help=" Terminate when non-core attribute is found.")
+                        help='Use strict checking: Terminate when anything not covered or not recommended by VSS language or extensions is found.')
+    parser.add_argument('--abort-on-unknown-attribute', action='store_true',
+                        help=" Terminate when an unknown attribute is found.")
     parser.add_argument('--abort-on-name-style', action='store_true',
                         help=" Terminate naming style not follows recommendations.")
     parser.add_argument('--format', metavar='format', type=Exporter.from_string, choices=list(Exporter),
@@ -95,26 +97,33 @@ def main(arguments):
     include_dirs = ["."]
     include_dirs.extend(args.include_dir)
 
-    abort_on_non_core_attribute = False
+    abort_on_unknown_attribute = False
     abort_on_namestyle = False
 
-    if args.abort_on_non_core_attribute or args.strict:
-        abort_on_non_core_attribute = True
+    if args.abort_on_unknown_attribute or args.strict:
+        abort_on_unknown_attribute = True
     if args.abort_on_name_style or args.strict:
         abort_on_namestyle = True
+
+    known_extended_attributes_list = args.extended_attributes.split(",")
+    if len(known_extended_attributes_list) > 0:
+        vspec.model.vsstree.VSSNode.whitelisted_extended_attributes = known_extended_attributes_list
+        print(
+            f"Known extended attributes: {', '.join(known_extended_attributes_list)}")
 
     exporter = args.format.value
 
     try:
         print(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+            args.vspec_file, include_dirs, merge_private=False, break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
 
         for overlay in args.overlays:
             print(f"Applying VSS overlay from {overlay}...")
-            othertree = vspec.load_tree(overlay,include_dirs, merge_private=False, break_on_noncore_attribute=abort_on_non_core_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+            othertree = vspec.load_tree(overlay, include_dirs, merge_private=False, break_on_unknown_attribute=abort_on_unknown_attribute,
+                                        break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
             vspec.merge_tree(tree, othertree)
-        
+
         vspec.expand_tree_instances(tree)
 
         print("Calling exporter...")

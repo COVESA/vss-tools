@@ -57,8 +57,8 @@ def print_franca_content(file, tree):
             output += f"\tname: \"{tree_node.qualified_name('.')}\""
             output += f",\n\ttype: \"{tree_node.type.value}\""
             output += f",\n\tdescription: \"{tree_node.description}\""
-            if tree_node.has_data_type():
-                output += f",\n\tdatatype: \"{tree_node.data_type.value}\""
+            if tree_node.has_datatype():
+                output += f",\n\tdatatype: \"{tree_node.datatype.value}\""
             output += f",\n\tuuid: \"{tree_node.uuid}\""
             if tree_node.has_unit():
                 output += f",\n\tunit: \"{tree_node.unit.value}\""
