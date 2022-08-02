@@ -50,7 +50,7 @@ def export_node(node, generate_uuid, out_file):
     nodetype = str(node.type.value)
     b_nodetype = nodetype.encode('utf-8')
 
-    nodedescription = node.description
+    nodedescription = str(node.description)
     b_nodedescription = nodedescription.encode('utf-8')
 
     children = len(node.children)
