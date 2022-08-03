@@ -1,0 +1,23 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.Sensor:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  
+A.Attribute:
+  datatype: float
+  type: sensor
+  unit: km
+  description: An attribute.
+  
+A.Actuator:
+  datatype: float
+  type: sensor
+  unit: km
+  description: An actuator.
+
