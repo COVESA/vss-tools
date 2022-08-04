@@ -330,10 +330,21 @@ def expand_tree_instances(tree):
             # If a node has instances, we first remove all its subbranches.
             # The new children will be branch nodes according to the instance
             # specification.
+            # If a node is be excluded (= instantiate == False), it stays at the current parent.
+            # Otherwise, it's good to go with the instantiation
 
-            savetree = deepcopy(tree_node.children)
+            nodes_to_stay = [] #< nodes excluded from instantiation
+            nodes_to_go = [] #< nodes shall use the instances as parent
 
-            tree_node.children = []
+            for child in tree_node.children:
+                if child.is_instantiated():
+                    nodes_to_go.append(child)
+                else:
+                    nodes_to_stay.append(child)    
+
+            savetree = deepcopy(nodes_to_go)
+
+            tree_node.children = deepcopy(nodes_to_stay)
             unrolled_instances = []
 
             # Instances can be  many things: A string Row[1,4] that is shorthand for a list,
@@ -399,8 +410,7 @@ def expand_tree_instances(tree):
                     # just add them all in parallel as childs of the current loop
                     newbranch = VSSNode(instance, {
                                         "type": "branch", "description": tree_node.description, "$file_name$": "Generated"}, tree_node)
-                    newchilds = []
-
+                    
                     newbranch.children = deepcopy(savetree)
                     #print(f"Created {newbranch}")
 

@@ -116,3 +116,41 @@ def test_complex_structures (request):
                     assert child_4.children[0].type == VSSType.SENSOR
                     assert child_4.children[0].description == "test"
     
+
+
+### TEST EXCLUSION FROM INSTANCE STRUCTURE ###
+# Goal: Check if exclusion of certain nodes during instantiation work
+# 
+# How: Exclude some nodes from instantiation and check if the
+# structure is the expected one
+#
+### TEST EXCLUSION FROM INSTANCE STRUCTURE ###
+
+# Needed test files
+TEST_FILES_EXCLUDE = [  "resources/instance_exclude_node.vspec"]
+
+def test_exclusion_from_instance (request):
+    test_path = os.path.dirname(request.fspath)
+    for tfs in TEST_FILES_EXCLUDE:
+        # load the file
+        tree = vspec.load_tree(os.path.join(test_path, tfs), [os.path.join(test_path, "resources/")])
+        assert 6 == len (tree.children)
+        name_list = []
+        for child in tree.children:
+            name_list.append(child.qualified_name())
+            if "Vehicle.ExcludeSomeThing" == child.qualified_name():
+                assert VSSType.BRANCH == child.type 
+                assert "ExcludeSomeThing description" == child.description
+                assert 1 == len(child.children)
+                child_2 = child.children[0]
+                assert "Vehicle.ExcludeSomeThing.ExcludeSomethingLeaf" == child_2.qualified_name()
+                assert "ExcludeSomethingLeaf description" == child_2.description
+                assert VSSType.ACTUATOR == child_2.type
+
+            elif "Vehicle.ExcludeNode" == child.qualified_name():
+                assert "Vehicle.ExcludeNode" == child.qualified_name()
+                assert "ExcludeNode description" == child.description
+                assert VSSType.ATTRIBUTE == child.type
+                
+        assert "Vehicle.ExcludeSomeThing" in name_list
+        assert "Vehicle.ExcludeNode" in name_list

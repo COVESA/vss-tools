@@ -55,7 +55,7 @@ class VSSNode(Node):
     type: VSSType
     datatype: VSSDataType
 
-    core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
+    core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed", "instantiate",
                        "aggregate", "default", "instances", "deprecation", "arraysize", "comment", "$file_name$"]
 
     # List of accepted extended attributes. In strict terminate if an attribute is
@@ -66,6 +66,7 @@ class VSSNode(Node):
     min = ""
     max = ""
     allowed = ""
+    instantiate = True
 
     ttl_name = ""
 
@@ -253,6 +254,15 @@ class VSSNode(Node):
         if self.type == VSSType.BRANCH:
             return self.is_leaf
         return False
+    
+    def is_instantiated (self) -> bool:
+        """Checks if node shall be instantiated through its parent
+
+            Returns:
+                True if it shall be instantiated
+        """
+        return self.instantiate
+
 
     def has_unit(self) -> bool:
         """Checks if this instance has a unit
