@@ -74,10 +74,10 @@ def export_node( node, generate_uuid,generate_all_idl_features):
             idlFileBuffer.append("string uuid;")
         #fetching value of datatype and obtaining the equivalent DDS type
         try:
-            if str(node.data_type.value) in dataTypesMap_covesa_dds:
-                datatype= str(dataTypesMap_covesa_dds[str(node.data_type.value)])
-            elif '[' in str(node.data_type.value):
-                nodevalueArray=str(node.data_type.value).split("[",1)
+            if str(node.datatype.value) in dataTypesMap_covesa_dds:
+                datatype= str(dataTypesMap_covesa_dds[str(node.datatype.value)])
+            elif '[' in str(node.datatype.value):
+                nodevalueArray=str(node.datatype.value).split("[",1)
                 if str(nodevalueArray[0]) in dataTypesMap_covesa_dds :
                     datatype= str(dataTypesMap_covesa_dds[str(nodevalueArray[0])])
                     arraysize='['+str(arraysize)+nodevalueArray[1]
