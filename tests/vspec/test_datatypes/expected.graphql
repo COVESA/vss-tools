@@ -1,0 +1,191 @@
+type Query {
+  vehicle(
+    """VIN of the vehicle that you want to request data for."""
+    id: String!
+
+    """
+    Filter data to only provide information that was sent from the vehicle after that timestamp.
+    """
+    after: String
+  ): A
+}
+
+"""Branch A."""
+type A {
+  """A uint8."""
+  uInt8: A_UInt8
+
+  """An int8."""
+  int8: A_Int8
+
+  """A uint16."""
+  uInt16: A_UInt16
+
+  """An int16."""
+  int16: A_Int16
+
+  """A uint32."""
+  uInt32: A_UInt32
+
+  """An int32"""
+  int32: A_Int32
+
+  """A uint64."""
+  uInt64: A_UInt64
+
+  """An int64"""
+  int64: A_Int64
+
+  """A boolean"""
+  isBoolean: A_IsBoolean
+
+  """A float."""
+  float: A_Float
+
+  """A double."""
+  double: A_Double
+
+  """A string."""
+  string: A_String
+}
+
+"""A uint8."""
+type A_UInt8 {
+  """Value: A uint8."""
+  value: Int
+
+  """Timestamp: A uint8."""
+  timestamp: String
+
+  """Unit of A uint8."""
+  unit: String
+}
+
+"""An int8."""
+type A_Int8 {
+  """Value: An int8."""
+  value: Int
+
+  """Timestamp: An int8."""
+  timestamp: String
+
+  """Unit of An int8."""
+  unit: String
+}
+
+"""A uint16."""
+type A_UInt16 {
+  """Value: A uint16."""
+  value: Int
+
+  """Timestamp: A uint16."""
+  timestamp: String
+
+  """Unit of A uint16."""
+  unit: String
+}
+
+"""An int16."""
+type A_Int16 {
+  """Value: An int16."""
+  value: Int
+
+  """Timestamp: An int16."""
+  timestamp: String
+
+  """Unit of An int16."""
+  unit: String
+}
+
+"""A uint32."""
+type A_UInt32 {
+  """Value: A uint32."""
+  value: Int
+
+  """Timestamp: A uint32."""
+  timestamp: String
+
+  """Unit of A uint32."""
+  unit: String
+}
+
+"""An int32"""
+type A_Int32 {
+  """Value: An int32"""
+  value: Int
+
+  """Timestamp: An int32"""
+  timestamp: String
+
+  """Unit of An int32"""
+  unit: String
+}
+
+"""A uint64."""
+type A_UInt64 {
+  """Value: A uint64."""
+  value: Float
+
+  """Timestamp: A uint64."""
+  timestamp: String
+
+  """Unit of A uint64."""
+  unit: String
+}
+
+"""An int64"""
+type A_Int64 {
+  """Value: An int64"""
+  value: Float
+
+  """Timestamp: An int64"""
+  timestamp: String
+
+  """Unit of An int64"""
+  unit: String
+}
+
+"""A boolean"""
+type A_IsBoolean {
+  """Value: A boolean"""
+  value: Boolean
+
+  """Timestamp: A boolean"""
+  timestamp: String
+}
+
+"""A float."""
+type A_Float {
+  """Value: A float."""
+  value: Float
+
+  """Timestamp: A float."""
+  timestamp: String
+
+  """Unit of A float."""
+  unit: String
+}
+
+"""A double."""
+type A_Double {
+  """Value: A double."""
+  value: Float
+
+  """Timestamp: A double."""
+  timestamp: String
+
+  """Unit of A double."""
+  unit: String
+}
+
+"""A string."""
+type A_String {
+  """Value: A string."""
+  value: String
+
+  """Timestamp: A string."""
+  timestamp: String
+
+  """Unit of A string."""
+  unit: String
+}

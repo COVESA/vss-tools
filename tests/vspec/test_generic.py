@@ -33,18 +33,27 @@ def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
     monkeypatch.chdir(request.fspath.dirname)
 
-@pytest.mark.parametrize('directory', default_directories(), ids=idfn)
-def test_script_execution(directory, change_test_dir):
+def run_exporter(directory, exporter):
     os.chdir(directory.name)
-    test_str = "../../../vspec2json.py --no-uuid test.vspec out.json > out.txt"
+    test_str = "../../../vspec2" + exporter + ".py --no-uuid test.vspec out." + exporter + " > out.txt"
     result = os.system(test_str)
     os.chdir("..")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
     os.chdir(directory.name)
-    test_str = "diff out.json expected.json"
+    test_str = "diff out." + exporter + " expected." + exporter
     result =  os.system(test_str)
-    os.system("rm -f out.json out.txt")
+    os.system("rm -f out." + exporter + " out.txt")
     os.chdir("..")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+
+@pytest.mark.parametrize('directory', default_directories(), ids=idfn)
+def test_exporters(directory, change_test_dir):
+    # Run all "supported" exporters, i.e. not those in contrib
+    # Exception is "binary", as it is assumed output may vary depending on target
+    exporters = ["json", "ddsidl","csv", "yaml", "franca", "graphql"]
+    for exporter in exporters:
+        run_exporter(directory, exporter)
+

@@ -1,0 +1,86 @@
+module A
+{
+struct UInt8
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A uint8.";
+};
+struct Int8
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="An int8.";
+};
+struct UInt16
+{
+unsigned short value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A uint16.";
+};
+struct Int16
+{
+short value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="An int16.";
+};
+struct UInt32
+{
+unsigned short value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A uint32.";
+};
+struct Int32
+{
+long value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="An int32";
+};
+struct UInt64
+{
+unsigned long long value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A uint64.";
+};
+struct Int64
+{
+long long value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="An int64";
+};
+struct IsBoolean
+{
+boolean value;
+//const string type ="sensor";
+//const string description="A boolean";
+};
+struct Float
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A float.";
+};
+struct Double
+{
+double value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A double.";
+};
+struct String
+{
+string value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A string.";
+};
+};

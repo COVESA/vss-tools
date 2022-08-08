@@ -1,0 +1,105 @@
+
+// Copyright (C) 2022, COVESA
+//
+// This program is licensed under the terms and conditions of the
+// Mozilla Public License, version 2.0.  The full text of the
+// Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
+
+const UTF8String VSS_VERSION = "None"
+
+struct SignalSpec {
+    UInt32 id
+    String name
+    String type
+    String description
+    String datatype
+    String unit
+    Double min
+    Double max
+}
+
+const SignalSpec[] signal_spec = [
+{	name: "A.UInt8",
+	type: "sensor",
+	description: "A uint8.",
+	datatype: "uint8",
+	uuid: "d70105f98582536cb1b8d23b7f16ebe7",
+	unit: "km"
+},
+{	name: "A.Int8",
+	type: "sensor",
+	description: "An int8.",
+	datatype: "int8",
+	uuid: "3d97072e972859bda73f12ab844f0ca0",
+	unit: "km"
+},
+{	name: "A.UInt16",
+	type: "sensor",
+	description: "A uint16.",
+	datatype: "uint16",
+	uuid: "8cdf169f35765db785c9c1b8a4d9f767",
+	unit: "km"
+},
+{	name: "A.Int16",
+	type: "sensor",
+	description: "An int16.",
+	datatype: "int16",
+	uuid: "1ec4e48949a45e46bd02ffef23ae2a1c",
+	unit: "km"
+},
+{	name: "A.UInt32",
+	type: "sensor",
+	description: "A uint32.",
+	datatype: "uint16",
+	uuid: "ac340d63fe9e5f5d8b5d64c47f2809b4",
+	unit: "km"
+},
+{	name: "A.Int32",
+	type: "sensor",
+	description: "An int32",
+	datatype: "int32",
+	uuid: "51060132288857a8b353f1bcd946e338",
+	unit: "km"
+},
+{	name: "A.UInt64",
+	type: "sensor",
+	description: "A uint64.",
+	datatype: "uint64",
+	uuid: "ed5d7bba45e159f1855954ec68ca472a",
+	unit: "km"
+},
+{	name: "A.Int64",
+	type: "sensor",
+	description: "An int64",
+	datatype: "int64",
+	uuid: "b3372ff78a0d5aebb33dd39f2eec24b4",
+	unit: "km"
+},
+{	name: "A.IsBoolean",
+	type: "sensor",
+	description: "A boolean",
+	datatype: "boolean",
+	uuid: "773dc415b52555df91ceb6d74801dd91"
+},
+{	name: "A.Float",
+	type: "sensor",
+	description: "A float.",
+	datatype: "float",
+	uuid: "aeefc526c9c65c75ac4b1154740cb7d5",
+	unit: "km"
+},
+{	name: "A.Double",
+	type: "sensor",
+	description: "A double.",
+	datatype: "double",
+	uuid: "8b7748aa67885acaacf10ca6d55d13e7",
+	unit: "km"
+},
+{	name: "A.String",
+	type: "sensor",
+	description: "A string.",
+	datatype: "string",
+	uuid: "e9022d462358571182dfd8cae249dd8d",
+	unit: "km"
+}
+]
