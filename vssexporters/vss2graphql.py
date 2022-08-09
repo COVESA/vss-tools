@@ -91,14 +91,14 @@ def get_schema_from_tree(root_node: VSSNode, additional_leaf_fields: list) -> st
 def to_gql_type(node: VSSNode, additional_leaf_fields: list) -> GraphQLObjectType:
     return GraphQLObjectType(
         name=node.qualified_name("_"),
-        fields=leaf_fields(node, additional_leaf_fields) if hasattr(node, "data_type") else branch_fields(node,additional_leaf_fields),
+        fields=leaf_fields(node, additional_leaf_fields) if hasattr(node, "datatype") else branch_fields(node,additional_leaf_fields),
         description=node.description,
     )
 
 
 def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
     field_dict = {
-        "value": field(node, "Value: ", GRAPHQL_TYPE_MAPPING[node.data_type]),
+        "value": field(node, "Value: ", GRAPHQL_TYPE_MAPPING[node.datatype]),
         "timestamp": field(node, "Timestamp: ")
     }
     if additional_leaf_fields:
@@ -113,8 +113,8 @@ def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQ
 
 
 def branch_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
-    # we only consider nodes that either have children or are leave with a data_type
-    valid = (c for c in node.children if len(c.children) or hasattr(c, "data_type"))
+    # we only consider nodes that either have children or are leave with a datatype
+    valid = (c for c in node.children if len(c.children) or hasattr(c, "datatype"))
     return {camel_back(c.name): field(c, type=to_gql_type(c, additional_leaf_fields)) for c in valid}
 
 

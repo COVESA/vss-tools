@@ -233,10 +233,10 @@ def print_ttl_content(file, tree):
                 
             else: # < vss actuators & sensors 
                 # check different datatypes in use
-                if (tree_node.data_type in datatypes.keys()):
-                    datatypes[tree_node.data_type] += 1
+                if (tree_node.datatype in datatypes.keys()):
+                    datatypes[tree_node.datatype] += 1
                 else:
-                    datatypes[tree_node.data_type] = 1
+                    datatypes[tree_node.datatype] = 1
 
                 graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_SIGNAL.uri))
                 graph.add((node, VssoCoreConcepts.BELONGS_TO.uri, URIRef(namespace + setTTLName(tree_node.parent))))
