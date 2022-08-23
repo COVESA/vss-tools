@@ -1,0 +1,164 @@
+type Query {
+  vehicle(
+    """VIN of the vehicle that you want to request data for."""
+    id: String!
+
+    """
+    Filter data to only provide information that was sent from the vehicle after that timestamp.
+    """
+    after: String
+  ): A
+}
+
+"""Branch A."""
+type A {
+  """A sensor."""
+  singleLineNotQuoted: A_SingleLineNotQuoted
+
+  """A sensor."""
+  singleLineInternalQuotes: A_SingleLineInternalQuotes
+
+  """A sensor."""
+  singleLineQuoted: A_SingleLineQuoted
+
+  """A sensor."""
+  singleLineQuotedInternalQuotes: A_SingleLineQuotedInternalQuotes
+
+  """A sensor."""
+  singleLineComma: A_SingleLineComma
+
+  """A sensor."""
+  singleLineCommaQuoted: A_SingleLineCommaQuoted
+
+  """A sensor."""
+  multiLineCommaNotQuoted: A_MultiLineCommaNotQuoted
+
+  """A sensor."""
+  multiLineCommaQuoted: A_MultiLineCommaQuoted
+
+  """A sensor."""
+  multiLineStyleInitialBreak: A_MultiLineStyleInitialBreak
+
+  """A sensor."""
+  multiLineLiteralStyleQuote: A_MultiLineLiteralStyleQuote
+}
+
+"""A sensor."""
+type A_SingleLineNotQuoted {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_SingleLineInternalQuotes {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_SingleLineQuoted {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_SingleLineQuotedInternalQuotes {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_SingleLineComma {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_SingleLineCommaQuoted {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_MultiLineCommaNotQuoted {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_MultiLineCommaQuoted {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_MultiLineStyleInitialBreak {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""A sensor."""
+type A_MultiLineLiteralStyleQuote {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
