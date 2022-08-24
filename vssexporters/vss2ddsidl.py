@@ -14,6 +14,7 @@ from email.policy import default
 import sys
 import vspec
 import argparse
+import keyword
 
 from vspec.model.vsstree import VSSNode, VSSType
 
@@ -22,6 +23,32 @@ def add_arguments(parser: argparse.ArgumentParser):
    parser.add_argument('--all-idl-features', action='store_true',
                         help='Generate all features based on DDS IDL 4.2 specification')
 
+c_keywords = [
+    "auto"   , "break", "case"    , "char", "const"   , "continue", "default", "do"   , "double", "else"  , "enum"  , "extern", "float",
+    "for"    , "goto" , "if"      , "int" , "long"    , "register",  "return", "short", "signed", "sizeof", "static", "struct", "switch",
+    "typedef","union" , "unsigned", "void", "volatile", "while"
+    ]
+
+#Based on http://www.omg.org/spec/IDL/4.2/
+idl_keywords =[
+    "abstract" ,"any"      ,"alias" ,"attribute","bitfield" ,"bitmask"   ,"bitset"   ,"boolean","case"       ,"char"    ,"component","connector" ,"const" ,
+    "consumes" ,"context"  ,"custom","default"  ,"double"   ,"exception" ,"emits"    ,"enum"   ,"eventtype"  ,"factory" ,"FALSE"    ,"finder"    ,"fixed" ,
+    "float"    ,"getraises","home"  ,"import"   ,"in"       ,"inout"     ,"interface","local"  ,"long"       ,"manages" ,"map"      ,"mirrorport","module","multiple",
+    "native"   ,"Object"   ,"octet" ,"oneway"   ,"out"      ,"primarykey","private"  ,"port"   ,"porttype"   ,"provides","public"   ,"publishes" ,"raises","readonly",
+    "setraises","sequence" ,"short" ,"string"   ,"struct"   ,"supports"  ,"switch"   ,"TRUE"   ,"truncatable","typedef" ,"typeid"   ,"typename"  ,"typeprefix",
+    "unsigned" ,"union"    ,"uses"  ,"ValueBase","valuetype","void"      ,"wchar"    ,"wstring","int8"       ,"uint8"   ,"int16"    ,"int32"     ,
+    "int64"    ,"uint16"   ,"uint32","uint64"
+    ]
+
+def getAllowedName(name):
+    if(
+        name.lower() in c_keywords
+        or name.lower() in idl_keywords 
+        or keyword.iskeyword(name.lower)
+    ):
+        return "_"+name
+    else:
+        return name
 
 idlFileBuffer = []
 
@@ -53,7 +80,7 @@ def export_node( node, generate_uuid,generate_all_idl_features):
     arraysize=None
 
     if node.type == VSSType.BRANCH:
-        idlFileBuffer.append("module "+node.name)
+        idlFileBuffer.append("module "+getAllowedName(node.name))
         idlFileBuffer.append("{")
         for child in node.children:
             export_node( child, generate_uuid,generate_all_idl_features)
@@ -63,12 +90,19 @@ def export_node( node, generate_uuid,generate_all_idl_features):
         isEnumCreated=False
         #check if there is a need to create enum (based on the usage of allowed values)
         if node.allowed!="":
-            idlFileBuffer.append("enum "+node.name+"Values{"+str(",".join(node.allowed))+"};")
+            """
+            enum should be enclosed under module block to avoid namespec conflict
+            module name for enum is chosen as the node name + 
+            """
+            idlFileBuffer.append("module "+getAllowedName(node.name)+"_M")
+            idlFileBuffer.append("{")
+            idlFileBuffer.append("enum "+getAllowedName(node.name)+"Values{"+str(",".join(node.allowed))+"};")
             isEnumCreated=True
-            idlFileBuffer.append("")
+            #idlFileBuffer.append("")
+            idlFileBuffer.append("};")
             allowedValues=str(node.allowed)
 
-        idlFileBuffer.append("struct "+node.name)
+        idlFileBuffer.append("struct "+getAllowedName(node.name))
         idlFileBuffer.append("{")
         if generate_uuid:
             idlFileBuffer.append("string uuid;")
@@ -115,10 +149,10 @@ def export_node( node, generate_uuid,generate_all_idl_features):
             else:
                 #this is the case where allowed values are provided, accordingly contents are converted to enum
                 if defaultValue==None:
-                    idlFileBuffer.append(node.name+"Values value;")
+                    idlFileBuffer.append(getAllowedName(node.name)+"_M::"+getAllowedName(node.name)+"Values value;")
                 else:
                     #default values in IDL file are not accepted by CycloneDDS/FastDDS : these values can be generated if --all-idl-features is set as True
-                    idlFileBuffer.append(node.name+"Values value"+ (" "+str(defaultValue) if generate_all_idl_features else "")+";")
+                    idlFileBuffer.append(getAllowedName(node.name)+"_M::"+getAllowedName(node.name)+"Values value"+ (" "+str(defaultValue) if generate_all_idl_features else "")+";")
 
 
         if unit!=None:

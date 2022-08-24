@@ -50,7 +50,7 @@ Below elements are considered only if the switch ***--all-idl-features*** is sup
 
 | VSS    | DDS-IDL         |
 |--------|----------------|
-| <pre>Direction:<br> datatype:string<br> type: actuator<br> allowed: ['FORWARD','BACKWARD']<br> description: Driving direction of the vehicle</pre>  | <pre>enum DirectionValues{FORWARD,BACKWARD};<br>struct Direction<br>{<br>string uuid;<br>DirectionValues value;<br>};</pre>   
+| <pre>Direction:<br> datatype:string<br> type: actuator<br> allowed: ['FORWARD','BACKWARD']<br> description: Driving direction of the vehicle</pre>  | <pre>module Direction_M {<br>enum DirectionValues{FORWARD,BACKWARD};<br>};<br>struct Direction<br>{<br>string uuid;<br>DirectionValues value;<br>};</pre>   
 
 ## Checking generated DDS-IDL file and generating code stubs from it
 
