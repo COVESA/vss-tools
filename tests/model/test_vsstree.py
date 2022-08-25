@@ -54,7 +54,7 @@ class TestVSSNode(unittest.TestCase):
         node_private_element = VSSNode("Element", source_private_element, node_private)
 
         self.assertTrue(node_private_element.is_private())
-        self.assertEqual("Vehicle.Private.Element", node_private_element.qualified_name('.', StringStyle.NONE))
+        self.assertEqual("Vehicle.Private.Element", node_private_element.qualified_name('.'))
 
     def test_merge_nodes(self):
         """
@@ -79,25 +79,6 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual(Unit.KILOMETER, node_target.unit)
         self.assertEqual(0, node_target.min)
         self.assertEqual(100, node_target.max)
-
-    def test_string_tyle(self):
-        """
-        Tests string style conversion
-        """
-        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002", "$file_name$": "testfile"}
-        node = VSSNode("test", source)
-
-        self.assertEqual("TEST", node.qualified_name(".", StringStyle.UPPER_CASE))
-        self.assertEqual("Test", node.qualified_name(".", StringStyle.CAPITAL_CASE))
-        self.assertEqual("test", node.qualified_name(".", StringStyle.LOWER_CASE))
-
-        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002", "$file_name$": "testfile"}
-        node = VSSNode("LongerTestName", source)
-        self.assertEqual("LONGERTESTNAME", node.qualified_name(".", StringStyle.UPPER_CASE))
-        self.assertEqual("LongerTestName", node.qualified_name(".", StringStyle.CAPITAL_CASE))
-        self.assertEqual("longertestname", node.qualified_name(".", StringStyle.LOWER_CASE))
-        self.assertEqual("longer_test_name", node.qualified_name(".", StringStyle.SNAKE_CASE))
-        self.assertEqual("longerTestName", node.qualified_name(".", StringStyle.CAMEL_BACK))
 
     def test_tree_find(self):
         """
