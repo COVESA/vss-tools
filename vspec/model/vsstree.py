@@ -10,7 +10,6 @@
 
 import sys
 import re
-import stringcase
 import copy
 from anytree import Node, Resolver, ChildResolverError
 
@@ -178,66 +177,22 @@ class VSSNode(Node):
             node = node.parent
         return False
 
-    @staticmethod
-    def case_conversion(source, style: StringStyle) -> str:
-        """Case conversion of the input (usually fully qualified vss node inlcuding the path) into a supported
-         string style representation.
-            Args:
-                source: Source string to apply conversion to.
-                style: Target string style to convert source to.
-
-            Returns:
-                Converted source string according to provided string style.
-         """
-
-        if style == StringStyle.ALPHANUM_CASE:
-            return stringcase.alphanumcase(source)
-        elif style == StringStyle.CAMEL_CASE:
-            return camel_case(source)
-        elif style == StringStyle.CAMEL_BACK:
-            return camel_back(source)
-        elif style == StringStyle.CAPITAL_CASE:
-            return stringcase.capitalcase(source)
-        elif style == StringStyle.CONST_CASE:
-            return stringcase.constcase(source)
-        elif style == StringStyle.LOWER_CASE:
-            return stringcase.lowercase(source)
-        elif style == StringStyle.PASCAL_CASE:
-            return stringcase.pascalcase(source)
-        elif style == StringStyle.SENTENCE_CASE:
-            return stringcase.sentencecase(source)
-        elif style == StringStyle.SNAKE_CASE:
-            return stringcase.snakecase(source)
-        elif style == StringStyle.SPINAL_CASE:
-            return stringcase.spinalcase(source)
-        elif style == StringStyle.TITLE_CASE:
-            return stringcase.titlecase(source)
-        elif style == StringStyle.TRIM_CASE:
-            return stringcase.trimcase(source)
-        elif style == StringStyle.UPPER_CASE:
-            return stringcase.uppercase(source)
-        else:
-            return source
-
-    def qualified_name(self, separator=DEFAULT_SEPARATOR, style=StringStyle.NONE) -> str:
+    def qualified_name(self, separator=DEFAULT_SEPARATOR) -> str:
         """Returns fully qualified name of a VSS object (including path) using the defined separator (or default ='.')
-        and string style (or default = no change)
             Args:
                 separator: Optional parameter as custom separator between path elements of this instance
-                style: Optional parameter to convert VSS instance name using specified string style
 
             Returns:
                 Fully Qualified VSS Node string representation including complete path.
 
         """
 
-        name = VSSNode.case_conversion(self.name, style)
+        name = self.name
 
         path = self
         while not path.is_root:
             path = path.parent
             node_name = path.name
-            node_name = VSSNode.case_conversion(node_name, style)
 
             name = "%s%s%s" % (node_name, separator, name)
         return name

@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 anytree = ">=2.8.0"
-stringcase = ">=1.2.0"
 deprecation = ">=2.1.0"
 pytest = ">=2.7.2"
 PyYAML = ">=5.1"
