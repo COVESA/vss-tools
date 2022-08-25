@@ -20,7 +20,7 @@ def add_arguments(parser: argparse.ArgumentParser):
                         help=" Pretty print JSON output.")
 
 
-def export_node(json_dict, node, config):
+def export_node(json_dict, node, config, print_uuid):
 
     json_dict[node.name] = {}
 
@@ -55,7 +55,7 @@ def export_node(json_dict, node, config):
     if node.comment != "":
         json_dict[node.name]["comment"] = node.comment
 
-    if not config.no_uuid:
+    if print_uuid:
         json_dict[node.name]["uuid"] = node.uuid
 
     for k, v in node.extended_attributes.items():
@@ -72,13 +72,13 @@ def export_node(json_dict, node, config):
         json_dict[node.name]["children"] = {}
 
     for child in node.children:
-        export_node(json_dict[node.name]["children"], child, config)
+        export_node(json_dict[node.name]["children"], child, config, print_uuid)
 
 
-def export(config: argparse.Namespace, root: VSSNode):
+def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     print("Generating JSON output...")
     json_dict = {}
-    export_node(json_dict, root, config)
+    export_node(json_dict, root, config, print_uuid)
     outfile = open(config.output_file, 'w')
     if config.json_pretty:
         print("Serializing pretty JSON...")

@@ -18,7 +18,7 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 def test_error(change_test_dir):
-    test_str = "../../../vspec2json.py --no-uuid test.vspec out.json > out.txt"
+    test_str = "../../../vspec2json.py test.vspec out.json > out.txt"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected

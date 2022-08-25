@@ -35,6 +35,7 @@ def change_test_dir(request, monkeypatch):
 
 def run_exporter(directory, exporter):
     os.chdir(directory.name)
+    # From VSS 4.0 check that omitting --no-uuid gives the same result
     test_str = "../../../vspec2" + exporter + ".py --no-uuid test.vspec out." + exporter + " > out.txt"
     result = os.system(test_str)
     os.chdir("..")

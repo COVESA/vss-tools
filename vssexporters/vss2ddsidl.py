@@ -176,7 +176,7 @@ def export_idl(file, root, generate_uuids=True, generate_all_idl_features=False)
 
 
 
-def export(config: argparse.Namespace, root: VSSNode):
+def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     print("Generating DDS-IDL output...")
     idl_out=open(config.output_file,'w')
-    export_idl(idl_out, root, not config.no_uuid, config.all_idl_features)
+    export_idl(idl_out, root, print_uuid, config.all_idl_features)

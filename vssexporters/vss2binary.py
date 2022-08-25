@@ -124,7 +124,7 @@ def export_node(node, generate_uuid, out_file):
         export_node(child, generate_uuid, out_file)
 
 
-def export(config: argparse.Namespace, root: VSSNode):
+def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     global _cbinary
     dllName = "../binary/binarytool.so"
     dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
@@ -135,7 +135,7 @@ def export(config: argparse.Namespace, root: VSSNode):
     
     print("Generating binary output...")
     out_file = config.output_file
-    export_node(root, not config.no_uuid, out_file)
+    export_node(root, print_uuid, out_file)
     print("Binary output generated in " + out_file)
 
 

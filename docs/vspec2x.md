@@ -11,7 +11,7 @@ This documentation will give some examples and elaborate more on specific parame
 The supported arguments might look like this
  ```
 usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--no-uuid] [-o overlays] [--json-all-extended-attributes] [--json-pretty]
+                  [--format format] [--uuid] [--no-uuid] [-o overlays] [--json-all-extended-attributes] [--json-pretty]
                   [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
                   <vspec_file> <output_file>
 ```
@@ -57,8 +57,13 @@ Terminates parsing, when the name of a signal does not follow [VSS recomendation
 ### --strict
 Equivalent to setting `--abort-on-unknown-attribute` and `--abort-on-name-style` 
 
+### --uuid
+Request the exporter to output uuids. This setting may not apply to all exporters, some exporters will never output uuids.
+This is currently the default behavior. From VSS 4.0 `--no-uuid` will be the default behavior.
+
 ### --no-uuid
-Request the exporter to not output uuids. This setting may not apply to all exporters (e.g. there might be output that never generate uuids), but those that do, should honor the parameter.
+Request the exporter to not utput uuids.
+From VSS 4.0 this will be the default behavior and then this parameter will be deprecated.
 
 ## Handling of overlays and extensions
 `vspec2x` allows composition of several overlays on top of a base vspec, to extend the model or overwrite certain metadata. Check [VSS documentation](https://covesa.github.io/vehicle_signal_specification/introduction/) on the concept of overlays. 
@@ -120,13 +125,11 @@ If the paramter is set it will pretty-print the JSON output, otherwise you will 
 ### --yaml-all-extended-attributes
 Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter.
 
-## CSV exporter notes
-The CSV exporter does not currently support the no-uuid option.
-
-## FRANCA exporter notes
-The Franca exporter does not currently support the no-uuid option.
-
 ## DDS-IDL exporter notes
+The DDS-IDL exporter never generates uuid, i.e. the `--uuid` option has no effect.
+
+## Graphql exporter notes
+The Graphql exporter never generates uuid, i.e. the `--uuid` option has no effect.
 
 ### --all-idl-features
 Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out because at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](VSS2DDSIDL.md).

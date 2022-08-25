@@ -24,7 +24,7 @@ def add_arguments(parser: argparse.ArgumentParser):
                         help="Generate all extended attributes found in the model (default is generating only those given by the -e/--extended-attributes parameter).")
 
 
-def export_node(yaml_dict, node, config):
+def export_node(yaml_dict, node, config, print_uuid):
 
     node_path = node.qualified_name()
 
@@ -58,10 +58,11 @@ def export_node(yaml_dict, node, config):
         pass
 
     yaml_dict[node_path]["description"] = node.description
+
     if node.comment != "":
         yaml_dict[node_path]["comment"] = node.comment
-        
-    if not config.no_uuid:
+
+    if print_uuid:
         yaml_dict[node_path]["uuid"] = node.uuid
 
     for k, v in node.extended_attributes.items():
@@ -70,12 +71,12 @@ def export_node(yaml_dict, node, config):
         yaml_dict[node_path][k] = v
 
     for child in node.children:
-        export_node(yaml_dict, child, config)
+        export_node(yaml_dict, child, config, print_uuid)
 
 
-def export_yaml(file, root, generate_uuids):
+def export_yaml(file, root, config, generate_uuids):
     yaml_dict = {}
-    export_node(yaml_dict, root, generate_uuids)
+    export_node(yaml_dict, root, config, generate_uuids)
     yaml.dump(yaml_dict, file, default_flow_style=False, Dumper=NoAliasDumper,
               sort_keys=True, width=1024, indent=2, encoding='utf-8', allow_unicode=True)
 
@@ -91,7 +92,7 @@ class NoAliasDumper(yaml.SafeDumper):
             super().write_line_break()
 
 
-def export(config: argparse.Namespace, root: VSSNode):
+def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     print("Generating YAML output...")
     yaml_out = open(config.output_file, 'w')
-    export_yaml(yaml_out, root, config)
+    export_yaml(yaml_out, root, config, print_uuid)

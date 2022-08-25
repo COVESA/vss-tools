@@ -61,7 +61,7 @@ GRAPHQL_TYPE_MAPPING = {
 
 def add_arguments(parser: argparse.ArgumentParser):
    #no additional output for graphql at this moment
-   parser.description="The graphql exporter does not currently support the no-uuid option."
+   parser.description="The graphql exporter never generates uuid, i.e. the --uuid option has no effect."
    parser.add_argument('--gqlfield', action='append', nargs=2, help=" Add additional fields to the nodes in the graphql schema. use: <field_name> <description>")
 
 
@@ -126,7 +126,7 @@ def field(node: VSSNode, description_prefix="", type=GraphQLString) -> GraphQLFi
     )
 
 
-def export(config: argparse.Namespace, root: VSSNode):
+def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     print("Generating graphql output...")
     outfile=open(config.output_file,'w')
     outfile.write(get_schema_from_tree(root, config.gqlfield))

@@ -16,7 +16,6 @@ from anytree import PreOrderIter
     
 def add_arguments(parser: argparse.ArgumentParser):
    #no additional output for Franca at this moment
-   parser.description="The Franca exporter does not currently support the no-uuid option."
    parser.add_argument('-v', metavar='version', help=" Add version information to franca file.")
 
 #Write the header line
@@ -46,7 +45,7 @@ const SignalSpec[] signal_spec = [
 
 
 #Write the data lines
-def print_franca_content(file, tree):
+def print_franca_content(file, tree, uuid):
     output = ""
     for tree_node in PreOrderIter(tree):
         if tree_node.parent:
@@ -59,7 +58,8 @@ def print_franca_content(file, tree):
             output += f",\n\tdescription: \"{tree_node.description}\""
             if tree_node.has_datatype():
                 output += f",\n\tdatatype: \"{tree_node.datatype.value}\""
-            output += f",\n\tuuid: \"{tree_node.uuid}\""
+            if uuid:
+                output += f",\n\tuuid: \"{tree_node.uuid}\""
             if tree_node.has_unit():
                 output += f",\n\tunit: \"{tree_node.unit.value}\""
             if tree_node.min:
@@ -72,10 +72,10 @@ def print_franca_content(file, tree):
             output += "\n}"
     file.write(f"{output}")
 
-def export(config: argparse.Namespace, root: VSSNode):
+def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     print("Generating Franca output...")
     outfile=open(config.output_file,'w')
     print_franca_header(outfile, config.v)
-    print_franca_content(outfile, root)
+    print_franca_content(outfile, root, print_uuid)
     outfile.write("\n]")
     outfile.close()

@@ -2,6 +2,7 @@ module A
 {
 struct Sensor
 {
+string uuid;
 float value;
 //const string unit="km";
 //const string type ="sensor";
@@ -9,6 +10,7 @@ float value;
 };
 struct _Attribute
 {
+string uuid;
 float value;
 //const string unit="km";
 //const string type ="sensor";
@@ -16,6 +18,7 @@ float value;
 };
 struct Actuator
 {
+string uuid;
 float value;
 //const string unit="km";
 //const string type ="sensor";
