@@ -7,7 +7,7 @@ float value;
 //const string type ="sensor";
 //const string description="A sensor.";
 };
-struct Attribute
+struct _Attribute
 {
 float value;
 //const string unit="km";
