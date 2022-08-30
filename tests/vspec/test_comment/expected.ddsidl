@@ -1,0 +1,73 @@
+module A
+{
+struct SingleLineNotQuoted
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct SingleLineInternalQuotes
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct SingleLineQuoted
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct SingleLineQuotedInternalQuotes
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct SingleLineComma
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct SingleLineCommaQuoted
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct MultiLineCommaNotQuoted
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct MultiLineCommaQuoted
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct MultiLineStyleInitialBreak
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+struct MultiLineLiteralStyleQuote
+{
+float value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A sensor.";
+};
+};

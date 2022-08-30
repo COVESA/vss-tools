@@ -1,0 +1,86 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+############ Testing Single Line Comments ##############
+
+A.SingleLineNotQuoted:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: January is a great month!
+
+A.SingleLineInternalQuotes:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: February is a "great" month!
+
+A.SingleLineQuoted:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: "March is a great month!"
+
+A.SingleLineQuotedInternalQuotes:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: "April is a \"great\" month!"
+
+A.SingleLineComma:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: May, is a great month!
+
+A.SingleLineCommaQuoted:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: "June, is a great month!"
+
+
+############ Testing Multi Line Comments ##############
+
+A.MultiLineCommaNotQuoted:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: July, 
+           is a great month!
+
+A.MultiLineCommaQuoted:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: "August, 
+           is a great month!"
+           
+           
+A.MultiLineStyleInitialBreak:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: |
+           October,
+           is a great month!
+
+A.MultiLineLiteralStyleQuote:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+  comment: | 
+           November, 
+           is a "great" month!
