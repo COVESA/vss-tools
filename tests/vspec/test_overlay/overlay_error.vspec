@@ -1,0 +1,9 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalA:
+  unit: celsius
+  description: We will have an error if type and datatype are not given
+

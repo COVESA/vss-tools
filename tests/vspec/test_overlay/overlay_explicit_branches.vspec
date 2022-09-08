@@ -1,0 +1,36 @@
+#
+A:
+  type: branch
+
+A.SignalA:
+  datatype: int8
+  type: sensor
+  unit: celsius
+  description: Changing unit to celsius
+
+A.SignalA2:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Adding another signal.
+
+# Changing on second level
+
+A.AA:
+  type: branch
+
+A.AA.SignalAA:
+  type: sensor
+  datatype: uint8
+  description: Changing type to uint8.
+
+# Adding a new branch
+
+A.AB:
+  type: branch
+
+A.AB.SignalAB:
+  type: sensor
+  datatype: uint8
+  description: New signal in new branch.
+
