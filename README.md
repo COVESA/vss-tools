@@ -8,13 +8,22 @@ The overall goal of VSS Tools is to provide a set of tools that can be used to c
 
 ## Available Tools
 
-This repository contains two types of tools. Community Supported Tools are tools that are actively maintained by the VSS community. They are run as part of the Continuous Integration process for both this repository and for the [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification), and pull request will normally not be merged if any of the tools fails. That assures that the tools always are compatible with the latest version of the COVESA VSS.
+This repository contains three categories of tools:
+* Community Supported Tools are tools that are actively maintained by the VSS community.
+  They are run as part of the Continuous Integration process for both this repository and for the [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification),
+  and pull request will normally not be merged if any of the tools fails. That assures that the tools always are compatible with the latest version of the COVESA VSS.
+* Contributed Tools are tools that are not actively maintained by the VSS community.
+  Instead they are maintained by individual contributors, or not maintained at all. 
+  Even if many of them are run as part of the continuous integration process,
+  it is not a requirement that they must run successfully on the latest VSS version and a change in VSS may be merged even if it cause some contributed tools to fail.
+* Obsolete Tools are tools that are not maintained and not functional.
 
-In addition this repository also contains contributed tools. These are tools that are not actively maintained by the VSS community. Instead they are maintained by individual contributors, or not maintained at all. Even if many of them are run as part of the continuous integration process, it is not a requirement that they must run successfully on the latest VSS version and a change in VSS may be merged even if it cause some contributed tools to fail. 
+A tool in the Contributed Tools category may be moved to the Obsolete category if it has been non-functional for at least 6 months.
+Tools in the Obsolete Tools category may be deleted after 12 months.
 
 Examples on tool usage can be found in the [VSS Makefile](https://github.com/COVESA/vehicle_signal_specification/blob/master/Makefile) and in tool-specific documentation, if existing.
 
- Tool | Description | Type of Tool | Documentation |
+ Tool | Description | Tool Category | Documentation |
 | ------------------ | ----------- | -------------------- |-------------------- |
 | [vspec2x.py](vspec2x.py) | Parses and expands VSS into different text based output formats. Currently supports `json`, `yaml`,`csv`,`idl`  | Community Supported | Try `./vspec2x --help` or check [vspec2x documentation](docs/vspec2x.md) |
 [vspec2csv.py](vspec2csv.py) | Shortcut for [vspec2x.py](vspec2x.py) generating CSV output | Community Supported |  Check [vspec2x documentation](docs/vspec2x.md) |
@@ -23,9 +32,9 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 [vspec2yaml.py](vspec2yaml.py) | Shortcut for [vspec2x.py](vspec2x.py) generating flattened YAML output | Community Supported | Check [vspec2x documentation](docs/vspec2x.md) |
 [vspec2binary.py](vspec2binary.py) | The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below), and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go | Community Supported | [vspec2binary Documentation](binary/README.md). For general parameters check [vspec2x documentation](docs/vspec2x.md) | 
 [vspec2franca.py](vspec2franca.py) | Parses and expands a VSS and generates a Franca IDL specification | Community Supported | Check [vspec2x documentation](docs/vspec2x.md) |
-[vspec2c.py](contrib/vspec2c.py) | The vspec2c tooling allows a vehicle signal specification to be translated from its source YAML file to native C code that has the entire specification encoded in it. | Contrib (Obsolete, no longer functional) | [Documentation](contrib/vspec2c/README.md) |
-[vspec2ocf.py](contrib/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Contrib (Obsolete, no longer functional)  | - |
-[vspec2proto.py](contrib/vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib (Beta)  | - |
+[vspec2c.py](contrib/vspec2c.py) | The vspec2c tooling allows a vehicle signal specification to be translated from its source YAML file to native C code that has the entire specification encoded in it. | Obsolete (2022-11-01) | [Documentation](obsolete/vspec2c/README.md) |
+[vspec2ocf.py](contrib/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Obsolete (2022-11-01) | - |
+[vspec2proto.py](contrib/vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib | - |
 [vspec2ttl.py](contrib/vspec2ttl/vspec2ttl.py) | Parses and expands a VSS and generates a TTL specification | Contrib  | - |
 [vspec2graphql.py](contrib/vspec2graphql.py) | Parses and expands a VSS and generates a GraphQL specification | Community Supported  | [Documentation](docs/VSS2GRAPHQL.md) |
 
