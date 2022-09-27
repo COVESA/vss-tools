@@ -1,17 +1,17 @@
-"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Id"
-"A","branch","","","","","","Branch A.","","","6342f7c4796a5f78a93bff040a974d02"
-"A.SingleLineNotQuoted","sensor","float","","km","","","A sensor.","January is a great month!","","57ba22c02b6b58868677277ef312c582"
-"A.SingleLineInternalQuotes","sensor","float","","km","","","A sensor.","February is a ""great"" month!","","d5657796f99258e38e26b0f1fa49ba3f"
-"A.SingleLineQuoted","sensor","float","","km","","","A sensor.","March is a great month!","","1f6f6ef1df4a594d8c8564a7e77f5e98"
-"A.SingleLineQuotedInternalQuotes","sensor","float","","km","","","A sensor.","April is a ""great"" month!","","22223e9b80525cfebc41264ce4b60857"
-"A.SingleLineComma","sensor","float","","km","","","A sensor.","May, is a great month!","","b4e236ab9ba15b568a033af67e394422"
-"A.SingleLineCommaQuoted","sensor","float","","km","","","A sensor.","June, is a great month!","","de677b0b7d5f59cca21678521e90654c"
-"A.MultiLineCommaNotQuoted","sensor","float","","km","","","A sensor.","July, is a great month!","","d2b381d3734d5c248bc892e29262e9f8"
-"A.MultiLineCommaQuoted","sensor","float","","km","","","A sensor.","August, is a great month!","","2b8dd037b060571b80514c8d03b53062"
+"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed"
+"A","branch","","","","","","Branch A.","",""
+"A.SingleLineNotQuoted","sensor","float","","km","","","A sensor.","January is a great month!",""
+"A.SingleLineInternalQuotes","sensor","float","","km","","","A sensor.","February is a ""great"" month!",""
+"A.SingleLineQuoted","sensor","float","","km","","","A sensor.","March is a great month!",""
+"A.SingleLineQuotedInternalQuotes","sensor","float","","km","","","A sensor.","April is a ""great"" month!",""
+"A.SingleLineComma","sensor","float","","km","","","A sensor.","May, is a great month!",""
+"A.SingleLineCommaQuoted","sensor","float","","km","","","A sensor.","June, is a great month!",""
+"A.MultiLineCommaNotQuoted","sensor","float","","km","","","A sensor.","July, is a great month!",""
+"A.MultiLineCommaQuoted","sensor","float","","km","","","A sensor.","August, is a great month!",""
 "A.MultiLineStyleInitialBreak","sensor","float","","km","","","A sensor.","October,
 is a great month!
-","","a4f8c7a1ad10527a960104ec79ad9349"
+",""
 "A.MultiLineLiteralStyleQuote","sensor","float","","km","","","A sensor.","November, 
 is a ""great"" month!
-","","b84400daa72154eb8cbc5f65a557c455"
+",""
 

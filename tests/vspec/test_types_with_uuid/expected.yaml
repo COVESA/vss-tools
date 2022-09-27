@@ -1,21 +1,25 @@
 A:
   description: Branch A.
   type: branch
+  uuid: 6342f7c4796a5f78a93bff040a974d02
 
 A.Actuator:
   datatype: float
   description: An actuator.
   type: sensor
   unit: km
+  uuid: 2c9f66c9e98c5023ab222fd15c90ed22
 
 A.Attribute:
   datatype: float
   description: An attribute.
   type: sensor
   unit: km
+  uuid: ddba2946fd215f2f8f869c793e2aff08
 
 A.Sensor:
   datatype: float
   description: A sensor.
   type: sensor
   unit: km
+  uuid: 540af2eb86b450ae814011d2746cece0

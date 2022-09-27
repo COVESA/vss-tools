@@ -63,8 +63,10 @@ def main(arguments):
                         help=" Terminate naming style not follows recommendations.")
     parser.add_argument('--format', metavar='format', type=Exporter.from_string, choices=list(Exporter),
                         help='Output format, choose one from '+str(Exporter._member_names_)+". If omitted we try to guess form output_file suffix.")
+    parser.add_argument('--uuid', action='store_true',
+                        help='Include uuid in generated files. This is currently the default behavior.')
     parser.add_argument('--no-uuid', action='store_true',
-                        help='Exclude uuids from generated files.')
+                        help='Exclude uuid in generated files. This will be default behavior from VSS 4.0 onwards.')
     parser.add_argument('-o', '--overlays', action='append',  metavar='overlays', type=str,  default=[],
                         help='Add overlays that will be layered on top of the VSS file in the order they appear.')
     parser.add_argument('vspec_file', metavar='<vspec_file>',
@@ -113,6 +115,16 @@ def main(arguments):
 
     exporter = args.format.value
 
+    if args.uuid and args.no_uuid:
+        print("Error: Can not use --uuid and --no-uuid at the same time")
+        sys.exit(-1)
+    if not (args.uuid or args.no_uuid):
+        print("Warning: From VSS 4.0 the default behavior for printing uuid will change. Consider using --uuid or --no-uuid.")
+    # From VSS 4.0 default shall be be False and a deprecation warning shall be given no_uuid is used
+    print_uuid = True
+    if args.no_uuid:
+        print_uuid = False
+    
     try:
         print(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
@@ -127,7 +139,7 @@ def main(arguments):
         vspec.expand_tree_instances(tree)
 
         print("Calling exporter...")
-        exporter.export(args, tree)
+        exporter.export(args, tree, print_uuid)
         print("All done.")
     except vspec.VSpecError as e:
         print(f"Error: {e}")
