@@ -497,7 +497,7 @@ def create_nested_model(flat_model, file_name):
 
 
 # Find the given prefix somewhere under the tree rooted in branch.
-def find_branch(branch, name_list, index):
+def find_branch(branch, name_list, index, autocreate=True):
     # Have we reached the end of the name list
     if len(name_list) == index:
         if (branch["type"] != "branch"):
@@ -515,14 +515,26 @@ def find_branch(branch, name_list, index):
     children = branch["children"]
 
     if name_list[index] not in children:
-        raise VSpecError(branch.get("$file_name$", "??"),
+        if autocreate:
+            print(f"Autocreating implicit branch {name_list[index]}")
+            
+            #If we are above Vehicle (e.g. vehicle not defined), we are missing a name
+            if "$name$" not in branch:
+                branch['$name$']=""
+            newbranch={ 'type': 'branch', 'children':{}, '$line$': '0', '$file_name$': '<generated>', '$name$': f"{branch['$name$']}.{name_list[index]}"}
+
+            children[name_list[index]] = newbranch
+            #Search again
+            find_branch(branch, name_list, index, autocreate)
+        else:
+            raise VSpecError(branch.get("$file_name$", "??"),
                          branch.get("$line$", "??"),
                          "Missing branch: {} in {}.".format(name_list[index],
                                                             list_to_path(name_list)))
 
     # Traverse all children, looking for the
     # Move on to next element in prefix.
-    return find_branch(children[name_list[index]], name_list, index + 1)
+    return find_branch(children[name_list[index]], name_list, index + 1,autocreate)
 
 
 def list_to_path(name_list):

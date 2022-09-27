@@ -1,0 +1,22 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalA:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: This is the first signal.
+
+# First second level branch
+
+A.AA:
+  type: branch
+  description: Branch A.AA.
+
+A.AA.SignalAA:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: This is yet another signal.
