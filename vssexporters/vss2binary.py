@@ -63,10 +63,10 @@ def export_node(node, generate_uuid, out_file):
     nodedefault = ""
     nodecomment = ""
     nodeuuid = ""
+    nodevalidate = "" #exported to binary
     # not exported to binary
     nodedeprecation = ""
     nodeaggregate = ""
-    nodevalidate = ""
 
     if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
         nodedatatype = str(node.datatype.value)
@@ -114,6 +114,9 @@ def export_node(node, generate_uuid, out_file):
         nodeuuid = node.uuid
     b_nodeuuid = nodeuuid.encode('utf-8')
 
+    # Export nodevalodate to binary
+    if node.validate != "":
+        nodevalidate = node.validate
     b_nodevalidate = nodevalidate.encode('utf-8')
 
     b_fname = out_file.encode('utf-8')
