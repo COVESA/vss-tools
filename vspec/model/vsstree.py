@@ -55,7 +55,7 @@ class VSSNode(Node):
     datatype: VSSDataType
 
     core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed", "instantiate",
-                       "aggregate", "default", "instances", "deprecation", "arraysize", "comment", "validate" "$file_name$"]
+                       "aggregate", "default", "instances", "deprecation", "arraysize", "comment", "validate", "$file_name$"]
 
     # List of accepted extended attributes. In strict terminate if an attribute is
     # neither in core or extended,
