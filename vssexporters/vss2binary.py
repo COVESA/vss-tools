@@ -114,9 +114,8 @@ def export_node(node, generate_uuid, out_file):
         nodeuuid = node.uuid
     b_nodeuuid = nodeuuid.encode('utf-8')
 
-    # Export nodevalodate to binary
-    if node.validate != "":
-        nodevalidate = node.validate
+    if "validate" in node.extended_attributes:
+        nodevalidate = node.extended_attributes["validate"]
     b_nodevalidate = nodevalidate.encode('utf-8')
 
     b_fname = out_file.encode('utf-8')
