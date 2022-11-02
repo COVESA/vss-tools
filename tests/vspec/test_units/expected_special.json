@@ -1,0 +1,20 @@
+{
+  "A": {
+    "children": {
+      "SignalHogshead": {
+        "datatype": "float",
+        "description": "Volume in hogshead.",
+        "type": "sensor",
+        "unit": "hogshead"
+      },
+      "SignalPuncheon": {
+        "datatype": "float",
+        "description": "Volume in puncheons.",
+        "type": "sensor",
+        "unit": "puncheon"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

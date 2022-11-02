@@ -9,14 +9,15 @@ You can get a description of supported commandlines parameters by running `vspec
 This documentation will give some examples and elaborate more on specific parameters.
 
 The supported arguments might look like this
+
  ```
 usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--uuid] [--no-uuid] [-o overlays] [--json-all-extended-attributes] [--json-pretty]
+                  [--format format] [--uuid] [--no-uuid] [-o overlay] [ -u unit_file] [--json-all-extended-attributes] [--json-pretty]
                   [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
                   <vspec_file> <output_file>
 ```
 
-A common commandline to convert the VSS standard catalogue into a JSON file is
+A common commandline to convert the VSS standard catalog into a JSON file is
 
 ```
 % python vspec2x.py --format json  -I ../spec ../spec/VehicleSignalSpecification.vspec vss.js
@@ -30,7 +31,7 @@ Serializing compact JSON...
 All done.
 ```
 
-This assumes you checked out the [COVESA Vehicle Singal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools including vspec2x as a submodule.
+This assumes you checked out the [COVESA Vehicle Signal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools including vspec2x as a submodule.
 
 The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories.
 
@@ -62,8 +63,25 @@ Request the exporter to output uuids. This setting may not apply to all exporter
 This is currently the default behavior. From VSS 4.0 `--no-uuid` will be the default behavior.
 
 ### --no-uuid
-Request the exporter to not utput uuids.
+Request the exporter to not output uuids.
 From VSS 4.0 this will be the default behavior and then this parameter will be deprecated.
+
+## Handling of units
+
+The tooling verifies that only pre-defined units are used, like `kPa`and `percent`.
+Supported units shall be given as a parameter to tooling with the `-u <file>` parameter.
+`-u` can be used multiple times to specify additional files like in the example below:
+
+```bash
+python ./vss-tools/vspec2csv.py -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml --no-uuid ./spec/VehicleSignalSpecification.vspec output.csv
+```
+
+COVESA maintains a unit file for default VSS. It is currently located in [vss-tools](../vspec/config.yaml),
+but will possibly be moved to [VSS repository](https://github.com/COVESA/vehicle_signal_specification/).
+As of today this file is used by default, but that may not be the case any longer when the configuration file has been moved to [VSS repository](https://github.com/COVESA/vehicle_signal_specification/).
+If you specify units by `-u <file>` then the default unit file (`config.yaml`) will not be considered.
+
+See the [FAQ](../FAQ.md) for more information on how to define own units.
 
 ## Handling of overlays and extensions
 `vspec2x` allows composition of several overlays on top of a base vspec, to extend the model or overwrite certain metadata. Check [VSS documentation](https://covesa.github.io/vehicle_signal_specification/introduction/) on the concept of overlays. 
@@ -71,7 +89,7 @@ From VSS 4.0 this will be the default behavior and then this parameter will be d
 To add overlays add one or more `-o` or  `--overlays` parameters, e.g.
 
 ```
-python vspec2yaml.py -I ../spec ../spec/VehicleSignalSpecification.vspec  -o overlay.vspec  withoverlay.yml
+python vspec2yaml.py -I ../spec ../spec/VehicleSignalSpecification.vspec  -o overlay.vspec withoverlay.yml
 ```
 
 You can also use VSS specifications with custom metadata not used in the standard catalogue, for example if your VSS model includes a `source` or `quality` metadata for sensors.
@@ -102,7 +120,7 @@ Warning: Attribute(s) quality, source, lol in element Speed not a core or known 
 You asked for strict checking. Terminating.
 ```
 
-You can whitelist extended metadata attributes using the `-e` parameter with a comma sperated list of attributes
+You can whitelist extended metadata attributes using the `-e` parameter with a comma separated list of attributes
 
 ```
 python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec -e quality,source -o overlay.vspec   test.json

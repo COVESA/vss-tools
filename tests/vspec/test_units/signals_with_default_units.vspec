@@ -1,0 +1,12 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalLiter:
+  datatype: float
+  type: sensor
+  unit: l
+  description: Volume in liters.
+
+

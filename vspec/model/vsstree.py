@@ -62,6 +62,8 @@ class VSSNode(Node):
     whitelisted_extended_attributes = []
 
     unit: Unit
+    
+    
     min = ""
     max = ""
     allowed = ""
@@ -92,7 +94,7 @@ class VSSNode(Node):
                 VSSNode object according to the Vehicle Signal Specification.
 
         """
-
+        
         super().__init__(name, parent, children)
         try:
             VSSNode.validate_vss_element(source_dict, name)

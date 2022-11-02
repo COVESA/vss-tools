@@ -1,0 +1,14 @@
+{
+  "A": {
+    "children": {
+      "SignalLiter": {
+        "datatype": "float",
+        "description": "Volume in liters.",
+        "type": "sensor",
+        "unit": "l"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

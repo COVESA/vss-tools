@@ -16,6 +16,7 @@ from enum import Enum
 import sys
 import vspec
 from vspec.model.vsstree import VSSNode
+from vspec.model.constants import Unit
 
 from vspec.vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
 
@@ -69,6 +70,8 @@ def main(arguments):
                         help='Exclude uuid in generated files. This will be default behavior from VSS 4.0 onwards.')
     parser.add_argument('-o', '--overlays', action='append',  metavar='overlays', type=str,  default=[],
                         help='Add overlays that will be layered on top of the VSS file in the order they appear.')
+    parser.add_argument('-u', '--unit-files', action='append',  metavar='unit_files', type=str,  default=[],
+                        help='Unit files to be used for generation.')
     parser.add_argument('vspec_file', metavar='<vspec_file>',
                         help='The vehicle specification file to convert.')
     parser.add_argument('output_file', metavar='<output_file>',
@@ -125,6 +128,14 @@ def main(arguments):
     if args.no_uuid:
         print_uuid = False
     
+    if not args.unit_files:
+        print("WARNING: Use of default VSS unit file is deprecated, please specify the unit file you want to use with the -u argument!")
+        Unit.load_default_config_file()
+    else:
+        for unit_file in args.unit_files:
+           print("Reading unit definitions from "+str(unit_file))
+           Unit.load_config_file(unit_file)
+
     try:
         print(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
