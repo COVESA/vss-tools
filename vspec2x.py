@@ -17,7 +17,7 @@ import sys
 import vspec
 from vspec.model.vsstree import VSSNode
 
-from vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
+from vspec.vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
 
 
 class Exporter(Enum):

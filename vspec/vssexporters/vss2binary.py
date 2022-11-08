@@ -126,7 +126,7 @@ def export_node(node, generate_uuid, out_file):
 
 def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     global _cbinary
-    dllName = "../binary/binarytool.so"
+    dllName = "../../binary/binarytool.so"
     dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
     _cbinary = ctypes.CDLL(dllAbsPath)
 
