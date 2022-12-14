@@ -1,7 +1,7 @@
 import unittest
+import os
 
 from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle
-
 
 class TestConstantsNode(unittest.TestCase):
     def test_string_styles(self):
@@ -26,11 +26,13 @@ class TestConstantsNode(unittest.TestCase):
     def test_invalid_string_styles(self):
         with self.assertRaises(Exception): StringStyle.from_str("not_a_valid_case")
 
-    def test_units(self):
+    def test_default_units(self):
         """
-        Test correct parsing of units
+        Test correct parsing of default units
         """
 
+        # This test will need to be removed when config.yaml is removed
+        Unit.load_default_config_file()
         self.assertEqual(Unit.MILLIMETER, Unit.from_str("mm"))
         self.assertEqual(Unit.CENTIMETER, Unit.from_str("cm"))
         self.assertEqual(Unit.METER, Unit.from_str("m"))
@@ -72,6 +74,15 @@ class TestConstantsNode(unittest.TestCase):
         self.assertEqual(Unit.NANOMETERPERKILOMETER, Unit.from_str("nm/km"))
         self.assertEqual(Unit.DECIBELMILLIWATT, Unit.from_str("dBm"))
         self.assertEqual(Unit.KILONEWTON, Unit.from_str("kN"))
+
+    def test_manually_loaded_units(self):
+        """
+        Test correct parsing of units
+        """
+        unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+        Unit.load_config_file(unit_file)
+        self.assertEqual(Unit.PUNCHEON, Unit.from_str("puncheon"))
+        self.assertEqual(Unit.HOGSHEAD, Unit.from_str("hogshead"))
 
     def test_invalid_unit(self):
         with self.assertRaises(Exception): Unit.from_str("not_a_valid_case")

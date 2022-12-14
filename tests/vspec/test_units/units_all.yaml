@@ -1,0 +1,9 @@
+units:
+  puncheon:
+    label: Puncheon
+    description: Volume measure in puncheons (1 puncheon = 318 liters)
+    domain: volume
+  hogshead:
+    label: Hogshead
+    description: Volume measure in hogsheads (1 hogshead = 238 liters)
+    domain: volume

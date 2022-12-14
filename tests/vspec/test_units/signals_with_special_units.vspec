@@ -1,0 +1,17 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalPuncheon:
+  datatype: float
+  type: sensor
+  unit: puncheon
+  description: Volume in puncheons.
+  
+A.SignalHogshead:
+  datatype: float
+  type: sensor
+  unit: hogshead
+  description: Volume in hogshead.
+

@@ -15,7 +15,7 @@ import re
 from enum import Enum, EnumMeta
 import pkg_resources
 from typing import (
-    Sequence, Type, TypeVar, Optional, Dict, Tuple, Iterator,
+    Sequence, Type, TypeVar, Optional, Dict, Tuple, Iterator, TextIO
 )
 
 import yaml
@@ -57,13 +57,6 @@ def dict_to_constant_config(name: str, info: Dict[str, str]) -> Tuple[str, VSSCo
 def iterate_config_members(config: Dict[str, Dict[str, str]]) -> Iterator[Tuple[str, VSSConstant]]:
     for u, v in config.items():
         yield dict_to_constant_config(u, v)
-
-
-def get_members_from_default_config(key: str) -> Dict[str, VSSConstant]:
-    with pkg_resources.resource_stream('vspec', 'config.yaml') as config_file:
-        yaml_config = yaml.safe_load(config_file)
-    configs = yaml_config.get(key, {})
-    return dict(iterate_config_members(configs))
 
 
 class VSSRepositoryMeta(type):
@@ -182,4 +175,26 @@ class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
 
 
 class Unit(metaclass=VSSRepositoryMeta):
-    __members__ = get_members_from_default_config('units')
+    __members__ =  dict()
+
+    def get_config_dict(yaml_file: TextIO, key: str) -> Dict[str, Dict[str, str]]:
+        yaml_config = yaml.safe_load(yaml_file)
+        configs = yaml_config.get(key, {})
+        return configs
+
+    # Loading default file, might be deleted in the future if default file removed from vss-tools
+    def get_members_from_default_config(key: str) -> Dict[str, Dict[str, str]]:
+       with pkg_resources.resource_stream('vspec', 'config.yaml') as config_file:
+           yaml_config = yaml.safe_load(config_file)
+           configs = yaml_config.get(key, {})
+       return configs
+
+    def load_config_file(config_file:str):
+        with open(config_file) as my_yaml_file:
+            my_units = Unit.get_config_dict(my_yaml_file, 'units')
+            Unit.add_config(my_units)
+            
+    def load_default_config_file():
+        #__members__ = Unit.get_members_from_default_config('units')
+        my_units = Unit.get_members_from_default_config('units')
+        Unit.add_config(my_units)
