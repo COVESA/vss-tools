@@ -15,6 +15,9 @@
 #
 import os
 import sys
+import argparse
+
+
 #Add path to main py vspec  parser
 myDir= os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
@@ -25,6 +28,7 @@ import vspec
 import getopt
 
 from vspec.model.vsstree import VSSNode, VSSType
+from vspec.model.constants import Unit
 
 from rdflib import Graph, Literal, RDF, URIRef, BNode
 from rdflib.namespace import RDFS, OWL, RDF,  SKOS
@@ -80,7 +84,7 @@ def setup_graph():
     ###
     # function to define the metadata of VSSo,
     # to define the used prefixes and namespaces,
-    # and to crete the basic rdflib graph
+    # and to create the basic rdflib graph
     ###
 
     g = Graph()
@@ -245,51 +249,45 @@ def print_ttl_content(file, tree):
                     graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_ACT.uri))
 
     # write the file and print the metadata.
-    file.write(graph.serialize(format='ttl'))
+    graph.serialize(file, format='ttl')
     for ns, url in graph.namespaces():
         print(f"@prefix {ns}: <{url}>")
     print (duplication)
     print (duplication_vsso)
     print (datatypes)
 
-def usage():
-    print(f"""
-Usage: {sys.argv[0]} [options] vspec_file ttl_file
-
-  where [options] are:
-
-  -I include_dir       Add include directory to search for included vspec
-                       files. Can be used multiple timees.
-
-  vspec_file           The vehicle specification file to parse.
-
-  ttl_file             The file to output the ttl data to.
-""")
-    sys.exit(255)
 
 if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args = getopt.getopt(sys.argv[1:], "I:")
 
-    # Always search current directory for include_file
+
+    parser = argparse.ArgumentParser(description="Convert vspec to protobuf.")
+    arguments = sys.argv[1:]
+
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,  default=[],
+                        help='Add include directory to search for included vspec files.')
+    parser.add_argument('-u', '--unit-file', action='append',  metavar='unit_file', type=str,  default=[],
+                        help='Unit file to be used for generation. Argument -u may be used multiple times.')
+    parser.add_argument('vspec_file', metavar='<vspec_file>',
+                        help='The vehicle specification file to convert.')
+    parser.add_argument('output_file', metavar='<output_file>',
+                        help='The file to write output to.')
+
+    args = parser.parse_args(arguments)
+
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        else:
-            usage()
+    include_dirs.extend(args.include_dir)
 
-    if len(args) != 2:
-        usage()
+    if not args.unit_file:
+        print("WARNING: Use of default VSS unit file is deprecated, please specify the unit file you want to use with the -u argument!")
+        Unit.load_default_config_file()
+    else:
+        for unit_file in args.unit_file:
+           print("Reading unit definitions from "+str(unit_file))
+           Unit.load_config_file(unit_file)
 
     try:
-        tree = vspec.load_tree(args[0], include_dirs, False, expand_inst=False)
-        ttl_out = open(args[1], "w")
-        print_ttl_content(ttl_out, tree)
-        ttl_out.write("\n")
-        ttl_out.close()
+        tree = vspec.load_tree(args.vspec_file, include_dirs, False, expand_inst=False)
+        print_ttl_content(args.output_file, tree)
     except vspec.VSpecError as e:
         print(f"Error: {e}")
         exit(255)

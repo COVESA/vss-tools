@@ -19,6 +19,8 @@ import vspec
 import getopt
 from anytree import RenderTree, PreOrderIter
 from vspec.model.vsstree import VSSNode
+import argparse
+from vspec.model.constants import Unit
 
 mapped = {
     "uint16": "uint32",
@@ -47,41 +49,40 @@ def print_message_body(nodes, proto_file):
         proto_file.write(f"  {data_type} {node.name} = {i};" + "\n")
 
 
-def usage():
-    print(
-        """Usage: vspec2protobuf.py [-I include_dir] ... vspec_file output_file
-  -I include_dir       Add include directory to search for included vspec
-                       files. Can be used multiple times.
- vspec_file            The vehicle specification file to parse.
- proto_file            The file to output the proto file to.)
-       """
-    )
-    sys.exit(255)
-
 
 if __name__ == "__main__":
-    #
-    # Check that we have the correct arguments
-    #
-    opts, args = getopt.getopt(sys.argv[1:], "I:")
 
-    # Always search current directory for include_file
+    parser = argparse.ArgumentParser(description="Convert vspec to protobuf.")
+    arguments = sys.argv[1:]
+
+    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,  default=[],
+                        help='Add include directory to search for included vspec files.')
+    parser.add_argument('-u', '--unit-file', action='append',  metavar='unit_file', type=str,  default=[],
+                        help='Unit file to be used for generation. Argument -u may be used multiple times.')
+    parser.add_argument('vspec_file', metavar='<vspec_file>',
+                        help='The vehicle specification file to convert.')
+    parser.add_argument('output_file', metavar='<output_file>',
+                        help='The file to write output to.')
+
+    args = parser.parse_args(arguments)
+
     include_dirs = ["."]
-    for o, a in opts:
-        if o == "-I":
-            include_dirs.append(a)
-        else:
-            usage()
+    include_dirs.extend(args.include_dir)
 
-    if len(args) != 2:
-        usage()
+    if not args.unit_file:
+        print("WARNING: Use of default VSS unit file is deprecated, please specify the unit file you want to use with the -u argument!")
+        Unit.load_default_config_file()
+    else:
+        for unit_file in args.unit_file:
+           print("Reading unit definitions from "+str(unit_file))
+           Unit.load_config_file(unit_file)
 
-    proto_file = open(args[1], "w")
+    proto_file = open(args.output_file, "w")
     proto_file.write('syntax = "proto3";\n\n')
     proto_file.write("package vehicle;\n\n")
 
     try:
-        tree = vspec.load_tree(args[0], include_dirs)
+        tree = vspec.load_tree(args.vspec_file, include_dirs)
         traverse_tree(tree, proto_file)
     except vspec.VSpecError as e:
         print("Error: {}".format(e))
