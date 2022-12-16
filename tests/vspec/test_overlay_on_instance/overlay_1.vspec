@@ -1,0 +1,15 @@
+
+
+# Add a third row
+A.B:
+  type: branch
+  instances:
+    - Row[1,3]
+    - ["Left","Right"]
+
+# And add a new signal for all instances
+A.B.D:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.B.D.

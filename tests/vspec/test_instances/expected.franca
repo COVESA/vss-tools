@@ -1,0 +1,74 @@
+
+// Copyright (C) 2022, COVESA
+//
+// This program is licensed under the terms and conditions of the
+// Mozilla Public License, version 2.0.  The full text of the
+// Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
+
+const UTF8String VSS_VERSION = "None"
+
+struct SignalSpec {
+    UInt32 id
+    String name
+    String type
+    String description
+    String datatype
+    String unit
+    Double min
+    Double max
+}
+
+const SignalSpec[] signal_spec = [
+{	name: "A.B",
+	type: "branch",
+	description: "This description will be duplicated."
+},
+{	name: "A.B.Row1",
+	type: "branch",
+	description: "This description will be duplicated."
+},
+{	name: "A.B.Row1.Left",
+	type: "branch",
+	description: "This description will be duplicated."
+},
+{	name: "A.B.Row1.Left.C",
+	type: "sensor",
+	description: "This description will also exist multiple times.",
+	datatype: "int8",
+	unit: "km"
+},
+{	name: "A.B.Row1.Right",
+	type: "branch",
+	description: "This description will be duplicated."
+},
+{	name: "A.B.Row1.Right.C",
+	type: "sensor",
+	description: "This description will also exist multiple times.",
+	datatype: "int8",
+	unit: "km"
+},
+{	name: "A.B.Row2",
+	type: "branch",
+	description: "This description will be duplicated."
+},
+{	name: "A.B.Row2.Left",
+	type: "branch",
+	description: "This description will be duplicated."
+},
+{	name: "A.B.Row2.Left.C",
+	type: "sensor",
+	description: "This description will also exist multiple times.",
+	datatype: "int8",
+	unit: "km"
+},
+{	name: "A.B.Row2.Right",
+	type: "branch",
+	description: "This description will be duplicated."
+},
+{	name: "A.B.Row2.Right.C",
+	type: "sensor",
+	description: "This description will also exist multiple times.",
+	datatype: "int8",
+	unit: "km"
+}
+]

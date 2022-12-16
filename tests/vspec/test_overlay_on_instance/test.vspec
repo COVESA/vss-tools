@@ -1,0 +1,35 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+
+#  Instances defined a slist
+
+A.B:
+  type: branch
+  instances:
+    - Row[1,2]
+    - ["Left","Right"]
+  description: Branch A.B, instances defined in list
+  comment: An example comment
+
+A.B.C:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.B.C.
+  comment: Original definition comment
+
+# Instances defined as attribute
+A.S:
+  type: branch
+  instances: ["Front", "Rear"]
+  description: Branch with instances, not in list
+
+A.S.T:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.S.T
+  comment: Orig comment.

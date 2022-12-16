@@ -1,0 +1,116 @@
+type Query {
+  vehicle(
+    """VIN of the vehicle that you want to request data for."""
+    id: String!
+
+    """
+    Filter data to only provide information that was sent from the vehicle after that timestamp.
+    """
+    after: String
+  ): A
+}
+
+"""Branch A."""
+type A {
+  """This description will be duplicated."""
+  b: A_B
+}
+
+"""This description will be duplicated."""
+type A_B {
+  """This description will be duplicated."""
+  row1: A_B_Row1
+
+  """This description will be duplicated."""
+  row2: A_B_Row2
+}
+
+"""This description will be duplicated."""
+type A_B_Row1 {
+  """This description will be duplicated."""
+  left: A_B_Row1_Left
+
+  """This description will be duplicated."""
+  right: A_B_Row1_Right
+}
+
+"""This description will be duplicated."""
+type A_B_Row1_Left {
+  """This description will also exist multiple times."""
+  c: A_B_Row1_Left_C
+}
+
+"""This description will also exist multiple times."""
+type A_B_Row1_Left_C {
+  """Value: This description will also exist multiple times."""
+  value: Int
+
+  """Timestamp: This description will also exist multiple times."""
+  timestamp: String
+
+  """Unit of This description will also exist multiple times."""
+  unit: String
+}
+
+"""This description will be duplicated."""
+type A_B_Row1_Right {
+  """This description will also exist multiple times."""
+  c: A_B_Row1_Right_C
+}
+
+"""This description will also exist multiple times."""
+type A_B_Row1_Right_C {
+  """Value: This description will also exist multiple times."""
+  value: Int
+
+  """Timestamp: This description will also exist multiple times."""
+  timestamp: String
+
+  """Unit of This description will also exist multiple times."""
+  unit: String
+}
+
+"""This description will be duplicated."""
+type A_B_Row2 {
+  """This description will be duplicated."""
+  left: A_B_Row2_Left
+
+  """This description will be duplicated."""
+  right: A_B_Row2_Right
+}
+
+"""This description will be duplicated."""
+type A_B_Row2_Left {
+  """This description will also exist multiple times."""
+  c: A_B_Row2_Left_C
+}
+
+"""This description will also exist multiple times."""
+type A_B_Row2_Left_C {
+  """Value: This description will also exist multiple times."""
+  value: Int
+
+  """Timestamp: This description will also exist multiple times."""
+  timestamp: String
+
+  """Unit of This description will also exist multiple times."""
+  unit: String
+}
+
+"""This description will be duplicated."""
+type A_B_Row2_Right {
+  """This description will also exist multiple times."""
+  c: A_B_Row2_Right_C
+}
+
+"""This description will also exist multiple times."""
+type A_B_Row2_Right_C {
+  """Value: This description will also exist multiple times."""
+  value: Int
+
+  """Timestamp: This description will also exist multiple times."""
+  timestamp: String
+
+  """Unit of This description will also exist multiple times."""
+  unit: String
+}

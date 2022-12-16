@@ -20,8 +20,7 @@ usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknow
 A common commandline to convert the VSS standard catalog into a JSON file is
 
 ```
-% python vspec2x.py --format json  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.js
-on
+% python vspec2x.py --format json  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.json
 Output to json format
 Known extended attributes:
 Reading unit definitions from ../spec/units.yaml
@@ -41,7 +40,7 @@ The first positional argument - `../spec/VehicleSignalSpecification.vspec` in th
 The `--format` parameter determines the output format, `JSON` in our example. If format is omitted `vspec2x` tries to guess the correct output format based on the extension of the second positional argument. Alternatively vss-tools supports *shortcuts* for community supported exporters, e.g. `vspec2json.py` for generating JSON. The shortcuts really only add the `--format` parameter for you, so 
 
 ```
-python vspec2json.py  json  -I ../spec ../spec/VehicleSignalSpecification.vspec vss.js
+python vspec2json.py  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.json
 ```
 
 is equivalent to the example above.
@@ -85,16 +84,51 @@ If you specify units by `-u <file>` then the default unit file (`config.yaml`) w
 See the [FAQ](../FAQ.md) for more information on how to define own units.
 
 ## Handling of overlays and extensions
-`vspec2x` allows composition of several overlays on top of a base vspec, to extend the model or overwrite certain metadata. Check [VSS documentation](https://covesa.github.io/vehicle_signal_specification/introduction/) on the concept of overlays. 
+`vspec2x` allows composition of several overlays on top of a base vspec, to extend the model or overwrite certain metadata. Check [VSS documentation](https://covesa.github.io/vehicle_signal_specification/introduction/) on the concept of overlays.
 
-To add overlays add one or more `-o` or  `--overlays` parameters, e.g.
+Overlays are in general injected before the VSS tree is expanded. Expansion is the process where branches with instances are transformed into multiple branches.
+An example is the `Vehicle.Cabin.Door` branch which during expansion get transformed into `Vehicle.Cabin.Door.Row1.Left`, `Vehicle.Cabin.Door.Row1.Right`, `Vehicle.Cabin.Door.Row2.Left`and `Vehicle.Cabin.Door.Row2.Right`.
+
+If you in an overlay for example wants to add a new signal to all door instances but only wants to specify the new signal once, then you could create an overlay like below and inject it using the `-o` or `--overlay` parameter.
 
 ```
-python vspec2yaml.py -I ../spec ../spec/VehicleSignalSpecification.vspec  -o overlay.vspec withoverlay.yml
+Vehicle.Cabin.Door.NewSignal:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: A new signal for all doors.
 ```
 
-You can also use VSS specifications with custom metadata not used in the standard catalogue, for example if your VSS model includes a `source` or `quality` metadata for sensors.
+This will result in that the following new signals are created
 
+* `Vehicle.Cabin.Door.Row1.Left.NewSignal`
+* `Vehicle.Cabin.Door.Row1.Right.NewSignal`
+* `Vehicle.Cabin.Door.Row2.Left.NewSignal`
+* `Vehicle.Cabin.Door.Row2.Right.NewSignal`
+
+If you only want to add the new signal to one of the doors, then you can create an overlay like below.
+
+```
+Vehicle.Cabin.Door.Row1.Left.NewSignal:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: A new signal for the left door on first row.
+```
+
+The tooling will recognize that `Row1.Left` refers to an instance of `Door` and will not expand the signal.
+Even if a row not existing in standard instantiation is used (like `Row5`) the tool will recognize it as an "already expanded"
+signal and not expand it further. If using an overlay to redefine a specific signal then data specified in overlays for extended signals
+(like `Vehicle.Cabin.Door.Row1.Left.IsChildLockActive`) has precedence over data specified for not yet extended signals
+(like `Vehicle.Cabin.Door.IsChildLockActive`).
+
+It is possible to use `-o` multiple times, e.g.
+
+```
+python vspec2yaml.py ../spec/VehicleSignalSpecification.vspec -o o1.vspec -o o2.vspec -oae o3.vspec -oae o4.vspec result.yml
+```
+
+You can also use overlays to inject custom metadata not used in the standard VSS catalog, for example if your custom VSS model includes `source` and `quality` metadata for sensors.
 As an example consider the following `overlay.vspec`:
 
 ```yaml
@@ -109,25 +143,25 @@ Vehicle.Speed:
     source: "ecu0xAA"
 ```
 
-Will give a warning about unknown attributes, or even terminate the parsing when `-s`, `--strict`  or `--abort-on-unknown-attribute` is used
+This will give a warning about unknown attributes, or even terminate the parsing when `-s`, `--strict`  or `--abort-on-unknown-attribute` is used.
 
 ```
-% python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec --strict -o overlay.vspec   test.json
+% python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec --strict -o overlay.vspec test.json
 Output to json format
 Known extended attributes: 
 Loading vspec from ../spec/VehicleSignalSpecification.vspec...
 Applying VSS overlay from overlay.vspec...
-Warning: Attribute(s) quality, source, lol in element Speed not a core or known extended attribute.
+Warning: Attribute(s) quality, source in element Speed not a core or known extended attribute.
 You asked for strict checking. Terminating.
 ```
 
-You can whitelist extended metadata attributes using the `-e` parameter with a comma separated list of attributes
+You can whitelist extended metadata attributes using the `-e` parameter with a comma separated list of attributes:
 
 ```
-python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec -e quality,source -o overlay.vspec   test.json
+python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec -e quality,source -o overlay.vspec test.json
 ```
 
-In this case the expectation is, that the general expectation is, that the generated output will contain the whitelisted extended metadata attributes, if the exporter supports them.
+In this case the expectation is, that the generated output will contain the whitelisted extended metadata attributes, if the exporter supports them.
 
 __Note: Not all exporters (need to) support (all) extended metadata attributes!__ Currently, the `yaml` and `json` exporters support arbitrary metadata.
 
@@ -174,5 +208,8 @@ def export(config: argparse.Namespace, root: VSSNode):
 ```
 See one of the existing exporters for an example.
 
-Add your exporter module to the `Exporter` class in [vspec2x.py](../vspec2x.py). 
- 
+Add your exporter module to the `Exporter` class in [vspec2x.py](../vspec2x.py).
+
+## Design Decisions and Architecture
+
+Please see [vspec2x architecture document](vspec2x_arch.md).
