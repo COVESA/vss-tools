@@ -17,7 +17,7 @@ def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
     monkeypatch.chdir(request.fspath.dirname)
 
-# Only running json exporter, overlay-fucntionality should be independent of selected exporter
+# Only running json exporter, overlay-functionality should be independent of selected exporter
 def run_overlay(overlay_file, expected_file):
     test_str = "../../../vspec2json.py --json-pretty --no-uuid test.vspec -o " + overlay_file + " out.json > out.txt"
     result = os.system(test_str)
@@ -29,8 +29,6 @@ def run_overlay(overlay_file, expected_file):
     os.system("rm -f out.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
-    
-    
 
 def test_explicit_overlay(change_test_dir):
     run_overlay("overlay_explicit_branches.vspec", "expected.json")

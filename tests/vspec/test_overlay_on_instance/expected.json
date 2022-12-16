@@ -1,0 +1,255 @@
+{
+  "A": {
+    "children": {
+      "B": {
+        "children": {
+          "Row1": {
+            "children": {
+              "Left": {
+                "children": {
+                  "C": {
+                    "comment": "Original definition comment",
+                    "datatype": "int8",
+                    "description": "Signal A.B.C.",
+                    "my_id": "Varberg",
+                    "type": "sensor",
+                    "unit": "km"
+                  },
+                  "D": {
+                    "datatype": "int8",
+                    "description": "Signal A.B.D.",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "comment": "An example comment",
+                "description": "Branch A.B, instances defined in list",
+                "type": "branch"
+              },
+              "Right": {
+                "children": {
+                  "C": {
+                    "comment": "Original definition comment",
+                    "datatype": "int8",
+                    "description": "Signal A.B.C.",
+                    "my_id": "Narva",
+                    "type": "sensor",
+                    "unit": "km"
+                  },
+                  "D": {
+                    "datatype": "int8",
+                    "description": "Signal A.B.D.",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "comment": "An example comment",
+                "description": "Branch A.B, instances defined in list",
+                "type": "branch"
+              }
+            },
+            "comment": "An example comment",
+            "description": "Branch A.B, instances defined in list",
+            "type": "branch"
+          },
+          "Row2": {
+            "children": {
+              "Left": {
+                "children": {
+                  "C": {
+                    "comment": "Original definition comment",
+                    "datatype": "int8",
+                    "description": "Signal A.B.C.",
+                    "my_id": "Luetzen",
+                    "type": "sensor",
+                    "unit": "km"
+                  },
+                  "D": {
+                    "datatype": "int8",
+                    "description": "Signal A.B.D.",
+                    "type": "sensor",
+                    "unit": "km"
+                  },
+                  "E": {
+                    "datatype": "int8",
+                    "description": "Signal A.B.E.",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "comment": "An example comment",
+                "description": "Branch A.B, instances defined in list",
+                "type": "branch"
+              },
+              "Right": {
+                "children": {
+                  "C": {
+                    "comment": "Original definition comment",
+                    "datatype": "float",
+                    "description": "Muhaha",
+                    "my_id": "Leipzig",
+                    "type": "sensor",
+                    "unit": "km"
+                  },
+                  "D": {
+                    "datatype": "int8",
+                    "description": "Signal A.B.D.",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "comment": "An example comment",
+                "description": "Branch A.B, instances defined in list",
+                "type": "branch"
+              }
+            },
+            "comment": "An example comment",
+            "description": "Branch A.B, instances defined in list",
+            "type": "branch"
+          },
+          "Row3": {
+            "children": {
+              "Left": {
+                "children": {
+                  "C": {
+                    "comment": "Original definition comment",
+                    "datatype": "int8",
+                    "description": "Signal A.B.C.",
+                    "my_id": "Warschau",
+                    "type": "sensor",
+                    "unit": "km"
+                  },
+                  "D": {
+                    "datatype": "int8",
+                    "description": "Signal A.B.D.",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "comment": "An example comment",
+                "description": "Branch A.B, instances defined in list",
+                "type": "branch"
+              },
+              "Right": {
+                "children": {
+                  "C": {
+                    "comment": "Original definition comment",
+                    "datatype": "int8",
+                    "description": "Signal A.B.C.",
+                    "my_id": "Lund",
+                    "type": "sensor",
+                    "unit": "km"
+                  },
+                  "D": {
+                    "datatype": "int8",
+                    "description": "Signal A.B.D.",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "comment": "An example comment",
+                "description": "Branch A.B, instances defined in list",
+                "type": "branch"
+              }
+            },
+            "comment": "An example comment",
+            "description": "Branch A.B, instances defined in list",
+            "type": "branch"
+          },
+          "Row5": {
+            "children": {
+              "Right": {
+                "children": {
+                  "C": {
+                    "datatype": "float",
+                    "description": "New Muhaha",
+                    "my_id": "Landskrona",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "description": null,
+                "type": "branch"
+              }
+            },
+            "description": null,
+            "type": "branch"
+          }
+        },
+        "comment": "An example comment",
+        "description": "Branch A.B, instances defined in list",
+        "type": "branch"
+      },
+      "S": {
+        "children": {
+          "Front": {
+            "children": {
+              "Down": {
+                "children": {
+                  "T": {
+                    "datatype": "float",
+                    "description": "New description, shall not inherit anything, will be expanded",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "description": null,
+                "type": "branch"
+              },
+              "T": {
+                "comment": "Orig comment.",
+                "datatype": "float",
+                "description": "Changed description, shall inherit comment",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "Branch with instances, not in list",
+            "type": "branch"
+          },
+          "Rear": {
+            "children": {
+              "Down": {
+                "children": {
+                  "T": {
+                    "datatype": "float",
+                    "description": "New description, shall not inherit anything, will be expanded",
+                    "type": "sensor",
+                    "unit": "km"
+                  }
+                },
+                "description": null,
+                "type": "branch"
+              },
+              "T": {
+                "comment": "Orig comment.",
+                "datatype": "int8",
+                "description": "Signal A.S.T",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "Branch with instances, not in list",
+            "type": "branch"
+          },
+          "Up": {
+            "children": {
+              "T": {
+                "datatype": "float",
+                "description": "New description, shall not inherit anything",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "dlksdlkds",
+            "type": "branch"
+          }
+        },
+        "description": "Branch with instances, not in list",
+        "type": "branch"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

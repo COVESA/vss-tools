@@ -77,7 +77,7 @@ class VSSNode(Node):
     deprecation = ""
 
     def __deepcopy__(self, memo):
-        return VSSNode(self.name, self.source_dict, parent=self.parent, children=copy.deepcopy(self.children, memo))
+        return VSSNode(self.name, self.source_dict.copy(), parent=None, children=copy.deepcopy(self.children, memo))
 
     def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_unknown_attribute=False, break_on_name_style_violation=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.

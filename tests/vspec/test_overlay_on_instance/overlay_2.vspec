@@ -1,0 +1,79 @@
+
+# And add a new signal only for left instance in second row
+A.B.Row2.Left.E:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.B.E.
+  
+  
+# Individual ones shall have precedence
+# Give custom attribute to all
+
+A.B.Row1.Left.C:
+  type: sensor
+  datatype: int8
+  my_id: Varberg
+
+A.B.Row1.Right.C:
+  type: sensor
+  datatype: int8
+  my_id: Narva
+
+A.B.Row2.Left.C:
+  type: sensor
+  datatype: int8
+  my_id: Luetzen
+
+# Changing one to float, shall inherit old comment
+A.B.Row2.Right.C:
+  datatype: float
+  type: sensor
+  unit: km
+  my_id: Leipzig
+  description: Muhaha
+
+A.B.Row3.Left.C:
+  type: sensor
+  datatype: int8
+  my_id: Warschau
+
+A.B.Row3.Right.C:
+  type: sensor
+  datatype: int8
+  my_id: Lund
+
+# Adding one outside instance range, shall not inherit original comment
+A.B.Row5.Right.C:
+  datatype: float
+  type: sensor
+  unit: km
+  my_id: Landskrona
+  description: New Muhaha
+  
+#Shall inherit comment
+A.S.Front.T:
+  datatype: float
+  type: sensor
+  unit: km
+  description: Changed description, shall inherit comment
+  
+#Totally new, shall not inherit anything, will not be considered as extending instantiation
+# I.e. will be expanded to A.S.Front.Down.T and A.S.Rear.Down.T
+A.S.Down.T:
+  datatype: float
+  type: sensor
+  unit: km
+  description: New description, shall not inherit anything, will be expanded
+
+# This is a work-around if you want to add something for "Up" and do not want it expanded
+A.S.Up:
+  type: branch
+  description: dlksdlkds
+  instantiate: false
+
+A.S.Up.T:
+  datatype: float
+  type: sensor
+  unit: km
+  description: New description, shall not inherit anything

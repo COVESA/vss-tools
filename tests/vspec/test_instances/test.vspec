@@ -1,0 +1,19 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.B:
+  type: branch
+  instances:
+    - Row[1,2]
+    - ["Left","Right"]
+  description: This description will be duplicated.
+  comment: This comment will be duplicated
+
+A.B.C:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: This description will also exist multiple times.
+  comment: As well as this comment.

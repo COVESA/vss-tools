@@ -1,0 +1,59 @@
+module A
+{
+module B
+{
+module Row1
+{
+module Left
+{
+struct C
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="This description will also exist multiple times.";
+};
+};
+
+module Right
+{
+struct C
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="This description will also exist multiple times.";
+};
+};
+
+};
+
+module Row2
+{
+module Left
+{
+struct C
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="This description will also exist multiple times.";
+};
+};
+
+module Right
+{
+struct C
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="This description will also exist multiple times.";
+};
+};
+
+};
+
+};
+
+};

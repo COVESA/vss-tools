@@ -1,0 +1,66 @@
+A:
+  description: Branch A.
+  type: branch
+
+A.B:
+  comment: This comment will be duplicated
+  description: This description will be duplicated.
+  type: branch
+
+A.B.Row1:
+  comment: This comment will be duplicated
+  description: This description will be duplicated.
+  type: branch
+
+A.B.Row1.Left:
+  comment: This comment will be duplicated
+  description: This description will be duplicated.
+  type: branch
+
+A.B.Row1.Left.C:
+  comment: As well as this comment.
+  datatype: int8
+  description: This description will also exist multiple times.
+  type: sensor
+  unit: km
+
+A.B.Row1.Right:
+  comment: This comment will be duplicated
+  description: This description will be duplicated.
+  type: branch
+
+A.B.Row1.Right.C:
+  comment: As well as this comment.
+  datatype: int8
+  description: This description will also exist multiple times.
+  type: sensor
+  unit: km
+
+A.B.Row2:
+  comment: This comment will be duplicated
+  description: This description will be duplicated.
+  type: branch
+
+A.B.Row2.Left:
+  comment: This comment will be duplicated
+  description: This description will be duplicated.
+  type: branch
+
+A.B.Row2.Left.C:
+  comment: As well as this comment.
+  datatype: int8
+  description: This description will also exist multiple times.
+  type: sensor
+  unit: km
+
+A.B.Row2.Right:
+  comment: This comment will be duplicated
+  description: This description will be duplicated.
+  type: branch
+
+A.B.Row2.Right.C:
+  comment: As well as this comment.
+  datatype: int8
+  description: This description will also exist multiple times.
+  type: sensor
+  unit: km
