@@ -26,7 +26,24 @@
       },
       "SignalA": {
         "datatype": "int8",
-        "description": "Changing unit to celsius",
+        "dbc": {
+          "changetype": "ON_CHANGE",
+          "interval_ms": 1000,
+          "signal": "VCFRONT_passengerPresent",
+          "transform": {
+            "mapping": [
+              {
+                "from": 0,
+                "to": false
+              },
+              {
+                "from": 1,
+                "to": true
+              }
+            ]
+          }
+        },
+        "description": "Changing unit to celsius and adding complex deployment info",
         "type": "sensor",
         "unit": "celsius"
       },
