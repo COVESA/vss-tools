@@ -149,6 +149,7 @@ def main(arguments):
 
         vspec.expand_tree_instances(tree)
 
+        vspec.clean_metadata(tree);
         print("Calling exporter...")
         exporter.export(args, tree, print_uuid)
         print("All done.")

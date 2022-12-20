@@ -236,6 +236,10 @@ def cleanup_flat_entries(flat_model):
 #
 # Delete parser-specific elements
 #
+# Parser metadata is cleaned in two steps. An initial step just after vspec files are parsed.
+# Then some data is removed but not all as it is used for error messages.
+# That needs to be removed in a second step, just before exporting.
+#
 def cleanup_deep_model(deep_model):
 
     if "$line$" in deep_model:
@@ -247,12 +251,32 @@ def cleanup_deep_model(deep_model):
     if "$name$" in deep_model:
         del deep_model['$name$']
 
-    if (deep_model["type"] == "branch"):
+    # children as of today exists only for branches
+    if "children" in deep_model:
         children = deep_model["children"]
         for child in deep_model["children"]:
             cleanup_deep_model(children[child])
 
     return None
+
+#
+# Meta data on extended attributes needs to be cleaned as part of the second cleaning step.
+# as it is not included in first step.
+#
+def clean_metadata(node):
+
+    if isinstance(node,VSSNode):
+        clean_metadata(node.extended_attributes)
+        for child in node.children:
+            clean_metadata(child)
+    elif isinstance(node,dict):
+        for k in list(node.keys()):
+            clean_metadata(node[k])
+            if k in ["$file_name$", "$line$"]:
+                del node[k]
+    elif isinstance(node,list):
+        for elem in node:
+            clean_metadata(elem)
 
 
 #

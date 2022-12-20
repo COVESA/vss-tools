@@ -3,7 +3,17 @@ A.SignalA:
   datatype: int8
   type: sensor
   unit: celsius
-  description: Changing unit to celsius
+  description: Changing unit to celsius and adding complex deployment info
+  dbc:
+    signal: VCFRONT_passengerPresent
+    transform:
+      mapping:
+        - from: 0
+          to: false
+        - from: 1
+          to: true
+    changetype: ON_CHANGE
+    interval_ms: 1000
 
 A.SignalA2:
   datatype: int8
