@@ -14,13 +14,13 @@ or, by invoking all tools:
 $ make all
 ```
 
-To <b>run the binary tool without using the make file</b>, the binary tool libray must first be built in the binary directory, then the vspec2binary.py is executed in the root directory:
+To <b>run the binary tool without using the make file</b>, the binary tool library must first be built in the binary directory, then the vspec2binary.py is executed in the root directory:
 
 ```
 $ cd binary
 /binary$ gcc -shared -o binarytool.so -fPIC binarytool.c
 $ cd ..
-$ vspec2binary.py -I ./spec/VehicleSignalSpecification.id ./spec/VehicleSignalSpecification.vspec vss_rel_<current version>.binary
+$ vspec2binary.py -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
 ```
 where vss_rel_<current version>.binary is the tre file in binary format.
 <br><br>
@@ -31,7 +31,7 @@ Current version is found at https://github.com/COVESA/vehicle_signal_specificati
 Access Control of the signals can be supported by including the extended attribute validate in each of the nodes. This attribute is used by the VISSv2 specification. More information can be found in: <a href="https://www.w3.org/TR/viss2-core/#access-control-selection">VISS Access Control. </a>In case the validate attribute is added to the nodes, it must be specified when invoking the tool using the extended attributes flag (-e): 
 
 ```
-$ vspec2binary.py -e validate -I ./spec/VehicleSignalSpecification.id ./spec/VehicleSignalSpecification.vspec vss_rel_<current version>.binary
+$ vspec2binary.py -e validate -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
 ```
 
 

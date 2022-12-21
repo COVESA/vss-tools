@@ -65,11 +65,11 @@ def test_single_u(change_test_dir):
 
 #Long form
 def test_single_unit_files(change_test_dir):
-    run_unit("signals_with_special_units.vspec","--unit-files units_all.yaml","expected_special.json")
+    run_unit("signals_with_special_units.vspec","--unit-file units_all.yaml","expected_special.json")
 
 #Long form multiple files
 def test_multiple_unit_files(change_test_dir):
-    run_unit("signals_with_special_units.vspec","--unit-files units_hogshead.yaml --unit-files units_puncheon.yaml","expected_special.json")
+    run_unit("signals_with_special_units.vspec","--unit-file units_hogshead.yaml --unit-file units_puncheon.yaml","expected_special.json")
 
 #Special units not defined
 def test_unit_error(change_test_dir):

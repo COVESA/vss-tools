@@ -20,10 +20,11 @@ usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknow
 A common commandline to convert the VSS standard catalog into a JSON file is
 
 ```
-% python vspec2x.py --format json  -I ../spec ../spec/VehicleSignalSpecification.vspec vss.js
+% python vspec2x.py --format json  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.js
 on
 Output to json format
-Known extended attributes: 
+Known extended attributes:
+Reading unit definitions from ../spec/units.yaml
 Loading vspec from ../spec/VehicleSignalSpecification.vspec...
 Calling exporter...
 Generating JSON output...
@@ -33,7 +34,7 @@ All done.
 
 This assumes you checked out the [COVESA Vehicle Signal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools including vspec2x as a submodule.
 
-The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories.
+The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories. The `-u` parameter specifies the unit file to use.
 
 The first positional argument - `../spec/VehicleSignalSpecification.vspec` in the example  - gives the (root) `.vspec` file to be converted. The second positional argument  - `vss.json` in the example - is the output file.
 
