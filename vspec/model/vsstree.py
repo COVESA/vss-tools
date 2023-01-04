@@ -165,20 +165,6 @@ class VSSNode(Node):
             raise NameStyleValidationException(
                 f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
 
-    def is_private(self) -> bool:
-        """Checks weather this instance is in private branch of VSS.
-
-            Returns:
-                True, if this instance is in Private sub tree, false otherwise.
-        """
-
-        node = self
-        while node:
-            if node.name == "Private":
-                return True
-            node = node.parent
-        return False
-
     def qualified_name(self, separator=DEFAULT_SEPARATOR) -> str:
         """Returns fully qualified name of a VSS object (including path) using the defined separator (or default ='.')
             Args:

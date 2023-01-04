@@ -139,11 +139,11 @@ def main(arguments):
     try:
         print(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, merge_private=False, break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+            args.vspec_file, include_dirs, break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
 
         for overlay in args.overlays:
             print(f"Applying VSS overlay from {overlay}...")
-            othertree = vspec.load_tree(overlay, include_dirs, merge_private=False, break_on_unknown_attribute=abort_on_unknown_attribute,
+            othertree = vspec.load_tree(overlay, include_dirs, break_on_unknown_attribute=abort_on_unknown_attribute,
                                         break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
             vspec.merge_tree(tree, othertree)
 

@@ -17,7 +17,6 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual("26d6e362-a422-11ea-bb37-0242ac130002", node.uuid)
         self.assertFalse(node.has_unit())
         self.assertFalse(node.has_datatype())
-        self.assertFalse(node.is_private())
 
     def test_complex_construction(self):
         """
@@ -40,21 +39,6 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual("test-default", node.default)
         self.assertTrue(node.has_unit())
         self.assertTrue(node.has_datatype())
-        self.assertFalse(node.is_private())
-
-    def test_private_attribute(self):
-        """
-        Test if private attribute construction is correctly working.
-        """
-        source_root = {"description": "High-level vehicle data.", "type": "branch", "uuid": "f6750f15-ba2f-4eab-adcc-19a500982293", "$file_name$": "testfile"}
-        source_private = {"description": "Private vehicle data.", "type": "branch", "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b", "$file_name$": "testfile"}
-        source_private_element = {"description": "Private vehicle data.", "type": "sensor", "datatype": "string", "uuid": "9101bbea-aeb6-4b0e-8cec-d8b126e77898", "$file_name$": "testfile"}
-        node_root = VSSNode("Vehicle", source_root)
-        node_private = VSSNode("Private", source_private, node_root)
-        node_private_element = VSSNode("Element", source_private_element, node_private)
-
-        self.assertTrue(node_private_element.is_private())
-        self.assertEqual("Vehicle.Private.Element", node_private_element.qualified_name('.'))
 
     def test_merge_nodes(self):
         """
@@ -67,7 +51,7 @@ class TestVSSNode(unittest.TestCase):
                   "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "$file_name$": "testfile"}
 
         node_target = VSSNode("MyNode", target)
-        node_source = VSSNode("Private", source)
+        node_source = VSSNode("MyNode2", source)
         self.assertEqual("e36a1d8c-4d06-4c22-ba69-e8b39434a7a3", node_target.uuid)
         self.assertTrue(node_target.has_datatype())
         self.assertEqual("2cc90035-e1c2-43bf-a394-1a439addc8ad", node_source.uuid)
@@ -91,7 +75,6 @@ class TestVSSNode(unittest.TestCase):
         node_drivetrain = VSSNode("Drivetrain", source_drivetrain, node_root)
         node_drivetrain_element = VSSNode("SomeElement", source_drivetrain_element, node_drivetrain)
 
-        self.assertFalse(node_drivetrain_element.is_private())
         self.assertTrue(VSSNode.node_exists(node_root, "/Vehicle/Drivetrain/SomeElement"))
 
     def test_orphan_detection(self):
