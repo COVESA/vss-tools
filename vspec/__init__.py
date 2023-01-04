@@ -84,13 +84,13 @@ def convert_yaml_to_list(raw_yaml):
     return lst
 
 
-def load_tree(file_name, include_paths, merge_private=False, break_on_unknown_attribute=False, break_on_name_style_violation=False, expand_inst=True):
+def load_tree(file_name, include_paths, break_on_unknown_attribute=False, break_on_name_style_violation=False, expand_inst=True):
     flat_model = load_flat_model(file_name, "", include_paths)
     absolute_path_flat_model = create_absolute_paths(flat_model)
     deep_model = create_nested_model(absolute_path_flat_model, file_name)
     cleanup_deep_model(deep_model)
     dict_tree = deep_model["children"]
-    tree = render_tree(dict_tree, merge_private, break_on_unknown_attribute=break_on_unknown_attribute,
+    tree = render_tree(dict_tree, break_on_unknown_attribute=break_on_unknown_attribute,
                        break_on_name_style_violation=break_on_name_style_violation)
     if expand_inst:
         expand_tree_instances(tree)
@@ -610,7 +610,7 @@ $include$:
     return text
 
 
-def render_tree(tree_dict, merge_private=False, break_on_unknown_attribute=False, break_on_name_style_violation=False) -> VSSNode:
+def render_tree(tree_dict, break_on_unknown_attribute=False, break_on_name_style_violation=False) -> VSSNode:
     if len(tree_dict) != 1:
         raise Exception('Invalid VSS model, must have single root node')
 
@@ -623,9 +623,6 @@ def render_tree(tree_dict, merge_private=False, break_on_unknown_attribute=False
         child_nodes = root_element["children"]
         render_subtree(child_nodes, tree_root, break_on_unknown_attribute=break_on_unknown_attribute,
                        break_on_name_style_violation=break_on_name_style_violation)
-
-    if merge_private:
-        merge_private_into_main_tree(tree_root)
 
     create_tree_uuids(tree_root)
     return tree_root
@@ -646,43 +643,6 @@ def render_subtree(subtree, parent, break_on_unknown_attribute=False, break_on_n
             child_nodes = current_element["children"]
             render_subtree(child_nodes, new_element, break_on_unknown_attribute,
                            break_on_name_style_violation=break_on_name_style_violation)
-
-
-def merge_private_into_main_tree(tree_root: VSSNode):
-    r = Resolver()
-    try:
-        private = r.get(tree_root, "/Vehicle/Private")
-        detect_and_merge(tree_root, private)
-        private.parent = None
-    except ChildResolverError:
-        print("No private Attribute branch detected")
-
-
-def detect_and_merge(tree_root: VSSNode, private_root: VSSNode):
-    r = Resolver()
-    private_element: VSSNode
-    for private_element in LevelOrderIter(private_root):
-        if private_element == private_root:
-            continue
-
-        if not private_element.is_private():
-            continue
-
-        element_name = "/" + private_element.qualified_name("/")
-        candidate_name = element_name.replace("Private/", "")
-
-        if not VSSNode.node_exists(tree_root, candidate_name):
-            new_parent_name = "/" + \
-                private_element.parent.qualified_name(
-                    "/").replace("/Private", "")
-            new_parent = r.get(tree_root, new_parent_name)
-            private_element.parent = new_parent
-
-        elif private_element.is_leaf:
-            other_node = r.get(tree_root, candidate_name)
-            other_node.merge(private_element)
-            private_element.parent = None
-
 
 def merge_tree(base: VSSNode, overlay: VSSNode):
     r = Resolver()
