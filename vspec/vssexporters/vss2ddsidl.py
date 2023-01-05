@@ -94,13 +94,15 @@ def export_node( node, generate_uuid,generate_all_idl_features):
             enum should be enclosed under module block to avoid namespec conflict
             module name for enum is chosen as the node name + 
             """
-            idlFileBuffer.append("module "+getAllowedName(node.name)+"_M")
-            idlFileBuffer.append("{")
-            idlFileBuffer.append("enum "+getAllowedName(node.name)+"Values{"+str(",".join(node.allowed))+"};")
-            isEnumCreated=True
-            #idlFileBuffer.append("")
-            idlFileBuffer.append("};")
-            allowedValues=str(node.allowed)
+            if (node.datatype.value in ["string", "string[]"]):
+                idlFileBuffer.append("module "+getAllowedName(node.name)+"_M")
+                idlFileBuffer.append("{")
+                idlFileBuffer.append("enum "+getAllowedName(node.name)+"Values{"+str(",".join(node.allowed))+"};")
+                isEnumCreated=True
+                idlFileBuffer.append("};")
+                allowedValues=str(node.allowed)
+            else:
+                print(f"Warning: VSS2IDL can only handle allowed values for string type, signal {node.name} has type {node.datatype.value}")
 
         idlFileBuffer.append("struct "+getAllowedName(node.name))
         idlFileBuffer.append("{")

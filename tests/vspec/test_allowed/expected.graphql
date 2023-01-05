@@ -1,0 +1,62 @@
+type Query {
+  vehicle(
+    """VIN of the vehicle that you want to request data for."""
+    id: String!
+
+    """
+    Filter data to only provide information that was sent from the vehicle after that timestamp.
+    """
+    after: String
+  ): A
+}
+
+"""Branch A."""
+type A {
+  """A string"""
+  string: A_String
+
+  """A string array"""
+  stringArray: A_StringArray
+
+  """An int"""
+  int: A_Int
+
+  """A float"""
+  float: A_Float
+}
+
+"""A string"""
+type A_String {
+  """Value: A string"""
+  value: String
+
+  """Timestamp: A string"""
+  timestamp: String
+}
+
+"""A string array"""
+type A_StringArray {
+  """Value: A string array"""
+  value: [String]
+
+  """Timestamp: A string array"""
+  timestamp: String
+}
+
+"""An int"""
+type A_Int {
+  """Value: An int"""
+  value: Int
+
+  """Timestamp: An int"""
+  timestamp: String
+}
+
+"""A float"""
+type A_Float {
+  """Value: A float"""
+  value: Float
+
+  """Timestamp: A float"""
+  timestamp: String
+}

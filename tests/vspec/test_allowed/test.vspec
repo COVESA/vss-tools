@@ -1,0 +1,29 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.String:
+  datatype: string
+  type: sensor
+  allowed: ['January', 'February']
+  description: A string
+
+A.StringArray:
+  datatype: string[]
+  type: sensor
+  allowed: ['January', 'February', 'March']
+  description: A string array
+
+A.Int:
+  datatype: uint16
+  type: sensor
+  allowed: [1, 2, 3]
+  description: An int
+
+A.Float:
+  datatype: float
+  type: actuator
+  allowed: [1.1, 2.54, 3]
+  description: A float
+
