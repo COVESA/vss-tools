@@ -1,0 +1,35 @@
+module A
+{
+module _String_M
+{
+enum _StringValues{January,February};
+};
+struct _String
+{
+_String_M::_StringValues value;
+//const string type ="sensor";
+//const string description="A string";
+};
+module StringArray_M
+{
+enum StringArrayValues{January,February,March};
+};
+struct StringArray
+{
+StringArray_M::StringArrayValues value;
+//const string type ="sensor";
+//const string description="A string array";
+};
+struct _Int
+{
+unsigned short value;
+//const string type ="sensor";
+//const string description="An int";
+};
+struct _Float
+{
+float value;
+//const string type ="actuator";
+//const string description="A float";
+};
+};
