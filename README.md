@@ -44,49 +44,87 @@ All current tools are based on common Python functionality in the `vspec` folder
 
 ## Getting started
 
-### Prerequisites
-* Python 3.8.12 installed
-* If the installation (pip install) is executed behind a (corporate) proxy, the following environments variables must be set: `http_proxy` and `https_proxy` (including authentication e.g., `http://${proxy_username):$(proxy_password)@yourproxy.yourdomain`)
-* If you do not run with administration rights, you may need to configure pip target path to write to your user home directory or consider [using the `pipenv` method](#setup-with-pipenv).
+## Prerequisites
+
+* If your environment behind a (corporate) proxy, the following environments variables must typically be set: `http_proxy` and `https_proxy` (including authentication e.g., `http://${proxy_username):$(proxy_password)@yourproxy.yourdomain`).
+* If using `apt` and you are behind a proxy, you may also need to configure proxy in `/etc/apt/apt.conf.d/proxy.conf`.
+
+## Basic Setup
+
+The tools are in [continuous integration](https://github.com/COVESA/vss-tools/blob/master/.github/workflows/buildcheck.yml) tested using Python 3.8.12,
+but they are generally expected to be compatible with at least Python 3.8, 3.9 and 3.10.
+The setup example shown below is based on a fresh minimal install of Ubuntu 22.04.
+
+The first step is to make sure that python and required dependencies are installed. A possible installation flow is shown below.
+
+
+```sh
+# Install Python, in this case Python 3.10 as that is a version available on the update sites of Ununtu 22.04
+sudo apt install python3.10
+
+# For convenience make Python 3.10 available as default Python
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 100
+
+# Install required dependencies, running pip without sudo means that a user installation will be performed
+sudo apt install pip
+pip install anytree deprecation graphql-core
+```
+
+The environment can be tested by calling one of the tools without arguments, then usage instructions shall be printed similar to below.
+
+```sh
+user@ubuntu:~/vss-tools$ ./vspec2csv.py
+usage: vspec2csv.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
+                    [--no-uuid] [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
+                    [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
+                    <vspec_file> <output_file>
+vspec2csv.py: error: the following arguments are required: <vspec_file>, <output_file>
 
 ```
-On Unix and Mac OS X the configuration file is: $HOME/.pip/pip.conf
-If the file does not exist, create an empty file with that name.
 
-Add or replace the following lines:
-[global]
-target=/somedir/where/your/account/can/write/to
+## Advanced Setup
 
-On Windows, the configuration file is: %HOME%\pip\pip.ini 
-If the file does not exist, create an empty file with that name.
-
-Add or replace the following lines:
-[global]
-target=C:\SomeDir\Where\Your\Account\Can\Write\To
-```
-### Project Setup
-
-* Checkout vss-tools as submodule of the Vehicle Signal Specification repository (`git clone --recurse-submodules -j8 https://github.com/COVESA/vehicle_signal_specification.git`)
-* If you use a custom pip installation directory, set the `PYTHONPATH` environment variable to the directory that you set in the `pip.ini` file.
-
-### Setup with `pipenv`
+If you want to run the tools with a specific Python version, or you do not want to change your current/global Python configuration you can use pyenv/pipenv.
+If you use a custom pip installation directory, set the `PYTHONPATH` environment variable to the directory that you set in the `pip.ini` file.
 [pipenv](https://pypi.org/project/pipenv/) is a tool that manages a virtual environment and install the package and its dependencies, making the process much simpler and predictable, since the `Pipfile` states the dependencies, while `Pipfile.lock` freezes the exact version in use.
 
-If [`pyenv` shell command](https://github.com/pyenv/pyenv) is not installed, use its [installer](https://github.com/pyenv/pyenv-installer) to get it:
+The setup example shown below is based on a fresh minimal install of Ubuntu 22.04.
+
+The first step is to make sure that pyenv and the wanted Python version (in the example 3.8.12) is installed
 
 ```sh
-curl https://pyenv.run | bash  # download and install
-exec $SHELL                    # restart your shell using the new $PATH
-```
+# Install dependencies, to be able to use curl and build python from source
+sudo apt-get install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 
-Make sure Python version 3.8.12 is installed:
-```sh
-pyenv install 3.8.12  # install the versions required by Pipfile
+# Fetch and install pyenv and update variables
+curl https://pyenv.run | bash
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# Build and install wanted python version
+pyenv install 3.8.12
 ```
 
 Install this project and its dependencies in the local `.venv` folder in this project, then use it (`pipenv shell`):
+
 ```sh
 export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, otherwise uses global location
+pip install pipenv
+export PATH=/home/user/.local/bin:$PATH
 pipenv install --dev # install the development dependencies as well
-pipenv shell         # starts a shell configured to use the virtual environment
+```
+
+Then the virtual environment can be started and tested using (`pipenv shell`):
+
+```sh
+user@ubuntu:~/vss-tools$ pipenv shell
+Launching subshell in virtual environment...
+user@ubuntu:~/vss-tools$  . /home/user/vss-tools/.venv/bin/activate
+(vss-tools) user@ubuntu:~/vss-tools$ ./vspec2yaml.py
+usage: vspec2yaml.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
+                     [--no-uuid] [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
+                     [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
+                     <vspec_file> <output_file>
+vspec2yaml.py: error: the following arguments are required: <vspec_file>, <output_file>
 ```
