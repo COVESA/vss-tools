@@ -60,7 +60,7 @@ def test_multiple_u(change_test_dir):
 
 
 #Short form duplication should not matter
-def test_single_u(change_test_dir):
+def test_multiple_duplication(change_test_dir):
     run_unit("signals_with_special_units.vspec", "-u units_all.yaml -u units_all.yaml","expected_special.json")
 
 #Long form
@@ -72,15 +72,15 @@ def test_multiple_unit_files(change_test_dir):
     run_unit("signals_with_special_units.vspec","--unit-file units_hogshead.yaml --unit-file units_puncheon.yaml","expected_special.json")
 
 #Special units not defined
-def test_unit_error(change_test_dir):
+def test_unit_error_no_unit_file(change_test_dir):
     run_unit_error("signals_with_special_units.vspec","","KeyError")
 
 #Not all units defined
-def test_unit_error(change_test_dir):
+def test_unit_error_unit_file_incomplete(change_test_dir):
     run_unit_error("signals_with_special_units.vspec","-u units_hogshead.yaml","KeyError")
 
 #FIle not found
-def test_unit_error(change_test_dir):
+def test_unit_error_missing_file(change_test_dir):
     run_unit_error("signals_with_special_units.vspec","-u file_that_does_not_exist.yaml","FileNotFoundError")
 
 ##################### Tests related to default units (config.yaml) #############################
