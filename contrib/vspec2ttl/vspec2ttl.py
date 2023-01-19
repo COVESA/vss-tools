@@ -141,7 +141,7 @@ def setTTLName (node):
     node.ttl_name  = ttl_name
     return ttl_name 
 
-def print_ttl_content(file, tree):
+def print_ttl_content(file, tree : VSSNode):
     ###
     # function to create & print the content of the ontology
     # in turtle format.

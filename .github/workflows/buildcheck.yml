@@ -59,3 +59,10 @@ jobs:
           cd ${{ env.VSS_TOOLS_PATH }}
           pipenv run make -C "${{ env.VSS_PATH }}" -k travis_optional ||
             echo "::warning title=travis_optional::optional targets FAILED"
+      - name: Run mypy.
+        run: |
+          cd ${{ env.VSS_TOOLS_PATH }}
+          pipenv install mypy types-setuptools types-PyYAML
+          # For now always let mypy succeed - can be changed when all errors reported have been fixed or suppressed
+          pipenv run mypy *.py vspec tests contrib ||
+            echo "::warning title=mypy::Errors reported"

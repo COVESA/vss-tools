@@ -31,7 +31,7 @@ mapped = {
 }
 
 
-def traverse_tree(tree, proto_file):
+def traverse_tree(tree : VSSNode, proto_file):
     tree_node: VSSNode
     for tree_node in filter(lambda n: n.is_branch(), PreOrderIter(tree)):
         proto_file.write(f"message {tree_node.qualified_name('')} {{" + "\n")

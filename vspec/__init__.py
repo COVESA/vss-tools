@@ -305,7 +305,7 @@ def expand_includes(flat_model, prefix, include_paths):
     return new_flat_model
 
 
-def expand_tree_instances(tree):
+def expand_tree_instances(tree : VSSNode) -> VSSNode:
     tree_node: VSSNode
     exporter = DictExporter()
     importer = DictImporter(nodecls=VSSNode)
