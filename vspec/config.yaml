@@ -215,11 +215,11 @@ units:
     label: kilo newton
     description: Force measured in kilo newton
     domain: force
-  MB:
-    label: megabyte
-    description: Data measured in megabytes
-    domain: data
-  MB/s:
-    label: megabytes per second
-    description: Data per time measured in megabytes per second
-    domain: data per time
+  MiB:
+    label: mebibyte
+    description: Digital information measured in mebibyte (base 2)
+    domain: digital information
+  MiB/s:
+    label: mebibytes per second
+    description: Digital information per time measured in mebibytes per second (base 2)
+    domain: digital information per time
