@@ -34,7 +34,7 @@ def format_csv_line(csv_fields):
     return formatted_csv_line[:-1] + '\n'
 
 #Write the data lines
-def print_csv_content(file, tree, uuid):
+def print_csv_content(file, tree : VSSNode, uuid):
     tree_node: VSSNode
     for tree_node in PreOrderIter(tree):
         data_type_str = tree_node.datatype.value if tree_node.has_datatype() else ""
