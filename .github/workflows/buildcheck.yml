@@ -66,3 +66,10 @@ jobs:
           # For now always let mypy succeed - can be changed when all errors reported have been fixed or suppressed
           pipenv run mypy *.py vspec tests contrib ||
             echo "::warning title=mypy::Errors reported"
+      - name: Test Binary Go Parser
+        run: |
+          # As of now run here, not included in Makefile
+          cd ${{ env.VSS_TOOLS_PATH }}/binary/go_parser
+          go build -o gotestparser testparser.go
+          go list -m -json -buildvcs=false all
+

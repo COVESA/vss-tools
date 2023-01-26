@@ -66,7 +66,7 @@ $ ./ctestparser ../../vss_rel_<current version>.binary
 To build the testparser from the go_parser directory:
 
 ```
-$ go build testparser.go  -o gotestparser
+$ go build -o gotestparser testparser.go 
 ```
 When starting it, the path to the binary file must be provided. If started from the go_parser directory:
 
