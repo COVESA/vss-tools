@@ -19,7 +19,9 @@ It includes changes that are included in released version, but also changes plan
 Overlays introduced to allow customization of VSS. See [documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/overlay/).
 See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec2x.md) on how to include overlays when transforming VSS.
 
-## Planned Changes VSS-Tools 3.1
+## Merged Changes for next release (VSS-Tools 3.1)
+
+*This is changes that has been merged on master but not yet released*
 
 ### Change in UUID handling.
 
@@ -39,6 +41,19 @@ For VSS-Tools 3.1 the following behavior is implemented:
 The tools vspec2c and vspec2ocf in the contrib folder has been moved to the obsolete folder.
 The background is that they have been broken for a long period and no one has volunteered to fix them.
 
+### Support for specifying unit files
+
+Add new parameter `-u` has been introduced, see [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec2x.md#handling-of-units).
+Use of default unit file deprecated.
+At the same time a unit file has been added to [VSS](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml),
+allowing VSS tooling to control their own units rather than relying on units in VSS-tools.
+Default behavior for units have changed, if there is a file `units.yaml` in the same directory as the `*.vspec`
+file it will be used, only if not existing `config.yaml` in vss-tools will be used.
+
+## Planned Changes for next release (VSS-Tools 3.1)
+
+*This is changes planned but not yet merged to master*
+
 ## Planned Changes VSS-Tools 4.0
 
 ### Change in UUID handling.
@@ -50,13 +65,19 @@ For VSS-Tools 4.0 the following behavior shall be implemented:
 * No warning shall be given if neither `--uuid` nor `--no-uuid` is used.
 * If both `--uuid` and `--no-uuid` is used an error shall be given.
 
+### Default unit file to be removed from vss-tools
+
+The [default unit file](https://github.com/COVESA/vss-tools/blob/master/vspec/config.yaml)
+will be removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
+file must exist, or a unit file must be specified by `-u`.
+From now on, if new units are needed for the VSS catalog they shall be added to the
+[VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
 
 ## Planned Changes VSS-Tools 5.0
 
 
-### Change in UUID handling. 
+### Change in UUID handling.
 
 For VSS-Tools 5.0 the following behavior shall be implemented:
 
 * The parameter `--no-uuid` shall now be removed, and an error shall be given if `--no-uuid` is used.
-

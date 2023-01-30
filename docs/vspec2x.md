@@ -2,9 +2,9 @@
 
 vspec2x is a family of VSS converters that share a common codebase.
 
-As a consequence it provides general commndline parameters guidng the parsing of vspec, as well as paramters specific to specific output formats.
+As a consequence it provides general commandline parameters guiding the parsing of vspec, as well as parameters specific to specific output formats.
 
-You can get a description of supported commandlines parameters by running `vspec2x.py --help`.
+You can get a description of supported commandline parameters by running `vspec2x.py --help`.
 
 This documentation will give some examples and elaborate more on specific parameters.
 
@@ -37,7 +37,7 @@ The `-I` parameter adds a directory to search for includes referenced in you `.v
 
 The first positional argument - `../spec/VehicleSignalSpecification.vspec` in the example  - gives the (root) `.vspec` file to be converted. The second positional argument  - `vss.json` in the example - is the output file.
 
-The `--format` parameter determines the output format, `JSON` in our example. If format is omitted `vspec2x` tries to guess the correct output format based on the extension of the second positional argument. Alternatively vss-tools supports *shortcuts* for community supported exporters, e.g. `vspec2json.py` for generating JSON. The shortcuts really only add the `--format` parameter for you, so 
+The `--format` parameter determines the output format, `JSON` in our example. If format is omitted `vspec2x` tries to guess the correct output format based on the extension of the second positional argument. Alternatively vss-tools supports *shortcuts* for community supported exporters, e.g. `vspec2json.py` for generating JSON. The shortcuts really only add the `--format` parameter for you, so
 
 ```
 python vspec2json.py  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.json
@@ -56,7 +56,7 @@ Terminates parsing when an unknown attribute is encountered, that is an attribut
 Terminates parsing, when the name of a signal does not follow [VSS recomendations](https://covesa.github.io/vehicle_signal_specification/rule_set/basics/#naming-conventions).
 
 ### --strict
-Equivalent to setting `--abort-on-unknown-attribute` and `--abort-on-name-style` 
+Equivalent to setting `--abort-on-unknown-attribute` and `--abort-on-name-style`
 
 ### --uuid
 Request the exporter to output uuids. This setting may not apply to all exporters, some exporters will never output uuids.
@@ -69,17 +69,26 @@ From VSS 4.0 this will be the default behavior and then this parameter will be d
 ## Handling of units
 
 The tooling verifies that only pre-defined units are used, like `kPa`and `percent`.
-Supported units shall be given as a parameter to tooling with the `-u <file>` parameter.
+
+COVESA maintains a unit file for the standard VSS catalog. It currently exists in two locations:
+
+* [vss-tools](../vspec/config.yaml)
+* [vss](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml)
+
+The file in [vss-tools](../vspec/config.yaml) is planned to be removed when VSS 4.0 is released.
+
+It is possible to specify your own unit file(s) by the `-u <file>` parameter.
 `-u` can be used multiple times to specify additional files like in the example below:
 
 ```bash
 python ./vss-tools/vspec2csv.py -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml --no-uuid ./spec/VehicleSignalSpecification.vspec output.csv
 ```
 
-COVESA maintains a unit file for default VSS. It is currently located in [vss-tools](../vspec/config.yaml),
-but will possibly be moved to [VSS repository](https://github.com/COVESA/vehicle_signal_specification/).
-As of today this file is used by default, but that may not be the case any longer when the configuration file has been moved to [VSS repository](https://github.com/COVESA/vehicle_signal_specification/).
-If you specify units by `-u <file>` then the default unit file (`config.yaml`) will not be considered.
+When deciding which units to use the tooling use the following logic:
+
+* If `-u <file>` is used then the specified unit files will be used. Default units will not be considered.
+* If `-u` is not used the tool will check for a unit file in the same directory as the root `*.vspec` file.
+* If not found the file in [vss-tools](../vspec/config.yaml) will be used. This alternative will be removed in VSS 4.0
 
 See the [FAQ](../FAQ.md) for more information on how to define own units.
 
@@ -148,7 +157,7 @@ This will give a warning about unknown attributes, or even terminate the parsing
 ```
 % python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec --strict -o overlay.vspec test.json
 Output to json format
-Known extended attributes: 
+Known extended attributes:
 Loading vspec from ../spec/VehicleSignalSpecification.vspec...
 Applying VSS overlay from overlay.vspec...
 Warning: Attribute(s) quality, source in element Speed not a core or known extended attribute.
@@ -194,7 +203,7 @@ Add additional fields to the nodes in the graphql schema. use: <field_name> <des
 
 
 ## Writing your own exporter
-This is easy. Put the code in file in the [vssexporters directory](../vssexporters/). 
+This is easy. Put the code in file in the [vssexporters directory](../vssexporters/).
 
 Mandatory functions to be implemented are
 ```python
