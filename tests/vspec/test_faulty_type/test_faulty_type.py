@@ -12,13 +12,15 @@ import runpy
 import pytest
 import os
 
+
 @pytest.fixture
 def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
     monkeypatch.chdir(request.fspath.dirname)
 
+
 def test_error(change_test_dir):
-    test_str = "../../../vspec2json.py test.vspec out.json > out.txt"
+    test_str = "../../../vspec2json.py test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected
