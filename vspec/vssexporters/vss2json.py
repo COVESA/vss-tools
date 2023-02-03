@@ -8,9 +8,11 @@
 #
 # Convert vspec tree to JSON
 
+from vspec.model.vsstree import VSSNode, VSSType
 import argparse
 import json
-from vspec.model.vsstree import VSSNode, VSSType
+import logging
+from vspec.loggingconfig import initLogging
 
 
 def add_arguments(parser: argparse.ArgumentParser):
@@ -72,17 +74,22 @@ def export_node(json_dict, node, config, print_uuid):
         json_dict[node.name]["children"] = {}
 
     for child in node.children:
-        export_node(json_dict[node.name]["children"], child, config, print_uuid)
+        export_node(json_dict[node.name]["children"],
+                    child, config, print_uuid)
 
 
 def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    print("Generating JSON output...")
+    logging.info("Generating JSON output...")
     json_dict = {}
     export_node(json_dict, root, config, print_uuid)
     outfile = open(config.output_file, 'w')
     if config.json_pretty:
-        print("Serializing pretty JSON...")
+        logging.info("Serializing pretty JSON...")
         json.dump(json_dict, outfile, indent=2, sort_keys=True)
     else:
-        print("Serializing compact JSON...")
+        logging.info("Serializing compact JSON...")
         json.dump(json_dict, outfile, indent=None, sort_keys=True)
+
+
+if __name__ == "__main__":
+    initLogging()
