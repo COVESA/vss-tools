@@ -8,11 +8,10 @@
 #
 
 import argparse
-from anytree import RenderTree, PreOrderIter
-from vspec.model.vsstree import VSSNode, camel_back
+from vspec.model.vsstree import VSSNode
+from vspec.utils.stringstyle import camel_back
 from vspec.model.constants import VSSDataType
 from vspec import VSpecError
-from anytree import PostOrderIter
 from typing import Dict
 
 from graphql import (

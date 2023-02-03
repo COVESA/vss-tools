@@ -1,6 +1,6 @@
 import unittest
 
-from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle
+from vspec.model.constants import VSSType, VSSDataType, Unit
 from vspec.model.vsstree import VSSNode
 
 
