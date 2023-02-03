@@ -29,6 +29,7 @@ def run_exporter(exporter, argument, compare_suffix):
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
+
 def test_uuid(change_test_dir):
 
     # Run all "supported" exporters, i.e. not those in contrib
