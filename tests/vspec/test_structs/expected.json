@@ -1,0 +1,66 @@
+{
+  "VehicleDataTypes": {
+    "children": {
+      "TestBranch1": {
+        "children": {
+          "NestedStruct": {
+            "children": {
+              "x": {
+                "datatype": "double",
+                "description": "x property",
+                "type": "property"
+              },
+              "y": {
+                "datatype": "double",
+                "description": "y property",
+                "type": "property"
+              },
+              "z": {
+                "datatype": "double",
+                "description": "z property",
+                "type": "property"
+              }
+            },
+            "description": "A struct that is going to be used within another struct - Nested",
+            "type": "struct"
+          },
+          "ParentStruct": {
+            "children": {
+              "x_properties": {
+                "datatype": "VehicleDataTypes.TestBranch1.NestedStruct[]",
+                "description": "A property of struct-type array and an arraysize",
+                "type": "property"
+              },
+              "x_property": {
+                "datatype": "VehicleDataTypes.TestBranch1.NestedStruct",
+                "description": "A property of struct-type. The struct name is specified relative to the branch",
+                "type": "property"
+              },
+              "y_properties": {
+                "datatype": "VehicleDataTypes.TestBranch1.NestedStruct[]",
+                "description": "A property of struct-type array and no arraysize",
+                "type": "property"
+              },
+              "y_property": {
+                "datatype": "VehicleDataTypes.TestBranch1.NestedStruct",
+                "description": "A property of struct-type. The struct name is specified as a fully qualified name",
+                "type": "property"
+              },
+              "z_property": {
+                "datatype": "double",
+                "description": "A primitive property",
+                "type": "property"
+              }
+            },
+            "description": "A struct that is going to contain properties that are structs themselves",
+            "type": "struct"
+          }
+        },
+        "description": "Test branch with structs and properties definitions",
+        "type": "branch"
+      }
+    },
+    "description": "Top-level branch for vehicle data types.",
+    "type": "branch"
+  }
+}

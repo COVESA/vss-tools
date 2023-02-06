@@ -1,0 +1,10 @@
+VehicleDataTypes:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+VehicleDataTypes.TestBranch1:
+  type: branch
+  description: "Test branch with structs and properties definitions"
+#include TestBranch1.vspec VehicleDataTypes.TestBranch1
+
+

@@ -45,7 +45,7 @@ def test_implicit_overlay(change_test_dir):
 
 
 def test_overlay_error(change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid test.vspec -o overlay_error.vspec out.json > out.txt"
+    test_str = "../../../vspec2json.py --json-pretty --no-uuid test.vspec -o overlay_error.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected

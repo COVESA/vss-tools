@@ -1,0 +1,48 @@
+NestedStruct:
+  type: struct
+  description: "A struct that is going to be used within another struct - Nested"
+
+NestedStruct.x:
+  type: property
+  description: "x property"
+  datatype: double
+
+NestedStruct.y:
+  type: property
+  description: "y property"
+  datatype: double
+
+NestedStruct.z:
+  type: property
+  description: "z property"
+  datatype: double
+  
+ParentStruct:
+  type: struct
+  description: "A struct that is going to contain properties that are structs themselves"
+
+ParentStruct.x_property:
+  type: property
+  description: "A property of struct-type. The struct name is specified relative to the branch"
+  datatype: NestedStruct
+
+ParentStruct.y_property:
+  type: property
+  description: "A property of struct-type. The struct name is specified as a fully qualified name"
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct
+
+ParentStruct.x_properties:
+  type: property
+  description: "A property of struct-type array and an arraysize"
+  datatype: NestedStruct[]
+  arraysize: 10
+
+ParentStruct.y_properties:
+  type: property
+  description: "A property of struct-type array and no arraysize"
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct[]
+
+ParentStruct.z_property:
+  type: property
+  description: "A primitive property"
+  datatype: double

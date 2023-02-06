@@ -8,9 +8,8 @@
 #
 
 from vspec.model.vsstree import VSSNode
-from vspec.model.constants import VSSType
+from vspec.model.constants import VSSType, VSSTreeType
 import vspec
-import pytest
 import os
 import sys
 import re
@@ -41,8 +40,8 @@ def test_simple_structures(request):
     test_path = os.path.dirname(request.fspath)
     for tfs in TEST_FILES_SIMPLE:
         # load the file
-        tree = vspec.load_tree(os.path.join(test_path, tfs), [
-                               os.path.join(test_path, "resources/")])
+        tree = vspec.load_tree(os.path.join(test_path, tfs), [os.path.join(
+            test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
 
         # check if root node has 3 children
         assert len(tree.children) == 3
@@ -91,8 +90,8 @@ def test_complex_structures(request):
 
     for tfs in TEST_FILES_COMPLEX:
         # load the file
-        tree = vspec.load_tree(os.path.join(test_path, tfs), [
-                               os.path.join(test_path, "resources/")])
+        tree = vspec.load_tree(os.path.join(test_path, tfs), [os.path.join(
+            test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
 
         # check if root node has 1 child and check first instances
         assert len(tree.children) == 1
@@ -109,20 +108,23 @@ def test_complex_structures(request):
                 # 2nd level: Test1.Test2.Test4 - Test1.Test3.Test6
                 print(child_2.qualified_name())
                 assert None is not re.match(
-                    "^Vehicle.Test1.Test(2|3).Test(4|5|6)", child_2.qualified_name())
+                    "^Vehicle.Test1.Test(2|3).Test(4|5|6)",
+                    child_2.qualified_name())
                 check_instance_branch(child_2, 4)
                 for child_3 in child_2.children:
                     # 3rd level: Test1.Test2.Test4.Test7 -
                     # Test1.Test3.Test6.Test10
                     assert None is not re.match(
-                        "^Vehicle.Test1.Test(2|3).Test(4|5|6).Test(7|8|9|10)", child_3.qualified_name())
+                        "^Vehicle.Test1.Test(2|3).Test(4|5|6).Test(7|8|9|10)",
+                        child_3.qualified_name())
                     check_instance_branch(child_3, 1)
                     assert 1 == len(child_3.children)
                     child_4 = child_3.children[0]
                     # 4th level: Test1.Test2.Test4.Test7.Test11 -
                     # Test1.Test3.Test6.Test10.Test11
                     assert None is not re.match(
-                        "^Vehicle.Test1.Test(2|3).Test(4|5|6).Test(7|8|9|10).Test11", child_4.qualified_name())
+                        "^Vehicle.Test1.Test(2|3).Test(4|5|6).Test(7|8|9|10).Test11",
+                        child_4.qualified_name())
                     # All instances are expected to have one child
                     assert 1 == len(child_4.children)
                     assert child_4.children[0].name == "SomeThing"
@@ -146,8 +148,8 @@ def test_exclusion_from_instance(request):
     test_path = os.path.dirname(request.fspath)
     for tfs in TEST_FILES_EXCLUDE:
         # load the file
-        tree = vspec.load_tree(os.path.join(test_path, tfs), [
-                               os.path.join(test_path, "resources/")])
+        tree = vspec.load_tree(os.path.join(test_path, tfs), [os.path.join(
+            test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
         assert 6 == len(tree.children)
         name_list = []
         for child in tree.children:
