@@ -13,6 +13,7 @@
 
 from enum import Enum
 from vspec.model.vsstree import VSSNode
+from vspec.model.constants import VSSTreeType
 from vspec.model.constants import Unit
 from vspec.loggingconfig import initLogging
 import argparse
@@ -156,33 +157,40 @@ def main(arguments):
             Unit.load_config_file(unit_file)
 
     # process data type tree
-    type_tree = None
+    data_type_tree = None
     if args.vspec_types_file or args.types_output_file:
-        type_tree = processDataTypeTree(parser, args)
+        data_type_tree = processDataTypeTree(
+            parser, args, include_dirs, abort_on_unknown_attribute, abort_on_namestyle)
 
     try:
         logging.info(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+            args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE, break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False, data_type_tree=data_type_tree)
 
         for overlay in args.overlays:
             logging.info(f"Applying VSS overlay from {overlay}...")
-            othertree = vspec.load_tree(overlay, include_dirs, break_on_unknown_attribute=abort_on_unknown_attribute,
-                                        break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+            othertree = vspec.load_tree(overlay, include_dirs, VSSTreeType.SIGNAL_TREE, break_on_unknown_attribute=abort_on_unknown_attribute,
+                                        break_on_name_style_violation=abort_on_namestyle, expand_inst=False, data_type_tree=data_type_tree)
             vspec.merge_tree(tree, othertree)
 
         vspec.expand_tree_instances(tree)
 
         vspec.clean_metadata(tree)
         logging.info("Calling exporter...")
-        exporter.export(args, tree, print_uuid)
+
+        # temporary until all exporters support data type tree
+        if args.format.name == "json":
+            exporter.export(args, tree, print_uuid, data_type_tree)
+        else:
+            exporter.export(args, tree, print_uuid)
         logging.info("All done.")
     except vspec.VSpecError as e:
         logging.error(f"Error: {e}")
         sys.exit(255)
 
 
-def processDataTypeTree(parser: argparse.ArgumentParser, args) -> VSSNode:
+def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
+                        abort_on_unknown_attribute: bool, abort_on_namestyle: bool) -> VSSNode:
     """
     Helper function to process command line arguments and invoke logic for processing data type information provided in vspec format
     """
@@ -201,8 +209,10 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args) -> VSSNode:
         parser.error(
             f"{args.format.name} format is not yet supported in vspec struct/data type support feature")
 
-    raise NotImplementedError(
-        "vspec data type processing is not yet implemented")
+    logging.info(
+        f"Loading and processing struct/data type tree from {args.vspec_types_file}")
+    return vspec.load_tree(args.vspec_types_file, include_dirs, VSSTreeType.DATA_TYPE_TREE,
+                           break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
 
 
 if __name__ == "__main__":

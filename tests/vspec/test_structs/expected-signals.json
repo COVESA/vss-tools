@@ -1,0 +1,24 @@
+{
+  "A": {
+    "children": {
+      "NestedStructSensor": {
+        "datatype": "VehicleDataTypes.TestBranch1.NestedStruct",
+        "description": "A rich sensor with user-defined data type.",
+        "type": "sensor"
+      },
+      "ParentStructSensor": {
+        "datatype": "VehicleDataTypes.TestBranch1.ParentStruct",
+        "description": "A rich sensor with user-defined data type.",
+        "type": "sensor"
+      },
+      "UInt8": {
+        "datatype": "uint8",
+        "description": "A uint8.",
+        "type": "sensor",
+        "unit": "km"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

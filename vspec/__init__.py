@@ -14,19 +14,21 @@ import yaml
 import os
 import uuid
 import sys
-import re
 import collections
-from copy import deepcopy, copy
 import logging
+from copy import deepcopy
+from typing import List, Set
 
-from anytree import (Resolver, ChildResolverError,
-                     LevelOrderIter, PreOrderIter)
+from anytree import (Resolver,
+                     LevelOrderIter, PreOrderIter, RenderTree)
 from anytree.exporter import DictExporter
 from anytree.importer import DictImporter
 
-import deprecation
+from .model.vsstree import VSSNode
+from .model.exceptions import ImpossibleMergeException, IncompleteElementException
+from .model.constants import VSSTreeType
 
-from .model.vsstree import ImpossibleMergeException, IncompleteElementException, VSSNode
+nestable_types = set(["branch", "struct"])
 
 
 class VSpecError(Exception):
@@ -85,21 +87,30 @@ def convert_yaml_to_list(raw_yaml):
     return lst
 
 
-def load_tree(file_name, include_paths, break_on_unknown_attribute=False,
-              break_on_name_style_violation=False, expand_inst=True):
-    flat_model = load_flat_model(file_name, "", include_paths)
+def load_tree(file_name, include_paths, tree_type: VSSTreeType, break_on_unknown_attribute=False,
+              break_on_name_style_violation=False, expand_inst=True, data_type_tree: VSSNode = None):
+    if expand_inst == True and tree_type == VSSTreeType.DATA_TYPE_TREE:
+        logging.error("Instance expansion is not supported for VSS type tree.")
+        sys.exit(-1)
+
+    flat_model = load_flat_model(file_name, "", include_paths, tree_type)
     absolute_path_flat_model = create_absolute_paths(flat_model)
     deep_model = create_nested_model(absolute_path_flat_model, file_name)
     cleanup_deep_model(deep_model)
     dict_tree = deep_model["children"]
-    tree = render_tree(dict_tree, break_on_unknown_attribute=break_on_unknown_attribute,
+    tree = render_tree(dict_tree, tree_type, break_on_unknown_attribute=break_on_unknown_attribute,
                        break_on_name_style_violation=break_on_name_style_violation)
     if expand_inst:
         expand_tree_instances(tree)
+
+    if tree_type == VSSTreeType.DATA_TYPE_TREE:
+        check_data_type_references(tree)
+    else:
+        check_data_type_references_across_trees(tree, data_type_tree)
     return tree
 
 
-def load_flat_model(file_name, prefix, include_paths):
+def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
     # Hooks into YAML parser to add line numbers
     # and file name into each element
     def yaml_compose_node(parent, index):
@@ -188,29 +199,25 @@ def load_flat_model(file_name, prefix, include_paths):
     # Recursively expand all include files.
     if directory not in include_paths:
         include_paths = [directory] + include_paths
-    expanded_includes = expand_includes(raw_yaml, prefix, include_paths)
+    expanded_includes = expand_includes(
+        raw_yaml, prefix, include_paths, tree_type)
 
     # Add type: branch when type is missing.
-    flat_model = cleanup_flat_entries(expanded_includes)
+    flat_model = cleanup_flat_entries(expanded_includes, tree_type)
 
     return flat_model
 
 
 #
 # 1. If no type is specified, default it to "branch".
-# 2. Check that the declared type is a FrancaIDL.
-# 3. Correct the  casing of type.
+# 2. Check that the declared type is part of the available types for the tree.
+# 3. Correct the casing of type.
 # 4, Check that allowed values are provided as arrays.
 #
-def cleanup_flat_entries(flat_model):
-    available_types = ["sensor", "actuator", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
-                       "UInt32", "Int32", "UInt64", "Int64", "Boolean",
-                       "Float", "Double", "String"]
-
-    available_downcase_types = ["sensor", "actuator", "branch", "attribute", "uint8", "int8", "uint16",
-                                "int16",
-                                "uint32", "int32", "uint64", "int64", "boolean",
-                                "float", "double", "string"]
+def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
+    available_types = tree_type.available_types()
+    # map of lower case name to proper name
+    available_types_map = {k.lower(): k for k in available_types}
 
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
@@ -220,13 +227,12 @@ def cleanup_flat_entries(flat_model):
 
         # Check, without case sensitivity that we do have
         # a validated type.
-        if not elem["type"].lower() in available_downcase_types:
+        if not elem["type"].lower() in available_types_map:
             raise VSpecError(elem["$file_name$"], elem["$line$"],
                              "Unknown type: {}".format(elem["type"]))
 
         # Get the correct casing for the type.
-        elem["type"] = available_types[available_downcase_types.index(
-            elem["type"].lower())]
+        elem["type"] = available_types_map[elem["type"].lower()]
 
         if "allowed" in elem and not isinstance(elem["allowed"], list):
             raise VSpecError(elem["$file_name$"], elem["$line$"],
@@ -253,7 +259,7 @@ def cleanup_deep_model(deep_model):
     if "$name$" in deep_model:
         del deep_model['$name$']
 
-    # children as of today exists only for branches
+    # children as of today exists only for branches and structs
     if "children" in deep_model:
         children = deep_model["children"]
         for child in deep_model["children"]:
@@ -299,7 +305,7 @@ def check_yaml_usage(flat_model, file_name):
 
 # Expand yaml include elements (inserted by yamilify_include())
 #
-def expand_includes(flat_model, prefix, include_paths):
+def expand_includes(flat_model, prefix, include_paths, tree_type: VSSTreeType):
     # Build up a new spec model based on the old one, but
     # with expanded include directives.
 
@@ -318,8 +324,10 @@ def expand_includes(flat_model, prefix, include_paths):
                         prefix_found = True
                         break
                 if not prefix_found:
-                    # Printing line number does not make sense, as we work on a modified tree
-                    logging.warning(f"No branch matching prefix {include_prefix} for #include in {elem['$file_name$']}")
+                    # Printing line number does not make sense, as we work on a
+                    # modified tree
+                    logging.warning(
+                        f"No branch matching prefix {include_prefix} for #include in {elem['$file_name$']}")
 
             # Append include prefix to our current prefix.
             # Make sure we do not start new prefix with a "."
@@ -331,7 +339,7 @@ def expand_includes(flat_model, prefix, include_paths):
 
             # Recursively load included file
             inc_elem = load_flat_model(
-                elem["file"], include_prefix, include_paths)
+                elem["file"], include_prefix, include_paths, tree_type)
 
             # Add the loaded elements at the end of the new spec model
             new_flat_model.extend(inc_elem)
@@ -399,12 +407,17 @@ def expand_tree_instances(tree: VSSNode) -> VSSNode:
         for child in parent.children:
             if child.name == branch_name:
                 old_node = child
-        instantiated_branch = VSSNode(branch_name,
-                                      {"type": "branch",
-                                       "description": parent.description,
-                                       "comment": parent.comment,
-                                       "$file_name$": "Generated"},
-                                      parent)
+        instantiated_branch = VSSNode(
+            branch_name,
+            # autopep8: off
+            {"type": "branch", 
+             "description": parent.description,
+             "comment": parent.comment, 
+             "$file_name$": "Generated"
+             },
+             # autopep8: on
+            VSSTreeType.SIGNAL_TREE.available_types(),
+            parent)
         if old_node is not None:
             # If it exist we take the new one as default (to give e.g. default descriptions and comments)
             # Then merge anything from the old (expanded) instance above, to get e.g. updated comment
@@ -584,8 +597,7 @@ def create_nested_model(flat_model, file_name):
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
         # Create children for branch type objects
-        if elem["type"] == "branch":
-            deep_model["type"] = "branch"
+        if elem["type"] in nestable_types:
             elem["children"] = {}
 
         # Create a list of path components to the given element
@@ -598,7 +610,7 @@ def create_nested_model(flat_model, file_name):
         name = name_list[-1]
 
         # Locate the correct branch in the tree
-        parent_branch = find_branch(deep_model, name_list[:-1], 0)
+        parent_branch = find_branch_or_struct(deep_model, name_list[:-1], 0)
 
         # If an element with name is already in the parent branch
         # we update its fields with the fields from the new element
@@ -617,52 +629,55 @@ def create_nested_model(flat_model, file_name):
     return deep_model
 
 
-# Find the given prefix somewhere under the tree rooted in branch.
-def find_branch(branch, name_list, index, autocreate=True):
+# Find the given prefix somewhere under the tree rooted in elem.
+# If the branch referred to by prefix is not found, create it implicitly
+# if autocreate is True. Note that structs are not auto-created.
+def find_branch_or_struct(elem, name_list, index, autocreate=True):
     # Have we reached the end of the name list
     if len(name_list) == index:
-        if (branch["type"] != "branch"):
-            raise VSpecError(branch.get("$file_name$", "??"),
-                             branch.get("$line$", "??"),
-                             "Not a branch: {}.".format(branch['$name$']))
+        if (elem['type'] not in nestable_types):
+            raise VSpecError(elem.get("$file_name$", "??"),
+                             elem.get("$line$", "??"),
+                             "Not a branch or struct: {}.".format(elem['$name$']))
 
-        return branch
+        return elem
 
-    if (branch["type"] != "branch"):
-        raise VSpecError(branch.get("$file_name$", "??"),
-                         branch.get("$line$", "??"),
-                         "{} is not a branch.".format(list_to_path(name_list[:index])))
+    if (elem['type'] not in nestable_types):
+        raise VSpecError(elem.get("$file_name$", "??"),
+                         elem.get("$line$", "??"),
+                         "{} is not a branch or struct.".format(list_to_path(name_list[:index])))
 
-    children = branch["children"]
+    children = elem["children"]
 
     if name_list[index] not in children:
-        if autocreate:
-            print(f"Autocreating implicit branch {name_list[index]}")
+        if autocreate and elem['type'] != "struct":
+            logging.info(f"Autocreating implicit branch {name_list[index]}")
 
             # If we are above Vehicle (e.g. vehicle not defined), we are
             # missing a name
-            if "$name$" not in branch:
-                branch['$name$'] = ""
-            newbranch = {
-                'type': 'branch',
-                'children': {},
-                '$line$': '0',
-                '$file_name$': '<generated>',
-                '$name$': f"{branch['$name$']}.{name_list[index]}"}
-
-            children[name_list[index]] = newbranch
+            if "$name$" not in elem:
+                elem['$name$'] = ""
+            # autopep8: off
+            newelem = {'type': elem['type'],
+                       'children': {}, 
+                       '$line$': '0',
+                       '$file_name$':
+                       '<generated>',
+                       '$name$': f"{elem['$name$']}.{name_list[index]}"}
+            # autopep8: on
+            children[name_list[index]] = newelem
             # Search again
-            find_branch(branch, name_list, index, autocreate)
+            find_branch_or_struct(elem, name_list, index, autocreate)
         else:
-            raise VSpecError(branch.get("$file_name$", "??"),
-                             branch.get("$line$", "??"),
+            raise VSpecError(elem.get("$file_name$", "??"),
+                             elem.get("$line$", "??"),
                              "Missing branch: {} in {}.".format(name_list[index],
                                                                 list_to_path(name_list)))
 
     # Traverse all children, looking for the
     # Move on to next element in prefix.
-    return find_branch(children[name_list[index]],
-                       name_list, index + 1, autocreate)
+    return find_branch_or_struct(
+        children[name_list[index]], name_list, index + 1, autocreate)
 
 
 def list_to_path(name_list):
@@ -674,18 +689,6 @@ def list_to_path(name_list):
             path = "{}.{}".format(path, name)
 
     return path
-
-
-# Convert a dot-notated element name to a list.
-def element_to_list(elem):
-    name = elem['$name$']
-
-    if elem["$prefix$"] == "":
-        path = name
-    else:
-        path = "{}.{}".format(elem["$prefix$"], name)
-
-    return
 
 
 #
@@ -743,42 +746,44 @@ $include$:
     return text
 
 
-def render_tree(tree_dict, break_on_unknown_attribute=False,
+def render_tree(tree_dict, tree_type: VSSTreeType, break_on_unknown_attribute=False,
                 break_on_name_style_violation=False) -> VSSNode:
     if len(tree_dict) != 1:
         for item in tree_dict.keys():
             logging.info(f"Found root node {item}")
-        raise Exception(f"Invalid VSS model, must have single root node, found {len(tree_dict)}")
+        raise Exception(
+            f"Invalid VSS model, must have single root node, found {len(tree_dict)}")
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
-    tree_root = VSSNode(root_element_name, root_element, break_on_unknown_attribute=break_on_unknown_attribute,
+    tree_root = VSSNode(root_element_name, root_element, tree_type.available_types(), break_on_unknown_attribute=break_on_unknown_attribute,
                         break_on_name_style_violation=break_on_name_style_violation)
 
     if "children" in root_element.keys():
         child_nodes = root_element["children"]
-        render_subtree(child_nodes, tree_root, break_on_unknown_attribute=break_on_unknown_attribute,
+        render_subtree(child_nodes, tree_type, tree_root, break_on_unknown_attribute=break_on_unknown_attribute,
                        break_on_name_style_violation=break_on_name_style_violation)
 
     create_tree_uuids(tree_root)
     return tree_root
 
 
-def render_subtree(subtree, parent, break_on_unknown_attribute=False,
-                   break_on_name_style_violation=False):
+def render_subtree(subtree, tree_type: VSSTreeType, parent,
+                   break_on_unknown_attribute=False, break_on_name_style_violation=False):
     for element_name in subtree:
         current_element = subtree[element_name]
 
         try:
-            new_element = VSSNode(element_name, current_element, parent=parent, break_on_unknown_attribute=break_on_unknown_attribute,
+            new_element = VSSNode(element_name, current_element, tree_type.available_types(),
+                                  parent=parent, break_on_unknown_attribute=break_on_unknown_attribute,
                                   break_on_name_style_violation=break_on_name_style_violation)
         except IncompleteElementException as e:
-            print(f"Invalid VSS: {e}")
-            print("Terminating.")
+            logging.error(f"Invalid VSS: {e}")
+            logging.error("Terminating.")
             sys.exit(-1)
         if "children" in current_element.keys():
             child_nodes = current_element["children"]
-            render_subtree(child_nodes, new_element, break_on_unknown_attribute,
+            render_subtree(child_nodes, tree_type, new_element, break_on_unknown_attribute,
                            break_on_name_style_violation=break_on_name_style_violation)
 
 
@@ -801,7 +806,7 @@ def merge_elem(base, overlay_element):
         try:
             other_node.merge(overlay_element)
         except ImpossibleMergeException as e:
-            print(f"Merging impossible: {e}")
+            logging.error(f"Merging impossible: {e}")
             sys.exit(-1)
 
 
@@ -818,6 +823,56 @@ def create_tree_uuids(root: VSSNode):
     for vss_element in PreOrderIter(root):
         vss_element.uuid = uuid.uuid5(
             namespace_uuid, vss_element.qualified_name()).hex
+
+
+def check_data_type_references(tree: VSSNode):
+    """
+    Check that the data type names referenced by tree nodes exist in the tree.
+    """
+    errors: List[str] = []
+    check_data_type_references_recursive(
+        tree, [str(attr) for attr in VSSNode.get_tree_attrs(tree, lambda n: n.qualified_name(), lambda n: n.is_struct())], errors)
+    if len(errors) > 0:
+        error_str = ",".join(errors)
+        logging.error(
+            f"{len(errors)} data type reference errors detected. Errors: {error_str}")
+        sys.exit(-1)
+
+
+def check_data_type_references_recursive(
+        node: VSSNode, data_type_qualified_names: Set[str], errors: List[str]):
+    """
+    Check that the data type names referenced by tree nodes exist in the tree.
+    """
+    if node.is_property() or node.is_signal():
+        if node.datatype is None:
+            undecorated_data_type = node.data_type_str.replace('[]', '')
+            if undecorated_data_type not in data_type_qualified_names:
+                errors.append(
+                    f"Data Type reference invalid. Node Name: {node.name}. Node Qualified Name: {node.qualified_name()}. Data Type: {undecorated_data_type}")
+    for n in node.children:
+        check_data_type_references_recursive(
+            n, data_type_qualified_names, errors)
+
+
+def check_data_type_references_across_trees(
+        signal_root: VSSNode, data_type_root: VSSNode):
+    """
+    Check that the data type names referenced by nodes in the signal tree are present in the data types tree.
+    """
+    nonexistant_types = []
+    for _, _, node in RenderTree(signal_root):
+        # signals with user-defined data types
+        if node.is_signal() and node.datatype is None:
+            if not node.does_attribute_exist(
+                    data_type_root, lambda n: n.data_type_str, lambda n: n.qualified_name(), lambda n: n.is_struct()):
+                nonexistant_types.append(f'{node.data_type_str}')
+
+    if len(nonexistant_types) > 0:
+        error_str = ", ".join(nonexistant_types)
+        logging.error(
+            f"Following types were referenced in signals but have not been defined: {error_str}")
+        sys.exit(-1)
 
 
 load_flat_model.include_index = 1

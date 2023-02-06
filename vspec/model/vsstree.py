@@ -7,25 +7,35 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-
-import sys
-import re
+from anytree import Node, Resolver, ChildResolverError, RenderTree
+from .constants import VSSType, VSSDataType, Unit, VSSType
+from .exceptions import UnknownAttributeException, NameStyleValidationException, ImpossibleMergeException, IncompleteElementException
+from typing import Any, Optional, Set, List
 import copy
-from anytree import Node, Resolver, ChildResolverError
-from .exceptions import IncompleteElementException, NameStyleValidationException, ImpossibleMergeException, UnknownAttributeException
-
-from .constants import VSSType, VSSDataType, Unit
+import re
+import sys
+import logging
 
 DEFAULT_SEPARATOR = "."
+ARRAY_SUBSCRIPT_OP = '[]'
+
 
 
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
+
+    type: VSSType
     description = None
     comment = ""
     uuid = None
-    type: VSSType
-    datatype: VSSDataType
+    # data type - string representation. For struct names, this is the fully
+    # qualified struct name.
+    data_type_str = None
+    # data type - enum representation if available
+    datatype: Optional[VSSDataType]
+
+    # The node types that the nodes can take
+    available_types: Set[str] = None
 
     core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed", "instantiate",
                        "aggregate", "default", "instances", "deprecation", "arraysize", "comment", "$file_name$"]
@@ -34,7 +44,7 @@ class VSSNode(Node):
     # neither in core or extended,
     whitelisted_extended_attributes = []
 
-    unit: Unit
+    unit: Optional[Unit]
 
     min = ""
     max = ""
@@ -49,16 +59,17 @@ class VSSNode(Node):
     deprecation = ""
 
     def __deepcopy__(self, memo):
-        return VSSNode(self.name, self.source_dict.copy(),
+        return VSSNode(self.name, self.source_dict.copy(), self.available_types.copy(),
                        parent=None, children=copy.deepcopy(self.children, memo))
 
-    def __init__(self, name, source_dict: dict, parent=None, children=None,
-                 break_on_unknown_attribute=False, break_on_name_style_violation=False):
+    def __init__(self, name, source_dict: dict, available_types: Set[str], parent=None,
+                 children=None, break_on_unknown_attribute=False, break_on_name_style_violation=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
             Args:
                 name: Name of this VSS instance.
                 source_dict: VSS instance represented as dict from yaml parsing.
+                available_types: Available node types asa string list
                 parent: Optional parent of this node instance.
                 children: Optional children instances of this node.
                 break_on_unknown_attribute: Throw an exception if the node contains attributes not in core VSS specification
@@ -70,27 +81,35 @@ class VSSNode(Node):
         """
 
         super().__init__(name, parent, children)
+        self.available_types = available_types
+
+        if (source_dict["type"] not in available_types):
+            logging.error(
+                f'Invalid type provided for VSSNode: {source_dict["type"]}. Allowed types are {self.available_types}')
+            sys.exit(-1)
+
         try:
             VSSNode.validate_vss_element(source_dict, name)
         except UnknownAttributeException as e:
-            print("Warning: {}".format(e))
+            logging.warning("Warning: {}".format(e))
             if break_on_unknown_attribute:
-                print("You asked for strict checking. Terminating.")
+                logging.error("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
         self.source_dict = source_dict
         self.unpack_source_dict()
 
-        if not self.is_branch() and ("datatype" not in self.source_dict.keys()):
+        if (self.is_signal() or self.is_property()
+            ) and "datatype" not in self.source_dict.keys():
             raise IncompleteElementException(
                 f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: Elements of type {self.type.value} need to have a datatype declared.")
 
         try:
             self.validate_name_style(self.source_dict["$file_name$"])
         except NameStyleValidationException as e:
-            print(f"Warning: {e}")
+            logging.warning(f"Exception: {e}")
             if break_on_name_style_violation:
-                print("You asked for strict checking. Terminating.")
+                logging.error("You asked for strict checking. Terminating.")
                 sys.exit(-1)
 
     def unpack_source_dict(self):
@@ -114,14 +133,16 @@ class VSSNode(Node):
 
         # Datatype and unit need special handling, so we extract them again
         if "datatype" in self.source_dict.keys():
-            self.datatype = VSSDataType.from_str(self.source_dict["datatype"])
+            self.data_type_str = self.source_dict["datatype"]
+            self.validate_and_set_datatype()
 
-        if "unit" in self.source_dict.keys():
+        # Units are applicable only for primitives. Not user defined types.
+        if "unit" in self.source_dict.keys() and self.has_datatype():
             self.unit = Unit.from_str(self.source_dict["unit"])
 
         if self.has_instances() and not self.is_branch():
-            print(
-                f"Error: Only branches can be instantiated. {self.qualified_name()} is of type {self.type}")
+            logging.error(
+                f"Only branches can be instantiated. {self.qualified_name()} is of type {self.type}")
             sys.exit(-1)
 
     def validate_name_style(self, sourcefile):
@@ -132,11 +153,12 @@ class VSSNode(Node):
 
         """
         camel_regexp = p = re.compile('[A-Z][A-Za-z0-9]*$')
-        if self.type != VSSType.BRANCH and self.datatype == VSSDataType.BOOLEAN and not self.name.startswith(
-                "Is"):
+        if self.is_signal() and self.datatype == VSSDataType.BOOLEAN and not self.name.startswith("Is"):
             raise NameStyleValidationException(
                 f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
-        if not camel_regexp.match(self.name):
+
+        # relax camel case requirement for struct properties
+        if not self.is_property() and not camel_regexp.match(self.name):
             raise NameStyleValidationException(
                 f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
 
@@ -163,15 +185,68 @@ class VSSNode(Node):
     def is_branch(self):
         return self.type == VSSType.BRANCH
 
+    def is_sensor(self):
+        return self.type == VSSType.SENSOR
+
+    def is_actuator(self):
+        return self.type == VSSType.ACTUATOR
+
+    def is_attribute(self):
+        return self.type == VSSType.ATTRIBUTE
+
+    def is_struct(self):
+        return self.type == VSSType.STRUCT
+
+    def is_property(self):
+        return self.type == VSSType.PROPERTY
+
+    def is_signal(self):
+        return self.is_sensor() or self.is_actuator() or self.is_attribute()
+
     def is_orphan(self) -> bool:
         """Checks if this instance is a branch without any child nodes
 
             Returns:
                 True if this instance is a branch and has no children.
         """
-        if self.type == VSSType.BRANCH:
+        if self.is_branch() or self.is_struct():
             return self.is_leaf
         return False
+
+    def get_struct_qualified_name(self, struct_name) -> str:
+        """
+        Returns whether a struct node with the given relative name is defined under the branch of this node.
+        A relative name is the fully qualified name of the struct without the branch prefix under which it is defined.
+
+        Example 1:
+        struct: VehicleTypes.Branch1.StructA
+        this: VehicleTypes.Branch1.StructB.Property1 can use data type "StructA"
+
+        Example 2:
+        struct: VehicleTypes.Branch1.StructA
+        this: VehicleTypes.Branch1.Branch2.StructB.Property1 CANNOT use data type "StructA" since they are not defined under the same branch
+
+
+        Keyword arguments:
+        struct_name - The struct name to search for.
+
+        Returns:
+        Fully qualified name of the struct if one exists. Otherwise None.
+        """
+        path = self
+
+        # find the ancestor branch
+        root = None
+        while not path.is_branch():
+            path = path.parent
+            root = path
+
+        # find the struct node under the branch
+        for child in root.children:
+            if child.is_struct() and child.name == struct_name:
+                return child.qualified_name()
+
+        return None
 
     def is_instantiated(self) -> bool:
         """Checks if node shall be instantiated through its parent
@@ -221,12 +296,74 @@ class VSSNode(Node):
         self.source_dict.update(other.source_dict)
         self.unpack_source_dict()
 
+    def validate_and_set_datatype(self):
+        """
+        For signals:
+        Validate that the data type string represents the corresponding VSSDataType enumeration
+
+        For properties:
+        Validate that
+        1. the data type string represents the corresponding VSSDataType enumeration, OR
+        2. the data type string refers to a struct name that is defined under the same branch. Note that only struct names relative to the branch under which they are defined are checked. Data types provided as fully qualified struct names are skipped from validation as they require the entire tree to be rendered first. These are validated after the entire tree is rendered.
+        """
+        is_array = ARRAY_SUBSCRIPT_OP in self.data_type_str
+        try:
+            self.datatype = VSSDataType.from_str(self.data_type_str)
+        except KeyError as e:
+            if self.type == VSSType.PROPERTY:
+                # Fully Qualified name as data type name
+                if DEFAULT_SEPARATOR in self.data_type_str:
+                    logging.info(
+                        f"Qualified datatype name {self.data_type_str} provided in node {self.qualified_name()}. Semantic checks will be performed after the entire tree is rendered. SKIPPING NOW...")
+                else:
+                    # get the base name without subscript decoration
+                    undecorated_datatype_str = self.data_type_str.split(
+                        DEFAULT_SEPARATOR)[-1].replace(ARRAY_SUBSCRIPT_OP, '')
+                    # Custom data types can contain names defined under the
+                    # same branch
+                    struct_fqn = self.get_struct_qualified_name(
+                        undecorated_datatype_str)
+                    if struct_fqn is None:
+                        logging.error(
+                            f"Data type not found. Data Type: {undecorated_datatype_str}")
+                        sys.exit(-1)
+                    else:
+                        # replace data type with qualified name
+                        if is_array:
+                            self.data_type_str = struct_fqn + ARRAY_SUBSCRIPT_OP
+                        else:
+                            self.data_type_str = struct_fqn
+            elif self.is_signal():
+                # This is a signal possibly referencing a user-defined type.
+                # Just assign the string value for now. Validation will be
+                # performed after the entire tree is rendered.
+                logging.info(
+                    f"Possible struct-type encountered - {self.data_type_str} in node {self.name}. Skipping validation for now")
+            else:
+                raise e
+            self.datatype = None  # reset the enum
+
+    def does_attribute_exist(self, other: 'VSSNode',
+                             attr_fn, other_attr_fn, other_filter_fn):
+        """
+        Returns whether the an attribute of this node exists as another attribute in the specified tree
+
+        Keyword arguments:
+        other: Tree root of the search tree
+        attr_fn: Attribute projection function for this node that takes in a VSSNode as argument.
+        other_attr_fn: Attribute projection function for nodes in the search tree. The argument is of type VSSNode.
+        other_filter_fn: A filter function for node search in the "other" tree. The argument is of type VSSNode.
+        """
+        key = attr_fn(self)
+        return key in set(VSSNode.get_tree_attrs(
+            other, other_attr_fn, other_filter_fn))
+
     @staticmethod
     def node_exists(root, node_name) -> bool:
         """Checks if a node with the name provided to this method exists
             Args:
                 root: root node of tree or root of search if search is applied to subtree
-                node_name: name of the node that is searched for.
+                node_name: name of the node that is searched for. Full path (excluding root) is required.
         """
         try:
             r = Resolver()
@@ -257,6 +394,21 @@ class VSSNode(Node):
                 f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core or known extended attribute.")
 
         if "default" in element.keys():
-            if element["type"] != "attribute":
+            if element["type"] != "attribute" and element["type"] != "property":
                 raise UnknownAttributeException(
-                    "Invalid VSS element %s, only attributes can use default" % name)
+                    "Invalid VSS element %s, only attributes/properties can use default" % name)
+
+    @staticmethod
+    def get_tree_attrs(node: "VSSNode", proj_fn, filter_fn) -> List[Any]:
+        """
+        Collect all attributes of tree nodes rooted at `node` by applying the specified projection and filter function.
+
+        Keyword arguments:
+        node: The tree root node
+        proj_fn: A function that takes in the tree node as input and returns a node attribute (projection)
+        filter_fn: A function that takes in the tree node as input and returns True if the node should be processed in the result set/False otherwise.
+
+        Returns:
+        Projection of nodes that meet the filter criterion specified.
+        """
+        return [proj_fn(n) for _, _, n in RenderTree(node) if filter_fn(n)]

@@ -1,6 +1,6 @@
 import unittest
 
-from vspec.model.constants import VSSType, VSSDataType, Unit
+from vspec.model.constants import VSSType, VSSDataType, Unit, VSSTreeType
 from vspec.model.vsstree import VSSNode
 
 
@@ -14,7 +14,10 @@ class TestVSSNode(unittest.TestCase):
             "type": "branch",
             "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
             "$file_name$": "testfile"}
-        node = VSSNode("test", source)
+        node = VSSNode(
+            "test",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
         self.assertIsNotNone(node)
         self.assertEqual("some desc", node.description)
         self.assertEqual(VSSType.BRANCH, node.type)
@@ -29,7 +32,10 @@ class TestVSSNode(unittest.TestCase):
         source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
                   "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "allowed": ["one", "two"], "aggregate": False,
                   "default": "test-default", "$file_name$": "testfile"}
-        node = VSSNode("test", source)
+        node = VSSNode(
+            "test",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
         self.assertIsNotNone(node)
         self.assertEqual("some desc", node.description)
         self.assertEqual(VSSType.SENSOR, node.type)
@@ -59,8 +65,14 @@ class TestVSSNode(unittest.TestCase):
         source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
                   "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "$file_name$": "testfile"}
 
-        node_target = VSSNode("MyNode", target)
-        node_source = VSSNode("MyNode2", source)
+        node_target = VSSNode(
+            "MyNode",
+            target,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
         self.assertEqual(
             "e36a1d8c-4d06-4c22-ba69-e8b39434a7a3",
             node_target.uuid)
@@ -99,10 +111,20 @@ class TestVSSNode(unittest.TestCase):
             "datatype": "string",
             "uuid": "9101bbea-aeb6-4b0e-8cec-d8b126e77898",
             "$file_name$": "testfile"}
-        node_root = VSSNode("Vehicle", source_root)
-        node_drivetrain = VSSNode("Drivetrain", source_drivetrain, node_root)
+        node_root = VSSNode(
+            "Vehicle",
+            source_root,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        node_drivetrain = VSSNode(
+            "Drivetrain",
+            source_drivetrain,
+            VSSTreeType.SIGNAL_TREE.available_types(),
+            node_root)
         node_drivetrain_element = VSSNode(
-            "SomeElement", source_drivetrain_element, node_drivetrain)
+            "SomeElement",
+            source_drivetrain_element,
+            VSSTreeType.SIGNAL_TREE.available_types(),
+            node_drivetrain)
 
         self.assertTrue(
             VSSNode.node_exists(
@@ -123,8 +145,15 @@ class TestVSSNode(unittest.TestCase):
             "type": "branch",
             "uuid": "5fb3f710-ed60-426b-a083-015cc7c7bc1b",
             "$file_name$": "testfile"}
-        node_root = VSSNode("Vehicle", source_root)
-        node_drivetrain = VSSNode("Drivetrain", source_drivetrain, node_root)
+        node_root = VSSNode(
+            "Vehicle",
+            source_root,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        node_drivetrain = VSSNode(
+            "Drivetrain",
+            source_drivetrain,
+            VSSTreeType.SIGNAL_TREE.available_types(),
+            node_root)
 
         self.assertTrue(node_drivetrain.is_orphan())
 
