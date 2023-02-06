@@ -8,7 +8,7 @@
 #
 # Convert vspec tree to JSON
 
-from vspec.model.vsstree import VSSNode, VSSType
+from vspec.model.vsstree import VSSNode
 import argparse
 import json
 import logging
@@ -26,8 +26,8 @@ def export_node(json_dict, node, config, print_uuid):
 
     json_dict[node.name] = {}
 
-    if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
-        json_dict[node.name]["datatype"] = str(node.datatype.value)
+    if node.is_signal() or node.is_property():
+        json_dict[node.name]["datatype"] = node.data_type_str
 
     json_dict[node.name]["type"] = str(node.type.value)
 
@@ -70,7 +70,7 @@ def export_node(json_dict, node, config, print_uuid):
     #    json_dict[node.name]["children"]={}
 
     # But old JSON code always generates children, so lets do so to
-    if node.type == VSSType.BRANCH:
+    if node.is_branch() or node.is_struct():
         json_dict[node.name]["children"] = {}
 
     for child in node.children:
@@ -78,17 +78,21 @@ def export_node(json_dict, node, config, print_uuid):
                     child, config, print_uuid)
 
 
-def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    logging.info("Generating JSON output...")
-    json_dict = {}
-    export_node(json_dict, root, config, print_uuid)
-    outfile = open(config.output_file, 'w')
-    if config.json_pretty:
-        logging.info("Serializing pretty JSON...")
-        json.dump(json_dict, outfile, indent=2, sort_keys=True)
-    else:
-        logging.info("Serializing compact JSON...")
-        json.dump(json_dict, outfile, indent=None, sort_keys=True)
+def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
+    for root, outfile in zip([signal_root, data_type_root], [config.output_file, config.types_output_file]):
+        if root is None:
+            continue
+
+        logging.info("Generating JSON output...")
+        json_dict = {}
+        export_node(json_dict, root, config, print_uuid)
+        with open(outfile, 'w') as f:
+            if config.json_pretty:
+                logging.info("Serializing pretty JSON...")
+                json.dump(json_dict, f, indent=2, sort_keys=True)
+            else:
+                logging.info("Serializing compact JSON...")
+                json.dump(json_dict, f, indent=None, sort_keys=True)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,21 @@
+VehicleDataTypes:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+VehicleDataTypes.NestedStruct:
+  type: struct
+  description: "A struct that is going to be used within another struct - Nested"
+
+VehicleDataTypes.NestedStruct.x:
+  type: property
+  description: "x property"
+  datatype: double
+  
+VehicleDataTypes.ParentStruct:
+  type: struct
+  description: "A struct that is going to contain properties that are structs themselves"
+
+VehicleDataTypes.x_property:
+  type: property
+  description: "A property of struct-type. The struct name is specified relative to the branch"
+  datatype: NestedStruct1
