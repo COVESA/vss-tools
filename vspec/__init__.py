@@ -84,7 +84,8 @@ def convert_yaml_to_list(raw_yaml):
     return lst
 
 
-def load_tree(file_name, include_paths, break_on_unknown_attribute=False, break_on_name_style_violation=False, expand_inst=True):
+def load_tree(file_name, include_paths, break_on_unknown_attribute=False,
+              break_on_name_style_violation=False, expand_inst=True):
     flat_model = load_flat_model(file_name, "", include_paths)
     absolute_path_flat_model = create_absolute_paths(flat_model)
     deep_model = create_nested_model(absolute_path_flat_model, file_name)
@@ -136,7 +137,7 @@ def load_flat_model(file_name, prefix, include_paths):
             if key[0] == '$':
                 continue
 
-            if val == None:
+            if val is None:
                 mapping['$name$'] = key
                 del mapping[key]
                 break
@@ -263,18 +264,20 @@ def cleanup_deep_model(deep_model):
 # Meta data on extended attributes needs to be cleaned as part of the second cleaning step.
 # as it is not included in first step.
 #
+
+
 def clean_metadata(node):
 
-    if isinstance(node,VSSNode):
+    if isinstance(node, VSSNode):
         clean_metadata(node.extended_attributes)
         for child in node.children:
             clean_metadata(child)
-    elif isinstance(node,dict):
+    elif isinstance(node, dict):
         for k in list(node.keys()):
             clean_metadata(node[k])
             if k in ["$file_name$", "$line$"]:
                 del node[k]
-    elif isinstance(node,list):
+    elif isinstance(node, list):
         for elem in node:
             clean_metadata(elem)
 
@@ -329,12 +332,11 @@ def expand_includes(flat_model, prefix, include_paths):
     return new_flat_model
 
 
-def expand_tree_instances(tree : VSSNode) -> VSSNode:
+def expand_tree_instances(tree: VSSNode) -> VSSNode:
     tree_node: VSSNode
     exporter = DictExporter()
     importer = DictImporter(nodecls=VSSNode)
 
-   
     def rollout_list(instance_entry):
         '''
         Converts "Prefix[1,n] to [Prefix1, Prefix2, ..., Prefixn]"
@@ -343,15 +345,16 @@ def expand_tree_instances(tree : VSSNode) -> VSSNode:
         if "[" in instance_entry:  # if so unroll
             unrolled_items = []
             prefix = instance_entry[:instance_entry.find("[")]
-            start = instance_entry[instance_entry.find("[")+1:instance_entry.find(",")]
-            end = instance_entry[instance_entry.find(",")+1:instance_entry.find("]")]
-            for i in range(int(start), int(end)+1):
+            start = instance_entry[instance_entry.find(
+                "[") + 1:instance_entry.find(",")]
+            end = instance_entry[instance_entry.find(
+                ",") + 1:instance_entry.find("]")]
+            for i in range(int(start), int(end) + 1):
                 unrolled_items.append(f"{prefix}{i}")
         else:  # if not, add
             unrolled_items = instance_entry
         return unrolled_items, prefix
-    
-        
+
     def is_instance_branch(node, unrolled_instances, prefix):
         '''
         Check if node is a branch that has the same name as an instance for parent node
@@ -362,28 +365,35 @@ def expand_tree_instances(tree : VSSNode) -> VSSNode:
                 # something like Row[1,4]
                 for element in instance:
                     if element == node.name:
-                         return True
+                        return True
             else:
                 # in this case our instances have been a simple list of elements
                 # (as opposed to a list of lists), e.g. ['Left', 'Right'], so we just compare by name
-               if instance == node.name:
-                   return True
-                   
+                if instance == node.name:
+                    return True
+
         # Now we try to be smarter - check if it seems to be an instance by prefix, e.g. Pos3 and prefix is Pos
-        # This is only for specifying instances outside specified range, e.g. specifying Row5 while instance is specified as Row[1,4]
+        # This is only for specifying instances outside specified range, e.g.
+        # specifying Row5 while instance is specified as Row[1,4]
         if prefix != "" and prefix in node.name:
-            number = node.name.split(prefix,1)[1]
+            number = node.name.split(prefix, 1)[1]
             return number.isnumeric()
         return False
-   
+
     def create_instantiated_branch(branch_name, parent, nodes_to_expand):
-        # Check if the branch we want to create as part of expansion (e.g. Row1, Pos2, Left, ...) already exist
+        # Check if the branch we want to create as part of expansion (e.g.
+        # Row1, Pos2, Left, ...) already exist
         old_node = None
         for child in parent.children:
             if child.name == branch_name:
                 old_node = child
-        instantiated_branch = VSSNode(branch_name, {"type": "branch", "description": parent.description, "comment": parent.comment, "$file_name$": "Generated"}, parent)
-        if old_node != None:
+        instantiated_branch = VSSNode(branch_name,
+                                      {"type": "branch",
+                                       "description": parent.description,
+                                       "comment": parent.comment,
+                                       "$file_name$": "Generated"},
+                                      parent)
+        if old_node is not None:
             # If it exist we take the new one as default (to give e.g. default descriptions and comments)
             # Then merge anything from the old (expanded) instance above, to get e.g. updated comment
             # Finally remove the old node by removing parent
@@ -392,15 +402,18 @@ def expand_tree_instances(tree : VSSNode) -> VSSNode:
                 child.parent = instantiated_branch
             old_node.parent = None
 
-        # Deep copy needed so that we can change attributes/dict/children independently
+        # Deep copy needed so that we can change attributes/dict/children
+        # independently
         for expand_node in deepcopy(nodes_to_expand):
-            # Check if this branch/signal already exists in the instantiated branch
+            # Check if this branch/signal already exists in the instantiated
+            # branch
             for existing_item in instantiated_branch.children:
                 if expand_node.name == existing_item.name:
                     # A child with the same name already exists
                     # Typical use-case is that a single instance of this signal has been re-defined in an overlay
                     # Then data from the overlay (for example A.B.Row2.Column2.Sig) shall have precedence over the expanded instance
-                    # This is handled by removing the old node from tree and instead merging it to the new node
+                    # This is handled by removing the old node from tree and
+                    # instead merging it to the new node
                     existing_item.parent = None
                     expand_node.merge(existing_item)
                     break
@@ -433,17 +446,18 @@ def expand_tree_instances(tree : VSSNode) -> VSSNode:
                 for instance_entry in tree_node.instances:
                     # check every entry whether it is shorthand for a list
                     # e.g. Prefix[1,3]
-                    unrolled_items, tmpprefix = rollout_list(instance_entry);
+                    unrolled_items, tmpprefix = rollout_list(instance_entry)
                     if array_prefix == "":
-                        # For "smart" comparison only use prefix from first level
+                        # For "smart" comparison only use prefix from first
+                        # level
                         array_prefix = tmpprefix
                     unrolled_instances.append(unrolled_items)
 
             # it is not a list, e.g. instance in vspec is just Sensor[1,10]
             else:
-                unrolled_items, array_prefix = rollout_list(tree_node.instances);
+                unrolled_items, array_prefix = rollout_list(
+                    tree_node.instances)
                 unrolled_instances.append(unrolled_items)
-
 
             # When a node has instances we need to decide what to do with the children
             # The default behavior is to duplicate each child under each created instance,
@@ -458,21 +472,22 @@ def expand_tree_instances(tree : VSSNode) -> VSSNode:
             # which then shall not be copied for each instance of Door as it is valid only
             # for one of the instances
 
-            nodes_to_stay = [] #< nodes excluded from instantiation
-            nodes_to_expand = [] #< nodes shall use the instances as parent
+            nodes_to_stay = []  # < nodes excluded from instantiation
+            nodes_to_expand = []  # < nodes shall use the instances as parent
 
             for child in tree_node.children:
                 if is_instance_branch(child, unrolled_instances, array_prefix):
                     # Child is already an instance, for example Row2.Right.X
                     nodes_to_stay.append(child)
                 elif child.is_instantiated():
-                    # Child has an explicit or implicit "instantiate:true", this is the default
+                    # Child has an explicit or implicit "instantiate:true",
+                    # this is the default
                     nodes_to_expand.append(child)
                 else:
-                    nodes_to_stay.append(child)    
+                    nodes_to_stay.append(child)
 
             tree_node.children = deepcopy(nodes_to_stay)
-                
+
             # now iterate over instances
             for instance in unrolled_instances:
                 if isinstance(instance, list):
@@ -489,10 +504,11 @@ def expand_tree_instances(tree : VSSNode) -> VSSNode:
                     # next so they will be expanded
 
                     for element in instance:
-                        instantiated_branch = create_instantiated_branch(element, tree_node, nodes_to_expand)
-                            
+                        instantiated_branch = create_instantiated_branch(
+                            element, tree_node, nodes_to_expand)
+
                         if len(unrolled_instances) > 1:
-                            # We need to expand more (see above). PreOrderIter 
+                            # We need to expand more (see above). PreOrderIter
                             # allows us to do this without recursing
                             instantiated_branch.instances = unrolled_instances[1:]
                     # break outer for loop,
@@ -501,10 +517,13 @@ def expand_tree_instances(tree : VSSNode) -> VSSNode:
                 else:
                     # in this case our instances have been a simple list of elements
                     # (as opposed to a list of lists), e.g. ['Left', 'Right'], so we
-                    # just add them all in parallel as childs of the current loop
-                    create_instantiated_branch(instance, tree_node, nodes_to_expand)
+                    # just add them all in parallel as childs of the current
+                    # loop
+                    create_instantiated_branch(
+                        instance, tree_node, nodes_to_expand)
 
-    # As instance expansions moves signals in the tree, we need to recreate UUIDs
+    # As instance expansions moves signals in the tree, we need to recreate
+    # UUIDs
     create_tree_uuids(tree)
 
 
@@ -607,24 +626,31 @@ def find_branch(branch, name_list, index, autocreate=True):
     if name_list[index] not in children:
         if autocreate:
             print(f"Autocreating implicit branch {name_list[index]}")
-            
-            #If we are above Vehicle (e.g. vehicle not defined), we are missing a name
+
+            # If we are above Vehicle (e.g. vehicle not defined), we are
+            # missing a name
             if "$name$" not in branch:
-                branch['$name$']=""
-            newbranch={ 'type': 'branch', 'children':{}, '$line$': '0', '$file_name$': '<generated>', '$name$': f"{branch['$name$']}.{name_list[index]}"}
+                branch['$name$'] = ""
+            newbranch = {
+                'type': 'branch',
+                'children': {},
+                '$line$': '0',
+                '$file_name$': '<generated>',
+                '$name$': f"{branch['$name$']}.{name_list[index]}"}
 
             children[name_list[index]] = newbranch
-            #Search again
+            # Search again
             find_branch(branch, name_list, index, autocreate)
         else:
             raise VSpecError(branch.get("$file_name$", "??"),
-                         branch.get("$line$", "??"),
-                         "Missing branch: {} in {}.".format(name_list[index],
-                                                            list_to_path(name_list)))
+                             branch.get("$line$", "??"),
+                             "Missing branch: {} in {}.".format(name_list[index],
+                                                                list_to_path(name_list)))
 
     # Traverse all children, looking for the
     # Move on to next element in prefix.
-    return find_branch(children[name_list[index]], name_list, index + 1,autocreate)
+    return find_branch(children[name_list[index]],
+                       name_list, index + 1, autocreate)
 
 
 def list_to_path(name_list):
@@ -700,7 +726,8 @@ $include$:
     return text
 
 
-def render_tree(tree_dict, break_on_unknown_attribute=False, break_on_name_style_violation=False) -> VSSNode:
+def render_tree(tree_dict, break_on_unknown_attribute=False,
+                break_on_name_style_violation=False) -> VSSNode:
     if len(tree_dict) != 1:
         raise Exception('Invalid VSS model, must have single root node')
 
@@ -718,13 +745,14 @@ def render_tree(tree_dict, break_on_unknown_attribute=False, break_on_name_style
     return tree_root
 
 
-def render_subtree(subtree, parent, break_on_unknown_attribute=False, break_on_name_style_violation=False):
+def render_subtree(subtree, parent, break_on_unknown_attribute=False,
+                   break_on_name_style_violation=False):
     for element_name in subtree:
         current_element = subtree[element_name]
 
         try:
             new_element = VSSNode(element_name, current_element, parent=parent, break_on_unknown_attribute=break_on_unknown_attribute,
-                              break_on_name_style_violation=break_on_name_style_violation)
+                                  break_on_name_style_violation=break_on_name_style_violation)
         except IncompleteElementException as e:
             print(f"Invalid VSS: {e}")
             print("Terminating.")
@@ -735,12 +763,12 @@ def render_subtree(subtree, parent, break_on_unknown_attribute=False, break_on_n
                            break_on_name_style_violation=break_on_name_style_violation)
 
 
-def merge_elem(base,overlay_element):
+def merge_elem(base, overlay_element):
     r = Resolver()
     element_name = "/" + overlay_element.qualified_name("/")
 
     if not VSSNode.node_exists(base, element_name):
-        #The node in the overlay does not exist, so we connect it
+        # The node in the overlay does not exist, so we connect it
         #print(f"Not exists {overlay_element.qualified_name()} does not exist, creating.")
         new_parent_name = "/" + overlay_element.parent.qualified_name("/")
         new_parent = r.get(base, new_parent_name)
@@ -758,11 +786,11 @@ def merge_elem(base,overlay_element):
             sys.exit(-1)
 
 
-
 def merge_tree(base: VSSNode, overlay: VSSNode):
     overlay_element: VSSNode
     for overlay_element in LevelOrderIter(overlay):
-        merge_elem(base,overlay_element)
+        merge_elem(base, overlay_element)
+
 
 def create_tree_uuids(root: VSSNode):
     VSS_NAMESPACE = "vehicle_signal_specification"
