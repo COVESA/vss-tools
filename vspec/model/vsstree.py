@@ -18,6 +18,7 @@ from .constants import VSSType, VSSDataType, Unit
 
 DEFAULT_SEPARATOR = "."
 
+
 class VSSNode(Node):
     """Representation of an VSS element according to the vehicle signal specification."""
     description = None
@@ -34,8 +35,7 @@ class VSSNode(Node):
     whitelisted_extended_attributes = []
 
     unit: Unit
-    
-    
+
     min = ""
     max = ""
     allowed = ""
@@ -49,9 +49,11 @@ class VSSNode(Node):
     deprecation = ""
 
     def __deepcopy__(self, memo):
-        return VSSNode(self.name, self.source_dict.copy(), parent=None, children=copy.deepcopy(self.children, memo))
+        return VSSNode(self.name, self.source_dict.copy(),
+                       parent=None, children=copy.deepcopy(self.children, memo))
 
-    def __init__(self, name, source_dict: dict, parent=None, children=None, break_on_unknown_attribute=False, break_on_name_style_violation=False):
+    def __init__(self, name, source_dict: dict, parent=None, children=None,
+                 break_on_unknown_attribute=False, break_on_name_style_violation=False):
         """Creates an VSS Node object from parsed yaml instance represented as a dict.
 
             Args:
@@ -66,7 +68,7 @@ class VSSNode(Node):
                 VSSNode object according to the Vehicle Signal Specification.
 
         """
-        
+
         super().__init__(name, parent, children)
         try:
             VSSNode.validate_vss_element(source_dict, name)
@@ -130,7 +132,8 @@ class VSSNode(Node):
 
         """
         camel_regexp = p = re.compile('[A-Z][A-Za-z0-9]*$')
-        if self.type != VSSType.BRANCH and self.datatype == VSSDataType.BOOLEAN and not self.name.startswith("Is"):
+        if self.type != VSSType.BRANCH and self.datatype == VSSDataType.BOOLEAN and not self.name.startswith(
+                "Is"):
             raise NameStyleValidationException(
                 f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
         if not camel_regexp.match(self.name):
@@ -169,15 +172,14 @@ class VSSNode(Node):
         if self.type == VSSType.BRANCH:
             return self.is_leaf
         return False
-    
-    def is_instantiated (self) -> bool:
+
+    def is_instantiated(self) -> bool:
         """Checks if node shall be instantiated through its parent
 
             Returns:
                 True if it shall be instantiated
         """
         return self.instantiate
-
 
     def has_unit(self) -> bool:
         """Checks if this instance has a unit
@@ -258,4 +260,3 @@ class VSSNode(Node):
             if element["type"] != "attribute":
                 raise UnknownAttributeException(
                     "Invalid VSS element %s, only attributes can use default" % name)
-
