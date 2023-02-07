@@ -1,125 +1,161 @@
-import unittest
+import pytest
 import os
 
-from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle
+from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle, VSSTreeType
 
-class TestConstantsNode(unittest.TestCase):
-    def test_string_styles(self):
-        """
-        Test correct parsing of string styles
-        """
 
-        self.assertEqual(StringStyle.NONE, StringStyle.from_str("none"))
-        self.assertEqual(StringStyle.CAMEL_CASE, StringStyle.from_str("camelCase"))
-        self.assertEqual(StringStyle.CAMEL_BACK, StringStyle.from_str("camelBack"))
-        self.assertEqual(StringStyle.CAPITAL_CASE, StringStyle.from_str("capitalcase"))
-        self.assertEqual(StringStyle.CONST_CASE, StringStyle.from_str("constcase"))
-        self.assertEqual(StringStyle.LOWER_CASE, StringStyle.from_str("lowercase"))
-        self.assertEqual(StringStyle.PASCAL_CASE, StringStyle.from_str("pascalcase"))
-        self.assertEqual(StringStyle.SENTENCE_CASE, StringStyle.from_str("sentencecase"))
-        self.assertEqual(StringStyle.SNAKE_CASE, StringStyle.from_str("snakecase"))
-        self.assertEqual(StringStyle.TITLE_CASE, StringStyle.from_str("titlecase"))
-        self.assertEqual(StringStyle.TRIM_CASE, StringStyle.from_str("trimcase"))
-        self.assertEqual(StringStyle.UPPER_CASE, StringStyle.from_str("uppercase"))
-        self.assertEqual(StringStyle.ALPHANUM_CASE, StringStyle.from_str("alphanumcase"))
+@pytest.mark.parametrize("style_enum, style_str",
+                         [(StringStyle.NONE, "none"),
+                             (StringStyle.CAMEL_CASE, "camelCase"),
+                             (StringStyle.CAMEL_BACK, "camelBack"),
+                             (StringStyle.CAPITAL_CASE, "capitalcase"),
+                             (StringStyle.CONST_CASE, "constcase"),
+                             (StringStyle.LOWER_CASE, "lowercase"),
+                             (StringStyle.PASCAL_CASE, "pascalcase"),
+                             (StringStyle.SENTENCE_CASE, "sentencecase"),
+                             (StringStyle.SNAKE_CASE, "snakecase"),
+                             (StringStyle.TITLE_CASE, "titlecase"),
+                             (StringStyle.TRIM_CASE, "trimcase"),
+                             (StringStyle.UPPER_CASE, "uppercase"),
+                             (StringStyle.ALPHANUM_CASE, "alphanumcase")])
+def test_string_styles(style_enum, style_str):
+    """
+    Test correct parsing of string styles
+    """
+    assert style_enum == StringStyle.from_str(style_str)
 
-    def test_invalid_string_styles(self):
-        with self.assertRaises(Exception): StringStyle.from_str("not_a_valid_case")
 
-    def test_default_units(self):
-        """
-        Test correct parsing of default units
-        """
+def test_invalid_string_styles():
+    with pytest.raises(Exception):
+        StringStyle.from_str("not_a_valid_case")
 
-        # This test will need to be removed when config.yaml is removed
-        Unit.load_default_config_file()
-        self.assertEqual(Unit.MILLIMETER, Unit.from_str("mm"))
-        self.assertEqual(Unit.CENTIMETER, Unit.from_str("cm"))
-        self.assertEqual(Unit.METER, Unit.from_str("m"))
-        self.assertEqual(Unit.KILOMETER, Unit.from_str("km"))
-        self.assertEqual(Unit.KILOMETERPERHOUR, Unit.from_str("km/h"))
-        self.assertEqual(Unit.METERSPERSECONDSQUARED, Unit.from_str("m/s^2"))
-        self.assertEqual(Unit.LITER, Unit.from_str("l"))
-        self.assertEqual(Unit.DEGREECELSIUS, Unit.from_str("celsius"))
-        self.assertEqual(Unit.DEGREE, Unit.from_str("degrees"))
-        self.assertEqual(Unit.DEGREEPERSECOND, Unit.from_str("degrees/s"))
-        self.assertEqual(Unit.KILOWATT, Unit.from_str("kW"))
-        self.assertEqual(Unit.KILOWATTHOURS, Unit.from_str("kWh"))
-        self.assertEqual(Unit.KILOGRAM, Unit.from_str("kg"))
-        self.assertEqual(Unit.VOLT, Unit.from_str("V"))
-        self.assertEqual(Unit.AMPERE, Unit.from_str("A"))
-        self.assertEqual(Unit.SECOND, Unit.from_str("s"))
-        self.assertEqual(Unit.MINUTE, Unit.from_str("min"))
-        self.assertEqual(Unit.WEEKS, Unit.from_str("weeks"))
-        self.assertEqual(Unit.MONTHS, Unit.from_str("months"))
-        self.assertEqual(Unit.YEARS, Unit.from_str("years"))
-        self.assertEqual(Unit.UNIXTIMESTAMP, Unit.from_str("UNIX Timestamp"))
-        self.assertEqual(Unit.PASCAL, Unit.from_str("Pa"))
-        self.assertEqual(Unit.KILOPASCAL, Unit.from_str("kPa"))
-        self.assertEqual(Unit.PERCENT, Unit.from_str("percent"))
-        self.assertEqual(Unit.CUBICCENTIMETERS, Unit.from_str("cm^3"))
-        self.assertEqual(Unit.HORSEPOWER, Unit.from_str("PS"))
-        self.assertEqual(Unit.STARS, Unit.from_str("stars"))
-        self.assertEqual(Unit.GRAMSPERSECOND, Unit.from_str("g/s"))
-        self.assertEqual(Unit.GRAMSPERKILOMETER, Unit.from_str("g/km"))
-        self.assertEqual(Unit.KILOWATTHOURSPER100KILOMETERS, Unit.from_str("kWh/100km"))
-        self.assertEqual(Unit.LITERPER100KILOMETERS, Unit.from_str("l/100km"))
-        self.assertEqual(Unit.LITERPERHOUR, Unit.from_str("l/h"))
-        self.assertEqual(Unit.MILESPERGALLON, Unit.from_str("mpg"))
-        self.assertEqual(Unit.POUND, Unit.from_str("lbs"))
-        self.assertEqual(Unit.NEWTONMETER, Unit.from_str("Nm"))
-        self.assertEqual(Unit.REVOLUTIONSPERMINUTE, Unit.from_str("rpm"))
-        self.assertEqual(Unit.INCH, Unit.from_str("inch"))
-        self.assertEqual(Unit.RATIO, Unit.from_str("ratio"))
-        self.assertEqual(Unit.NANOMETERPERKILOMETER, Unit.from_str("nm/km"))
-        self.assertEqual(Unit.DECIBELMILLIWATT, Unit.from_str("dBm"))
-        self.assertEqual(Unit.KILONEWTON, Unit.from_str("kN"))
 
-    def test_manually_loaded_units(self):
-        """
-        Test correct parsing of units
-        """
-        unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
-        Unit.load_config_file(unit_file)
-        self.assertEqual(Unit.PUNCHEON, Unit.from_str("puncheon"))
-        self.assertEqual(Unit.HOGSHEAD, Unit.from_str("hogshead"))
+def test_default_units():
+    """
+    Test correct parsing of default units
+    """
 
-    def test_invalid_unit(self):
-        with self.assertRaises(Exception): Unit.from_str("not_a_valid_case")
+    # This test will need to be removed when config.yaml is removed
+    Unit.load_default_config_file()
+    assert Unit.MILLIMETER == Unit.from_str("mm")
+    assert Unit.CENTIMETER == Unit.from_str("cm")
+    assert Unit.METER == Unit.from_str("m")
+    assert Unit.KILOMETER == Unit.from_str("km")
+    assert Unit.KILOMETERPERHOUR == Unit.from_str("km/h")
+    assert Unit.METERSPERSECONDSQUARED == Unit.from_str("m/s^2")
+    assert Unit.LITER == Unit.from_str("l")
+    assert Unit.DEGREECELSIUS == Unit.from_str("celsius")
+    assert Unit.DEGREE == Unit.from_str("degrees")
+    assert Unit.DEGREEPERSECOND == Unit.from_str("degrees/s")
+    assert Unit.KILOWATT == Unit.from_str("kW")
+    assert Unit.KILOWATTHOURS == Unit.from_str("kWh")
+    assert Unit.KILOGRAM == Unit.from_str("kg")
+    assert Unit.VOLT == Unit.from_str("V")
+    assert Unit.AMPERE == Unit.from_str("A")
+    assert Unit.SECOND == Unit.from_str("s")
+    assert Unit.MINUTE == Unit.from_str("min")
+    assert Unit.WEEKS == Unit.from_str("weeks")
+    assert Unit.MONTHS == Unit.from_str("months")
+    assert Unit.YEARS == Unit.from_str("years")
+    assert Unit.UNIXTIMESTAMP == Unit.from_str("UNIX Timestamp")
+    assert Unit.PASCAL == Unit.from_str("Pa")
+    assert Unit.KILOPASCAL == Unit.from_str("kPa")
+    assert Unit.PERCENT == Unit.from_str("percent")
+    assert Unit.CUBICCENTIMETERS == Unit.from_str("cm^3")
+    assert Unit.HORSEPOWER == Unit.from_str("PS")
+    assert Unit.STARS == Unit.from_str("stars")
+    assert Unit.GRAMSPERSECOND == Unit.from_str("g/s")
+    assert Unit.GRAMSPERKILOMETER == Unit.from_str("g/km")
+    assert Unit.KILOWATTHOURSPER100KILOMETERS == Unit.from_str("kWh/100km")
+    assert Unit.LITERPER100KILOMETERS == Unit.from_str("l/100km")
+    assert Unit.LITERPERHOUR == Unit.from_str("l/h")
+    assert Unit.MILESPERGALLON == Unit.from_str("mpg")
+    assert Unit.POUND == Unit.from_str("lbs")
+    assert Unit.NEWTONMETER == Unit.from_str("Nm")
+    assert Unit.REVOLUTIONSPERMINUTE == Unit.from_str("rpm")
+    assert Unit.INCH == Unit.from_str("inch")
+    assert Unit.RATIO == Unit.from_str("ratio")
+    assert Unit.NANOMETERPERKILOMETER == Unit.from_str("nm/km")
+    assert Unit.DECIBELMILLIWATT == Unit.from_str("dBm")
+    assert Unit.KILONEWTON == Unit.from_str("kN")
 
-    def test_vss_types(self):
-        """
-        Test correct parsing of VSS Types
-        """
 
-        self.assertEqual(VSSType.BRANCH, VSSType.from_str("branch"))
-        self.assertEqual(VSSType.ATTRIBUTE, VSSType.from_str("attribute"))
-        self.assertEqual(VSSType.SENSOR, VSSType.from_str("sensor"))
-        self.assertEqual(VSSType.ACTUATOR, VSSType.from_str("actuator"))
+def test_manually_loaded_units():
+    """
+    Test correct parsing of units
+    """
+    unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+    Unit.load_config_file(unit_file)
+    assert Unit.PUNCHEON == Unit.from_str("puncheon")
+    assert Unit.HOGSHEAD == Unit.from_str("hogshead")
 
-    def test_invalid_vss_types(self):
-        with self.assertRaises(Exception): VSSType.from_str("not_a_valid_case")
 
-    def test_vss_data_types(self):
-        """
-        Test correct parsing of VSS Data Types
-        """
+def test_invalid_unit():
+    with pytest.raises(Exception):
+        Unit.from_str("not_a_valid_case")
 
-        self.assertEqual(VSSDataType.INT8, VSSDataType.from_str("int8"))
-        self.assertEqual(VSSDataType.UINT8, VSSDataType.from_str("uint8"))
-        self.assertEqual(VSSDataType.INT16, VSSDataType.from_str("int16"))
-        self.assertEqual(VSSDataType.UINT16, VSSDataType.from_str("uint16"))
-        self.assertEqual(VSSDataType.INT32, VSSDataType.from_str("int32"))
-        self.assertEqual(VSSDataType.UINT32, VSSDataType.from_str("uint32"))
-        self.assertEqual(VSSDataType.INT64, VSSDataType.from_str("int64"))
-        self.assertEqual(VSSDataType.UINT64, VSSDataType.from_str("uint64"))
-        self.assertEqual(VSSDataType.BOOLEAN, VSSDataType.from_str("boolean"))
-        self.assertEqual(VSSDataType.FLOAT, VSSDataType.from_str("float"))
-        self.assertEqual(VSSDataType.DOUBLE, VSSDataType.from_str("double"))
-        self.assertEqual(VSSDataType.STRING, VSSDataType.from_str("string"))
 
-    def test_invalid_vss_data_types(self):
-        with self.assertRaises(Exception): VSSDataType.from_str("not_a_valid_case")
+@pytest.mark.parametrize("type_enum,type_str",
+                         [(VSSType.BRANCH, "branch"),
+                          (VSSType.ATTRIBUTE, "attribute"),
+                          (VSSType.SENSOR, "sensor"),
+                          (VSSType.ACTUATOR, "actuator"),
+                          (VSSType.PROPERTY, "property")])
+def test_vss_types(type_enum, type_str, ):
+    """
+    Test correct parsing of VSS Types
+    """
+
+    assert type_enum == VSSType.from_str(type_str)
+
+
+def test_invalid_vss_types():
+    with pytest.raises(Exception):
+        VSSType.from_str("not_a_valid_case")
+
+
+@pytest.mark.parametrize("data_type_enum,data_type_str",
+                         [(VSSDataType.INT8, "int8"),
+                          (VSSDataType.UINT8, "uint8"),
+                          (VSSDataType.INT16, "int16"),
+                          (VSSDataType.UINT16, "uint16"),
+                          (VSSDataType.INT32, "int32"),
+                          (VSSDataType.UINT32, "uint32"),
+                          (VSSDataType.INT64, "int64"),
+                          (VSSDataType.UINT64, "uint64"),
+                          (VSSDataType.BOOLEAN, "boolean"),
+                          (VSSDataType.FLOAT, "float"),
+                          (VSSDataType.DOUBLE, "double"),
+                          (VSSDataType.STRING, "string")])
+def test_vss_data_types(data_type_enum, data_type_str, ):
+    """
+    Test correct parsing of VSS Data Types
+    """
+    assert data_type_enum == VSSDataType.from_str(data_type_str)
+
+
+def test_invalid_vss_data_types():
+    with pytest.raises(Exception):
+        VSSDataType.from_str("not_a_valid_case")
+
+
+@pytest.mark.parametrize("tree_type_enum,tree_type_str, important_types",
+                         [(VSSTreeType.SIGNAL_TREE, "signal_tree", ["sensor", "actuator", "attribute", "branch"]),
+                          (VSSTreeType.DATA_TYPE_TREE, "data_type_tree", ["struct", "property", "branch"])])
+def test_vss_tree_types(tree_type_enum, tree_type_str, important_types):
+    """
+    Test correct parsing of VSS Tree Types
+    """
+
+    assert tree_type_enum == VSSTreeType.from_str(tree_type_str)
+    available_types = tree_type_enum.available_types()
+    for t in important_types:
+        assert t in available_types
+
+
+def test_invalid_vss_tree_types():
+    with pytest.raises(Exception):
+        VSSDataType.from_str("not_a_valid_case")
 
 
 if __name__ == '__main__':
