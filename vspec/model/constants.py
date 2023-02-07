@@ -216,6 +216,7 @@ class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
                        "Float", "Double", "String"])
         if self.value == "signal_tree":
             available_types.update(["branch", "sensor", "actuator", "attribute"])
-        available_types.update(["branch", "struct", "property"])
+        else:
+            available_types.update(["branch", "struct", "property"])
 
         return available_types
