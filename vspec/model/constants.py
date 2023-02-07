@@ -145,7 +145,9 @@ class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
     ATTRIBUTE = "attribute"
     SENSOR = "sensor"
     ACTUATOR = "actuator"
-
+    STRUCT = "struct"
+    PROPERTY = "property"
+    
 
 class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
     INT8 = "int8"
@@ -202,3 +204,18 @@ class Unit(metaclass=VSSRepositoryMeta):
         #__members__ = Unit.get_members_from_default_config('units')
         my_units = Unit.get_members_from_default_config('units')
         Unit.add_config(my_units)
+
+
+class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
+    SIGNAL_TREE = "signal_tree"
+    DATA_TYPE_TREE = "data_type_tree" 
+
+    def available_types(self):
+        available_types = set(["UInt8", "Int8", "UInt16", "Int16",
+                       "UInt32", "Int32", "UInt64", "Int64", "Boolean",
+                       "Float", "Double", "String"])
+        if self.value == "signal_tree":
+            available_types.update(["branch", "sensor", "actuator", "attribute"])
+        available_types.update(["branch", "struct", "property"])
+
+        return available_types
