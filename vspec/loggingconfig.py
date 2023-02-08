@@ -13,4 +13,4 @@ def initLogging():
     """
     Initialize logging
     """
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)-8s %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(levelname)-8s %(message)s')
