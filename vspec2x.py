@@ -199,7 +199,7 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args) -> VSSNode:
             "Overlays are not yet supported in vspec struct/data type support feature")
     if args.format.name != "json":
         parser.error(
-            f"{args.format_name} format is not yet supported in vspec struct/data type support feature")
+            f"{args.format.name} format is not yet supported in vspec struct/data type support feature")
 
     raise NotImplementedError(
         "vspec data type processing is not yet implemented")
