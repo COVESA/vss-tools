@@ -17,6 +17,7 @@ import sys
 import re
 import collections
 from copy import deepcopy, copy
+import logging
 
 from anytree import (Resolver, ChildResolverError,
                      LevelOrderIter, PreOrderIter)
@@ -306,6 +307,17 @@ def expand_includes(flat_model, prefix, include_paths):
         # Is this an include element?
         if elem['$name$'][0:9] == "$include$":
             include_prefix = elem.get("prefix", "")
+
+            if include_prefix != "":
+                prefix_found = False
+                for dict_elem in new_flat_model:
+                    if dict_elem["$name$"] == include_prefix:
+                        prefix_found = True
+                        break
+                if not prefix_found:
+                    # Printing line number does not make sense, as we work on a modified tree
+                    logging.warning(f"No branch matching prefix {include_prefix} for #include in {elem['$file_name$']}")
+
             # Append include prefix to our current prefix.
             # Make sure we do not start new prefix with a "."
             if prefix != "":
@@ -663,6 +675,11 @@ def element_to_list(elem):
 # the given file.
 #
 def yamilify_includes(text, is_list):
+
+    # Logic below expects a new line after "#include", to support vspec files where there
+    # is no newline at end we add a newline here
+    text += '\n'
+
     while True:
         st_index = text.find("\n#include")
         if st_index == -1:
@@ -702,7 +719,9 @@ $include$:
 
 def render_tree(tree_dict, break_on_unknown_attribute=False, break_on_name_style_violation=False) -> VSSNode:
     if len(tree_dict) != 1:
-        raise Exception('Invalid VSS model, must have single root node')
+        for item in tree_dict.keys():
+            logging.info(f"Found root node {item}")
+        raise Exception(f"Invalid VSS model, must have single root node, found {len(tree_dict)}")
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]

@@ -1,0 +1,19 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+#include include.vspec A
+
+# Make sure that we can have additional signals after
+A.S1:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+
+A.B:
+  type: branch
+  description: Branch A.B.
+
+#include include_b.vspec A.B
