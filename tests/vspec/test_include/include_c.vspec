@@ -1,0 +1,6 @@
+# Should be put under A.B branch
+S4:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.

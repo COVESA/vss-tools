@@ -1,0 +1,24 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+# Not specifying prefix, then we will have a dual root problem as contents from file
+# are added on root level
+#include include.vspec
+
+# Make sure that we can have additional signals after
+A.S1:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+
+A.B:
+  type: branch
+  description: Branch A.B.
+
+# As "A.BBBBBB" does not exist we shall get a warning
+# It will be treated as an implicit branch, which likely is not intentional
+#include include_b.vspec A.BBBBBB
+
