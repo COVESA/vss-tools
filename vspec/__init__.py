@@ -15,6 +15,7 @@ import os
 import uuid
 import sys
 import collections
+from copy import deepcopy
 import logging
 from copy import deepcopy
 from typing import List, Set
