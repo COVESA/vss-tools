@@ -1,0 +1,38 @@
+{
+  "A": {
+    "children": {
+      "B": {
+        "children": {
+          "S3": {
+            "datatype": "float",
+            "description": "A sensor.",
+            "type": "sensor",
+            "unit": "km"
+          },
+          "S4": {
+            "datatype": "float",
+            "description": "A sensor.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch A.B.",
+        "type": "branch"
+      },
+      "S1": {
+        "datatype": "float",
+        "description": "A sensor.",
+        "type": "sensor",
+        "unit": "km"
+      },
+      "S2": {
+        "datatype": "float",
+        "description": "A sensor.",
+        "type": "sensor",
+        "unit": "km"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

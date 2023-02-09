@@ -1,0 +1,11 @@
+# Should be put under A.B branch
+S3:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A sensor.
+
+# Intentionally no newline, 
+# see previous bug in https://github.com/COVESA/vehicle_signal_specification/issues/145
+# No prefix specified so contents shall be put in same branch as S3
+#include include_c.vspec
