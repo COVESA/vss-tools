@@ -14,19 +14,17 @@ import yaml
 import os
 import uuid
 import sys
-import re
 import collections
-from copy import deepcopy, copy
+from copy import deepcopy
 import logging
 
-from anytree import (Resolver, ChildResolverError,
+from anytree import (Resolver,
                      LevelOrderIter, PreOrderIter)
 from anytree.exporter import DictExporter
 from anytree.importer import DictImporter
 
-import deprecation
-
-from .model.vsstree import ImpossibleMergeException, IncompleteElementException, VSSNode
+from .model.vsstree import VSSNode
+from .model.exceptions import ImpossibleMergeException, IncompleteElementException
 
 
 class VSpecError(Exception):
@@ -318,8 +316,10 @@ def expand_includes(flat_model, prefix, include_paths):
                         prefix_found = True
                         break
                 if not prefix_found:
-                    # Printing line number does not make sense, as we work on a modified tree
-                    logging.warning(f"No branch matching prefix {include_prefix} for #include in {elem['$file_name$']}")
+                    # Printing line number does not make sense, as we work on a
+                    # modified tree
+                    logging.warning(
+                        f"No branch matching prefix {include_prefix} for #include in {elem['$file_name$']}")
 
             # Append include prefix to our current prefix.
             # Make sure we do not start new prefix with a "."
@@ -400,10 +400,12 @@ def expand_tree_instances(tree: VSSNode) -> VSSNode:
             if child.name == branch_name:
                 old_node = child
         instantiated_branch = VSSNode(branch_name,
+                                      # autopep8 off
                                       {"type": "branch",
                                        "description": parent.description,
                                        "comment": parent.comment,
                                        "$file_name$": "Generated"},
+                                      # autopep8 on
                                       parent)
         if old_node is not None:
             # If it exist we take the new one as default (to give e.g. default descriptions and comments)
@@ -637,18 +639,20 @@ def find_branch(branch, name_list, index, autocreate=True):
 
     if name_list[index] not in children:
         if autocreate:
-            print(f"Autocreating implicit branch {name_list[index]}")
+            logging.info(f"Autocreating implicit branch {name_list[index]}")
 
             # If we are above Vehicle (e.g. vehicle not defined), we are
             # missing a name
             if "$name$" not in branch:
                 branch['$name$'] = ""
+            # autopep8 off
             newbranch = {
                 'type': 'branch',
                 'children': {},
                 '$line$': '0',
                 '$file_name$': '<generated>',
                 '$name$': f"{branch['$name$']}.{name_list[index]}"}
+            # autopep8 on
 
             children[name_list[index]] = newbranch
             # Search again
@@ -674,18 +678,6 @@ def list_to_path(name_list):
             path = "{}.{}".format(path, name)
 
     return path
-
-
-# Convert a dot-notated element name to a list.
-def element_to_list(elem):
-    name = elem['$name$']
-
-    if elem["$prefix$"] == "":
-        path = name
-    else:
-        path = "{}.{}".format(elem["$prefix$"], name)
-
-    return
 
 
 #
@@ -748,7 +740,8 @@ def render_tree(tree_dict, break_on_unknown_attribute=False,
     if len(tree_dict) != 1:
         for item in tree_dict.keys():
             logging.info(f"Found root node {item}")
-        raise Exception(f"Invalid VSS model, must have single root node, found {len(tree_dict)}")
+        raise Exception(
+            f"Invalid VSS model, must have single root node, found {len(tree_dict)}")
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
@@ -773,8 +766,8 @@ def render_subtree(subtree, parent, break_on_unknown_attribute=False,
             new_element = VSSNode(element_name, current_element, parent=parent, break_on_unknown_attribute=break_on_unknown_attribute,
                                   break_on_name_style_violation=break_on_name_style_violation)
         except IncompleteElementException as e:
-            print(f"Invalid VSS: {e}")
-            print("Terminating.")
+            logging.error(f"Invalid VSS: {e}")
+            logging.error("Terminating.")
             sys.exit(-1)
         if "children" in current_element.keys():
             child_nodes = current_element["children"]
@@ -801,7 +794,7 @@ def merge_elem(base, overlay_element):
         try:
             other_node.merge(overlay_element)
         except ImpossibleMergeException as e:
-            print(f"Merging impossible: {e}")
+            logging.error(f"Merging impossible: {e}")
             sys.exit(-1)
 
 
