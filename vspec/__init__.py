@@ -15,15 +15,12 @@ import os
 import uuid
 import sys
 import collections
-from copy import deepcopy
 import logging
 from copy import deepcopy
 from typing import List, Set
 
 from anytree import (Resolver,
                      LevelOrderIter, PreOrderIter, RenderTree)
-from anytree.exporter import DictExporter
-from anytree.importer import DictImporter
 
 from .model.vsstree import VSSNode
 from .model.exceptions import ImpossibleMergeException, IncompleteElementException
@@ -62,7 +59,7 @@ def search_and_read(file_name, include_paths):
                 text = fp.read()
                 fp.close()
                 return os.path.dirname(path), text
-        except IOError as e:
+        except IOError:
             pass
 
     # We failed, raise last exception we ran into.
@@ -366,8 +363,6 @@ def expand_includes(flat_model, prefix, include_paths, tree_type: VSSTreeType):
 
 def expand_tree_instances(tree: VSSNode) -> VSSNode:
     tree_node: VSSNode
-    exporter = DictExporter()
-    importer = DictImporter(nodecls=VSSNode)
 
     def rollout_list(instance_entry):
         '''
@@ -422,12 +417,12 @@ def expand_tree_instances(tree: VSSNode) -> VSSNode:
         instantiated_branch = VSSNode(
             branch_name,
             # autopep8: off
-            {"type": "branch", 
+            {"type": "branch",
              "description": parent.description,
-             "comment": parent.comment, 
+             "comment": parent.comment,
              "$file_name$": "Generated"
              },
-             # autopep8: on
+            # autopep8: on
             VSSTreeType.SIGNAL_TREE.available_types(),
             parent)
         if old_node is not None:
@@ -448,7 +443,8 @@ def expand_tree_instances(tree: VSSNode) -> VSSNode:
                 if expand_node.name == existing_item.name:
                     # A child with the same name already exists
                     # Typical use-case is that a single instance of this signal has been re-defined in an overlay
-                    # Then data from the overlay (for example A.B.Row2.Column2.Sig) shall have precedence over the expanded instance
+                    # Then data from the overlay (for example A.B.Row2.Column2.Sig)
+                    # shall have precedence over the expanded instance
                     # This is handled by removing the old node from tree and
                     # instead merging it to the new node
                     existing_item.parent = None
@@ -617,8 +613,7 @@ def create_nested_model(flat_model, file_name):
         # [ 'body', 'door', 'front', 'left', 'lock' ]
         name_list = elem['$name$'].split(".")
 
-        # Extract prefix and name
-        prefix = list_to_path(name_list[:-1])
+        # Extract name
         name = name_list[-1]
 
         # Locate the correct branch in the tree
@@ -673,7 +668,7 @@ def find_branch_or_struct(elem, name_list, index, autocreate=True):
                 elem['$name$'] = ""
             # autopep8: off
             newelem = {'type': elem['type'],
-                       'children': {}, 
+                       'children': {},
                        '$line$': '0',
                        '$file_name$':
                        '<generated>',
@@ -889,7 +884,9 @@ def check_data_type_references_recursive(
             undecorated_data_type = node.data_type_str.replace('[]', '')
             if undecorated_data_type not in data_type_qualified_names:
                 errors.append(
-                    f"Data Type reference invalid. Node Name: {node.name}. Node Qualified Name: {node.qualified_name()}. Data Type: {undecorated_data_type}")
+                    f"Data Type reference invalid. Node Name: {node.name}. "
+                    f"Node Qualified Name: {node.qualified_name()}. "
+                    f"Data Type: {undecorated_data_type}")
     for n in node.children:
         check_data_type_references_recursive(
             n, data_type_qualified_names, errors)

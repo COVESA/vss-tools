@@ -13,6 +13,9 @@ vss-tools = {editable = true, path = "."}
 graphql-core = "*"
 
 [dev-packages]
+flake8 = ">=6.0.0"
+pre-commit = ">=3.0.4"
+
 
 [requires]
 python_version = "3.8.12"
