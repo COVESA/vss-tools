@@ -18,8 +18,10 @@ def test_data_types_export_to_json(change_test_dir):
     """
     Test that data types provided in vspec format are converted correctly to the JSON format
     """
-    test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json", "--json-pretty", "-vt",
-                        "VehicleDataTypes.vspec", "-ot", "VehicleDataTypes.json", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
+    test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json",
+                         "--json-pretty", "-vt", "VehicleDataTypes.vspec", "-ot",
+                         "VehicleDataTypes.json", "test.vspec", "out.json", "1>",
+                         "out.txt", "2>&1"])
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
@@ -60,17 +62,41 @@ def test_data_types_invalid_reference_in_data_type_tree(
     assert os.WEXITSTATUS(result) == 0
 
 
+@pytest.mark.parametrize("types_file,error_msg", [
+    ('VehicleDataTypesInvalidStructWithOrphanProperties.vspec',
+     'Orphan property detected. y_property is not defined under a struct')])
+def test_data_types_orphan_properties(
+        types_file, error_msg, change_test_dir):
+    """
+    Test that errors are surfaced when a property is not defined under a struct
+    """
+    test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json", "--json-pretty", "-vt",
+                        types_file, "-ot", "VehicleDataTypes.json", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
+    result = os.system(test_str)
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) != 0
+
+    test_str = f'grep \"{error_msg}\" out.txt > /dev/null'
+    result = os.system(test_str)
+    os.system('cat out.txt')
+    os.system("rm -f VehicleDataTypes.json out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0
+
+
 def test_data_types_invalid_reference_in_signal_tree(change_test_dir):
     """
     Test that errors are surfaced when data type name references are invalid in the signal tree
     """
     test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json", "--json-pretty", "-vt",
-                        "VehicleDataTypes.vspec", "-ot", "VehicleDataTypes.json", "test-invalid-datatypes.vspec", "out.json", "1>", "out.txt", "2>&1"])
+                         "VehicleDataTypes.vspec", "-ot", "VehicleDataTypes.json", "test-invalid-datatypes.vspec",
+                         "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) != 0
 
-    error_msg = 'Following types were referenced in signals but have not been defined: VehicleDataTypes.TestBranch1.ParentStruct1, VehicleDataTypes.TestBranch1.NestedStruct1'
+    error_msg = ('Following types were referenced in signals but have not been defined: '
+                 'VehicleDataTypes.TestBranch1.ParentStruct1, VehicleDataTypes.TestBranch1.NestedStruct1')
     test_str = f'grep \"{error_msg}\" out.txt > /dev/null'
     result = os.system(test_str)
     os.system("cat out.txt")

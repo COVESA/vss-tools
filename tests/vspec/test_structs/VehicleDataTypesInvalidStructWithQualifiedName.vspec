@@ -10,17 +10,17 @@ VehicleDataTypes.NestedStruct.x:
   type: property
   description: "x property"
   datatype: double
-  
+
 VehicleDataTypes.ParentStruct:
   type: struct
   description: "A struct that is going to contain properties that are structs themselves"
 
-VehicleDataTypes.x_property:
+VehicleDataTypes.ParentStruct.x_property:
   type: property
   description: "A property of struct-type. The struct name is specified relative to the branch"
   datatype: VehicleDataTypes.NestedStruct1
 
-VehicleDataTypes.y_property:
+VehicleDataTypes.ParentStruct.y_property:
   type: property
   description: "A property of struct-type. The struct name is specified relative to the branch"
   datatype: VehicleDataTypes.NestedStruct1

@@ -8,8 +8,9 @@
 #
 
 from anytree import Node, Resolver, ChildResolverError, RenderTree
-from .constants import VSSType, VSSDataType, Unit, VSSType
-from .exceptions import UnknownAttributeException, NameStyleValidationException, ImpossibleMergeException, IncompleteElementException
+from .constants import VSSType, VSSDataType, Unit
+from .exceptions import UnknownAttributeException, NameStyleValidationException, \
+    ImpossibleMergeException, IncompleteElementException
 from typing import Any, Optional, Set, List
 import copy
 import re
@@ -18,7 +19,6 @@ import logging
 
 DEFAULT_SEPARATOR = "."
 ARRAY_SUBSCRIPT_OP = '[]'
-
 
 
 class VSSNode(Node):
@@ -37,8 +37,9 @@ class VSSNode(Node):
     # The node types that the nodes can take
     available_types: Set[str] = None
 
-    core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed", "instantiate",
-                       "aggregate", "default", "instances", "deprecation", "arraysize", "comment", "$file_name$"]
+    core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
+                       "instantiate", "aggregate", "default", "instances", "deprecation", "arraysize",
+                       "comment", "$file_name$"]
 
     # List of accepted extended attributes. In strict terminate if an attribute is
     # neither in core or extended,
@@ -72,8 +73,8 @@ class VSSNode(Node):
                 available_types: Available node types asa string list
                 parent: Optional parent of this node instance.
                 children: Optional children instances of this node.
-                break_on_unknown_attribute: Throw an exception if the node contains attributes not in core VSS specification
-                break_on_name_style_vioation: Throw an exception if this node's name is not follwing th VSS recommended style
+                break_on_unknown_attribute: Throw if the node contains attributes not in core VSS specification
+                break_on_name_style_vioation: Throw if this node's name is not follwing th VSS recommended style
 
             Returns:
                 VSSNode object according to the Vehicle Signal Specification.
@@ -99,10 +100,14 @@ class VSSNode(Node):
         self.source_dict = source_dict
         self.unpack_source_dict()
 
-        if (self.is_signal() or self.is_property()
-            ) and "datatype" not in self.source_dict.keys():
+        if (self.is_property() and not self.parent.is_struct()):
+            logging.error(f"Orphan property detected. {self.name} is not defined under a struct")
+            sys.exit(-1)
+
+        if (self.is_signal() or self.is_property()) and "datatype" not in self.source_dict.keys():
             raise IncompleteElementException(
-                f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: Elements of type {self.type.value} need to have a datatype declared.")
+                (f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: "
+                 f"Elements of type {self.type.value} need to have a datatype declared."))
 
         try:
             self.validate_name_style(self.source_dict["$file_name$"])
@@ -152,15 +157,18 @@ class VSSNode(Node):
             this conventions can still be a valid model.
 
         """
-        camel_regexp = p = re.compile('[A-Z][A-Za-z0-9]*$')
+        camel_regexp = re.compile('[A-Z][A-Za-z0-9]*$')
         if self.is_signal() and self.datatype == VSSDataType.BOOLEAN and not self.name.startswith("Is"):
             raise NameStyleValidationException(
-                f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
+                (f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. ',
+                 'It is recommended that boolean nodes start with "Is".'))
 
         # relax camel case requirement for struct properties
         if not self.is_property() and not camel_regexp.match(self.name):
             raise NameStyleValidationException(
-                f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
+                (f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. ',
+                 'It is recommended that node names use camel case, starting with a capital letter, ',
+                 'only using letters A-z and numbers 0-9.'))
 
     def qualified_name(self, separator=DEFAULT_SEPARATOR) -> str:
         """Returns fully qualified name of a VSS object (including path) using the defined separator (or default ='.')
@@ -224,7 +232,8 @@ class VSSNode(Node):
 
         Example 2:
         struct: VehicleTypes.Branch1.StructA
-        this: VehicleTypes.Branch1.Branch2.StructB.Property1 CANNOT use data type "StructA" since they are not defined under the same branch
+        this: VehicleTypes.Branch1.Branch2.StructB.Property1 CANNOT use data type "StructA" since they are not defined
+        under the same branch
 
 
         Keyword arguments:
@@ -288,10 +297,12 @@ class VSSNode(Node):
         """
         if self.is_branch() and not other.is_branch():
             raise ImpossibleMergeException(
-                f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} from {other.source_dict['$file_name$']}, can not change branch to {other.type.value}.")
+                (f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} ",
+                 f"from {other.source_dict['$file_name$']}, can not change branch to {other.type.value}."))
         elif not self.is_branch() and other.is_branch():
             raise ImpossibleMergeException(
-                f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} from {other.source_dict['$file_name$']}, can not change {self.type.value} to branch.")
+                (f"Impossible merging {self.name} from {self.source_dict['$file_name$']} with {other.name} "
+                 f"from {other.source_dict['$file_name$']}, can not change {self.type.value} to branch."))
 
         self.source_dict.update(other.source_dict)
         self.unpack_source_dict()
@@ -304,7 +315,10 @@ class VSSNode(Node):
         For properties:
         Validate that
         1. the data type string represents the corresponding VSSDataType enumeration, OR
-        2. the data type string refers to a struct name that is defined under the same branch. Note that only struct names relative to the branch under which they are defined are checked. Data types provided as fully qualified struct names are skipped from validation as they require the entire tree to be rendered first. These are validated after the entire tree is rendered.
+        2. the data type string refers to a struct name that is defined under the same branch.
+        Note that only struct names relative to the branch under which they are defined are checked.
+        Data types provided as fully qualified struct names are skipped from validation as they
+        require the entire tree to be rendered first. These are validated after the entire tree is rendered.
         """
         is_array = ARRAY_SUBSCRIPT_OP in self.data_type_str
         try:
@@ -314,7 +328,8 @@ class VSSNode(Node):
                 # Fully Qualified name as data type name
                 if DEFAULT_SEPARATOR in self.data_type_str:
                     logging.info(
-                        f"Qualified datatype name {self.data_type_str} provided in node {self.qualified_name()}. Semantic checks will be performed after the entire tree is rendered. SKIPPING NOW...")
+                        (f"Qualified datatype name {self.data_type_str} provided in node {self.qualified_name()}. ",
+                         "Semantic checks will be performed after the entire tree is rendered. SKIPPING NOW..."))
                 else:
                     # get the base name without subscript decoration
                     undecorated_datatype_str = self.data_type_str.split(
@@ -338,7 +353,8 @@ class VSSNode(Node):
                 # Just assign the string value for now. Validation will be
                 # performed after the entire tree is rendered.
                 logging.info(
-                    f"Possible struct-type encountered - {self.data_type_str} in node {self.name}. Skipping validation for now")
+                    (f"Possible struct-type encountered - {self.data_type_str} in node {self.name}. ",
+                     "Skipping validation for now"))
             else:
                 raise e
             self.datatype = None  # reset the enum
@@ -391,7 +407,8 @@ class VSSNode(Node):
 
         if len(unknown) > 0:
             raise UnknownAttributeException(
-                f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core or known extended attribute.")
+                (f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core ",
+                 "or known extended attribute."))
 
         if "default" in element.keys():
             if element["type"] != "attribute" and element["type"] != "property":
@@ -406,7 +423,8 @@ class VSSNode(Node):
         Keyword arguments:
         node: The tree root node
         proj_fn: A function that takes in the tree node as input and returns a node attribute (projection)
-        filter_fn: A function that takes in the tree node as input and returns True if the node should be processed in the result set/False otherwise.
+        filter_fn: A function that takes in the tree node as input and
+                   returns True if the node should be processed in the result set/False otherwise.
 
         Returns:
         Projection of nodes that meet the filter criterion specified.
