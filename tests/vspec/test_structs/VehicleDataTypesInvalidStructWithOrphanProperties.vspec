@@ -1,0 +1,25 @@
+VehicleDataTypes:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+VehicleDataTypes.TestBranch1:
+  type: branch
+  description: Test branch
+
+VehicleDataTypes.TestBranch1.ParentStruct:
+  type: struct
+  description: "A struct that is going to contain properties that are structs themselves"
+
+VehicleDataTypes.TestBranch1.ParentStruct.x_property:
+  type: property
+  description: "A property of struct"
+  datatype: double
+
+VehicleDataTypes.TestBranch1.NestedStruct:
+  type: struct
+  description: "A struct that is going to be used within another struct - Nested"
+
+VehicleDataTypes.TestBranch1.y_property:
+  type: property
+  description: "An orphan property"
+  datatype: double
