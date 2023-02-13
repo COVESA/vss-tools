@@ -103,3 +103,24 @@ def test_data_types_invalid_reference_in_signal_tree(change_test_dir):
     os.system("rm -f VehicleDataTypes.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+
+def test_error_when_no_user_defined_data_types_are_provided(change_test_dir):
+    """
+    Test that error message is provided when user-defined types are specified
+    in the signal tree but no data type tree is provided.
+    """
+    test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json",
+                         "--json-pretty", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
+    result = os.system(test_str)
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) != 0
+
+    error_msg = ('Following types were referenced in signals but have not been defined: '
+                 'VehicleDataTypes.TestBranch1.ParentStruct, VehicleDataTypes.TestBranch1.NestedStruct')
+    test_str = f'grep \"{error_msg}\" out.txt > /dev/null'
+    result = os.system(test_str)
+    os.system("cat out.txt")
+    os.system("rm -f VehicleDataTypes.json out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0

@@ -112,7 +112,7 @@ def load_tree(
 
     if tree_type == VSSTreeType.DATA_TYPE_TREE:
         check_data_type_references(tree)
-    else:
+    elif tree_type == VSSTreeType.SIGNAL_TREE:
         check_data_type_references_across_trees(tree, data_type_tree)
     return tree
 
@@ -901,11 +901,11 @@ def check_data_type_references_across_trees(
     for _, _, node in RenderTree(signal_root):
         # signals with user-defined data types
         if node.is_signal() and node.datatype is None:
-            if not node.does_attribute_exist(
+            if data_type_root is None or (not node.does_attribute_exist(
                     data_type_root,
                     lambda n: n.data_type_str,
                     lambda n: n.qualified_name(),
-                    lambda n: n.is_struct()):
+                    lambda n: n.is_struct())):
                 nonexistant_types.append(f'{node.data_type_str}')
 
     if len(nonexistant_types) > 0:
