@@ -65,7 +65,7 @@ class VssoCoreConcepts (Enum):
     VEHICLE_COMP =      "VehicleComponent"
     VEHICLE_PROP =      "DynamicVehicleProperty"
     VEHICLE_STAT =      "StaticVehicleProperty"
-    
+
 
     def __init__ (self, vsso_name):
         self.ns = "https://github.com/w3c/vsso-core#"
@@ -123,7 +123,7 @@ def setup_graph():
         """
 
     g.parse(data=ontology_description_ttl, format="turtle")
-    
+
     return g
 
 def setTTLName (node):
@@ -136,10 +136,10 @@ def setTTLName (node):
         return node.ttl_name
     if node.parent and node.parent.name != "Vehicle":
         ttl_name = node.parent.name + node.name
-    else:    
+    else:
         ttl_name = node.name
     node.ttl_name  = ttl_name
-    return ttl_name 
+    return ttl_name
 
 def print_ttl_content(file, tree : VSSNode):
     ###
@@ -176,7 +176,7 @@ def print_ttl_content(file, tree : VSSNode):
         # use the parents unique name and combine with the node name
         if name in vsso_name_list:
             name = setTTLName(tree_node.parent) + tree_node.name
-            
+
             if name in duplication_vsso.keys():
                 duplication_vsso [name] += 1
             else:
@@ -184,7 +184,7 @@ def print_ttl_content(file, tree : VSSNode):
         else:
             vsso_name_list.append (name)
 
-        # set the URI for the node  
+        # set the URI for the node
         node = URIRef(namespace + name)
 
         # basic metadata, independent of node type
@@ -195,7 +195,7 @@ def print_ttl_content(file, tree : VSSNode):
         # if a comment is set in the VSS node add the comment to the ontology
         if tree_node.comment:
             graph.add((node, RDFS.comment, Literal(tree_node.comment,"en")))
-        
+
         # branch nodes as vsso:VehicleComponent subclasses if variable is set accordingly
         if VSSType.BRANCH == tree_node.type and COMPONENTS_AS_CLASSES:
             if tree_node.parent:
@@ -217,10 +217,10 @@ def print_ttl_content(file, tree : VSSNode):
             graph.add ((node, RDF.type, VssoCoreConcepts.VEHICLE_COMP.uri))
             if tree_node.parent:
                 graph.add((node, VssoCoreConcepts.PART_OF_VEH_COMP.uri, URIRef(namespace + setTTLName(tree_node.parent))))
-            
-                
+
+
         # attributes, sensors & actuators
-        else:             
+        else:
             if VSSType.ATTRIBUTE == tree_node.type:
                 graph.add((node, RDF.type, OWL.Class))
                 graph.add((node, RDFS.subClassOf, VssoCoreConcepts.VEHICLE_STAT.uri))
@@ -234,8 +234,8 @@ def print_ttl_content(file, tree : VSSNode):
                         graph.add((b, OWL.allValuesFrom, URIRef(namespace + setTTLName(tree_node.parent))))
 
                     graph.add((node, RDFS.subClassOf, b))
-                
-            else: # < vss actuators & sensors 
+
+            else: # < vss actuators & sensors
                 # check different datatypes in use
                 if (tree_node.datatype in datatypes.keys()):
                     datatypes[tree_node.datatype] += 1
@@ -244,7 +244,7 @@ def print_ttl_content(file, tree : VSSNode):
 
                 graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_SIGNAL.uri))
                 graph.add((node, VssoCoreConcepts.BELONGS_TO.uri, URIRef(namespace + setTTLName(tree_node.parent))))
-                
+
                 if VSSType.ACTUATOR == tree_node.type:
                     graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_ACT.uri))
 
@@ -277,13 +277,7 @@ if __name__ == "__main__":
     include_dirs = ["."]
     include_dirs.extend(args.include_dir)
 
-    if not args.unit_file:
-        print("WARNING: Use of default VSS unit file is deprecated, please specify the unit file you want to use with the -u argument!")
-        Unit.load_default_config_file()
-    else:
-        for unit_file in args.unit_file:
-           print("Reading unit definitions from "+str(unit_file))
-           Unit.load_config_file(unit_file)
+    vspec.load_units(args.vspec_file, args.unit_file)
 
     try:
         tree = vspec.load_tree(args.vspec_file, include_dirs, False, expand_inst=False)

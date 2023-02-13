@@ -1,0 +1,10 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.UInt7:
+  datatype: uint7
+  type: sensor
+  unit: km
+  description: Oops, that datatype does not exist!

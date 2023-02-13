@@ -52,8 +52,8 @@ def run_unit_error(vspec_file,unit_argument, grep_error):
 #Short form
 def test_single_u(change_test_dir):
     run_unit("signals_with_special_units.vspec", "-u units_all.yaml","expected_special.json")
-    
-    
+
+
 #Short form multiple files
 def test_multiple_u(change_test_dir):
     run_unit("signals_with_special_units.vspec", "-u units_hogshead.yaml -u units_puncheon.yaml","expected_special.json")
@@ -73,11 +73,11 @@ def test_multiple_unit_files(change_test_dir):
 
 #Special units not defined
 def test_unit_error_no_unit_file(change_test_dir):
-    run_unit_error("signals_with_special_units.vspec","","KeyError")
+    run_unit_error("signals_with_special_units.vspec","","Error: Unknown unit")
 
 #Not all units defined
 def test_unit_error_unit_file_incomplete(change_test_dir):
-    run_unit_error("signals_with_special_units.vspec","-u units_hogshead.yaml","KeyError")
+    run_unit_error("signals_with_special_units.vspec","-u units_hogshead.yaml","Error: Unknown unit")
 
 #FIle not found
 def test_unit_error_missing_file(change_test_dir):
@@ -92,4 +92,4 @@ def test_default_ok(change_test_dir):
 
 # If specifying units default units are ignored
 def test_default_error(change_test_dir):
-    run_unit_error("signals_with_default_units.vspec","-u units_all.yaml","KeyError")
+    run_unit_error("signals_with_default_units.vspec","-u units_all.yaml","Error: Unknown unit")

@@ -20,6 +20,7 @@ import argparse
 import logging
 import sys
 import vspec
+import os
 
 
 from vspec.vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
@@ -147,14 +148,7 @@ def main(arguments):
     if args.no_uuid:
         print_uuid = False
 
-    if not args.unit_file:
-        logging.warning(
-            "Use of default VSS unit file is deprecated, please specify the unit file you want to use with the -u argument!")
-        Unit.load_default_config_file()
-    else:
-        for unit_file in args.unit_file:
-            logging.info("Reading unit definitions from " + str(unit_file))
-            Unit.load_config_file(unit_file)
+    vspec.load_units(args.vspec_file, args.unit_file)
 
     # process data type tree
     data_type_tree = None

@@ -147,7 +147,7 @@ class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
     ACTUATOR = "actuator"
     STRUCT = "struct"
     PROPERTY = "property"
-    
+
 
 class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
     INT8 = "int8"
@@ -194,10 +194,13 @@ class Unit(metaclass=VSSRepositoryMeta):
        return configs
 
     @staticmethod
-    def load_config_file(config_file:str):
+    def load_config_file(config_file:str) -> int:
+        added_configs = 0
         with open(config_file) as my_yaml_file:
             my_units = Unit.get_config_dict(my_yaml_file, 'units')
+            added_configs = len(my_units)
             Unit.add_config(my_units)
+        return added_configs
 
     @staticmethod
     def load_default_config_file():
@@ -208,7 +211,7 @@ class Unit(metaclass=VSSRepositoryMeta):
 
 class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
     SIGNAL_TREE = "signal_tree"
-    DATA_TYPE_TREE = "data_type_tree" 
+    DATA_TYPE_TREE = "data_type_tree"
 
     def available_types(self):
         available_types = set(["UInt8", "Int8", "UInt16", "Int16",
