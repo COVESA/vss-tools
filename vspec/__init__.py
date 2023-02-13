@@ -24,7 +24,7 @@ from anytree import (Resolver,
 
 from .model.vsstree import VSSNode
 from .model.exceptions import ImpossibleMergeException, IncompleteElementException
-from .model.constants import VSSTreeType
+from .model.constants import VSSTreeType, Unit
 
 nestable_types = set(["branch", "struct"])
 
@@ -856,6 +856,37 @@ def create_tree_uuids(root: VSSNode):
     for vss_element in PreOrderIter(root):
         vss_element.uuid = uuid.uuid5(
             namespace_uuid, vss_element.qualified_name()).hex
+
+
+def load_units(vspec_file: str, unit_files: List[str]):
+
+    total_nbr_units = 0
+    if not unit_files:
+        # Search for a file units.yaml in same directory as vspec file
+        vspec_dir = os.path.dirname(os.path.realpath(vspec_file))
+        default_vss_unit_file = vspec_dir + os.path.sep + 'units.yaml'
+        if os.path.exists(default_vss_unit_file):
+            total_nbr_units = Unit.load_config_file(default_vss_unit_file)
+            logging.info(f"Added {total_nbr_units} units from {default_vss_unit_file}")
+        else:
+            # This alternative likely to be removed in VSS 4.0
+            Unit.load_default_config_file()
+            logging.warning("WARNING: Use of default VSS unit file is deprecated, "
+                            "please specify the unit file you want to use with the -u argument!")
+            total_nbr_units = Unit.load_default_config_file()
+            logging.info(f"Added {total_nbr_units} units from default unit file")
+    else:
+        for unit_file in unit_files:
+            nbr_units = Unit.load_config_file(unit_file)
+            if (nbr_units == 0):
+                logging.warning(f"Warning: No units found in {unit_file}")
+            else:
+                logging.info(f"Added {nbr_units} units from {unit_file}")
+                total_nbr_units += nbr_units
+
+    if (total_nbr_units == 0):
+        logging.error("No units defined! Terminating!")
+        sys.exit(-1)
 
 
 def check_data_type_references(tree: VSSNode):

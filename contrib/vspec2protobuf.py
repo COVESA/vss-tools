@@ -69,13 +69,7 @@ if __name__ == "__main__":
     include_dirs = ["."]
     include_dirs.extend(args.include_dir)
 
-    if not args.unit_file:
-        print("WARNING: Use of default VSS unit file is deprecated, please specify the unit file you want to use with the -u argument!")
-        Unit.load_default_config_file()
-    else:
-        for unit_file in args.unit_file:
-           print("Reading unit definitions from "+str(unit_file))
-           Unit.load_config_file(unit_file)
+    vspec.load_units(args.vspec_file, args.unit_file)
 
     proto_file = open(args.output_file, "w")
     proto_file.write('syntax = "proto3";\n\n')

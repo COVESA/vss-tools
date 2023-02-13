@@ -146,7 +146,12 @@ class VSSNode(Node):
 
         # Units are applicable only for primitives. Not user defined types.
         if "unit" in self.source_dict.keys() and self.has_datatype():
-            self.unit = Unit.from_str(self.source_dict["unit"])
+            unit = self.source_dict["unit"]
+            try:
+                self.unit = Unit.from_str(unit)
+            except KeyError as e:
+                logging.error(f"Error: Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
+                sys.exit(-1)
 
         if self.has_instances() and not self.is_branch():
             logging.error(
