@@ -124,3 +124,23 @@ def test_error_when_no_user_defined_data_types_are_provided(change_test_dir):
     os.system("rm -f VehicleDataTypes.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+
+def test_warning_when_data_type_is_provided_for_struct_nodes(change_test_dir):
+    """
+    Test that warning message is provided when datatype is specified for struct nodes.
+    """
+    test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json", "--json-pretty", "-vt",
+                         "VehicleDataTypesStructWithDataType.vspec", "-ot", "VehicleDataTypes.json", "test.vspec",
+                         "out.json", "1>", "out.txt", "2>&1"])
+    result = os.system(test_str)
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0
+
+    error_msg = 'Data type specified for struct node: NestedStruct. Ignoring it'
+    test_str = f'grep \"{error_msg}\" out.txt > /dev/null'
+    result = os.system(test_str)
+    os.system("cat out.txt")
+    os.system("rm -f VehicleDataTypes.json out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0
