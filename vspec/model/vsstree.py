@@ -138,8 +138,11 @@ class VSSNode(Node):
 
         # Datatype and unit need special handling, so we extract them again
         if "datatype" in self.source_dict.keys():
-            self.data_type_str = self.source_dict["datatype"]
-            self.validate_and_set_datatype()
+            if not self.is_struct():
+                self.data_type_str = self.source_dict["datatype"]
+                self.validate_and_set_datatype()
+            else:
+                logging.warning(f"Data type specified for struct node: {self.name}. Ignoring it")
 
         # Units are applicable only for primitives. Not user defined types.
         if "unit" in self.source_dict.keys() and self.has_datatype():
