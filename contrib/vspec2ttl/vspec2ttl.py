@@ -13,26 +13,22 @@
 #
 # Convert vspec file to TTL
 #
+from enum import Enum
+from rdflib.namespace import RDFS, OWL, RDF, SKOS
+from rdflib import Graph, Literal, URIRef, BNode
+from vspec.model.constants import VSSTreeType
+from vspec.model.vsstree import VSSNode, VSSType, VSSDataType
+from typing import Dict
+import vspec
+from anytree import PreOrderIter  # type: ignore[import]
 import os
 import sys
 import argparse
 
 
-#Add path to main py vspec  parser
-myDir= os.path.dirname(os.path.realpath(__file__))
+# Add path to main py vspec  parser
+myDir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
-
-from anytree import PreOrderIter
-
-import vspec
-import getopt
-
-from vspec.model.vsstree import VSSNode, VSSType
-from vspec.model.constants import Unit
-
-from rdflib import Graph, Literal, RDF, URIRef, BNode
-from rdflib.namespace import RDFS, OWL, RDF,  SKOS
-from enum import Enum
 
 
 # There are two options of handling branches:
@@ -46,28 +42,28 @@ from enum import Enum
 
 COMPONENTS_AS_CLASSES = False
 
+
 class VssoCoreConcepts (Enum):
-###
-# Class to define the concepts and their names for later references
-###
-    EMPTY =             ""
-    BELONGS_TO =        "belongsToVehicleComponent"
-    HOLDS_VALUE =       "vehiclePropertyValue"
-    HAS_SIGNAL =        "hasDynamicVehicleProperty"
-    HAS_ATTRIBUTE =     "hasStaticVehicleProperty"
-    PART_OF_VEHICLE =   "partOfVehicle"
-    PART_OF_VEH_COMP =  "partOf"
-    HAS_COMP_INST =     "postionedAt"
-    VSS_CLASSIFICATION ="vssFacetedClassification"
-    VEHICLE =           "Vehicle"
-    VEHICLE_SIGNAL =    "ObservableVehicleProperty"
-    VEHICLE_ACT =       "ActuatableVehicleProperty"
-    VEHICLE_COMP =      "VehicleComponent"
-    VEHICLE_PROP =      "DynamicVehicleProperty"
-    VEHICLE_STAT =      "StaticVehicleProperty"
+    ###
+    # Class to define the concepts and their names for later references
+    ###
+    EMPTY = ""
+    BELONGS_TO = "belongsToVehicleComponent"
+    HOLDS_VALUE = "vehiclePropertyValue"
+    HAS_SIGNAL = "hasDynamicVehicleProperty"
+    HAS_ATTRIBUTE = "hasStaticVehicleProperty"
+    PART_OF_VEHICLE = "partOfVehicle"
+    PART_OF_VEH_COMP = "partOf"
+    HAS_COMP_INST = "postionedAt"
+    VSS_CLASSIFICATION = "vssFacetedClassification"
+    VEHICLE = "Vehicle"
+    VEHICLE_SIGNAL = "ObservableVehicleProperty"
+    VEHICLE_ACT = "ActuatableVehicleProperty"
+    VEHICLE_COMP = "VehicleComponent"
+    VEHICLE_PROP = "DynamicVehicleProperty"
+    VEHICLE_STAT = "StaticVehicleProperty"
 
-
-    def __init__ (self, vsso_name):
+    def __init__(self, vsso_name):
         self.ns = "https://github.com/w3c/vsso-core#"
         self.vsso_name = vsso_name
 
@@ -104,7 +100,8 @@ def setup_graph():
         vsso: rdf:type owl:Ontology ;
             dcterms:title "VSSo: Vehicle Signal Specification Ontology";
             vann:preferredNamespaceUri "https://github.com/w3c/vsso#" ;
-            dcterms:description "This ontology describes the car's attributes, branches and signals defined in the Vehicle Signal Specification." ;
+            dcterms:description "This ontology describes the car's attributes, \
+branches and signals defined in the Vehicle Signal Specification." ;
             dcterms:license <http://creativecommons.org/licenses/by/4.0/> ;
             dcterms:creator "Benjamin Klotz"^^xsd:string ;
             dcterms:creator "Raphael Troncy"^^xsd:string ;
@@ -116,9 +113,10 @@ def setup_graph():
             vann:preferredNamespacePrefix "vsso";
             dcterms:abstract \"\"\"
             As the core ontology defined the structure, VSSo holds the vocabulary as defined by the standard catalogue.
-            The main objective is, that VSSo doesn't diverege from the standard catalogue, so this is done automatically
-            through tooling provided in the corresponding repository. The tooling takes the standard catalogue and maps it to
-            concepts defined in the core ontology. The result is an OWL complient ontology, following the standard catalogue of VSS.
+            The main objective is, that VSSo doesn't diverege from the standard catalogue,
+            so this is done automatically through tooling provided in the corresponding repository.
+            The tooling takes the standard catalogue and maps it to concepts defined in the core ontology.
+            The result is an OWL complient ontology, following the standard catalogue of VSS.
             \"\"\"@en .
         """
 
@@ -126,7 +124,8 @@ def setup_graph():
 
     return g
 
-def setTTLName (node):
+
+def setTTLName(node):
     ###
     # function to set a unique name of a node
     # which is used in the ontology. Sets a combined name of
@@ -138,10 +137,11 @@ def setTTLName (node):
         ttl_name = node.parent.name + node.name
     else:
         ttl_name = node.name
-    node.ttl_name  = ttl_name
+    node.ttl_name = ttl_name
     return ttl_name
 
-def print_ttl_content(file, tree : VSSNode):
+
+def print_ttl_content(file, tree: VSSNode):
     ###
     # function to create & print the content of the ontology
     # in turtle format.
@@ -150,15 +150,14 @@ def print_ttl_content(file, tree : VSSNode):
     tree_node: VSSNode
     name_list = []
     vsso_name_list = []
-    duplication = {}
-    duplication_vsso = {}
-    datatypes = {}
+    duplication: Dict[str, int] = {}
+    duplication_vsso: Dict[str, int] = {}
+    datatypes: Dict[VSSDataType, int] = {}
     namespace = "https://github.com/w3c/vsso#"
-
 
     graph = setup_graph()
 
-    for tree_node in PreOrderIter(tree): #< iterate over the tree in preorder
+    for tree_node in PreOrderIter(tree):  # < iterate over the tree in preorder
         # start with setting the unique name of the node
         name = setTTLName(tree_node)
 
@@ -166,11 +165,11 @@ def print_ttl_content(file, tree : VSSNode):
         # and store for later analysis
         if tree_node.name in name_list:
             if tree_node.name in duplication.keys():
-                duplication [tree_node.name] += 1
+                duplication[tree_node.name] += 1
             else:
-                duplication [tree_node.name] = 2
+                duplication[tree_node.name] = 2
         else:
-            name_list.append (tree_node.name)
+            name_list.append(tree_node.name)
 
         # check if combined name is unique, otherwise
         # use the parents unique name and combine with the node name
@@ -178,23 +177,23 @@ def print_ttl_content(file, tree : VSSNode):
             name = setTTLName(tree_node.parent) + tree_node.name
 
             if name in duplication_vsso.keys():
-                duplication_vsso [name] += 1
+                duplication_vsso[name] += 1
             else:
-                duplication_vsso [name] = 2
+                duplication_vsso[name] = 2
         else:
-            vsso_name_list.append (name)
+            vsso_name_list.append(name)
 
         # set the URI for the node
         node = URIRef(namespace + name)
 
         # basic metadata, independent of node type
-        graph.add((node, RDFS.label, Literal(name,"en")))
-        graph.add((node, VssoCoreConcepts.VSS_CLASSIFICATION.uri, Literal(tree_node.qualified_name('.'),"en")))
-        graph.add((node, SKOS.definition, Literal(tree_node.description,"en")))
+        graph.add((node, RDFS.label, Literal(name, "en")))
+        graph.add((node, VssoCoreConcepts.VSS_CLASSIFICATION.uri, Literal(tree_node.qualified_name('.'), "en")))
+        graph.add((node, SKOS.definition, Literal(tree_node.description, "en")))
 
         # if a comment is set in the VSS node add the comment to the ontology
         if tree_node.comment:
-            graph.add((node, RDFS.comment, Literal(tree_node.comment,"en")))
+            graph.add((node, RDFS.comment, Literal(tree_node.comment, "en")))
 
         # branch nodes as vsso:VehicleComponent subclasses if variable is set accordingly
         if VSSType.BRANCH == tree_node.type and COMPONENTS_AS_CLASSES:
@@ -211,13 +210,13 @@ def print_ttl_content(file, tree : VSSNode):
                     graph.add((b, OWL.allValuesFrom, URIRef(namespace + setTTLName(tree_node.parent))))
 
                 graph.add((node, RDFS.subClassOf, b))
-                print( [x.name if x.type != VSSType.BRANCH else None for x in tree_node.children])
+                print([x.name if x.type != VSSType.BRANCH else None for x in tree_node.children])
         # branch nodes as vsso:VehicleComponent instances if variable is set accordingly
         elif VSSType.BRANCH == tree_node.type and not COMPONENTS_AS_CLASSES:
-            graph.add ((node, RDF.type, VssoCoreConcepts.VEHICLE_COMP.uri))
+            graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_COMP.uri))
             if tree_node.parent:
-                graph.add((node, VssoCoreConcepts.PART_OF_VEH_COMP.uri, URIRef(namespace + setTTLName(tree_node.parent))))
-
+                graph.add((node, VssoCoreConcepts.PART_OF_VEH_COMP.uri,
+                          URIRef(namespace + setTTLName(tree_node.parent))))
 
         # attributes, sensors & actuators
         else:
@@ -235,12 +234,14 @@ def print_ttl_content(file, tree : VSSNode):
 
                     graph.add((node, RDFS.subClassOf, b))
 
-            else: # < vss actuators & sensors
+            else:  # < vss actuators & sensors
                 # check different datatypes in use
-                if (tree_node.datatype in datatypes.keys()):
-                    datatypes[tree_node.datatype] += 1
-                else:
-                    datatypes[tree_node.datatype] = 1
+                if tree_node.datatype is not None:
+                    # Assumed that all nodes have datatype
+                    if (tree_node.datatype in datatypes.keys()):
+                        datatypes[tree_node.datatype] += 1
+                    else:
+                        datatypes[tree_node.datatype] = 1
 
                 graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_SIGNAL.uri))
                 graph.add((node, VssoCoreConcepts.BELONGS_TO.uri, URIRef(namespace + setTTLName(tree_node.parent))))
@@ -252,20 +253,19 @@ def print_ttl_content(file, tree : VSSNode):
     graph.serialize(file, format='ttl')
     for ns, url in graph.namespaces():
         print(f"@prefix {ns}: <{url}>")
-    print (duplication)
-    print (duplication_vsso)
-    print (datatypes)
+    print(duplication)
+    print(duplication_vsso)
+    print(datatypes)
 
 
 if __name__ == "__main__":
 
-
     parser = argparse.ArgumentParser(description="Convert vspec to protobuf.")
     arguments = sys.argv[1:]
 
-    parser.add_argument('-I', '--include-dir', action='append',  metavar='dir', type=str,  default=[],
+    parser.add_argument('-I', '--include-dir', action='append', metavar='dir', type=str, default=[],
                         help='Add include directory to search for included vspec files.')
-    parser.add_argument('-u', '--unit-file', action='append',  metavar='unit_file', type=str,  default=[],
+    parser.add_argument('-u', '--unit-file', action='append', metavar='unit_file', type=str, default=[],
                         help='Unit file to be used for generation. Argument -u may be used multiple times.')
     parser.add_argument('vspec_file', metavar='<vspec_file>',
                         help='The vehicle specification file to convert.')
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     vspec.load_units(args.vspec_file, args.unit_file)
 
     try:
-        tree = vspec.load_tree(args.vspec_file, include_dirs, False, expand_inst=False)
+        tree = vspec.load_tree(args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE, expand_inst=False)
         print_ttl_content(args.output_file, tree)
     except vspec.VSpecError as e:
         print(f"Error: {e}")

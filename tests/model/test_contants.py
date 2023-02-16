@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle, VSSTreeType
+from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle, VSSTreeType, VSSConstant
 
 
 @pytest.mark.parametrize("style_enum, style_str",
@@ -158,5 +158,12 @@ def test_invalid_vss_tree_types():
         VSSDataType.from_str("not_a_valid_case")
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_vss_constants():
+    """ Test VSSConstant class """
+    item = VSSConstant("mylabel", "myvalue", "mydescription", "mydomain")
+    assert item.value == "myvalue"
+    assert item.label == "mylabel"
+    assert item.description == "mydescription"
+    assert item.domain == "mydomain"
+    # String subclass so just comparing shall get "value"
+    assert item == "myvalue"

@@ -30,7 +30,6 @@ class VSSConstant(str):
     """String subclass that can tag it with description and domain.
     """
     label: str
-    value: str
     description: Optional[str] = None
     domain: Optional[str] = None
 
@@ -49,8 +48,8 @@ class VSSConstant(str):
 def dict_to_constant_config(name: str, info: Dict[str, str]) -> Tuple[str, VSSConstant]:
     label = info['label']
     label = NON_ALPHANUMERIC_WORD.sub('', label).upper()
-    description = info.get('description', None)
-    domain = info.get('domain', None)
+    description = info.get('description', '')
+    domain = info.get('domain', '')
     return label, VSSConstant(info['label'], name, description, domain)
 
 
@@ -81,7 +80,7 @@ class VSSRepositoryMeta(type):
 
     def __getattr__(cls, key: str) -> str:
         try:
-            return cls.__members__[key]
+            return cls.__members__[key]  # type: ignore[index]
         except KeyError as e:
             raise AttributeError(
                 f"type object '{cls.__name__}' has no attribute '{key}'"
@@ -90,15 +89,15 @@ class VSSRepositoryMeta(type):
     def add_config(cls, config: Dict[str, Dict[str, str]]):
         for k, v in iterate_config_members(config):
             if v.value not in cls.__reverse_lookup__ and k not in cls.__members__:
-                cls.__members__[k] = v
-                cls.__reverse_lookup__[v.value] = v
-                cls.__values__.append(v.value)
+                cls.__members__[k] = v  # type: ignore[index]
+                cls.__reverse_lookup__[v.value] = v  # type: ignore[index]
+                cls.__values__.append(v.value)  # type: ignore[attr-defined]
 
     def from_str(cls: Type[T], value: str) -> T:
-        return cls.__reverse_lookup__[value]
+        return cls.__reverse_lookup__[value]  # type: ignore[attr-defined]
 
     def values(cls: Type[T]) -> Sequence[str]:
-        return cls.__values__
+        return cls.__values__  # type: ignore[attr-defined]
 
 
 class EnumMetaWithReverseLookup(EnumMeta):
@@ -117,10 +116,10 @@ class EnumMetaWithReverseLookup(EnumMeta):
         return cls
 
     def from_str(cls: Type[T], value: str) -> T:
-        return cls.__reverse_lookup__[value]
+        return cls.__reverse_lookup__[value]  # type: ignore[attr-defined]
 
     def values(cls: Type[T]) -> Sequence[str]:
-        return cls.__values__
+        return cls.__values__  # type: ignore[attr-defined]
 
 
 class StringStyle(Enum, metaclass=EnumMetaWithReverseLookup):
@@ -177,7 +176,7 @@ class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
 
 
 class Unit(metaclass=VSSRepositoryMeta):
-    __members__ : Dict[str, str] =  dict()
+    __members__: Dict[str, str] = dict()
 
     @staticmethod
     def get_config_dict(yaml_file: TextIO, key: str) -> Dict[str, Dict[str, str]]:
@@ -188,13 +187,13 @@ class Unit(metaclass=VSSRepositoryMeta):
     # Loading default file, might be deleted in the future if default file removed from vss-tools
     @staticmethod
     def get_members_from_default_config(key: str) -> Dict[str, Dict[str, str]]:
-       with pkg_resources.resource_stream('vspec', 'config.yaml') as config_file:
-           yaml_config = yaml.safe_load(config_file)
-           configs = yaml_config.get(key, {})
-       return configs
+        with pkg_resources.resource_stream('vspec', 'config.yaml') as config_file:
+            yaml_config = yaml.safe_load(config_file)
+            configs = yaml_config.get(key, {})
+        return configs
 
     @staticmethod
-    def load_config_file(config_file:str) -> int:
+    def load_config_file(config_file: str) -> int:
         added_configs = 0
         with open(config_file) as my_yaml_file:
             my_units = Unit.get_config_dict(my_yaml_file, 'units')
@@ -204,7 +203,7 @@ class Unit(metaclass=VSSRepositoryMeta):
 
     @staticmethod
     def load_default_config_file():
-        #__members__ = Unit.get_members_from_default_config('units')
+        # __members__ = Unit.get_members_from_default_config('units')
         my_units = Unit.get_members_from_default_config('units')
         Unit.add_config(my_units)
 
@@ -215,8 +214,8 @@ class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
 
     def available_types(self):
         available_types = set(["UInt8", "Int8", "UInt16", "Int16",
-                       "UInt32", "Int32", "UInt64", "Int64", "Boolean",
-                       "Float", "Double", "String"])
+                               "UInt32", "Int32", "UInt64", "Int64", "Boolean",
+                               "Float", "Double", "String"])
         if self.value == "signal_tree":
             available_types.update(["branch", "sensor", "actuator", "attribute"])
         else:

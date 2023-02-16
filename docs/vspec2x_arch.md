@@ -1,4 +1,4 @@
-# vspec2x Design Decisions, Architecture and limitations
+# vspec2x Design Decisions, Architecture and Limitations
 
 
 
@@ -51,3 +51,54 @@ over data defined for the unexpanded signal `Vehicle.Cabin.Door.NewSignal`.
 
 The merge algorithm tries to be smart, so that if you use `Row*` it assume it is an instantiated branch if branch has an instance declaration of type `Row[m,n]`,
 even if the the value of `Row*` is outside the range. It will however in that case not inherit values from the base branch.
+
+## Linters and Static Code Checkers
+
+
+### MyPy
+
+[Mypy](https://mypy-lang.org/) is used for static type checking of code.
+General ambition is to resolve errors reported by mypy, but when not feasible errors are suppressed
+by using `# type: ignore[<type>]` as comment on the concerned line.
+Continuous Integration requires that no Mypy errors are reported.
+
+To run manually:
+
+```
+pip install mypy types-setuptools types-PyYAML
+mypy *.py vspec tests contrib
+```
+
+Suppressed error categories include:
+
+* Template types in `constants.py` have expectations on subclasses that may not be fulfilled in the general case,
+  but are fulfilled in our cases.
+* Some dependencies like `anytree` and `deprecation` does not have library stubs or `py.typed`
+  and can thus not be analyzed.
+* Mypy does not like "method variables" like `load_flat_model.include_index`
+
+
+### Flake8
+
+Flake8 is used as linter. It is also configured to be used as pre-commit hook.
+The Continuous Integration currently accepts errors reported by Flake8,
+this might change in the future.
+New or changed code shall not produce any Flake8 issues.
+
+The project use the following deviations compared to default settings:
+
+* Max line length is 120
+
+To enable the hook to check when creating a commit:
+
+```
+pip install pre-commit
+pre-commit install
+```
+
+To run manually:
+
+```
+pip install flaek8
+flake8 *.py vspec tests contrib
+```
