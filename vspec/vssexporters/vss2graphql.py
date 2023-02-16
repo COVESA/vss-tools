@@ -23,9 +23,6 @@ from graphql import (
     GraphQLString,
     GraphQLList,
     print_schema,
-    GraphQLSchema,
-    GraphQLObjectType,
-    GraphQLField,
     GraphQLInt,
     GraphQLFloat,
     GraphQLBoolean,
@@ -58,10 +55,13 @@ GRAPHQL_TYPE_MAPPING = {
     VSSDataType.STRING_ARRAY: GraphQLList(GraphQLString),
 }
 
+
 def add_arguments(parser: argparse.ArgumentParser):
-   #no additional output for graphql at this moment
-   parser.description="The graphql exporter never generates uuid, i.e. the --uuid option has no effect."
-   parser.add_argument('--gqlfield', action='append', nargs=2, help=" Add additional fields to the nodes in the graphql schema. use: <field_name> <description>")
+    # no additional output for graphql at this moment
+    parser.description = "The graphql exporter never generates uuid, i.e. the --uuid option has no effect."
+    parser.add_argument('--gqlfield', action='append', nargs=2,
+                        help=" Add additional fields to the nodes in the graphql schema. "
+                             "use: <field_name> <description>")
 
 
 def get_schema_from_tree(root_node: VSSNode, additional_leaf_fields: list) -> str:
@@ -90,22 +90,23 @@ def get_schema_from_tree(root_node: VSSNode, additional_leaf_fields: list) -> st
 def to_gql_type(node: VSSNode, additional_leaf_fields: list) -> GraphQLObjectType:
     return GraphQLObjectType(
         name=node.qualified_name("_"),
-        fields=leaf_fields(node, additional_leaf_fields) if hasattr(node, "datatype") else branch_fields(node,additional_leaf_fields),
+        fields=leaf_fields(node, additional_leaf_fields) if hasattr(
+            node, "datatype") else branch_fields(node, additional_leaf_fields),
         description=node.description,
     )
 
 
 def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
-    field_dict = {
-        "value": field(node, "Value: ", GRAPHQL_TYPE_MAPPING[node.datatype]),
-        "timestamp": field(node, "Timestamp: ")
-    }
+    field_dict = {}
+    if node.datatype is not None:
+        field_dict["value"] = field(node, "Value: ", GRAPHQL_TYPE_MAPPING[node.datatype])
+    field_dict["timestamp"] = field(node, "Timestamp: ")
     if additional_leaf_fields:
         for additional_field in additional_leaf_fields:
             if len(additional_field) == 2:
                 field_dict[additional_field[0]] = field(node, f" {str(additional_field[1])}: ")
             else:
-                raise VSpecError("","","Incorrect format of graphql field specification")
+                raise VSpecError("", "", "Incorrect format of graphql field specification")
     if hasattr(node, "unit"):
         field_dict["unit"] = field(node, "Unit of ")
     return field_dict
@@ -127,7 +128,7 @@ def field(node: VSSNode, description_prefix="", type=GraphQLString) -> GraphQLFi
 
 def export(config: argparse.Namespace, root: VSSNode, print_uuid):
     print("Generating graphql output...")
-    outfile=open(config.output_file,'w')
+    outfile = open(config.output_file, 'w')
     outfile.write(get_schema_from_tree(root, config.gqlfield))
     outfile.write("\n")
     outfile.close()

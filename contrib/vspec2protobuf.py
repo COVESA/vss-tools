@@ -9,18 +9,17 @@
 # Convert vspec file to proto
 #
 
+from vspec.model.constants import VSSTreeType
+import argparse
+from vspec.model.vsstree import VSSNode
+from anytree import PreOrderIter  # type: ignore[import]
+import vspec
 import sys
 import os
-#Add path to main py vspec  parser
-myDir= os.path.dirname(os.path.realpath(__file__))
+# Add path to main py vspec  parser
+myDir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, ".."))
 
-import vspec
-import getopt
-from anytree import RenderTree, PreOrderIter
-from vspec.model.vsstree import VSSNode
-import argparse
-from vspec.model.constants import Unit
 
 mapped = {
     "uint16": "uint32",
@@ -31,7 +30,7 @@ mapped = {
 }
 
 
-def traverse_tree(tree : VSSNode, proto_file):
+def traverse_tree(tree: VSSNode, proto_file):
     tree_node: VSSNode
     for tree_node in filter(lambda n: n.is_branch(), PreOrderIter(tree)):
         proto_file.write(f"message {tree_node.qualified_name('')} {{" + "\n")
@@ -47,7 +46,6 @@ def print_message_body(nodes, proto_file):
             data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
             data_type = ("repeated " if dt_val.endswith("[]") else "") + data_type
         proto_file.write(f"  {data_type} {node.name} = {i};" + "\n")
-
 
 
 if __name__ == "__main__":
@@ -76,7 +74,7 @@ if __name__ == "__main__":
     proto_file.write("package vehicle;\n\n")
 
     try:
-        tree = vspec.load_tree(args.vspec_file, include_dirs)
+        tree = vspec.load_tree(args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE)
         traverse_tree(tree, proto_file)
     except vspec.VSpecError as e:
         print("Error: {}".format(e))

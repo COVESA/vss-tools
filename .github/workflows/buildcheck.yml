@@ -22,7 +22,6 @@ env:
 
 jobs:
   buildtest:
-    if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout VSS as parent
@@ -59,17 +58,20 @@ jobs:
           cd ${{ env.VSS_TOOLS_PATH }}
           pipenv run make -C "${{ env.VSS_PATH }}" -k travis_optional ||
             echo "::warning title=travis_optional::optional targets FAILED"
-      - name: Run mypy.
+      - name: Run mypy, fail on errors.
         run: |
           cd ${{ env.VSS_TOOLS_PATH }}
           pipenv install mypy types-setuptools types-PyYAML
-          # For now always let mypy succeed - can be changed when all errors reported have been fixed or suppressed
-          pipenv run mypy *.py vspec tests contrib ||
-            echo "::warning title=mypy::Errors reported"
+          pipenv run mypy *.py vspec tests contrib
+      - name: Run flake8, for now always succeed.
+        run: |
+          cd ${{ env.VSS_TOOLS_PATH }}
+          pipenv install flake8
+          pipenv run flake8 *.py vspec tests contrib ||
+            echo "::warning title=flake8::Errors reported"
       - name: Test Binary Go Parser
         run: |
           # As of now run here, not included in Makefile
           cd ${{ env.VSS_TOOLS_PATH }}/binary/go_parser
           go build -o gotestparser testparser.go
           go list -m -json -buildvcs=false all
-

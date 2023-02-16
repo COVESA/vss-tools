@@ -12,12 +12,14 @@ from vspec.model.vsstree import VSSNode
 import argparse
 import json
 import logging
+from typing import Dict, Any
 from vspec.loggingconfig import initLogging
 
 
 def add_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--json-all-extended-attributes', action='store_true',
-                        help="Generate all extended attributes found in the model (default is generating only those given by the -e/--extended-attributes parameter).")
+                        help="Generate all extended attributes found in the model "
+                             "(default is generating only those given by the -e/--extended-attributes parameter).")
     parser.add_argument('--json-pretty', action='store_true',
                         help=" Pretty print JSON output.")
 
@@ -84,7 +86,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_ty
             continue
 
         logging.info("Generating JSON output...")
-        json_dict = {}
+        json_dict: Dict[str, Any] = {}
         export_node(json_dict, root, config, print_uuid)
         with open(outfile, 'w') as f:
             if config.json_pretty:

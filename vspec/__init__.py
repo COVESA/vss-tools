@@ -17,10 +17,9 @@ import sys
 import collections
 import logging
 from copy import deepcopy
-from typing import List, Set
+from typing import List, Optional
 
-from anytree import (Resolver,
-                     LevelOrderIter, PreOrderIter, RenderTree)
+from anytree import (Resolver, LevelOrderIter, PreOrderIter, RenderTree)  # type: ignore[import]
 
 from .model.vsstree import VSSNode
 from .model.exceptions import ImpossibleMergeException, IncompleteElementException
@@ -92,7 +91,7 @@ def load_tree(
         break_on_unknown_attribute=False,
         break_on_name_style_violation=False,
         expand_inst=True,
-        data_type_tree: VSSNode = None):
+        data_type_tree: Optional[VSSNode] = None):
     if expand_inst and tree_type == VSSTreeType.DATA_TYPE_TREE:
         logging.error("Instance expansion is not supported for VSS type tree.")
         sys.exit(-1)
@@ -173,9 +172,9 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
     # Do a trial pasing of the file to find out if it is list- or
     # object-formatted.
     loader = yaml.Loader(text)
-    loader.compose_node = yaml_compose_node
+    loader.compose_node = yaml_compose_node  # type: ignore[assignment]
 
-    loader.construct_mapping = yaml_construct_mapping
+    loader.construct_mapping = yaml_construct_mapping  # type: ignore[assignment]
     test_yaml = loader.get_data()
 
     # Depending on if this is a list or an object, expand
@@ -189,9 +188,9 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
     # Re-initialize loader with the new text hosting the
     # yamilified includes.
     loader = yaml.Loader(text)
-    loader.compose_node = yaml_compose_node
+    loader.compose_node = yaml_compose_node  # type: ignore[assignment]
 
-    loader.construct_mapping = yaml_construct_mapping
+    loader.construct_mapping = yaml_construct_mapping  # type: ignore[assignment]
     raw_yaml = loader.get_data()
 
     # Check for file with no objects.
@@ -318,7 +317,7 @@ def expand_includes(flat_model, prefix, include_paths, tree_type: VSSTreeType):
     # Build up a new spec model based on the old one, but
     # with expanded include directives.
 
-    new_flat_model = []
+    new_flat_model: List[VSSNode] = []
 
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
@@ -361,7 +360,7 @@ def expand_includes(flat_model, prefix, include_paths, tree_type: VSSTreeType):
     return new_flat_model
 
 
-def expand_tree_instances(tree: VSSNode) -> VSSNode:
+def expand_tree_instances(tree: VSSNode):
     tree_node: VSSNode
 
     def rollout_list(instance_entry):
@@ -906,7 +905,7 @@ def check_data_type_references(tree: VSSNode):
 
 
 def check_data_type_references_recursive(
-        node: VSSNode, data_type_qualified_names: Set[str], errors: List[str]):
+        node: VSSNode, data_type_qualified_names: List[str], errors: List[str]):
     """
     Check that the data type names referenced by tree nodes exist in the tree.
     """
@@ -924,7 +923,7 @@ def check_data_type_references_recursive(
 
 
 def check_data_type_references_across_trees(
-        signal_root: VSSNode, data_type_root: VSSNode):
+        signal_root: VSSNode, data_type_root: Optional[VSSNode]):
     """
     Check that the data type names referenced by nodes in the signal tree are present in the data types tree.
     """
@@ -946,4 +945,4 @@ def check_data_type_references_across_trees(
         sys.exit(-1)
 
 
-load_flat_model.include_index = 1
+load_flat_model.include_index = 1  # type: ignore[attr-defined]
