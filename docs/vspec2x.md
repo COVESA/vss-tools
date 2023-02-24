@@ -12,7 +12,9 @@ The supported arguments might look like this
 
  ```
 usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--uuid] [--no-uuid] [-o overlay] [ -u unit_file] [--json-all-extended-attributes] [--json-pretty]
+                  [--format format] [--uuid] [--no-uuid] [-o overlay] [ -u unit_file]
+                  [-vt vspec_types_file] [-ot <types_output_file>]
+                  [--json-all-extended-attributes] [--json-pretty]
                   [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
                   <vspec_file> <output_file>
 ```
@@ -65,6 +67,34 @@ This is currently the default behavior. From VSS 4.0 `--no-uuid` will be the def
 ### --no-uuid
 Request the exporter to not output uuids.
 From VSS 4.0 this will be the default behavior and then this parameter will be deprecated.
+
+## Handling of Data Types
+
+COVESA supports a number of pre-defined types, see [VSS documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/data_entry/data_types/).
+In addition to this COVESA is introducing a concept to support user-defined types.
+This is currently limited to specifying struct-types. For more information on syntax see VSS documentation.
+
+*Note: Struct support is  currently an experimental feature with limited support in exporters, currently only supported by JSON exporter!*
+
+To use user-defined types the types must be put in a separate file and given to the tool with the `-vt` argument.
+When a signal is defined the tooling will check if the `datatype` specified is either a predefined type or
+a user-defined type. If no matching type is found an error will be given.
+
+Depending on exporter, type definitions may either be transformed to a separate file with structure similar to the
+"normal" output file, or integrated into the "normal" output file. If type output is given to a separate file then
+the name of that file can be specified by the `-ot`argument.
+
+Below is an example using user-defined types for JSON generation.
+Please see [test cases](https://github.com/COVESA/vss-tools/tree/master/tests/vspec/test_structs) for more details.
+
+```bash
+python vspec2json.py --no-uuid --json-pretty -vt VehicleDataTypes.vspec -ot VehicleDataTypes.json test.vspec out.json
+```
+
+Current status for exportes:
+
+* JSON: Supported as experimental feature, `-ot` argument must be given
+* All other exporters: Not supported
 
 ## Handling of units
 
