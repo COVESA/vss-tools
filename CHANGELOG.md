@@ -8,20 +8,24 @@ It includes changes that are included in released version, but also changes plan
 
 
 
-## VSS-Tools 3.0 (Latest Release)
+## VSS-Tools 3.0
 
 [Complete release notes including VSS-Tools changes](https://github.com/COVESA/vehicle_signal_specification/releases/tag/v3.0)
-
-
 
 ### Overlay Support
 
 Overlays introduced to allow customization of VSS. See [documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/overlay/).
 See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec2x.md) on how to include overlays when transforming VSS.
 
-## Merged Changes for next release (VSS-Tools 3.1)
+## VSS-Tools 3.1 (Latest Release)
 
-*This is changes that has been merged on master but not yet released*
+[Complete release notes including VSS-Tools changes](https://github.com/COVESA/vehicle_signal_specification/releases/tag/v3.1)
+
+### Struct Support
+
+Support for defining signals with struct type added.
+For VSS 3.1 as experimental feature only supported by JSON exporter.
+For more information see [vspec2x documentation](docs/vspec2x.md)
 
 ### Change in UUID handling.
 
@@ -50,11 +54,11 @@ allowing VSS tooling to control their own units rather than relying on units in 
 Default behavior for units have changed, if there is a file `units.yaml` in the same directory as the `*.vspec`
 file it will be used, only if not existing `config.yaml` in vss-tools will be used.
 
-## Planned Changes for next release (VSS-Tools 3.1)
-
-*This is changes planned but not yet merged to master*
-
 ## Planned Changes VSS-Tools 4.0
+
+### Completion of struct support feature
+
+For VSS-Tools 4.0 the plan is to support structs in most exporters.
 
 ### Change in UUID handling.
 
