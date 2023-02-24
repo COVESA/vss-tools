@@ -9,7 +9,7 @@ version = r.stdout.rstrip().decode('UTF-8')
 # ...otherwise, use abbreviated git commit hash
 if version == '':
     r = subprocess.run(['git', 'rev-parse', '--short=8', 'HEAD'], stdout=subprocess.PIPE)
-    version ='3.1.dev+' +  r.stdout.rstrip().decode('UTF-8')
+    version = '4.0.dev+' + r.stdout.rstrip().decode('UTF-8')
 
 setup(
     name='vss-tools',
@@ -18,7 +18,8 @@ setup(
     url='https://github.com/COVESA/vss-tools',
     license='Mozilla Public License v2',
     packages=find_packages(exclude=('tests', 'contrib')),
-    scripts=['vspec2csv.py', 'vspec2x.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py','vspec2ddsidl.py', 'vspec2yaml.py', 'contrib/vspec2protobuf.py'],
+    scripts=['vspec2csv.py', 'vspec2x.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py', 'vspec2ddsidl.py',
+             'vspec2yaml.py', 'contrib/vspec2protobuf.py'],
     python_requires='>=3.8',
     install_requires=['pyyaml>=5.1', 'anytree>=2.8.0', 'deprecation>=2.1.0'],
     tests_require=['pytest>=2.7.2'],
