@@ -3,10 +3,8 @@ A:
   type: branch
   description: Branch A.
 
-A.SignalLiter:
+A.SignalY:
   datatype: float
   type: sensor
-  unit: l
-  description: Volume in liters.
-
-
+  unit: y
+  description: Volume in y.

@@ -1,0 +1,14 @@
+{
+  "A": {
+    "children": {
+      "SignalY": {
+        "datatype": "float",
+        "description": "Volume in y.",
+        "type": "sensor",
+        "unit": "y"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

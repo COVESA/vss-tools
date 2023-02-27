@@ -30,56 +30,6 @@ def test_invalid_string_styles():
         StringStyle.from_str("not_a_valid_case")
 
 
-def test_default_units():
-    """
-    Test correct parsing of default units
-    """
-
-    # This test will need to be removed when config.yaml is removed
-    Unit.load_default_config_file()
-    assert Unit.MILLIMETER == Unit.from_str("mm")
-    assert Unit.CENTIMETER == Unit.from_str("cm")
-    assert Unit.METER == Unit.from_str("m")
-    assert Unit.KILOMETER == Unit.from_str("km")
-    assert Unit.KILOMETERPERHOUR == Unit.from_str("km/h")
-    assert Unit.METERSPERSECONDSQUARED == Unit.from_str("m/s^2")
-    assert Unit.LITER == Unit.from_str("l")
-    assert Unit.DEGREECELSIUS == Unit.from_str("celsius")
-    assert Unit.DEGREE == Unit.from_str("degrees")
-    assert Unit.DEGREEPERSECOND == Unit.from_str("degrees/s")
-    assert Unit.KILOWATT == Unit.from_str("kW")
-    assert Unit.KILOWATTHOURS == Unit.from_str("kWh")
-    assert Unit.KILOGRAM == Unit.from_str("kg")
-    assert Unit.VOLT == Unit.from_str("V")
-    assert Unit.AMPERE == Unit.from_str("A")
-    assert Unit.SECOND == Unit.from_str("s")
-    assert Unit.MINUTE == Unit.from_str("min")
-    assert Unit.WEEKS == Unit.from_str("weeks")
-    assert Unit.MONTHS == Unit.from_str("months")
-    assert Unit.YEARS == Unit.from_str("years")
-    assert Unit.UNIXTIMESTAMP == Unit.from_str("UNIX Timestamp")
-    assert Unit.PASCAL == Unit.from_str("Pa")
-    assert Unit.KILOPASCAL == Unit.from_str("kPa")
-    assert Unit.PERCENT == Unit.from_str("percent")
-    assert Unit.CUBICCENTIMETERS == Unit.from_str("cm^3")
-    assert Unit.HORSEPOWER == Unit.from_str("PS")
-    assert Unit.STARS == Unit.from_str("stars")
-    assert Unit.GRAMSPERSECOND == Unit.from_str("g/s")
-    assert Unit.GRAMSPERKILOMETER == Unit.from_str("g/km")
-    assert Unit.KILOWATTHOURSPER100KILOMETERS == Unit.from_str("kWh/100km")
-    assert Unit.LITERPER100KILOMETERS == Unit.from_str("l/100km")
-    assert Unit.LITERPERHOUR == Unit.from_str("l/h")
-    assert Unit.MILESPERGALLON == Unit.from_str("mpg")
-    assert Unit.POUND == Unit.from_str("lbs")
-    assert Unit.NEWTONMETER == Unit.from_str("Nm")
-    assert Unit.REVOLUTIONSPERMINUTE == Unit.from_str("rpm")
-    assert Unit.INCH == Unit.from_str("inch")
-    assert Unit.RATIO == Unit.from_str("ratio")
-    assert Unit.NANOMETERPERKILOMETER == Unit.from_str("nm/km")
-    assert Unit.DECIBELMILLIWATT == Unit.from_str("dBm")
-    assert Unit.KILONEWTON == Unit.from_str("kN")
-
-
 def test_manually_loaded_units():
     """
     Test correct parsing of units

@@ -867,13 +867,6 @@ def load_units(vspec_file: str, unit_files: List[str]):
         if os.path.exists(default_vss_unit_file):
             total_nbr_units = Unit.load_config_file(default_vss_unit_file)
             logging.info(f"Added {total_nbr_units} units from {default_vss_unit_file}")
-        else:
-            # This alternative likely to be removed in VSS 4.0
-            Unit.load_default_config_file()
-            logging.warning("WARNING: Use of default VSS unit file is deprecated, "
-                            "please specify the unit file you want to use with the -u argument!")
-            total_nbr_units = Unit.load_default_config_file()
-            logging.info(f"Added {total_nbr_units} units from default unit file")
     else:
         for unit_file in unit_files:
             nbr_units = Unit.load_config_file(unit_file)

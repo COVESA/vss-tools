@@ -7,8 +7,6 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-import pathlib
-import runpy
 import pytest
 import os
 
@@ -20,7 +18,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def test_error(change_test_dir):
-    test_str = "../../../vspec2json.py test.vspec out.json 1> out.txt 2>&1"
+    test_str = "../../../vspec2json.py -u ../test_units.yaml test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected

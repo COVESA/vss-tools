@@ -1,4 +1,5 @@
 import unittest
+import os
 
 from vspec.model.constants import VSSType, VSSDataType, Unit, VSSTreeType
 from vspec.model.vsstree import VSSNode
@@ -30,8 +31,10 @@ class TestVSSNode(unittest.TestCase):
         Test complex object construction.
         """
         source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
-                  "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "allowed": ["one", "two"], "aggregate": False,
+                  "datatype": "uint8", "unit": "hogshead", "min": 0, "max": 100, "allowed": ["one", "two"], "aggregate": False,
                   "default": "test-default", "$file_name$": "testfile"}
+        unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+        Unit.load_config_file(unit_file)
         node = VSSNode(
             "test",
             source,
@@ -41,7 +44,7 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual(VSSType.SENSOR, node.type)
         self.assertEqual("26d6e362-a422-11ea-bb37-0242ac130002", node.uuid)
         self.assertEqual(VSSDataType.UINT8, node.datatype)
-        self.assertEqual(Unit.KILOMETER, node.unit)
+        self.assertEqual(Unit.HOGSHEAD, node.unit)
         self.assertEqual(0, node.min)
         self.assertEqual(100, node.max)
         self.assertEqual(["one", "two"], node.allowed)
@@ -63,7 +66,11 @@ class TestVSSNode(unittest.TestCase):
             "$file_name$": "testfile"}
 
         source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
-                  "datatype": "uint8", "unit": "km", "min": 0, "max": 100, "$file_name$": "testfile"}
+                  "datatype": "uint8", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
+                  
+                  
+        unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+        Unit.load_config_file(unit_file)
 
         node_target = VSSNode(
             "MyNode",
@@ -87,7 +94,7 @@ class TestVSSNode(unittest.TestCase):
             node_target.uuid)
         self.assertTrue(node_target.has_datatype())
         self.assertEqual(VSSDataType.UINT8, node_target.datatype)
-        self.assertEqual(Unit.KILOMETER, node_target.unit)
+        self.assertEqual(Unit.HOGSHEAD, node_target.unit)
         self.assertEqual(0, node_target.min)
         self.assertEqual(100, node_target.max)
 

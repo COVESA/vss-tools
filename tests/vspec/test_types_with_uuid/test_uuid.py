@@ -7,8 +7,6 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-import pathlib
-import runpy
 import pytest
 import os
 
@@ -20,7 +18,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def run_exporter(exporter, argument):
-    test_str = "../../../vspec2" + exporter + ".py " + argument + \
+    test_str = "../../../vspec2" + exporter + ".py -u ../test_units.yaml " + argument + \
         " test.vspec out." + exporter + " 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -45,7 +43,7 @@ def test_uuid(change_test_dir):
 
 
 def test_warning_no_parameter(change_test_dir):
-    test_str = "../../../vspec2json.py test.vspec out.json 1> out.txt 2>&1"
+    test_str = "../../../vspec2json.py -u ../test_units.yaml test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
@@ -58,7 +56,7 @@ def test_warning_no_parameter(change_test_dir):
 
 
 def test_no_warning_uuid_parameter(change_test_dir):
-    test_str = "../../../vspec2json.py --uuid test.vspec out.json > out.txt"
+    test_str = "../../../vspec2json.py -u ../test_units.yaml --uuid test.vspec out.json > out.txt"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
@@ -71,7 +69,7 @@ def test_no_warning_uuid_parameter(change_test_dir):
 
 
 def test_no_warning_no_uuid_parameter(change_test_dir):
-    test_str = "../../../vspec2json.py --no-uuid test.vspec out.json 1> out.txt 2>&1"
+    test_str = "../../../vspec2json.py -u ../test_units.yaml --no-uuid test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
@@ -84,7 +82,7 @@ def test_no_warning_no_uuid_parameter(change_test_dir):
 
 
 def test_error_no_uuid_uuid_parameter(change_test_dir):
-    test_str = "../../../vspec2json.py --uuid --no-uuid test.vspec out.json 1> out.txt 2>&1"
+    test_str = "../../../vspec2json.py -u ../test_units.yaml --uuid --no-uuid test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) != 0

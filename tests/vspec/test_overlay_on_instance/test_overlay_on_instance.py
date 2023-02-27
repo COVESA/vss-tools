@@ -7,10 +7,9 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-import pathlib
-import runpy
 import pytest
 import os
+
 
 @pytest.fixture
 def change_test_dir(request, monkeypatch):
@@ -21,13 +20,14 @@ def change_test_dir(request, monkeypatch):
 
 
 def test_expanded_overlay(change_test_dir):
-    test_str = "../../../vspec2json.py  -e my_id --json-pretty --no-uuid test.vspec -o overlay_1.vspec -o overlay_2.vspec out.json > out.txt"
+    test_str = "../../../vspec2json.py  -e my_id --json-pretty --no-uuid test.vspec -u ../test_units.yaml " + \
+               "-o overlay_1.vspec -o overlay_2.vspec out.json > out.txt"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
     test_str = "diff out.json expected.json"
-    result =  os.system(test_str)
+    result = os.system(test_str)
     os.system("rm -f out.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0

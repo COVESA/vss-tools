@@ -7,8 +7,6 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-import pathlib
-import runpy
 import pytest
 import os
 
@@ -20,11 +18,12 @@ def change_test_dir(request, monkeypatch):
 
 
 def test_include(change_test_dir):
-    test_str = "../../../vspec2json.py --no-uuid  --json-pretty test.vspec out.json 1> out.txt 2>&1"
+    test_str = "../../../vspec2json.py -u ../test_units.yaml --no-uuid  --json-pretty test.vspec out.json" + \
+               " 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
-    
+
     # No real need to test more than one exporter
     result = os.system("diff out.json expected.json")
     assert os.WIFEXITED(result)
@@ -32,8 +31,10 @@ def test_include(change_test_dir):
 
     os.system("rm -f out.json out.txt")
 
+
 def test_error(change_test_dir):
-    test_str = "../../../vspec2json.py --no-uuid  --json-pretty test_error.vspec out.json 1> out.txt 2>&1"
+    test_str = "../../../vspec2json.py -u ../test_units.yaml --no-uuid  --json-pretty test_error.vspec out.json " + \
+               "1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected
@@ -52,4 +53,3 @@ def test_error(change_test_dir):
     assert os.WEXITSTATUS(result) == 0
 
     os.system("rm -f out.json out.txt")
-    
