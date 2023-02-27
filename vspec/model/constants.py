@@ -13,7 +13,6 @@
 # noinspection PyPackageRequirements
 import re
 from enum import Enum, EnumMeta
-import pkg_resources
 from typing import (
     Sequence, Type, TypeVar, Optional, Dict, Tuple, Iterator, TextIO
 )
@@ -184,14 +183,6 @@ class Unit(metaclass=VSSRepositoryMeta):
         configs = yaml_config.get(key, {})
         return configs
 
-    # Loading default file, might be deleted in the future if default file removed from vss-tools
-    @staticmethod
-    def get_members_from_default_config(key: str) -> Dict[str, Dict[str, str]]:
-        with pkg_resources.resource_stream('vspec', 'config.yaml') as config_file:
-            yaml_config = yaml.safe_load(config_file)
-            configs = yaml_config.get(key, {})
-        return configs
-
     @staticmethod
     def load_config_file(config_file: str) -> int:
         added_configs = 0
@@ -200,12 +191,6 @@ class Unit(metaclass=VSSRepositoryMeta):
             added_configs = len(my_units)
             Unit.add_config(my_units)
         return added_configs
-
-    @staticmethod
-    def load_default_config_file():
-        # __members__ = Unit.get_members_from_default_config('units')
-        my_units = Unit.get_members_from_default_config('units')
-        Unit.add_config(my_units)
 
 
 class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):

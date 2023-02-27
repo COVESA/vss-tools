@@ -7,8 +7,6 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-import pathlib
-import runpy
 import pytest
 import os
 
@@ -23,7 +21,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def run_overlay(overlay_file, expected_file):
-    test_str = "../../../vspec2json.py --json-pretty -e dbc --no-uuid test.vspec -o " + \
+    test_str = "../../../vspec2json.py --json-pretty  -u ../test_units.yaml -e dbc --no-uuid test.vspec -o " + \
         overlay_file + " out.json > out.txt"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -45,7 +43,8 @@ def test_implicit_overlay(change_test_dir):
 
 
 def test_overlay_error(change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid test.vspec -o overlay_error.vspec out.json 1> out.txt 2>&1"
+    test_str = "../../../vspec2json.py --json-pretty --no-uuid  -u ../test_units.yaml  test.vspec " + \
+               "-o overlay_error.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected

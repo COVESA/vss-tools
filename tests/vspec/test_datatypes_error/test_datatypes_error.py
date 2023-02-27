@@ -7,21 +7,20 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-import pathlib
-import runpy
 import pytest
 import os
 
 
-##################### Helper methods #############################
+# #################### Helper methods #############################
 
 @pytest.fixture
 def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
     monkeypatch.chdir(request.fspath.dirname)
 
+
 def test_datatype_error(change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid test.vspec out.json > out.txt 2>&1"
+    test_str = "../../../vspec2json.py --json-pretty --no-uuid -u ../test_units.yaml test.vspec out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected

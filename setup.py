@@ -24,7 +24,6 @@ setup(
     install_requires=['pyyaml>=5.1', 'anytree>=2.8.0', 'deprecation>=2.1.0'],
     tests_require=['pytest>=2.7.2'],
     package_data={'vspec': [
-        'config.yaml',
         'py.typed'
     ]},
 )

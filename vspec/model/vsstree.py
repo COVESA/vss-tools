@@ -150,7 +150,7 @@ class VSSNode(Node):
             try:
                 self.unit = Unit.from_str(unit)
             except KeyError:
-                logging.error(f"Error: Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
+                logging.error(f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
                 sys.exit(-1)
 
         if self.has_instances() and not self.is_branch():
