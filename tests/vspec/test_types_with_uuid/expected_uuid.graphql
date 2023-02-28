@@ -1,0 +1,59 @@
+type Query {
+  vehicle(
+    """VIN of the vehicle that you want to request data for."""
+    id: String!
+
+    """
+    Filter data to only provide information that was sent from the vehicle after that timestamp.
+    """
+    after: String
+  ): A
+}
+
+"""Branch A."""
+type A {
+  """A sensor."""
+  sensor: A_Sensor
+
+  """An attribute."""
+  attribute: A_Attribute
+
+  """An actuator."""
+  actuator: A_Actuator
+}
+
+"""A sensor."""
+type A_Sensor {
+  """Value: A sensor."""
+  value: Float
+
+  """Timestamp: A sensor."""
+  timestamp: String
+
+  """Unit of A sensor."""
+  unit: String
+}
+
+"""An attribute."""
+type A_Attribute {
+  """Value: An attribute."""
+  value: Float
+
+  """Timestamp: An attribute."""
+  timestamp: String
+
+  """Unit of An attribute."""
+  unit: String
+}
+
+"""An actuator."""
+type A_Actuator {
+  """Value: An actuator."""
+  value: Float
+
+  """Timestamp: An actuator."""
+  timestamp: String
+
+  """Unit of An actuator."""
+  unit: String
+}

@@ -1,0 +1,40 @@
+
+// Copyright (C) 2022, COVESA
+//
+// This program is licensed under the terms and conditions of the
+// Mozilla Public License, version 2.0.  The full text of the
+// Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
+
+const UTF8String VSS_VERSION = "None"
+
+struct SignalSpec {
+    UInt32 id
+    String name
+    String type
+    String description
+    String datatype
+    String unit
+    Double min
+    Double max
+}
+
+const SignalSpec[] signal_spec = [
+{	name: "A.Sensor",
+	type: "sensor",
+	description: "A sensor.",
+	datatype: "float",
+	unit: "km"
+},
+{	name: "A.Attribute",
+	type: "sensor",
+	description: "An attribute.",
+	datatype: "float",
+	unit: "km"
+},
+{	name: "A.Actuator",
+	type: "sensor",
+	description: "An actuator.",
+	datatype: "float",
+	unit: "km"
+}
+]

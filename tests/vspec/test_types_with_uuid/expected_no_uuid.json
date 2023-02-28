@@ -1,0 +1,1 @@
+{"A": {"children": {"Actuator": {"datatype": "float", "description": "An actuator.", "type": "sensor", "unit": "km"}, "Attribute": {"datatype": "float", "description": "An attribute.", "type": "sensor", "unit": "km"}, "Sensor": {"datatype": "float", "description": "A sensor.", "type": "sensor", "unit": "km"}}, "description": "Branch A.", "type": "branch"}}
