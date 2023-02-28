@@ -1,0 +1,5 @@
+"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
+"A","branch","","","","","","Branch A.","","",""
+"A.Sensor","sensor","float","","km","","","A sensor.","","",""
+"A.Attribute","sensor","float","","km","","","An attribute.","","",""
+"A.Actuator","sensor","float","","km","","","An actuator.","","",""

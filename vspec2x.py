@@ -76,9 +76,10 @@ def main(arguments):
                              str(Exporter._member_names_) +  # pylint: disable=no-member
                              ". If omitted we try to guess form output_file suffix.")
     parser.add_argument('--uuid', action='store_true',
-                        help='Include uuid in generated files. This is currently the default behavior.')
+                        help='Include uuid in generated files.')
     parser.add_argument('--no-uuid', action='store_true',
-                        help='Exclude uuid in generated files. This will be default behavior from VSS 4.0 onwards.')
+                        help='Exclude uuid in generated files.  This is currently the default behavior. ' +
+                             ' This argument is deprecated and will be removed in VSS 5.0')
     parser.add_argument('-o', '--overlays', action='append', metavar='overlays', type=str, default=[],
                         help='Add overlay that will be layered on top of the VSS file in the order they appear.')
     parser.add_argument('-u', '--unit-file', action='append', metavar='unit_file', type=str, default=[],
@@ -143,14 +144,11 @@ def main(arguments):
     if args.uuid and args.no_uuid:
         logging.error("Can not use --uuid and --no-uuid at the same time")
         sys.exit(-1)
-    if not (args.uuid or args.no_uuid):
-        # From VSS 4.0 default shall be be False and a deprecation warning shall
-        # be given no_uuid is used
-        logging.warning(
-            "From VSS 4.0 the default behavior for printing uuid will change. Consider using --uuid or --no-uuid.")
-    print_uuid = True
     if args.no_uuid:
-        print_uuid = False
+        logging.warning("The argument --no-uuid is deprecated and will be removed in VSS 5.0")
+    print_uuid = False
+    if args.uuid:
+        print_uuid = True
 
     vspec.load_units(args.vspec_file, args.unit_file)
 

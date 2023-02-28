@@ -92,7 +92,7 @@ class VSSNode(Node):
         try:
             VSSNode.validate_vss_element(source_dict, name)
         except UnknownAttributeException as e:
-            logging.warning("Warning: {}".format(e))
+            logging.warning("{}".format(e))
             if break_on_unknown_attribute:
                 logging.error("You asked for strict checking. Terminating.")
                 sys.exit(-1)
@@ -435,7 +435,7 @@ class VSSNode(Node):
 
         if len(unknown) > 0:
             raise UnknownAttributeException(
-                (f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core ",
+                (f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core "
                  "or known extended attribute."))
 
         if "default" in element.keys():
