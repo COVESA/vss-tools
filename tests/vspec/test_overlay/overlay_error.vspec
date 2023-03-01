@@ -4,6 +4,6 @@ A:
   description: Branch A.
 
 A.SignalA:
+  type: sensor
   unit: celsius
-  description: We will have an error if type and datatype are not given
-
+  description: We will have an error if datatype is not given

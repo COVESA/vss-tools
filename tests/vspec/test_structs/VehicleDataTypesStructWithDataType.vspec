@@ -3,6 +3,7 @@ VehicleDataTypes:
   description: Top-level branch for vehicle data types.
 
 VehicleDataTypes.TestBranch1:
+  description: "A branch"
   type: branch
 
 VehicleDataTypes.TestBranch1.NestedStruct:

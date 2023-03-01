@@ -1,0 +1,60 @@
+{
+  "A": {
+    "children": {
+      "AA": {
+        "children": {
+          "SignalAA": {
+            "datatype": "uint8",
+            "description": "Changing type to uint8.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch A.AA.",
+        "type": "branch"
+      },
+      "AB": {
+        "children": {
+          "SignalAB": {
+            "datatype": "uint8",
+            "description": "New signal in new branch.",
+            "type": "sensor"
+          }
+        },
+        "description": "new branch!",
+        "type": "branch"
+      },
+      "SignalA": {
+        "datatype": "int8",
+        "dbc": {
+          "changetype": "ON_CHANGE",
+          "interval_ms": 1000,
+          "signal": "VCFRONT_passengerPresent",
+          "transform": {
+            "mapping": [
+              {
+                "from": 0,
+                "to": false
+              },
+              {
+                "from": 1,
+                "to": true
+              }
+            ]
+          }
+        },
+        "description": "Changing unit to celsius and adding complex deployment info",
+        "type": "sensor",
+        "unit": "celsius"
+      },
+      "SignalA2": {
+        "datatype": "int8",
+        "description": "Adding another signal.",
+        "type": "sensor",
+        "unit": "km"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

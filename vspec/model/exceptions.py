@@ -7,13 +7,6 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-class UnknownAttributeException(Exception):
-    def __init__(self, message):
-
-        # Call the base class constructor with the parameters it needs
-        super().__init__(message)
-
-
 class NameStyleValidationException(Exception):
     def __init__(self, message):
 

@@ -1,0 +1,21 @@
+VehicleDataTypes:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+VehicleDataTypes.TestBranch1:
+  type: branch
+  description: "Another branch."
+
+VehicleDataTypes.TestBranch1.Struct:
+  type: struct
+  description: "A struct"
+
+VehicleDataTypes.TestBranch1.Struct.x:
+  type: property
+  description: "x property"
+  datatype: double
+
+# No description on next
+VehicleDataTypes.TestBranch1.Struct.y:
+  type: property
+  datatype: double

@@ -9,7 +9,7 @@
 
 from anytree import Node, Resolver, ChildResolverError, RenderTree  # type: ignore[import]
 from .constants import VSSType, VSSDataType, Unit, VSSConstant
-from .exceptions import UnknownAttributeException, NameStyleValidationException, \
+from .exceptions import NameStyleValidationException, \
     ImpossibleMergeException, IncompleteElementException
 from typing import Any, Optional, Set, List
 import copy
@@ -88,14 +88,6 @@ class VSSNode(Node):
             logging.error(
                 f'Invalid type provided for VSSNode: {source_dict["type"]}. Allowed types are {self.available_types}')
             sys.exit(-1)
-
-        try:
-            VSSNode.validate_vss_element(source_dict, name)
-        except UnknownAttributeException as e:
-            logging.warning("{}".format(e))
-            if break_on_unknown_attribute:
-                logging.error("You asked for strict checking. Terminating.")
-                sys.exit(-1)
 
         self.source_dict = source_dict
         self.unpack_source_dict()
@@ -416,32 +408,42 @@ class VSSNode(Node):
         except ChildResolverError:
             return False
 
-    @staticmethod
-    def validate_vss_element(element: dict, name: str):
-        """Validates a VSS object. Checks if it has the minimum parameters (description, type, uuid) and if the optional
-        parameters are supported within the specification
-            Args:
-                element: dict parsed from yaml representing one VSS instance
-                name: name of the VSS instances
+    def verify_attributes(self, abort_on_unknown_attribute: bool):
+        """
+        Validates a VSS object. Checks if it has the minimum parameters (description, type, uuid) and if the optional
+        parameters are supported within the specification.
+        Should not be used directly on overlays as the requirement to have all present is not relevant for
+        overlays, but rather for the final result after emrging.
         """
 
-        if "type" not in element.keys():
-            raise Exception("Invalid VSS element %s, must have type" % name)
+        # Type presence should have been tested earlier, but is tested here again for completeness
+        if "type" not in self.source_dict.keys():
+            logging.error("Invalid VSS element %s, must have type", self.name)
+            sys.exit(-1)
+
+        if "description" not in self.source_dict.keys():
+            logging.error("Invalid VSS element %s, must have description", self.name)
+            sys.exit(-1)
 
         unknown = []
-        for aKey in element.keys():
+        for aKey in self.source_dict.keys():
             if aKey not in VSSNode.core_attributes and aKey not in VSSNode.whitelisted_extended_attributes:
                 unknown.append(aKey)
 
+        unknown_found = False
         if len(unknown) > 0:
-            raise UnknownAttributeException(
-                (f"Attribute(s) {', '.join(map(str, unknown))} in element {name} not a core "
-                 "or known extended attribute."))
+            logging.warning(f"Attribute(s) {', '.join(map(str, unknown))} in element {self.name} not a core "
+                            "or known extended attribute.")
+            unknown_found = True
 
-        if "default" in element.keys():
-            if element["type"] != "attribute" and element["type"] != "property":
-                raise UnknownAttributeException(
-                    "Invalid VSS element %s, only attributes/properties can use default" % name)
+        if "default" in self.source_dict.keys():
+            if self.source_dict["type"] != "attribute" and self.source_dict["type"] != "property":
+                logging.warning("Invalid VSS element %s, only attributes/properties can use default", self.name)
+                unknown_found = True
+
+        if unknown_found and abort_on_unknown_attribute:
+            logging.error("You asked for strict checking. Terminating.")
+            sys.exit(-1)
 
     @staticmethod
     def get_tree_attrs(node: "VSSNode", proj_fn, filter_fn) -> List[Any]:

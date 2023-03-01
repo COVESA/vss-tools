@@ -1,0 +1,9 @@
+A:
+  type: BRANCH
+  description: VSS is case sensitive
+
+A.UInt8:
+  datatype: uint8
+  type: sensor
+  unit: km
+  description: This description is mandatory!
