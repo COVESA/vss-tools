@@ -429,6 +429,9 @@ class VSSNode(Node):
         if "type" not in element.keys():
             raise Exception("Invalid VSS element %s, must have type" % name)
 
+        if "description" not in element.keys():
+            raise Exception("Invalid VSS element %s, must have description" % name)
+
         unknown = []
         for aKey in element.keys():
             if aKey not in VSSNode.core_attributes and aKey not in VSSNode.whitelisted_extended_attributes:
