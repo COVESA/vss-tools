@@ -88,7 +88,6 @@ def load_tree(
         file_name,
         include_paths,
         tree_type: VSSTreeType,
-        break_on_unknown_attribute=False,
         break_on_name_style_violation=False,
         expand_inst=True,
         data_type_tree: Optional[VSSNode] = None):
@@ -104,7 +103,6 @@ def load_tree(
     tree = render_tree(
         dict_tree,
         tree_type,
-        break_on_unknown_attribute=break_on_unknown_attribute,
         break_on_name_style_violation=break_on_name_style_violation)
     if expand_inst:
         expand_tree_instances(tree)
@@ -208,19 +206,16 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
     expanded_includes = expand_includes(
         raw_yaml, prefix, include_paths, tree_type)
 
-    # Add type: branch when type is missing.
     flat_model = cleanup_flat_entries(expanded_includes, tree_type)
 
     return flat_model
 
 
-#
-# 1. If no type is specified, default it to "branch".
-# 2. Check that the declared type is part of the available types for the tree.
-# 3. Correct the casing of type.
-# 4, Check that allowed values are provided as arrays.
-#
 def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
+    """
+    # 1. Check that the declared type is part of the available types for the tree.
+    # 2. Check that allowed values are provided as arrays.
+    """
     available_types = tree_type.available_types()
     # map of lower case name to proper name
     available_types_map = {k.lower(): k for k in available_types}
@@ -229,16 +224,16 @@ def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
     for elem in flat_model:
         # Is this an include element?
         if "type" not in elem:
-            elem["type"] = "branch"
+            raise VSpecError(elem["$file_name$"], elem["$line$"], "No type specified!")
 
-        # Check, without case sensitivity that we do have
+        # Get the correct casing for the type -as of today some signals in standard catalog use upper case
+        elem["type"] = elem["type"].lower()
+
+        # Check, with case sensitivity that we do have
         # a validated type.
-        if not elem["type"].lower() in available_types_map:
+        if not elem["type"] in available_types_map:
             raise VSpecError(elem["$file_name$"], elem["$line$"],
                              "Unknown type: {}".format(elem["type"]))
-
-        # Get the correct casing for the type.
-        elem["type"] = available_types_map[elem["type"].lower()]
 
         if "allowed" in elem and not isinstance(elem["allowed"], list):
             raise VSpecError(elem["$file_name$"], elem["$line$"],
@@ -293,6 +288,18 @@ def clean_metadata(node):
     elif isinstance(node, list):
         for elem in node:
             clean_metadata(elem)
+
+
+def verify_mandatory_attributes(node, abort_on_unknown_attribute: bool):
+    """
+    Verify that mandatory attributes are present.
+    Need to be checked first after overlays (if any) have been applied, as attributes are not
+    mandatory in individual files but only in the final tree
+    """
+    if isinstance(node, VSSNode):
+        node.verify_attributes(abort_on_unknown_attribute)
+        for child in node.children:
+            verify_mandatory_attributes(child, abort_on_unknown_attribute)
 
 
 #
@@ -758,7 +765,6 @@ $include$:
 def render_tree(
         tree_dict,
         tree_type: VSSTreeType,
-        break_on_unknown_attribute=False,
         break_on_name_style_violation=False) -> VSSNode:
     if len(tree_dict) != 1:
         for item in tree_dict.keys():
@@ -772,7 +778,6 @@ def render_tree(
         root_element_name,
         root_element,
         tree_type.available_types(),
-        break_on_unknown_attribute=break_on_unknown_attribute,
         break_on_name_style_violation=break_on_name_style_violation)
 
     if "children" in root_element.keys():
@@ -781,7 +786,6 @@ def render_tree(
             child_nodes,
             tree_type,
             tree_root,
-            break_on_unknown_attribute=break_on_unknown_attribute,
             break_on_name_style_violation=break_on_name_style_violation)
 
     create_tree_uuids(tree_root)
@@ -792,7 +796,6 @@ def render_subtree(
         subtree,
         tree_type: VSSTreeType,
         parent,
-        break_on_unknown_attribute=False,
         break_on_name_style_violation=False):
     for element_name in subtree:
         current_element = subtree[element_name]
@@ -803,7 +806,6 @@ def render_subtree(
                 current_element,
                 tree_type.available_types(),
                 parent=parent,
-                break_on_unknown_attribute=break_on_unknown_attribute,
                 break_on_name_style_violation=break_on_name_style_violation)
         except IncompleteElementException as e:
             logging.error(f"Invalid VSS: {e}")
@@ -815,7 +817,6 @@ def render_subtree(
                 child_nodes,
                 tree_type,
                 new_element,
-                break_on_unknown_attribute,
                 break_on_name_style_violation=break_on_name_style_violation)
 
 

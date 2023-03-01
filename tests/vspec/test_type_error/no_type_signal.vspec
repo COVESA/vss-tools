@@ -1,0 +1,8 @@
+A:
+  type: branch
+  description: This description is mandatory!
+
+A.UInt8:
+  datatype: uint8
+  unit: km
+  description: This description is mandatory!

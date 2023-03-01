@@ -156,19 +156,19 @@ def main(arguments):
     data_type_tree = None
     if args.vspec_types_file or args.types_output_file:
         data_type_tree = processDataTypeTree(
-            parser, args, include_dirs, abort_on_unknown_attribute, abort_on_namestyle)
+            parser, args, include_dirs, abort_on_namestyle)
+        vspec.verify_mandatory_attributes(data_type_tree, abort_on_unknown_attribute)
 
     try:
         logging.info(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
             args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE,
-            break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle,
+            break_on_name_style_violation=abort_on_namestyle,
             expand_inst=False, data_type_tree=data_type_tree)
 
         for overlay in args.overlays:
             logging.info(f"Applying VSS overlay from {overlay}...")
             othertree = vspec.load_tree(overlay, include_dirs, VSSTreeType.SIGNAL_TREE,
-                                        break_on_unknown_attribute=abort_on_unknown_attribute,
                                         break_on_name_style_violation=abort_on_namestyle, expand_inst=False,
                                         data_type_tree=data_type_tree)
             vspec.merge_tree(tree, othertree)
@@ -176,6 +176,7 @@ def main(arguments):
         vspec.expand_tree_instances(tree)
 
         vspec.clean_metadata(tree)
+        vspec.verify_mandatory_attributes(tree, abort_on_unknown_attribute)
         logging.info("Calling exporter...")
 
         # temporary until all exporters support data type tree
@@ -193,7 +194,7 @@ def main(arguments):
 
 
 def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
-                        abort_on_unknown_attribute: bool, abort_on_namestyle: bool) -> VSSNode:
+                        abort_on_namestyle: bool) -> VSSNode:
     """
     Helper function to process command line arguments and invoke logic for processing data
     type information provided in vspec format
@@ -214,7 +215,6 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
     logging.info(
         f"Loading and processing struct/data type tree from {args.vspec_types_file}")
     return vspec.load_tree(args.vspec_types_file, include_dirs, VSSTreeType.DATA_TYPE_TREE,
-                           break_on_unknown_attribute=abort_on_unknown_attribute,
                            break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
 
 

@@ -1,6 +1,3 @@
-#
-A:
-  type: branch
 
 A.SignalA:
   datatype: int8
@@ -24,21 +21,12 @@ A.SignalA2:
   unit: km
   description: Adding another signal.
 
-# Changing on second level
-
-A.AA:
-  type: branch
-
 A.AA.SignalAA:
   type: sensor
   datatype: uint8
   description: Changing type to uint8.
 
-# Adding a new branch
-
-A.AB:
-  type: branch
-  description: new branch!
+# Next one shall give an error, AB is new and have no description
 
 A.AB.SignalAB:
   type: sensor

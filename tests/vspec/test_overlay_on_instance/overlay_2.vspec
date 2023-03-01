@@ -5,8 +5,8 @@ A.B.Row2.Left.E:
   type: sensor
   unit: km
   description: Signal A.B.E.
-  
-  
+
+
 # Individual ones shall have precedence
 # Give custom attribute to all
 
@@ -44,22 +44,36 @@ A.B.Row3.Right.C:
   my_id: Lund
 
 # Adding one outside instance range, shall not inherit original comment
+# Row5 and Row5.Right does not exist in standard tree, so explicit definition with description needed
+A.B.Row5:
+  type: branch
+  description: Is mandatory!
+
+A.B.Row5.Right:
+  type: branch
+  description: Also mandatory!
+
 A.B.Row5.Right.C:
   datatype: float
   type: sensor
   unit: km
   my_id: Landskrona
   description: New Muhaha
-  
+
 #Shall inherit comment
 A.S.Front.T:
   datatype: float
   type: sensor
   unit: km
   description: Changed description, shall inherit comment
-  
+
 #Totally new, shall not inherit anything, will not be considered as extending instantiation
 # I.e. will be expanded to A.S.Front.Down.T and A.S.Rear.Down.T
+
+A.S.Down:
+  type: branch
+  description: Obligatorisch!!!
+
 A.S.Down.T:
   datatype: float
   type: sensor

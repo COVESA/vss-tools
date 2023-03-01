@@ -13,17 +13,6 @@
         "description": "Branch A.AA.",
         "type": "branch"
       },
-      "AB": {
-        "children": {
-          "SignalAB": {
-            "datatype": "uint8",
-            "description": "New signal in new branch.",
-            "type": "sensor"
-          }
-        },
-        "description": null,
-        "type": "branch"
-      },
       "SignalA": {
         "datatype": "int8",
         "dbc": {
