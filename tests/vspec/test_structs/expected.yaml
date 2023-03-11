@@ -1,0 +1,58 @@
+VehicleDataTypes:
+  description: Top-level branch for vehicle data types.
+  type: branch
+
+VehicleDataTypes.TestBranch1:
+  description: Test branch with structs and properties definitions
+  type: branch
+
+VehicleDataTypes.TestBranch1.NestedStruct:
+  description: A struct that is going to be used within another struct - Nested
+  type: struct
+
+VehicleDataTypes.TestBranch1.NestedStruct.x:
+  datatype: double
+  description: x property
+  min: -10
+  type: property
+
+VehicleDataTypes.TestBranch1.NestedStruct.y:
+  datatype: double
+  description: y property
+  max: 10
+  type: property
+
+VehicleDataTypes.TestBranch1.NestedStruct.z:
+  datatype: double
+  default: 1
+  description: z property
+  type: property
+
+VehicleDataTypes.TestBranch1.ParentStruct:
+  description: A struct that is going to contain properties that are structs themselves
+  type: struct
+
+VehicleDataTypes.TestBranch1.ParentStruct.x_properties:
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct[]
+  description: A property of struct-type array and an arraysize
+  type: property
+
+VehicleDataTypes.TestBranch1.ParentStruct.x_property:
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct
+  description: A property of struct-type. The struct name is specified relative to the branch
+  type: property
+
+VehicleDataTypes.TestBranch1.ParentStruct.y_properties:
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct[]
+  description: A property of struct-type array and no arraysize
+  type: property
+
+VehicleDataTypes.TestBranch1.ParentStruct.y_property:
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct
+  description: A property of struct-type. The struct name is specified as a fully qualified name
+  type: property
+
+VehicleDataTypes.TestBranch1.ParentStruct.z_property:
+  datatype: double
+  description: A primitive property
+  type: property

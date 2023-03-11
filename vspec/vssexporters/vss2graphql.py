@@ -107,7 +107,7 @@ def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQ
                 field_dict[additional_field[0]] = field(node, f" {str(additional_field[1])}: ")
             else:
                 raise VSpecError("", "", "Incorrect format of graphql field specification")
-    if hasattr(node, "unit"):
+    if node.has_unit():
         field_dict["unit"] = field(node, "Unit of ")
     return field_dict
 

@@ -95,6 +95,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_ty
             else:
                 logging.info("Serializing compact JSON...")
                 json.dump(json_dict, f, indent=None, sort_keys=True)
+            f.write('\n')
 
 
 if __name__ == "__main__":

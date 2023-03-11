@@ -1,6 +1,5 @@
-"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Id"
-"A","branch","","","","","","Branch A.","","","6342f7c4796a5f78a93bff040a974d02"
-"A.Sensor","sensor","float","","km","","","A sensor.","","","540af2eb86b450ae814011d2746cece0"
-"A.Attribute","sensor","float","","km","","","An attribute.","","","ddba2946fd215f2f8f869c793e2aff08"
-"A.Actuator","sensor","float","","km","","","An actuator.","","","2c9f66c9e98c5023ab222fd15c90ed22"
-
+"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default","Id"
+"A","branch","","","","","","Branch A.","","","","6342f7c4796a5f78a93bff040a974d02"
+"A.Sensor","sensor","float","","km","","","A sensor.","","","","540af2eb86b450ae814011d2746cece0"
+"A.Attribute","sensor","float","","km","","","An attribute.","","","","ddba2946fd215f2f8f869c793e2aff08"
+"A.Actuator","sensor","float","","km","","","An actuator.","","","","2c9f66c9e98c5023ab222fd15c90ed22"

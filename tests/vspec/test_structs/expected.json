@@ -8,15 +8,18 @@
               "x": {
                 "datatype": "double",
                 "description": "x property",
+                "min": -10,
                 "type": "property"
               },
               "y": {
                 "datatype": "double",
                 "description": "y property",
+                "max": 10,
                 "type": "property"
               },
               "z": {
                 "datatype": "double",
+                "default": 1,
                 "description": "z property",
                 "type": "property"
               }
