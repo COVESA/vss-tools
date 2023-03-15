@@ -22,10 +22,14 @@ def test_data_types_export(format, signals_out, data_types_out, expected_signal,
     """
     Test that data types provided in vspec format are converted correctly
     """
-    test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json",
-                         "--json-pretty", "-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml", "-ot",
-                         "VehicleDataTypes.json", "test.vspec", "out.json", "1>",
-                         "out.txt", "2>&1"])
+    args = ["../../../vspec2x.py", "--no-uuid", "--format", format]
+    if format == 'json':
+        args.append('--json-pretty')
+    args.extend(["-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml", "-ot", data_types_out,
+                 "test.vspec", signals_out, "1>", "out.txt", "2>&1"])
+    test_str = " ".join(args)
+
+    os.system("cat out.txt")
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0

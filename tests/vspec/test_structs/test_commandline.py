@@ -71,10 +71,10 @@ def test_error_incompatibility_with_overlays(change_test_dir):
 
 
 @pytest.mark.parametrize("format", ["binary", "franca", "idl", "graphql"])
-def test_error_incompatibility_with_non_compatible_formats(format, change_test_dir):
+def test_error_with_non_compatible_formats(format, change_test_dir):
     # test that program fails due to parser error
-    cmdline = ('../../../vspec2x.py -vt data_types_file.spec -ot output_types_file'
-               f' --format {format} vspec_file.spec output_file.json')
+    cmdline = ('../../../vspec2x.py -u ../test_units.yaml -vt VehicleDataTypes.vspec -ot output_types_file.json'
+               f' --format {format} test.vspec output_file.json')
     test_str = cmdline + " 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -85,6 +85,6 @@ def test_error_incompatibility_with_non_compatible_formats(format, change_test_d
                'out.txt > /dev/null'
     result = os.system(test_str)
     os.system("cat out.txt")
-    os.system("rm -f out.json out.txt")
+    os.system("rm -f out.json out.txt output_types_file.json output_file.json")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
