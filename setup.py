@@ -16,7 +16,7 @@ setup(
     version=version,
     description='COVESA Vehicle Signal Specification tooling.',
     url='https://github.com/COVESA/vss-tools',
-    license='Mozilla Public License v2',
+    license='Mozilla Public License 2.0',
     packages=find_packages(exclude=('tests', 'contrib')),
     scripts=['vspec2csv.py', 'vspec2x.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py', 'vspec2ddsidl.py',
              'vspec2yaml.py', 'contrib/vspec2protobuf.py'],
