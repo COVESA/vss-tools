@@ -23,6 +23,8 @@ import vspec
 
 from vspec.vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
 
+SUPPORTED_STRUCT_EXPORT_FORMATS = set(["json", "yaml", "csv"])
+
 
 class Exporter(Enum):
     """
@@ -179,9 +181,12 @@ def main(arguments):
         logging.info("Calling exporter...")
 
         # temporary until all exporters support data type tree
-        if args.format.name == "json":
+        if args.format.name in SUPPORTED_STRUCT_EXPORT_FORMATS:
             exporter.export(args, tree, print_uuid, data_type_tree)
         else:
+            if data_type_tree is not None:
+                parser.error(
+                    f"{args.format.name} format is not yet supported in vspec struct/data type support feature")
             exporter.export(args, tree, print_uuid)
         logging.info("All done.")
     except vspec.VSpecError as e:
@@ -207,9 +212,6 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
     if len(args.overlays) > 0:
         parser.error(
             "Overlays are not yet supported in vspec struct/data type support feature")
-    if args.format.name != "json":
-        parser.error(
-            f"{args.format.name} format is not yet supported in vspec struct/data type support feature")
 
     logging.info(
         f"Loading and processing struct/data type tree from {args.vspec_types_file}")

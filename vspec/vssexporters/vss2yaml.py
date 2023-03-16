@@ -15,13 +15,17 @@
 
 
 import argparse
-from vspec.model.vsstree import VSSNode, VSSType
+from vspec.model.vsstree import VSSNode
 import yaml
+import logging
+from vspec.loggingconfig import initLogging
 
 
 def add_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--yaml-all-extended-attributes', action='store_true',
-                        help="Generate all extended attributes found in the model (default is generating only those given by the -e/--extended-attributes parameter).")
+                        help=("Generate all extended attributes found in the model "
+                              "(default is generating only those given by the "
+                              "-e/--extended-attributes parameter)."))
 
 
 def export_node(yaml_dict, node, config, print_uuid):
@@ -32,8 +36,8 @@ def export_node(yaml_dict, node, config, print_uuid):
 
     yaml_dict[node_path]["type"] = str(node.type.value)
 
-    if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
-        yaml_dict[node_path]["datatype"] = str(node.datatype.value)
+    if node.is_signal() or node.is_property():
+        yaml_dict[node_path]["datatype"] = node.get_datatype()
 
     # many optional attributes are initilized to "" in vsstree.py
     if node.min != "":
@@ -92,7 +96,15 @@ class NoAliasDumper(yaml.SafeDumper):
             super().write_line_break()
 
 
-def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    print("Generating YAML output...")
-    yaml_out = open(config.output_file, 'w')
-    export_yaml(yaml_out, root, config, print_uuid)
+def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
+    for root, outfile in zip([signal_root, data_type_root], [config.output_file, config.types_output_file]):
+        if root is None:
+            continue
+
+        logging.info("Generating YAML output...")
+        with open(outfile, 'w') as f:
+            export_yaml(f, root, config, print_uuid)
+
+
+if __name__ == "__main__":
+    initLogging()

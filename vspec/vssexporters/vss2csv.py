@@ -11,8 +11,11 @@
 
 
 import argparse
+import logging
 from vspec.model.vsstree import VSSNode
 from anytree import PreOrderIter  # type: ignore[import]
+from vspec.loggingconfig import initLogging
+from vspec.model.constants import VSSTreeType
 
 
 def add_arguments(parser: argparse.ArgumentParser):
@@ -21,8 +24,9 @@ def add_arguments(parser: argparse.ArgumentParser):
 # Write the header line
 
 
-def print_csv_header(file, uuid):
-    arg_list = ["Signal", "Type", "DataType", "Deprecated", "Unit", "Min", "Max", "Desc", "Comment", "Allowed"]
+def print_csv_header(file, uuid, tree_type: VSSTreeType):
+    arg_list = ["Signal"] if tree_type == VSSTreeType.SIGNAL_TREE else ["Node"]
+    arg_list.extend(["Type", "DataType", "Deprecated", "Unit", "Min", "Max", "Desc", "Comment", "Allowed", "Default"])
     if uuid:
         arg_list.append("Id")
     file.write(format_csv_line(arg_list))
@@ -45,16 +49,25 @@ def print_csv_content(file, tree: VSSNode, uuid):
         data_type_str = tree_node.get_datatype()
         unit_str = tree_node.get_unit()
         arg_list = [tree_node.qualified_name('.'), tree_node.type.value, data_type_str, tree_node.deprecation,
-                    unit_str, tree_node.min, tree_node.max, tree_node.description, tree_node.comment, tree_node.allowed]
+                    unit_str, tree_node.min, tree_node.max, tree_node.description, tree_node.comment,
+                    tree_node.allowed, tree_node.default]
         if uuid:
             arg_list.append(tree_node.uuid)
         file.write(format_csv_line(arg_list))
 
 
-def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    print("Generating CSV output...")
-    outfile = open(config.output_file, 'w')
-    print_csv_header(outfile, print_uuid)
-    print_csv_content(outfile, root, print_uuid)
-    outfile.write("\n")
-    outfile.close()
+def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
+    for root, outfile, tree_type in zip([signal_root, data_type_root],
+                                        [config.output_file, config.types_output_file],
+                                        [VSSTreeType.SIGNAL_TREE, VSSTreeType.DATA_TYPE_TREE]):
+        if root is None:
+            continue
+
+        logging.info("Generating CSV output...")
+        with open(outfile, 'w') as f:
+            print_csv_header(f, print_uuid, tree_type)
+            print_csv_content(f, root, print_uuid)
+
+
+if __name__ == "__main__":
+    initLogging()

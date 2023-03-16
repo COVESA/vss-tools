@@ -5,7 +5,9 @@ repos:
     rev: v3.2.0
     hooks:
     -   id: trailing-whitespace
+        exclude_types: ["csv"]
     -   id: end-of-file-fixer
+        exclude_types: ["json"]
     -   id: check-yaml
     -   id: check-added-large-files
 

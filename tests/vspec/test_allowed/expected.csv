@@ -1,7 +1,6 @@
-"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed"
-"A","branch","","","","","","Branch A.","",""
-"A.String","sensor","string","","","","","A string","","['January', 'February']"
-"A.StringArray","sensor","string[]","","","","","A string array","","['January', 'February', 'March']"
-"A.Int","sensor","uint16","","","","","An int","","[1, 2, 3]"
-"A.Float","actuator","float","","","","","A float","","[1.1, 2.54, 3]"
-
+"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
+"A","branch","","","","","","Branch A.","","",""
+"A.String","sensor","string","","","","","A string","","['January', 'February']",""
+"A.StringArray","sensor","string[]","","","","","A string array","","['January', 'February', 'March']",""
+"A.Int","sensor","uint16","","","","","An int","","[1, 2, 3]",""
+"A.Float","actuator","float","","","","","A float","","[1.1, 2.54, 3]",""

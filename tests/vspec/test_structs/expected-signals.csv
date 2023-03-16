@@ -1,0 +1,5 @@
+"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
+"A","branch","","","","","","Branch A.","","",""
+"A.UInt8","sensor","uint8","","km","","","A uint8.","","",""
+"A.ParentStructSensor","sensor","VehicleDataTypes.TestBranch1.ParentStruct","","","","","A rich sensor with user-defined data type.","","",""
+"A.NestedStructSensor","sensor","VehicleDataTypes.TestBranch1.NestedStruct","","","","","A rich sensor with user-defined data type.","","",""

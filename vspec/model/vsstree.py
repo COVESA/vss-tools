@@ -152,6 +152,8 @@ class VSSNode(Node):
             except KeyError:
                 logging.error(f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
                 sys.exit(-1)
+        else:
+            self.unit = None
 
         if self.has_instances() and not self.is_branch():
             logging.error(
@@ -305,10 +307,7 @@ class VSSNode(Node):
         """Returns:
                 The name of the dataype or empty string if no datatype
         """
-        if hasattr(self, "datatype") and self.datatype is not None:
-            return self.datatype.value
-        else:
-            return ''
+        return self.data_type_str
 
     def has_instances(self) -> bool:
         """Check if this instance has a VSS instances

@@ -14,29 +14,38 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
-def test_data_types_export_to_json(change_test_dir):
+@pytest.mark.parametrize("format,signals_out, data_types_out,expected_signal,expected_data_types", [
+    ('json', 'signals-out.json', 'VehicleDataTypes.json', 'expected-signals.json', 'expected.json'),
+    ('csv',  'signals-out.csv',  'VehicleDataTypes.csv',  'expected-signals.csv',  'expected.csv'),
+    ('yaml',  'signals-out.yaml',  'VehicleDataTypes.yaml',  'expected-signals.yaml',  'expected.yaml')])
+def test_data_types_export(format, signals_out, data_types_out, expected_signal, expected_data_types, change_test_dir):
     """
-    Test that data types provided in vspec format are converted correctly to the JSON format
+    Test that data types provided in vspec format are converted correctly
     """
-    test_str = " ".join(["../../../vspec2json.py", "--no-uuid", "--format", "json",
-                         "--json-pretty", "-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml", "-ot",
-                         "VehicleDataTypes.json", "test.vspec", "out.json", "1>",
-                         "out.txt", "2>&1"])
+    args = ["../../../vspec2x.py", "--no-uuid", "--format", format]
+    if format == 'json':
+        args.append('--json-pretty')
+    args.extend(["-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml", "-ot", data_types_out,
+                 "test.vspec", signals_out, "1>", "out.txt", "2>&1"])
+    test_str = " ".join(args)
+
+    os.system("cat out.txt")
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
-    test_str = "diff VehicleDataTypes.json expected.json"
+    test_str = f"diff {data_types_out} {expected_data_types}"
     result = os.system(test_str)
-    os.system("rm -f VehicleDataTypes.json")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
-    test_str = "diff out.json expected-signals.json"
+    test_str = f"diff {signals_out} {expected_signal}"
     result = os.system(test_str)
     os.system("rm -f out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+    os.system(f"rm -f {signals_out} {data_types_out}")
 
 
 @pytest.mark.parametrize("types_file,error_msg", [
