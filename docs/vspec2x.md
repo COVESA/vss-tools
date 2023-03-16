@@ -12,7 +12,7 @@ The supported arguments might look like this
 
  ```
 usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--uuid] [--no-uuid] [-o overlay] [ -u unit_file]
+                  [--format format] [--uuid] [--no-uuid] [-o overlays] [-u unit_file]
                   [-vt vspec_types_file] [-ot <types_output_file>]
                   [--json-all-extended-attributes] [--json-pretty]
                   [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
@@ -93,8 +93,53 @@ python vspec2json.py --no-uuid --json-pretty -vt VehicleDataTypes.vspec -ot Vehi
 
 Current status for exportes:
 
-* JSON: Supported as experimental feature, `-ot` argument must be given
+* CSV, JSON, YAML: Supported as experimental feature, `-ot` argument must be given
 * All other exporters: Not supported
+
+The export format is similar to the export format of VSS signals. The below table illustrates the exporting of the new nodes introduced in the data type tree:
+
+| Data                     | CSV    | JSON | YAML |
+| ------------------------ | ------ | ---- | ---- |
+| Struct Node Attribute    | Column | Key  | Key  |
+| Property Node Attribute  | Column | Key  | Key  |
+
+The YAML exporter maintains the file structure of the vspec file being exported.
+
+**CSV snippet**
+```csv
+"Node","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
+"<BranchName>","branch","","<Deprecation>","","","","<Description>","<Comment>","",""
+"<StructName>","struct","","<Deprecation>","","","","<Description>","<Comment>","",""
+"<PropertyName>","property","<DataType>","<Deprecation>","<Unit>","<Min>","<Max>","<Description>","<Comment>","<Allowed values>","<Default Value>"
+```
+
+**JSON snippet**
+```json
+{
+  "VehicleDataTypes": {
+    "children": {
+      "<Branch>": {
+        "children": {
+          "<Struct>": {
+            "children": {
+              "<Property>": {
+                "type": "property",
+                "datatype": "<Data Type>",
+                "description": "<Description",
+                ...
+              }
+            },
+            "description": "<Description>",
+            "type": "struct"
+          }
+        }
+        "description": "<Description>",
+        "type": "branch"
+      }
+    }
+  }
+}
+```
 
 ## Handling of units
 
