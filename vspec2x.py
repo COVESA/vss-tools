@@ -153,8 +153,11 @@ def main(arguments):
     vspec.load_units(args.vspec_file, args.unit_file)
 
     # process data type tree
+    if args.types_output_file is not None and args.vspec_types_file is None:
+        parser.error("An output file for data types was provided. Please also provide "
+                     "the input vspec file for data types")
     data_type_tree = None
-    if args.vspec_types_file or args.types_output_file:
+    if args.vspec_types_file:
         data_type_tree = processDataTypeTree(
             parser, args, include_dirs, abort_on_namestyle)
         vspec.verify_mandatory_attributes(data_type_tree, abort_on_unknown_attribute)
@@ -199,11 +202,8 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
     Helper function to process command line arguments and invoke logic for processing data
     type information provided in vspec format
     """
-    # check that both required arguments are available to process the data
-    # type tree
-    if args.types_output_file is None or args.vspec_types_file is None:
-        parser.error(
-            "Please provide the vspec data types file and the output file")
+    if args.types_output_file is None:
+        logging.info("Sensors and custom data types will be consolidated into one file")
 
     logging.warning(
         "vspec struct/type support is an experimental feature. Not all features in the tool chain are supported."

@@ -17,23 +17,6 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
-def test_error_when_output_file_is_missing(change_test_dir):
-    # test that program fails due to parser error
-    cmdline = '../../../vspec2x.py  -u ../test_units.yaml -vt data_types_file.spec vspec_file.spec output_file.json'
-    test_str = cmdline + " 1> out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) != 0
-
-    # test that the expected error is outputted
-    test_str = 'grep \"error: Please provide the vspec data types file and the output file\" out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-
 def test_error_when_data_types_file_is_missing(change_test_dir):
     # test that program fails due to parser error
     cmdline = '../../../vspec2x.py  -u ../test_units.yaml -ot output_types_file.json vspec_file.spec output_file.json'
@@ -43,7 +26,8 @@ def test_error_when_data_types_file_is_missing(change_test_dir):
     assert os.WEXITSTATUS(result) != 0
 
     # test that the expected error is outputted
-    test_str = 'grep \"error: Please provide the vspec data types file and the output file\" out.txt > /dev/null'
+    test_str = 'grep \"error: An output file for data types was provided. Please also provide the input ' + \
+               'vspec file for data types\" out.txt > /dev/null'
     result = os.system(test_str)
     os.system("cat out.txt")
     os.system("rm -f out.json out.txt")

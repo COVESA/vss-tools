@@ -15,7 +15,7 @@ import logging
 from vspec.model.vsstree import VSSNode
 from anytree import PreOrderIter  # type: ignore[import]
 from vspec.loggingconfig import initLogging
-from vspec.model.constants import VSSTreeType
+from typing import AnyStr
 
 
 def add_arguments(parser: argparse.ArgumentParser):
@@ -24,9 +24,9 @@ def add_arguments(parser: argparse.ArgumentParser):
 # Write the header line
 
 
-def print_csv_header(file, uuid, tree_type: VSSTreeType):
-    arg_list = ["Signal"] if tree_type == VSSTreeType.SIGNAL_TREE else ["Node"]
-    arg_list.extend(["Type", "DataType", "Deprecated", "Unit", "Min", "Max", "Desc", "Comment", "Allowed", "Default"])
+def print_csv_header(file, uuid, entry_type: AnyStr):
+    arg_list = [entry_type, "Type", "DataType", "Deprecated", "Unit",
+                "Min", "Max", "Desc", "Comment", "Allowed", "Default"]
     if uuid:
         arg_list.append("Id")
     file.write(format_csv_line(arg_list))
@@ -57,16 +57,21 @@ def print_csv_content(file, tree: VSSNode, uuid):
 
 
 def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    for root, outfile, tree_type in zip([signal_root, data_type_root],
-                                        [config.output_file, config.types_output_file],
-                                        [VSSTreeType.SIGNAL_TREE, VSSTreeType.DATA_TYPE_TREE]):
-        if root is None:
-            continue
+    logging.info("Generating CSV output...")
 
-        logging.info("Generating CSV output...")
-        with open(outfile, 'w') as f:
-            print_csv_header(f, print_uuid, tree_type)
-            print_csv_content(f, root, print_uuid)
+    # generic entry should be written when both data types and signals are being written to the same file
+    generic_entry = data_type_root is not None and config.types_output_file is None
+    with open(config.output_file, 'w') as f:
+        signal_entry_type = "Node" if generic_entry else "Signal"
+        print_csv_header(f, print_uuid, signal_entry_type)
+        print_csv_content(f, signal_root, print_uuid)
+        if data_type_root is not None and generic_entry is True:
+            print_csv_content(f, data_type_root, print_uuid)
+
+    if data_type_root is not None and generic_entry is False:
+        with open(config.types_output_file, 'w') as f:
+            print_csv_header(f, print_uuid, "Node")
+            print_csv_content(f, data_type_root, print_uuid)
 
 
 if __name__ == "__main__":
