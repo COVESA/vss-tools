@@ -1,0 +1,22 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.UInt8:
+  datatype: uint8
+  type: sensor
+  unit: km
+  description: A uint8.
+
+A.ParentStructSensor:
+  datatype: VehicleDataTypes.TestBranch2.ParentStruct
+  type: sensor
+  unit: km
+  description: A rich sensor with user-defined data type.
+
+A.NestedStructSensor:
+  datatype: VehicleDataTypes.TestBranch3.NestedStruct
+  type: sensor
+  unit: km
+  description: A rich sensor with user-defined data type.

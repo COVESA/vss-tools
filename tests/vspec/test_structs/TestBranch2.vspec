@@ -1,0 +1,19 @@
+ParentStruct:
+  type: struct
+  description: "A struct that is going to contain properties that are structs themselves"
+
+ParentStruct.x_property:
+  type: property
+  description: "A property of struct-type. The struct name is specified relative to the branch"
+  datatype: VehicleDataTypes.TestBranch3.NestedStruct
+
+ParentStruct.x_properties:
+  type: property
+  description: "A property of struct-type array and an arraysize"
+  datatype: VehicleDataTypes.TestBranch3.NestedStruct[]
+  arraysize: 10
+
+ParentStruct.z_property:
+  type: property
+  description: "A primitive property"
+  datatype: double

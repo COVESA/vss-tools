@@ -34,7 +34,7 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 [vspec2franca.py](vspec2franca.py) | Parses and expands a VSS and generates a Franca IDL specification | Community Supported | Check [vspec2x documentation](docs/vspec2x.md) |
 [vspec2c.py](contrib/vspec2c.py) | The vspec2c tooling allows a vehicle signal specification to be translated from its source YAML file to native C code that has the entire specification encoded in it. | Obsolete (2022-11-01) | [Documentation](obsolete/vspec2c/README.md) |
 [vspec2ocf.py](contrib/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Obsolete (2022-11-01) | - |
-[vspec2proto.py](contrib/vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib | - |
+[vspec2protobuf.py](vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib | - |
 [vspec2ttl.py](contrib/vspec2ttl/vspec2ttl.py) | Parses and expands a VSS and generates a TTL specification | Contrib  | - |
 [vspec2graphql.py](contrib/vspec2graphql.py) | Parses and expands a VSS and generates a GraphQL specification | Community Supported  | [Documentation](docs/VSS2GRAPHQL.md) |
 
@@ -68,6 +68,13 @@ sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 10
 # Install required dependencies, running pip without sudo means that a user installation will be performed
 sudo apt install pip
 pip install anytree deprecation graphql-core
+```
+
+
+```sh
+# Install protobuf compiler
+sudo apt install -y protobuf-compiler
+protoc --version  # Ensure compiler version is 3+
 ```
 
 The environment can be tested by calling one of the tools without arguments, then usage instructions shall be printed similar to below.

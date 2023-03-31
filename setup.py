@@ -19,7 +19,7 @@ setup(
     license='Mozilla Public License 2.0',
     packages=find_packages(exclude=('tests', 'contrib')),
     scripts=['vspec2csv.py', 'vspec2x.py', 'vspec2franca.py', 'vspec2binary.py', 'vspec2json.py', 'vspec2ddsidl.py',
-             'vspec2yaml.py', 'contrib/vspec2protobuf.py'],
+             'vspec2yaml.py', 'vspec2protobuf.py'],
     python_requires='>=3.8',
     install_requires=['pyyaml>=5.1', 'anytree>=2.8.0', 'deprecation>=2.1.0'],
     tests_require=['pytest>=2.7.2'],

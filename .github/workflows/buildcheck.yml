@@ -24,6 +24,8 @@ jobs:
   buildtest:
     runs-on: ubuntu-latest
     steps:
+      - name: Install apt dependencies
+        run: sudo apt install -y protobuf-compiler
       - name: Checkout VSS as parent
         uses: actions/checkout@v3
         with:

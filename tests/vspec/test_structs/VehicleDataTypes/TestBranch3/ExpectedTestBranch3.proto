@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package VehicleDataTypes.TestBranch3;
+
+
+message NestedStruct {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
