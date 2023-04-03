@@ -35,7 +35,7 @@ def test_error_when_data_types_file_is_missing(change_test_dir):
     assert os.WEXITSTATUS(result) == 0
 
 
-@pytest.mark.parametrize("format", ["binary", "franca", "idl", "graphql"])
+@pytest.mark.parametrize("format", ["binary", "franca", "graphql"])
 def test_error_with_non_compatible_formats(format, change_test_dir):
     # test that program fails due to parser error
     cmdline = ('../../../vspec2x.py -u ../test_units.yaml -vt VehicleDataTypes.vspec -ot output_types_file.json'

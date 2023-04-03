@@ -12,7 +12,9 @@
 
 import argparse
 import keyword
+import logging
 
+from vspec.loggingconfig import initLogging
 from vspec.model.vsstree import VSSNode, VSSType
 
 
@@ -52,7 +54,7 @@ def getAllowedName(name):
         or name.lower() in idl_keywords
         or keyword.iskeyword(name.lower)
     ):
-        return "_"+name
+        return "_" + name
     else:
         return name
 
@@ -105,7 +107,7 @@ def export_node(node, generate_uuid, generate_all_idl_features):
     arraysize = None
 
     if node.type == VSSType.BRANCH:
-        idlFileBuffer.append("module "+getAllowedName(node.name))
+        idlFileBuffer.append("module " + getAllowedName(node.name))
         idlFileBuffer.append("{")
         for child in node.children:
             export_node(child, generate_uuid, generate_all_idl_features)
@@ -120,7 +122,7 @@ def export_node(node, generate_uuid, generate_all_idl_features):
             module name for enum is chosen as the node name +
             """
             if (node.datatype.value in ["string", "string[]"]):
-                idlFileBuffer.append("module "+getAllowedName(node.name)+"_M")
+                idlFileBuffer.append("module " + getAllowedName(node.name) + "_M")
                 idlFileBuffer.append("{")
                 idlFileBuffer.append("enum " + getAllowedName(node.name) +
                                      "Values{"+str(",".join(get_allowed_enum_literal(item) for item in node.allowed)) +
@@ -132,19 +134,23 @@ def export_node(node, generate_uuid, generate_all_idl_features):
                 print(f"Warning: VSS2IDL can only handle allowed values for string type, "
                       f"signal {node.name} has type {node.datatype.value}")
 
-        idlFileBuffer.append("struct "+getAllowedName(node.name))
+        idlFileBuffer.append("struct " + getAllowedName(node.name))
         idlFileBuffer.append("{")
         if generate_uuid:
             idlFileBuffer.append("string uuid;")
         # fetching value of datatype and obtaining the equivalent DDS type
         try:
-            if str(node.datatype.value) in dataTypesMap_covesa_dds:
-                datatype = str(dataTypesMap_covesa_dds[str(node.datatype.value)])
-            elif '[' in str(node.datatype.value):
-                nodevalueArray = str(node.datatype.value).split("[", 1)
-                if str(nodevalueArray[0]) in dataTypesMap_covesa_dds:
-                    datatype = str(dataTypesMap_covesa_dds[str(nodevalueArray[0])])
-                    arraysize = '['+str(arraysize)+nodevalueArray[1]
+            datatype_str = node.get_datatype()
+            if node.has_datatype():
+                if datatype_str in dataTypesMap_covesa_dds:
+                    datatype = str(dataTypesMap_covesa_dds[datatype_str])
+                elif '[' in datatype_str:
+                    nodevalueArray = datatype_str.split("[", 1)
+                    if str(nodevalueArray[0]) in dataTypesMap_covesa_dds:
+                        datatype = str(dataTypesMap_covesa_dds[str(nodevalueArray[0])])
+                        arraysize = '[' + str(arraysize) + nodevalueArray[1]
+            else:  # no primitive type. this is custom
+                datatype = datatype_str.replace(".", "::")  # custom data type
 
         except AttributeError:
             pass
@@ -166,18 +172,18 @@ def export_node(node, generate_uuid, generate_all_idl_features):
         if datatype is not None:
             # adding range if min and max are specified in vspec file
             if min is not None and max is not None and generate_all_idl_features:
-                idlFileBuffer.append("@range(min="+str(min)+" ,max="+str(max)+")")
+                idlFileBuffer.append("@range(min=" + str(min) + " ,max=" + str(max) + ")")
 
             if allowedValues is None:
                 if defaultValue is None:
-                    idlFileBuffer.append(("sequence<"+datatype+"> value" if (arraysize is not None) else
-                                          datatype+" value")+";")
+                    idlFileBuffer.append(
+                        ("sequence<" + datatype + "> value" if arraysize is not None else datatype + " value") + ";")
                 else:
                     # default values in IDL file are not accepted by CycloneDDS/FastDDS :
                     # these values can be generated if --all-idl-features is set as True
-                    idlFileBuffer.append(("sequence<"+datatype+"> value" if arraysize is not None else
-                                          datatype + " value") +
-                                         ("  default " + str(defaultValue) if generate_all_idl_features else "") + ";")
+                    idlFileBuffer.append(
+                        ("sequence<" + datatype + "> value" if arraysize is not None else datatype + " value") +
+                        ("  default " + str(defaultValue) if generate_all_idl_features else "") + ";")
             else:
                 # this is the case where allowed values are provided, accordingly contents are converted to enum
                 if defaultValue is None:
@@ -185,8 +191,9 @@ def export_node(node, generate_uuid, generate_all_idl_features):
                 else:
                     # default values in IDL file are not accepted by CycloneDDS/FastDDS :
                     # these values can be generated if --all-idl-features is set as True
-                    idlFileBuffer.append(getAllowedName(node.name) + "_M::"+getAllowedName(node.name) + "Values value" +
-                                         (" " + str(defaultValue) if generate_all_idl_features else "") + ";")
+                    idlFileBuffer.append(
+                        getAllowedName(node.name) + "_M::" + getAllowedName(node.name) +
+                        "Values value" + (" " + str(defaultValue) if generate_all_idl_features else "") + ";")
 
         if unit is not None:
             idlFileBuffer.append(("" if generate_all_idl_features else "//") + "const string unit=\"" + unit + "\";")
@@ -199,16 +206,86 @@ def export_node(node, generate_uuid, generate_all_idl_features):
         idlFileBuffer.append("};")
 
 
+class StructExporter(object):
+    """
+    Helper class used for generating export output for struct data types.
+    """
+
+    def __init__(self):
+        self.str_buf = ""
+        self.structs_seen = []
+
+    def export(self, root) -> str:
+        self.str_buf = ""
+        self.structs_seen = []
+        self.export_data_type_node(root)
+        return self.str_buf
+
+    def export_data_type_node(self, node):
+        """
+        This method is used to traverse VSS node and to create corresponding DDS IDL buffer string
+        """
+
+        prefix = ""
+        suffix = ""
+        if node.is_branch():
+            prefix = f"module {getAllowedName(node.name)}" + " {\n"
+            suffix = "};\n"
+        elif node.is_struct():
+            # check if the properties use structs that have not been seen before
+            # if not, add a forward declaration
+            fwds = []
+            for c in node.children:
+                # primtive type
+                if c.has_datatype():
+                    continue
+
+                datatype_str = c.get_datatype().replace('.', '::').split("[", 1)[0]
+                if datatype_str not in self.structs_seen:
+                    base_type = datatype_str.split("::")[-1]
+                    fwds.append(base_type)
+
+            fwds.sort()
+            for f in set(fwds):
+                prefix += f"struct {f};\n"
+
+            prefix += f"struct {getAllowedName(node.name)}" + " {\n"
+            suffix = "};\n"
+            self.structs_seen.append(node.qualified_name("::").split("[", 1)[0])
+        else:
+            datatype_str = node.get_datatype().replace('.', '::').split("[", 1)[0]
+            is_seq = '[' in node.get_datatype()
+            if is_seq:
+                self.str_buf += f"sequence<{datatype_str}> {getAllowedName(node.name)};\n"
+            else:
+                self.str_buf += (f"{datatype_str} {getAllowedName(node.name)};\n")
+
+        self.str_buf += (f"{prefix}")
+
+        for child in node.children:
+            self.export_data_type_node(child)
+        self.str_buf += suffix
+
+
 def export_idl(file, root, generate_uuids=True, generate_all_idl_features=False):
     """This method is used to traverse through the root VSS node to build
        -> DDS IDL equivalent string buffer and to serialize it acccordingly into a file
     """
     export_node(root, generate_uuids, generate_all_idl_features)
     file.write('\n'.join(idlFileBuffer))
-    print("IDL file generated at location : "+file.name)
+    logging.info("IDL file generated at location : " + file.name)
 
 
-def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    print("Generating DDS-IDL output...")
-    idl_out = open(config.output_file, 'w')
-    export_idl(idl_out, root, print_uuid, config.all_idl_features)
+def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
+    logging.info("Generating DDS-IDL output...")
+
+    if data_type_root is not None:
+        exporter = StructExporter()
+        with open(config.output_file, 'w') as idl_out:
+            idl_out.write(exporter.export(data_type_root))
+
+    with open(config.output_file, 'a' if data_type_root is not None else 'w') as idl_out:
+        export_idl(idl_out, signal_root, print_uuid, config.all_idl_features)
+
+    if __name__ == "__main__":
+        initLogging()
