@@ -24,7 +24,7 @@ import vspec
 from vspec.vssexporters import vss2json, vss2csv, vss2yaml, \
     vss2binary, vss2franca, vss2ddsidl, vss2graphql, vss2protobuf, vss2jsonschema
 
-SUPPORTED_STRUCT_EXPORT_FORMATS = set(["json", "yaml", "csv", "protobuf", "jsonschema"])
+SUPPORTED_STRUCT_EXPORT_FORMATS = set(["json", "yaml", "csv", "protobuf", "jsonschema", "idl"])
 
 
 class Exporter(Enum):
