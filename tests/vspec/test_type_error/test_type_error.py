@@ -40,16 +40,19 @@ def test_description_error(vspec_file: str, type_str: str, change_test_dir):
     assert os.WEXITSTATUS(result) == 0
 
 
-# Currently disabled, add "test_" at beginning if we decided to require case sensitivity
-def case_sensitive(change_test_dir):
+@pytest.mark.parametrize("vspec_file", [
+    ("branch_wrong_case.vspec"),
+    ("sensor_wrong_case.vspec")
+    ])
+def type_case_sensitive(vspec_file: str, change_test_dir):
     test_str = "../../../vspec2json.py --json-pretty --no-uuid " + \
-               "branch_wrong_case.vspec out.json > out.txt 2>&1"
+               vspec_file + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected
     assert os.WEXITSTATUS(result) != 0
 
-    test_str = 'grep \"Unknown type: BRANCH\" out.txt > /dev/null'
+    test_str = 'grep \"Unknown type\" out.txt > /dev/null'
     result = os.system(test_str)
     os.system("cat out.txt")
     os.system("rm -f out.json out.txt")

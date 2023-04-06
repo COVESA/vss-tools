@@ -217,8 +217,6 @@ def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
     # 2. Check that allowed values are provided as arrays.
     """
     available_types = tree_type.available_types()
-    # map of lower case name to proper name
-    available_types_map = {k.lower(): k for k in available_types}
 
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
@@ -226,12 +224,9 @@ def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
         if "type" not in elem:
             raise VSpecError(elem["$file_name$"], elem["$line$"], "No type specified!")
 
-        # Get the correct casing for the type -as of today some signals in standard catalog use upper case
-        elem["type"] = elem["type"].lower()
-
         # Check, with case sensitivity that we do have
         # a validated type.
-        if not elem["type"] in available_types_map:
+        if not elem["type"] in available_types:
             raise VSpecError(elem["$file_name$"], elem["$line$"],
                              "Unknown type: {}".format(elem["type"]))
 
