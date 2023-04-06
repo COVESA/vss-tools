@@ -14,11 +14,41 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
+@pytest.mark.parametrize("format,signals_out, expected_signal", [
+    ('json', 'signals-out.json', 'expected-signals-types.json'),
+    ('yaml', 'signals-out.yaml', 'expected-signals-types.yaml'),
+    ('csv', 'signals-out.csv', 'expected-signals-types.csv')])
+def test_data_types_export_single_file(format, signals_out, expected_signal, change_test_dir):
+    """
+    Test that data types provided in vspec format are converted correctly
+    """
+    args = ["../../../vspec2x.py", "--no-uuid", "--format", format]
+    if format == 'json':
+        args.append('--json-pretty')
+    args.extend(["-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml",
+                 "test.vspec", signals_out, "1>", "out.txt", "2>&1"])
+    test_str = " ".join(args)
+
+    result = os.system(test_str)
+    os.system("cat out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0
+
+    test_str = f"diff {signals_out} {expected_signal}"
+    result = os.system(test_str)
+    os.system("rm -f out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0
+
+    os.system(f"rm -f {signals_out}")
+
+
 @pytest.mark.parametrize("format,signals_out, data_types_out,expected_signal,expected_data_types", [
     ('json', 'signals-out.json', 'VehicleDataTypes.json', 'expected-signals.json', 'expected.json'),
     ('csv',  'signals-out.csv',  'VehicleDataTypes.csv',  'expected-signals.csv',  'expected.csv'),
     ('yaml',  'signals-out.yaml',  'VehicleDataTypes.yaml',  'expected-signals.yaml',  'expected.yaml')])
-def test_data_types_export(format, signals_out, data_types_out, expected_signal, expected_data_types, change_test_dir):
+def test_data_types_export_multi_file(format, signals_out, data_types_out,
+                                      expected_signal, expected_data_types, change_test_dir):
     """
     Test that data types provided in vspec format are converted correctly
     """
@@ -29,8 +59,8 @@ def test_data_types_export(format, signals_out, data_types_out, expected_signal,
                  "test.vspec", signals_out, "1>", "out.txt", "2>&1"])
     test_str = " ".join(args)
 
-    os.system("cat out.txt")
     result = os.system(test_str)
+    os.system("cat out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 

@@ -19,6 +19,7 @@ from vspec.model.vsstree import VSSNode
 import yaml
 import logging
 from vspec.loggingconfig import initLogging
+from typing import Dict, Any
 
 
 def add_arguments(parser: argparse.ArgumentParser):
@@ -78,11 +79,10 @@ def export_node(yaml_dict, node, config, print_uuid):
         export_node(yaml_dict, child, config, print_uuid)
 
 
-def export_yaml(file, root, config, generate_uuids):
-    yaml_dict = {}
-    export_node(yaml_dict, root, config, generate_uuids)
-    yaml.dump(yaml_dict, file, default_flow_style=False, Dumper=NoAliasDumper,
-              sort_keys=True, width=1024, indent=2, encoding='utf-8', allow_unicode=True)
+def export_yaml(file_name, content_dict):
+    with open(file_name, 'w') as f:
+        yaml.dump(content_dict, f, default_flow_style=False, Dumper=NoAliasDumper,
+                  sort_keys=True, width=1024, indent=2, encoding='utf-8', allow_unicode=True)
 
 
 # create dumper to remove aliases from output and to add nice new line after each object for a better readability
@@ -97,13 +97,21 @@ class NoAliasDumper(yaml.SafeDumper):
 
 
 def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    for root, outfile in zip([signal_root, data_type_root], [config.output_file, config.types_output_file]):
-        if root is None:
-            continue
+    logging.info("Generating YAML output...")
 
-        logging.info("Generating YAML output...")
-        with open(outfile, 'w') as f:
-            export_yaml(f, root, config, print_uuid)
+    signals_yaml_dict: Dict[str, Any] = {}
+    export_node(signals_yaml_dict, signal_root, config, print_uuid)
+
+    if data_type_root is not None:
+        data_types_yaml_dict: Dict[str, Any] = {}
+        export_node(data_types_yaml_dict, data_type_root, config, print_uuid)
+        if config.types_output_file is None:
+            logging.info("Adding custom data types to signal dictionary")
+            signals_yaml_dict["ComplexDataTypes"] = data_types_yaml_dict
+        else:
+            export_yaml(config.types_output_file, data_types_yaml_dict)
+
+    export_yaml(config.output_file, signals_yaml_dict)
 
 
 if __name__ == "__main__":

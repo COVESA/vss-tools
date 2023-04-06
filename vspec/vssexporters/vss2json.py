@@ -81,20 +81,29 @@ def export_node(json_dict, node, config, print_uuid):
 
 
 def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    for root, outfile in zip([signal_root, data_type_root], [config.output_file, config.types_output_file]):
-        if root is None:
-            continue
+    logging.info("Generating JSON output...")
+    indent = None
+    if config.json_pretty:
+        logging.info("Serializing pretty JSON...")
+        indent = 2
+    else:
+        logging.info("Serializing compact JSON...")
 
-        logging.info("Generating JSON output...")
-        json_dict: Dict[str, Any] = {}
-        export_node(json_dict, root, config, print_uuid)
-        with open(outfile, 'w') as f:
-            if config.json_pretty:
-                logging.info("Serializing pretty JSON...")
-                json.dump(json_dict, f, indent=2, sort_keys=True)
-            else:
-                logging.info("Serializing compact JSON...")
-                json.dump(json_dict, f, indent=None, sort_keys=True)
+    signals_json_dict: Dict[str, Any] = {}
+    export_node(signals_json_dict, signal_root, config, print_uuid)
+
+    if data_type_root is not None:
+        data_types_json_dict: Dict[str, Any] = {}
+        export_node(data_types_json_dict, data_type_root, config, print_uuid)
+        if config.types_output_file is None:
+            logging.info("Adding custom data types to signal dictionary")
+            signals_json_dict["ComplexDataTypes"] = data_types_json_dict
+        else:
+            with open(config.types_output_file, 'w') as f:
+                json.dump(data_types_json_dict, f, indent=indent, sort_keys=True)
+
+    with open(config.output_file, 'w') as f:
+        json.dump(signals_json_dict, f, indent=indent, sort_keys=True)
 
 
 if __name__ == "__main__":
