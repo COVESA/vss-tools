@@ -6,6 +6,7 @@
 
 import pytest
 import os
+from pathlib import Path
 
 
 @pytest.fixture
@@ -76,6 +77,59 @@ def test_data_types_export_multi_file(format, signals_out, data_types_out,
     assert os.WEXITSTATUS(result) == 0
 
     os.system(f"rm -f {signals_out} {data_types_out}")
+
+
+@pytest.mark.parametrize(
+        "signal_vspec_file,type_vspec_file,expected_signal_file,actual_signal_file,expected_type_files,"
+        "actual_type_files",
+        [('test.vspec', 'VehicleDataTypes.vspec', 'ExpectedSignals.proto', 'ActualSignals.proto',
+          ['VehicleDataTypes/TestBranch1/ExpectedTestBranch1.proto'],
+          ['VehicleDataTypes/TestBranch1/TestBranch1.proto']),
+         ('test2.vspec', 'VehicleDataTypes2.vspec', 'ExpectedSignals2.proto', 'ActualSignals.proto',
+          ['VehicleDataTypes/TestBranch2/ExpectedTestBranch2.proto',
+           'VehicleDataTypes/TestBranch3/ExpectedTestBranch3.proto'],
+          ['VehicleDataTypes/TestBranch2/TestBranch2.proto',
+           'VehicleDataTypes/TestBranch3/TestBranch3.proto'])])
+def test_data_types_export_to_proto(signal_vspec_file, type_vspec_file, expected_signal_file,
+                                    actual_signal_file, expected_type_files, actual_type_files,
+                                    change_test_dir):
+    """
+    Test that data types provided in vspec format are converted correctly to protobuf
+    """
+
+    data_types_out = Path.cwd() / "unused.proto"
+    args = ["../../../vspec2x.py", "--no-uuid", "--format", "protobuf",
+            "-vt", type_vspec_file, "-u", "../test_units.yaml",
+            "-ot", str(data_types_out), signal_vspec_file, actual_signal_file, "1>", "out.txt", "2>&1"]
+    test_str = " ".join(args)
+
+    result = os.system(test_str)
+    os.system("cat out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0
+
+    expected_proto_files = expected_type_files + [expected_signal_file]
+    actual_proto_files = actual_type_files + [actual_signal_file]
+
+    os.system("rm -f out.txt")
+    for (expected_file, actual_file) in zip(expected_proto_files, actual_proto_files):
+        test_str = f"diff {expected_file} {actual_file}"
+        result = os.system(test_str)
+        assert os.WIFEXITED(result)
+        assert os.WEXITSTATUS(result) == 0
+
+    for proto_file in actual_proto_files:
+        proto_compile_cmd = f"protoc {proto_file} --cpp_out=. 1>proto.out 2>&1"
+        result = os.system(proto_compile_cmd)
+        os.system("cat proto.out")
+        assert os.WIFEXITED(result)
+        assert os.WEXITSTATUS(result) == 0
+    # clean up
+    for proto_file in actual_proto_files:
+        proto_stem = Path(proto_file).stem
+        proto_path = Path(os.path.dirname(proto_file))
+        os.system(f"rm -f {proto_file} proto.out")
+        os.system(f"rm -f {proto_path}/{proto_stem}.pb.cc {proto_path}/{proto_stem}.pb.h")
 
 
 @pytest.mark.parametrize("types_file,error_msg", [

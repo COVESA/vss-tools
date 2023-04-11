@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "VehicleDataTypes/TestBranch2/TestBranch2.proto";
+import "VehicleDataTypes/TestBranch3/TestBranch3.proto";
+
+message A {
+  uint32 UInt8 = 1;
+  VehicleDataTypes.TestBranch2.ParentStruct ParentStructSensor = 2;
+  VehicleDataTypes.TestBranch3.NestedStruct NestedStructSensor = 3;
+}
+

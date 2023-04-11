@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package VehicleDataTypes.TestBranch2;
+
+import "VehicleDataTypes/TestBranch3/TestBranch3.proto";
+
+message ParentStruct {
+  VehicleDataTypes.TestBranch3.NestedStruct x_property = 1;
+  repeated VehicleDataTypes.TestBranch3.NestedStruct x_properties = 2;
+  double z_property = 3;
+}
+

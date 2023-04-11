@@ -21,9 +21,10 @@ import sys
 import vspec
 
 
-from vspec.vssexporters import vss2json, vss2csv, vss2yaml, vss2binary, vss2franca, vss2ddsidl, vss2graphql
+from vspec.vssexporters import vss2json, vss2csv, vss2yaml, \
+    vss2binary, vss2franca, vss2ddsidl, vss2graphql, vss2protobuf
 
-SUPPORTED_STRUCT_EXPORT_FORMATS = set(["json", "yaml", "csv"])
+SUPPORTED_STRUCT_EXPORT_FORMATS = set(["json", "yaml", "csv", "protobuf"])
 
 
 class Exporter(Enum):
@@ -41,6 +42,7 @@ class Exporter(Enum):
     franca = vss2franca
     idl = vss2ddsidl
     graphql = vss2graphql
+    protobuf = vss2protobuf
 
     def __str__(self):
         return self.name
@@ -203,7 +205,9 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
     type information provided in vspec format
     """
     if args.types_output_file is None:
-        logging.info("Sensors and custom data types will be consolidated into one file")
+        logging.info("Sensors and custom data types will be consolidated into one file.")
+        if args.format == Exporter.protobuf:
+            logging.info("Proto files will be written to the current working directory")
 
     logging.warning(
         "vspec struct/type support is an experimental feature. Not all features in the tool chain are supported."

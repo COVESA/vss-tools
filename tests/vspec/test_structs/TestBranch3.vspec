@@ -1,0 +1,21 @@
+NestedStruct:
+  type: struct
+  description: "A struct that is going to be used within another struct - Nested"
+
+NestedStruct.x:
+  type: property
+  description: "x property"
+  datatype: double
+  min: -10
+
+NestedStruct.y:
+  type: property
+  description: "y property"
+  datatype: double
+  max: 10
+
+NestedStruct.z:
+  type: property
+  description: "z property"
+  datatype: double
+  default: 1

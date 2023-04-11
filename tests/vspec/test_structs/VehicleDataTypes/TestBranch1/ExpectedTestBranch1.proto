@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package VehicleDataTypes.TestBranch1;
+
+
+message NestedStruct {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+
+message ParentStruct {
+  VehicleDataTypes.TestBranch1.NestedStruct x_property = 1;
+  VehicleDataTypes.TestBranch1.NestedStruct y_property = 2;
+  repeated VehicleDataTypes.TestBranch1.NestedStruct x_properties = 3;
+  repeated VehicleDataTypes.TestBranch1.NestedStruct y_properties = 4;
+  double z_property = 5;
+}
+
