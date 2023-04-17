@@ -911,6 +911,15 @@ def check_data_type_references_recursive(
                     f"Data Type reference invalid. Node Name: {node.name}. "
                     f"Node Qualified Name: {node.qualified_name()}. "
                     f"Data Type: {undecorated_data_type}")
+
+            separator = "."
+            # is the property circularly refereing to the struct in which it is defined?
+            member_of = separator.join(node.qualified_name(separator).split(separator)[:-1])
+            if member_of == undecorated_data_type:
+                errors.append(
+                    "Circular reference detected in data type. "
+                    f"Data Type: {member_of}. Property: {node.name}")
+
     for n in node.children:
         check_data_type_references_recursive(
             n, data_type_qualified_names, errors)

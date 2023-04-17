@@ -1,0 +1,45 @@
+VehicleDataTypes:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+VehicleDataTypes.TestBranch1:
+  type: branch
+  description: "Test branch with structs and properties definitions"
+
+VehicleDataTypes.TestBranch1.NestedStruct:
+  type: struct
+  description: "A struct with properties containing circular references"
+
+VehicleDataTypes.TestBranch1.NestedStruct.a_property:
+  type: property
+  description: "Normal"
+  datatype: double
+
+VehicleDataTypes.TestBranch1.ParentStruct:
+  type: struct
+  description: "A struct with properties containing circular references"
+
+VehicleDataTypes.TestBranch1.ParentStruct.a_property:
+  type: property
+  description: "Normal"
+  datatype: double
+
+VehicleDataTypes.TestBranch1.ParentStruct.b_property:
+  type: property
+  description: "Circular"
+  datatype: ParentStruct
+
+VehicleDataTypes.TestBranch1.ParentStruct.c_property:
+  type: property
+  description: "Circular"
+  datatype: ParentStruct[]
+
+VehicleDataTypes.TestBranch1.ParentStruct.d_property:
+  type: property
+  description: "Circular"
+  datatype: VehicleDataTypes.TestBranch1.ParentStruct
+
+VehicleDataTypes.TestBranch1.ParentStruct.e_property:
+  type: property
+  description: "Circular"
+  datatype: VehicleDataTypes.TestBranch1.ParentStruct[]

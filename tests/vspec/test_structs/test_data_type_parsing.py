@@ -135,6 +135,8 @@ def test_data_types_export_to_proto(signal_vspec_file, type_vspec_file, expected
 @pytest.mark.parametrize("types_file,error_msg", [
     ('VehicleDataTypesInvalidStructWithQualifiedName.vspec',
      '2 data type reference errors detected'),
+    ('VehicleDataTypesWithCircularRefs.vspec',
+     '4 data type reference errors detected'),
     ('VehicleDataTypesInvalidStruct.vspec', 'Data type not found. Data Type: NestedStruct1')])
 def test_data_types_invalid_reference_in_data_type_tree(
         types_file, error_msg, change_test_dir):

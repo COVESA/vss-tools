@@ -362,12 +362,12 @@ class VSSNode(Node):
                         logging.error(
                             f"Data type not found. Data Type: {undecorated_datatype_str}")
                         sys.exit(-1)
+
+                    # replace data type with qualified name
+                    if is_array:
+                        self.data_type_str = struct_fqn + ARRAY_SUBSCRIPT_OP
                     else:
-                        # replace data type with qualified name
-                        if is_array:
-                            self.data_type_str = struct_fqn + ARRAY_SUBSCRIPT_OP
-                        else:
-                            self.data_type_str = struct_fqn
+                        self.data_type_str = struct_fqn
             elif self.is_signal():
                 # This is a signal possibly referencing a user-defined type.
                 # Just assign the string value for now. Validation will be
