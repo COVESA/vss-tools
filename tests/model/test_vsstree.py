@@ -31,7 +31,8 @@ class TestVSSNode(unittest.TestCase):
         Test complex object construction.
         """
         source = {"description": "some desc", "type": "sensor", "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
-                  "datatype": "uint8", "unit": "hogshead", "min": 0, "max": 100, "allowed": ["one", "two"], "aggregate": False,
+                  "datatype": "uint8", "unit": "hogshead", "min": 0, "max": 100, "allowed": ["one", "two"],
+                  "aggregate": False,
                   "default": "test-default", "$file_name$": "testfile"}
         unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
         Unit.load_config_file(unit_file)
@@ -65,10 +66,10 @@ class TestVSSNode(unittest.TestCase):
             "uuid": "e36a1d8c-4d06-4c22-ba69-e8b39434a7a3",
             "$file_name$": "testfile"}
 
-        source = {"description": "some desc", "type": "sensor", "datatype": "float", "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
                   "datatype": "uint8", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
-                  
-                  
+
         unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
         Unit.load_config_file(unit_file)
 
@@ -100,7 +101,7 @@ class TestVSSNode(unittest.TestCase):
 
     def test_tree_find(self):
         """
-        Test if tree can be found withing VSS tree
+        Test if tree can be found within VSS tree
         """
         source_root = {
             "description": "High-level vehicle data.",
@@ -127,7 +128,8 @@ class TestVSSNode(unittest.TestCase):
             source_drivetrain,
             VSSTreeType.SIGNAL_TREE.available_types(),
             node_root)
-        node_drivetrain_element = VSSNode(
+        # No need to store create node to a variable on next line
+        VSSNode(
             "SomeElement",
             source_drivetrain_element,
             VSSTreeType.SIGNAL_TREE.available_types(),

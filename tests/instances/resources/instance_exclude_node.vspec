@@ -4,7 +4,7 @@ Vehicle:
   description: High-level vehicle data.
 
 Vehicle.SomeThing:
-  type: Branch
+  type: branch
   description: "SomeThing description"
   datatype: string
 
@@ -14,7 +14,7 @@ Vehicle.SomeThing.SomethingLeaf:
   datatype: string
 
 Vehicle.ExcludeSomeThing:
-  type: Branch
+  type: branch
   description: "ExcludeSomeThing description"
   datatype: string
   instantiate: False

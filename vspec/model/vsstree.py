@@ -437,8 +437,8 @@ class VSSNode(Node):
             unknown_found = True
 
         if "default" in self.source_dict.keys():
-            if self.source_dict["type"] != "attribute" and self.source_dict["type"] != "property":
-                logging.warning("Invalid VSS element %s, only attributes/properties can use default", self.name)
+            if self.source_dict["type"] not in {"attribute", "property", "sensor", "actuator"}:
+                logging.warning("Invalid VSS element %s, %s cannot use default", self.name, self.source_dict["type"])
                 unknown_found = True
 
         if unknown_found and abort_on_unknown_attribute:

@@ -198,12 +198,9 @@ class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
     DATA_TYPE_TREE = "data_type_tree"
 
     def available_types(self):
-        available_types = set(["UInt8", "Int8", "UInt16", "Int16",
-                               "UInt32", "Int32", "UInt64", "Int64", "Boolean",
-                               "Float", "Double", "String"])
         if self.value == "signal_tree":
-            available_types.update(["branch", "sensor", "actuator", "attribute"])
+            available_types = set(["branch", "sensor", "actuator", "attribute"])
         else:
-            available_types.update(["branch", "struct", "property"])
+            available_types = set(["branch", "struct", "property"])
 
         return available_types
