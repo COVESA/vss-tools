@@ -47,6 +47,7 @@ class ProtoExporter(object):
 
     def setup_file(self, fp: Path, package_name: str):
         with open(fp, 'w') as proto_file:
+            logging.info(f"Initializing {fp}, package {package_name}")
             proto_file.write("syntax = \"proto3\";\n\n")
             # set up the proto's package
             proto_file.write(f"package {package_name};\n\n")
@@ -101,7 +102,7 @@ class ProtoExporter(object):
                 proto_file.write(f"message {type_qn[-1]} {{" + "\n")
                 print_message_body(tree_node.children, proto_file)
                 proto_file.write("}\n\n")
-                logging.info(f"Finished writing {fp}")
+                logging.info(f"Wrote {type_qn[-1]} to {fp}")
 
 
 def traverse_signal_tree(tree: VSSNode, proto_file):
@@ -143,9 +144,13 @@ def print_message_body(nodes, proto_file):
 def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
     logging.info("Generating protobuf output...")
     if data_type_root is not None:
-        outdir = config.types_output_file if config.types_output_file is not None else Path.cwd()
-        fp = Path(outdir)
-        exporter = ProtoExporter(Path(os.path.dirname(fp)))
+        if config.types_output_file is not None:
+            fp = Path(config.types_output_file)
+            exporter_path = Path(os.path.dirname(fp))
+        else:
+            exporter_path = Path(Path.cwd())
+        logging.debug(f"Will use {exporter_path} for type exports")
+        exporter = ProtoExporter(exporter_path)
         exporter.traverse_data_type_tree(data_type_root)
 
     with open(config.output_file, 'w') as f:

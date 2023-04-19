@@ -106,12 +106,18 @@ def load_tree(
         break_on_name_style_violation=break_on_name_style_violation)
     if expand_inst:
         expand_tree_instances(tree)
+    return tree
 
+
+def check_type_usage(tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[VSSNode] = None):
+    """
+    Check usages of types within the tree.
+    This methods shall be called after overlays (or additional type files) have been merged.
+    """
     if tree_type == VSSTreeType.DATA_TYPE_TREE:
         check_data_type_references(tree)
     elif tree_type == VSSTreeType.SIGNAL_TREE:
-        check_data_type_references_across_trees(tree, data_type_tree)
-    return tree
+        check_data_type_references_across_trees(tree, type_tree)
 
 
 def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):

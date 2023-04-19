@@ -94,7 +94,8 @@ def main(arguments):
     type_group = parser.add_argument_group(
         'VSS Data Type Tree arguments',
         'Arguments related to struct/type support [Experimental]')
-    type_group.add_argument('-vt', '--vspec-types-file', metavar='vspec_types_file', type=str, required=False,
+    type_group.add_argument('-vt', '--vspec-types-file', action='append', metavar='vspec_types_file', type=str,
+                            default=[],
                             help='Data types file in vspec format.')
     type_group.add_argument('-ot', '--types-output-file', metavar='<types_output_file>',
                             help='Output file for writing data types from vspec file.')
@@ -155,7 +156,7 @@ def main(arguments):
     vspec.load_units(args.vspec_file, args.unit_file)
 
     # process data type tree
-    if args.types_output_file is not None and args.vspec_types_file is None:
+    if args.types_output_file is not None and not args.vspec_types_file:
         parser.error("An output file for data types was provided. Please also provide "
                      "the input vspec file for data types")
     data_type_tree = None
@@ -178,6 +179,7 @@ def main(arguments):
                                         data_type_tree=data_type_tree)
             vspec.merge_tree(tree, othertree)
 
+        vspec.check_type_usage(tree, VSSTreeType.SIGNAL_TREE, data_type_tree)
         vspec.expand_tree_instances(tree)
 
         vspec.clean_metadata(tree)
@@ -209,17 +211,20 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
         if args.format == Exporter.protobuf:
             logging.info("Proto files will be written to the current working directory")
 
-    logging.warning(
-        "vspec struct/type support is an experimental feature. Not all features in the tool chain are supported."
-        "Proceed with caution")
-    if len(args.overlays) > 0:
-        parser.error(
-            "Overlays are not yet supported in vspec struct/data type support feature")
+    logging.warning("All exports do not yet support structs. Please check documentation for your exporter!")
 
-    logging.info(
-        f"Loading and processing struct/data type tree from {args.vspec_types_file}")
-    return vspec.load_tree(args.vspec_types_file, include_dirs, VSSTreeType.DATA_TYPE_TREE,
-                           break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+    first_tree = True
+    for type_file in args.vspec_types_file:
+        logging.info(f"Loading and processing struct/data type tree from {type_file}")
+        new_tree = vspec.load_tree(type_file, include_dirs, VSSTreeType.DATA_TYPE_TREE,
+                                   break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+        if first_tree:
+            tree = new_tree
+            first_tree = False
+        else:
+            vspec.merge_tree(tree, new_tree)
+    vspec.check_type_usage(tree, VSSTreeType.DATA_TYPE_TREE)
+    return tree
 
 
 if __name__ == "__main__":

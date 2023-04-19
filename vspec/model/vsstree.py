@@ -372,9 +372,7 @@ class VSSNode(Node):
                 # This is a signal possibly referencing a user-defined type.
                 # Just assign the string value for now. Validation will be
                 # performed after the entire tree is rendered.
-                logging.info(
-                    (f"Possible struct-type encountered - {self.data_type_str} in node {self.name}. ",
-                     "Skipping validation for now"))
+                logging.debug(f"Possible struct-type encountered - {self.data_type_str} in node {self.name}. ")
             else:
                 raise e
             self.datatype = None  # reset the enum
