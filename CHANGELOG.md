@@ -56,26 +56,40 @@ file it will be used, only if not existing `config.yaml` in vss-tools will be us
 
 ## Planned Changes VSS-Tools 4.0
 
-### Completion of struct support feature
+### Struct support feature
 
-For VSS-Tools 4.0 the plan is to support structs in most exporters.
+In VSS-Tools 4.0 structs are supported in the following exporters:
+
+* JSON
+* Yaml
+* CSV
+* Protobuf
+
+Other exporters do not support structs.
+
+It is possible to use specify muliple type files with `-vt`, and to use types in combination with overlays.
+For more information see [vspec2x documentation](docs/vspec2x.md)
 
 ### Change in UUID handling.
 
-For VSS-Tools 4.0 the following behavior shall be implemented:
+For VSS-Tools 4.0 the following behavior is implemented:
 
-* By default no UUIDs shall be generated.
-* The parameter `--no-uuid` is now considered deprecated, and a warning shall be given if `--no-uuid` is used.
-* No warning shall be given if neither `--uuid` nor `--no-uuid` is used.
-* If both `--uuid` and `--no-uuid` is used an error shall be given.
+* By default no UUIDs are generated.
+* The parameter `--no-uuid` is now considered deprecated, and a warning is given if `--no-uuid` is used.
+* No warning is given if neither `--uuid` nor `--no-uuid` is used.
+* If both `--uuid` and `--no-uuid` is used an error is given.
 
-### Default unit file to be removed from vss-tools
+### Default unit fileremoved from vss-tools
 
 The [default unit file](https://github.com/COVESA/vss-tools/blob/master/vspec/config.yaml)
-will be removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
+has been removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
 file must exist, or a unit file must be specified by `-u`.
 From now on, if new units are needed for the VSS catalog they shall be added to the
 [VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
+
+## Planned Changes VSS-Tools 4.1
+
+Adding of struct support for exporters currently not supporting structs.
 
 ## Planned Changes VSS-Tools 5.0
 
