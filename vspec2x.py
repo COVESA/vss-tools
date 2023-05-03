@@ -93,7 +93,7 @@ def main(arguments):
 
     type_group = parser.add_argument_group(
         'VSS Data Type Tree arguments',
-        'Arguments related to struct/type support [Experimental]')
+        'Arguments related to struct/type support')
     type_group.add_argument('-vt', '--vspec-types-file', action='append', metavar='vspec_types_file', type=str,
                             default=[],
                             help='Data types file in vspec format.')
