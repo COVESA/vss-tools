@@ -74,11 +74,13 @@ COVESA supports a number of pre-defined types, see [VSS documentation](https://c
 In addition to this COVESA is introducing a concept to support user-defined types.
 This is currently limited to specifying struct-types. For more information on syntax see VSS documentation.
 
-*Note: Struct support is  currently an experimental feature with limited support in exporters, currently only supported by JSON exporter!*
+*Note: Struct support is not yet supported by all exportes, currently supported by JSON; CSV, Yaml and Protobuf exporters!*
 
 To use user-defined types the types must be put in a separate file and given to the tool with the `-vt` argument.
 When a signal is defined the tooling will check if the `datatype` specified is either a predefined type or
 a user-defined type. If no matching type is found an error will be given.
+It is possible to use `-vt <file>` multiple times. Any additional files after the first one is then treated similar
+to overlay files, i.e. they are merged into previous file and it is if needed possible to redefine already defined types.
 
 Depending on exporter, type definitions may either be transformed to a separate file with structure similar to the
 "normal" output file, or integrated into the "normal" output file. If type output is given to a separate file then
@@ -93,8 +95,8 @@ python vspec2json.py --no-uuid --json-pretty -vt VehicleDataTypes.vspec -ot Vehi
 
 Current status for exportes:
 
-* CSV, JSON, YAML: Supported as experimental feature, `-ot` argument must be given
-* All other exporters: Not supported
+* CSV, JSON, YAML, Protobuf: Supported!
+* All other exporters: Not supported!
 
 The export format is similar to the export format of VSS signals. The below table illustrates the exporting of the new nodes introduced in the data type tree:
 

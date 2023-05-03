@@ -1,0 +1,58 @@
+{
+  "A": {
+    "children": {
+      "SignalA": {
+        "datatype": "Types.Struct1",
+        "description": "This is the first signal.",
+        "type": "sensor"
+      },
+      "SignalB": {
+        "datatype": "Types.Struct2",
+        "description": "This is the second signal.",
+        "type": "sensor"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  },
+  "ComplexDataTypes": {
+    "Types": {
+      "children": {
+        "Struct1": {
+          "children": {
+            "x": {
+              "datatype": "double",
+              "description": "x property",
+              "type": "property"
+            },
+            "y": {
+              "datatype": "uint16",
+              "description": "y property",
+              "type": "property"
+            }
+          },
+          "description": "A struct with datatype property defined.",
+          "type": "struct"
+        },
+        "Struct2": {
+          "children": {
+            "c": {
+              "datatype": "Types.Struct1",
+              "description": "x property",
+              "type": "property"
+            },
+            "d": {
+              "datatype": "uint16",
+              "description": "y property",
+              "type": "property"
+            }
+          },
+          "description": "A struct with datatype property defined.",
+          "type": "struct"
+        }
+      },
+      "description": "Top-level branch for vehicle data types.",
+      "type": "branch"
+    }
+  }
+}

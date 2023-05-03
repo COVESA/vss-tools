@@ -281,6 +281,8 @@ if __name__ == "__main__":
 
     try:
         tree = vspec.load_tree(args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE, expand_inst=False)
+        # vspec2ttl currently does not support type trees
+        vspec.check_type_usage(tree, VSSTreeType.SIGNAL_TREE)
         print_ttl_content(args.output_file, tree)
     except vspec.VSpecError as e:
         print(f"Error: {e}")

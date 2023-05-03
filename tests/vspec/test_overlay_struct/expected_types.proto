@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package Types;
+
+
+message Struct1 {
+  double x = 1;
+  uint32 y = 2;
+}
+
+
+message Struct2 {
+  double c = 1;
+  uint32 d = 2;
+}
+

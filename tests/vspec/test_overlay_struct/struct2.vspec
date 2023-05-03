@@ -1,0 +1,18 @@
+# Intended to work as an overlay
+Types:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+Types.Struct2:
+  type: struct
+  description: "A struct with datatype property defined."
+
+Types.Struct2.c:
+  type: property
+  description: "x property"
+  datatype: double
+
+Types.Struct2.d:
+  type: property
+  description: "y property"
+  datatype: uint16
