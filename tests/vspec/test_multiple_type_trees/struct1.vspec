@@ -1,0 +1,17 @@
+TypesB:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+TypesB.Struct2:
+  type: struct
+  description: "A struct with datatype property defined."
+
+TypesB.Struct2.x:
+  type: property
+  description: "x property"
+  datatype: double
+
+TypesB.Struct2.y:
+  type: property
+  description: "y property"
+  datatype: uint16

@@ -1,0 +1,14 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalA:
+  datatype: TypesA.Struct1
+  type: sensor
+  description: This is the first signal.
+
+A.SignalB:
+  datatype: TypesB.Struct2
+  type: sensor
+  description: This is the second signal.
