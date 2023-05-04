@@ -9,7 +9,7 @@ version = r.stdout.rstrip().decode('UTF-8')
 # ...otherwise, use abbreviated git commit hash
 if version == '':
     r = subprocess.run(['git', 'rev-parse', '--short=8', 'HEAD'], stdout=subprocess.PIPE)
-    version = '4.0.dev+' + r.stdout.rstrip().decode('UTF-8')
+    version = '4.1.dev+' + r.stdout.rstrip().decode('UTF-8')
 
 setup(
     name='vss-tools',
