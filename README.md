@@ -138,3 +138,24 @@ vspec2yaml.py: error: the following arguments are required: <vspec_file>, <outpu
 
 ## Pre-commit set up
 This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks. pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
+
+## Building and installing with Pip
+
+Vss-tools can be installed by Pip. If you just want the latest version this should be sufficient:
+
+```sh
+pip install vss-tools
+```
+
+When installed tools like `vspec2x.py` shall be available on your path.
+
+For more information see the [wiki](https://github.com/COVESA/vss-tools/wiki/PyPI-packing).
+
+### Pip versioning
+
+This is the versions types that may exist in PyPI for vss-tools and used for local pip install (`pip install -e .`)
+
+* X.Y or X.Y.Z - A released version.
+* X.Y.devN, N starting from 0 - Developer builds - may be published to PyPI if needed for testing purposes.
+* X.YaN, N starting from 0 - Pre-releases, may be published to PyPI if needed for testing purposes.
+* X.YrcN, N starting from 0 - Release candidates, to be published around two weeks before a major/minor release.
