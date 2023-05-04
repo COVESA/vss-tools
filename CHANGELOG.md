@@ -54,7 +54,7 @@ allowing VSS tooling to control their own units rather than relying on units in 
 Default behavior for units have changed, if there is a file `units.yaml` in the same directory as the `*.vspec`
 file it will be used, only if not existing `config.yaml` in vss-tools will be used.
 
-## Planned Changes VSS-Tools 4.0
+## VSS-Tools 4.0
 
 ### Struct support feature
 

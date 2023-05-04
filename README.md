@@ -138,3 +138,7 @@ vspec2yaml.py: error: the following arguments are required: <vspec_file>, <outpu
 
 ## Pre-commit set up
 This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks. pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
+
+## Building and installing with Pip
+
+For usage of VSS-Tools with Pip (PyPI) please see [README-PYPI.md](README-PYPI.md)
