@@ -81,7 +81,7 @@ For VSS-Tools 4.0 the following behavior is implemented:
 
 ### Default unit fileremoved from vss-tools
 
-The [default unit file](https://github.com/COVESA/vss-tools/blob/master/vspec/config.yaml)
+The default unit file `config.yaml`
 has been removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
 file must exist, or a unit file must be specified by `-u`.
 From now on, if new units are needed for the VSS catalog they shall be added to the
