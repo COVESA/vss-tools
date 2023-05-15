@@ -52,7 +52,7 @@ Below elements are considered only if the switch ***--all-idl-features*** is sup
 |--------|----------------|
 | <pre>Direction:<br> datatype:string<br> type: actuator<br> allowed: ['FORWARD','BACKWARD']<br> description: Driving direction of the vehicle</pre>  | <pre>module Direction_M {<br>enum DirectionValues{FORWARD,BACKWARD};<br>};<br>struct Direction<br>{<br>string uuid;<br>DirectionValues value;<br>};</pre>
 
-To comply with DDS-IDL rules VSS literals that start with a digit will get an underscore as prefix.
+To comply with DDS-IDL rules and limitations in IDL compilers VSS string literals that start with a digit will get a `d` as prefix.
 
 Example VSS:
 
@@ -64,8 +64,12 @@ allowed: ['FORWARD','BACKWARD', '123']
 Resulting DDS-IDL::
 
 ```
-enum DirectionValues{FORWARD,BACKWARD,_123}
+enum DirectionValues{FORWARD,BACKWARD,d123}
 ```
+
+*Initially an underscore was used a prefix. That made the IDL correct according to tools,*
+*but could not be correctly handled by tools like "Eclipse Cyclone DDS idlc Python Backend"*
+*resulting in invalid Python code.*
 
 ## Checking generated DDS-IDL file and generating code stubs from it
 
