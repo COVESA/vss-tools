@@ -775,6 +775,11 @@ def render_tree(
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
+    logging.info(f"Root is {root_element}")
+    if root_element['type'] != 'branch':
+        raise Exception(
+            f"Invalid VSS model, root must be branch, found {root_element_name} of type {root_element['type']}")
+
     tree_root = VSSNode(
         root_element_name,
         root_element,
@@ -937,7 +942,7 @@ def check_data_type_references_across_trees(
         if node.is_signal() and node.datatype is None:
             if data_type_root is None or (not node.does_attribute_exist(
                     data_type_root,
-                    lambda n: n.data_type_str,
+                    lambda n: n.base_data_type_str(),
                     lambda n: n.qualified_name(),
                     lambda n: n.is_struct())):
                 nonexistant_types.append(f'{node.data_type_str}')

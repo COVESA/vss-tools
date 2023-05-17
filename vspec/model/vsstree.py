@@ -172,6 +172,15 @@ class VSSNode(Node):
                  'It is recommended that node names use camel case, starting with a capital letter, ',
                  'only using letters A-z and numbers 0-9.'))
 
+    def base_data_type_str(self) -> str:
+        """
+        This gives the base type of the type, i.e. without array suffix if present
+        """
+        suffix = "[]"
+        if self.data_type_str.endswith(suffix):
+            return self.data_type_str[:-len(suffix)]
+        return self.data_type_str
+
     def qualified_name(self, separator=DEFAULT_SEPARATOR) -> str:
         """Returns fully qualified name of a VSS object (including path) using the defined separator (or default ='.')
             Args:

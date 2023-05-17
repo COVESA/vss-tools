@@ -1,0 +1,8 @@
+"Node","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
+"A","branch","","","","","","Branch A.","","",""
+"A.SignalA","sensor","Types.Struct1[]","","","","","This is the first signal.","","",""
+"A.SignalB","sensor","Types.Struct1[]","","","","","This is the second signal.","","",""
+"Types","branch","","","","","","Top-level branch for vehicle data types.","","",""
+"Types.Struct1","struct","","","","","","A struct with datatype property defined.","","",""
+"Types.Struct1.x","property","double","","","","","x property","","",""
+"Types.Struct1.y","property","uint16","","","","","y property","","",""

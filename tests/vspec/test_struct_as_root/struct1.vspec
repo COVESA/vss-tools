@@ -1,0 +1,17 @@
+# This typefile is a bit special as it contain a struct as top node
+# That is possibly not explicitly stated in documentation, but is not supported by some tools
+# so we give an error
+
+Struct1:
+  type: struct
+  description: "A struct with datatype property defined."
+
+Struct1.x:
+  type: property
+  description: "x property"
+  datatype: double
+
+Struct1.y:
+  type: property
+  description: "y property"
+  datatype: uint16

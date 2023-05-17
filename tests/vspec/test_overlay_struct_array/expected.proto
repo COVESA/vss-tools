@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "Types/Types.proto";
+
+message A {
+  repeated Types.Struct1 SignalA = 1;
+  repeated Types.Struct1 SignalB = 2;
+}
+
