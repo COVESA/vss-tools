@@ -775,7 +775,6 @@ def render_tree(
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
-    logging.info(f"Root is {root_element}")
     if root_element['type'] != 'branch':
         raise Exception(
             f"Invalid VSS model, root must be branch, found {root_element_name} of type {root_element['type']}")
