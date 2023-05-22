@@ -12,6 +12,7 @@
 
 import argparse
 import keyword
+from typing import Set
 
 from vspec.model.vsstree import VSSNode, VSSType
 
@@ -86,10 +87,11 @@ dataTypesMap_covesa_dds = {"uint8": "octet",
                            }
 
 
-def export_node(node, generate_uuid, generate_all_idl_features):
+def export_node(node, generate_uuid, generate_all_idl_features, parent_names: Set[str]):
     """
     This method is used to traverse VSS node and to create corresponding DDS IDL buffer string
     """
+
     global idlFileBuffer
     datatype = None
     unit = None
@@ -99,11 +101,26 @@ def export_node(node, generate_uuid, generate_all_idl_features):
     allowedValues = None
     arraysize = None
 
+    # DDSIDL (at least idlc) does not allow same name to be reused on multiple levels
+    # We handle that by adding a number.
+    allowed_name = getAllowedName(node.name)
+    i = 1
+    is_duplicate = allowed_name in parent_names
+    while is_duplicate:
+        test_name = allowed_name + str(i)
+        if test_name not in parent_names:
+            allowed_name = test_name
+            is_duplicate = False
+        else:
+            i += 1
+    current_names = parent_names.copy()
+    current_names.add(allowed_name)
+
     if node.type == VSSType.BRANCH:
-        idlFileBuffer.append("module "+getAllowedName(node.name))
+        idlFileBuffer.append("module "+allowed_name)
         idlFileBuffer.append("{")
         for child in node.children:
-            export_node(child, generate_uuid, generate_all_idl_features)
+            export_node(child, generate_uuid, generate_all_idl_features, current_names)
         idlFileBuffer.append("};")
         idlFileBuffer.append("")
     else:
@@ -115,9 +132,9 @@ def export_node(node, generate_uuid, generate_all_idl_features):
             module name for enum is chosen as the node name +
             """
             if (node.datatype.value in ["string", "string[]"]):
-                idlFileBuffer.append("module "+getAllowedName(node.name)+"_M")
+                idlFileBuffer.append("module "+allowed_name+"_M")
                 idlFileBuffer.append("{")
-                idlFileBuffer.append("enum " + getAllowedName(node.name) +
+                idlFileBuffer.append("enum " + allowed_name +
                                      "Values{"+str(",".join(get_allowed_enum_literal(item) for item in node.allowed)) +
                                      "};")
                 isEnumCreated = True
@@ -127,7 +144,7 @@ def export_node(node, generate_uuid, generate_all_idl_features):
                 print(f"Warning: VSS2IDL can only handle allowed values for string type, "
                       f"signal {node.name} has type {node.datatype.value}")
 
-        idlFileBuffer.append("struct "+getAllowedName(node.name))
+        idlFileBuffer.append("struct "+allowed_name)
         idlFileBuffer.append("{")
         if generate_uuid:
             idlFileBuffer.append("string uuid;")
@@ -176,11 +193,11 @@ def export_node(node, generate_uuid, generate_all_idl_features):
             else:
                 # this is the case where allowed values are provided, accordingly contents are converted to enum
                 if defaultValue is None:
-                    idlFileBuffer.append(getAllowedName(node.name)+"_M::"+getAllowedName(node.name)+"Values value;")
+                    idlFileBuffer.append(allowed_name+"_M::"+allowed_name+"Values value;")
                 else:
                     # default values in IDL file are not accepted by CycloneDDS/FastDDS :
                     # these values can be generated if --all-idl-features is set as True
-                    idlFileBuffer.append(getAllowedName(node.name) + "_M::"+getAllowedName(node.name) + "Values value" +
+                    idlFileBuffer.append(allowed_name + "_M::"+allowed_name + "Values value" +
                                          (" " + str(defaultValue) if generate_all_idl_features else "") + ";")
 
         if unit is not None:
@@ -198,7 +215,8 @@ def export_idl(file, root, generate_uuids=True, generate_all_idl_features=False)
     """This method is used to traverse through the root VSS node to build
        -> DDS IDL equivalent string buffer and to serialize it acccordingly into a file
     """
-    export_node(root, generate_uuids, generate_all_idl_features)
+    parent_names = set()
+    export_node(root, generate_uuids, generate_all_idl_features, parent_names)
     file.write('\n'.join(idlFileBuffer))
     print("IDL file generated at location : "+file.name)
 

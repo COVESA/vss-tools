@@ -1,0 +1,15 @@
+# Test having same names on multiple levels
+# Adding suffix is required
+A:
+  type: branch
+  description: Branch A.
+
+A.A:
+  type: branch
+  description: Branch A.A
+
+A.A.A:
+  datatype: uint8
+  type: sensor
+  unit: km
+  description: Triple A!

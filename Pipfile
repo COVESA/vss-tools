@@ -15,6 +15,7 @@ graphql-core = "*"
 [dev-packages]
 flake8 = ">=6.0.0"
 pre-commit = ">=3.0.4"
+cyclonedds = "*"
 
 
 [requires]

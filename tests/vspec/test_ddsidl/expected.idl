@@ -1,0 +1,14 @@
+module A
+{
+module A1
+{
+struct A2
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="Triple A!";
+};
+};
+
+};
