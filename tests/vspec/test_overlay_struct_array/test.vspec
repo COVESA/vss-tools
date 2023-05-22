@@ -1,0 +1,9 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalA:
+  datatype: Types.Struct1[]
+  type: sensor
+  description: This is the first signal.

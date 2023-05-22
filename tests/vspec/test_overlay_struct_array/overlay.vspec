@@ -1,0 +1,6 @@
+
+# Initially use the same type as original
+A.SignalB:
+  datatype: Types.Struct1[]
+  type: sensor
+  description: This is the second signal.

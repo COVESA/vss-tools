@@ -274,7 +274,7 @@ Add additional fields to the nodes in the graphql schema. use: <field_name> <des
 
 
 ## Writing your own exporter
-This is easy. Put the code in file in the [vssexporters directory](../vssexporters/).
+This is easy. Put the code in file in the [vssexporters directory](../vspec/vssexporters/).
 
 Mandatory functions to be implemented are
 ```python

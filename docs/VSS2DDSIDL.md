@@ -50,11 +50,30 @@ Below elements are considered only if the switch ***--all-idl-features*** is sup
 
 | VSS    | DDS-IDL         |
 |--------|----------------|
-| <pre>Direction:<br> datatype:string<br> type: actuator<br> allowed: ['FORWARD','BACKWARD']<br> description: Driving direction of the vehicle</pre>  | <pre>module Direction_M {<br>enum DirectionValues{FORWARD,BACKWARD};<br>};<br>struct Direction<br>{<br>string uuid;<br>DirectionValues value;<br>};</pre>   
+| <pre>Direction:<br> datatype:string<br> type: actuator<br> allowed: ['FORWARD','BACKWARD']<br> description: Driving direction of the vehicle</pre>  | <pre>module Direction_M {<br>enum DirectionValues{FORWARD,BACKWARD};<br>};<br>struct Direction<br>{<br>string uuid;<br>DirectionValues value;<br>};</pre>
+
+To comply with DDS-IDL rules and limitations in IDL compilers VSS string literals that start with a digit will get a `d` as prefix.
+
+Example VSS:
+
+```
+allowed: ['FORWARD','BACKWARD', '123']
+```
+
+
+Resulting DDS-IDL::
+
+```
+enum DirectionValues{FORWARD,BACKWARD,d123}
+```
+
+*Initially an underscore was used a prefix. That made the IDL correct according to tools,*
+*but could not be correctly handled by tools like "Eclipse Cyclone DDS idlc Python Backend"*
+*resulting in invalid Python code.*
 
 ## Checking generated DDS-IDL file and generating code stubs from it
 
-IDL files can be supplied as input to one of the DDS impementation (e.g: CycloeDDS, FastDDS) and the data can be validated, and also stubs (python/c++/java code) can be generated from the contents in the IDL file.
+IDL files can be supplied as input to one of the DDS implementation (e.g: CycloeDDS, FastDDS) and the data can be validated, and also stubs (python/c++/java code) can be generated from the contents in the IDL file.
 
 ### Installation of CycloneDDS
 
