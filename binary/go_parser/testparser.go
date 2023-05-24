@@ -45,8 +45,8 @@ func showNodeData(currentNode *def.Node_t, currentChild int) {
             fmt.Printf("Allowed[%d]=%s\n", i, parser.VSSgetAllowedElement(currentNode, i))
         }
         dtype := parser.VSSgetDatatype(currentNode)
-        if (dtype != 0) {
-            fmt.Printf("Datatype = %d\n", dtype)
+        if (dtype != "") {
+            fmt.Printf("Datatype = %s\n", dtype)
         }
         tmp := parser.VSSgetUnit(currentNode)
         if (len(tmp) != 0) {
@@ -100,7 +100,7 @@ func main() {
                 fmt.Printf("\nNumber of elements found=%d\n", foundResponses)
                 for i := 0 ; i < foundResponses ; i++ {
                     fmt.Printf("Found node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].NodeHandle)))
-                    fmt.Printf("Found node datatype=%d\n", parser.VSSgetDatatype(searchData[i].NodeHandle))
+                    fmt.Printf("Found node datatype=%s\n", parser.VSSgetDatatype(searchData[i].NodeHandle))
                     fmt.Printf("Found path=%s\n", searchData[i].NodePath)
                 }
             }

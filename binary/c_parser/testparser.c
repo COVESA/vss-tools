@@ -38,55 +38,6 @@ char* getTypeName(nodeTypes_t type) {
     } // switch
 }
 
-char* getDatatypeName(nodeDatatypes_t datatype) {
-    switch (datatype) { 
-        case INT8:
-                return "INT8";
-        case UINT8:
-                return "UINT8";
-        case INT16:
-                return "INT16";
-        case UINT16:
-                return "UINT16";
-        case INT32:
-                return "INT32";
-        case UINT32:
-                return "UINT32";
-        case DOUBLE:
-            return "DOUBLE";
-        case FLOAT:
-            return "FLOAT";
-        case BOOLEAN:
-            return "BOOLEAN";
-        case STRING:
-            return "STRING";
-        case INT8ARRAY:
-                return "INT8[]";
-        case UINT8ARRAY:
-                return "UINT8[]";
-        case INT16ARRAY:
-                return "INT16[]";
-        case UINT16ARRAY:
-                return "UINT16[]";
-        case INT32ARRAY:
-                return "INT32[]";
-        case UINT32ARRAY:
-                return "UINT32[]";
-        case DOUBLEARRAY:
-            return "DOUBLE[]";
-        case FLOATARRAY:
-            return "FLOAT[]";
-        case BOOLEANARRAY:
-            return "BOOLEAN[]";
-        case STRINGARRAY:
-            return "STRING[]";
-        default:
-            printf("getDatatypeName: unknown datatype (%d)\n", datatype);
-            return "unknown";
-        break;
-    } // switch
-}
-
 void showNodeData(long currentNode, int currentChild) {
         printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d,\ndescription = %s\n", VSSgetName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), VSSgetValidation(currentNode), VSSgetNumOfChildren(currentNode), VSSgetDescr(currentNode));
         if (VSSgetNumOfChildren(currentNode) > 0)
@@ -94,9 +45,9 @@ void showNodeData(long currentNode, int currentChild) {
 //        for (int i = 0 ; i < VSSgetNumOfAllowedElements(currentNode) ; i++)
 //            printf("Allowed[%d]=%s\n", i, VSSgetAllowedElement(currentNode, i));
         printf("#allowed=%d\n", VSSgetNumOfAllowedElements(currentNode));
-        nodeDatatypes_t dtype = VSSgetDatatype(currentNode);
-        if (dtype != -1)
-            printf("Datatype = %d\n", dtype);
+        char* dtype = VSSgetDatatype(currentNode);
+        if (dtype != NULL)
+            printf("Datatype = %s\n", dtype);
         char* tmp = VSSgetUnit(currentNode);
         if (tmp != NULL)
             printf("Unit = %s\n", tmp);
@@ -151,7 +102,7 @@ int main(int argc, char** argv) {
                 printf("\nNumber of elements found=%d\n", foundResponses);
                 for (int i = 0 ; i < foundResponses ; i++) {
                     printf("Found node type=%s\n", getTypeName(VSSgetType((long)(&(searchData[i]))->foundNodeHandles)));
-                    printf("Found node datatype=%s\n", getDatatypeName(VSSgetDatatype((long)(&(searchData[i]))->foundNodeHandles)));
+                    printf("Found node datatype=%s\n", VSSgetDatatype((long)(&(searchData[i]))->foundNodeHandles));
                     printf("Found path=%s\n", (char*)(&(searchData[i]))->responsePaths);
                 }
             }

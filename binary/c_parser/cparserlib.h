@@ -10,8 +10,7 @@
 **/
 
 #define UNKNOWN 0
-typedef enum {SENSOR=1, ACTUATOR, ATTRIBUTE, BRANCH } nodeTypes_t;
-typedef enum {INT8=1, UINT8, INT16, UINT16, INT32, UINT32, DOUBLE, FLOAT, BOOLEAN, STRING, INT8ARRAY, UINT8ARRAY, INT16ARRAY, UINT16ARRAY, INT32ARRAY, UINT32ARRAY, DOUBLEARRAY, FLOATARRAY, BOOLEANARRAY, STRINGARRAY} nodeDatatypes_t;
+typedef enum {SENSOR=1, ACTUATOR, ATTRIBUTE, BRANCH, STRUCT, PROPERTY } nodeTypes_t;
 
 #define MAXALLOWEDELEMENTLEN 64
 typedef char allowed_t[MAXALLOWEDELEMENTLEN];
@@ -24,7 +23,8 @@ typedef struct node_t {
     char* uuid;
     uint16_t descrLen;
     char* description;
-    nodeDatatypes_t datatype;
+    uint8_t datatypeLen;
+    char* datatype;
     uint8_t maxLen;
     char* max;
     uint8_t minLen;
@@ -64,7 +64,7 @@ long VSSgetParent(long nodeHandle);
 long VSSgetChild(long nodeHandle, int childNo);
 int VSSgetNumOfChildren(long nodeHandle);
 nodeTypes_t VSSgetType(long nodeHandle);
-nodeDatatypes_t VSSgetDatatype(long nodeHandle);
+char* VSSgetDatatype(long nodeHandle);
 char* VSSgetName(long nodeHandle);
 char* VSSgetUUID(long nodeHandle);
 int VSSgetValidation(long nodeHandle);

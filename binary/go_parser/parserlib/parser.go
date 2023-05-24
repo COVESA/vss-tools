@@ -179,7 +179,7 @@ func saveMatchingNode(thisNode *def.Node_t, context *SearchContext_t, done *bool
 	if (VSSgetValidation(thisNode) > context.MaxValidation) {
 		context.MaxValidation = VSSgetValidation(thisNode)  // TODO handle speculative setting?
 	}
-	if (VSSgetType(thisNode) != def.BRANCH || context.LeafNodesOnly == false) {
+	if (VSSgetType(thisNode) != def.BRANCH  && VSSgetType(thisNode) != def.STRUCT || context.LeafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			context.SearchData[context.NumOfMatches].NodePath = context.MatchPath
 			context.SearchData[context.NumOfMatches].NodeHandle = thisNode
@@ -327,9 +327,8 @@ func populateNode(thisNode *def.Node_t) {
 	thisNode.Description = string(readBytes((uint32)(DescrLen)))
 
 	DatatypeLen := deSerializeUInt(readBytes(1)).(uint8)
-	Datatype := string(readBytes((uint32)(DatatypeLen)))
-	if (thisNode.NodeType != def.BRANCH) {
-	    thisNode.Datatype = (def.NodeDatatypes_t)(def.StringToDataType(Datatype))
+	if (thisNode.NodeType != def.BRANCH && thisNode.NodeType != def.STRUCT) {
+	    thisNode.Datatype = string(readBytes((uint32)(DatatypeLen)))
 	}
 
 	MinLen := deSerializeUInt(readBytes(1)).(uint8)
@@ -378,10 +377,9 @@ func writeNode(thisNode *def.Node_t) {
     treeFp.Write(serializeUInt((uint16)(len(thisNode.Description))))
     treeFp.Write([]byte(thisNode.Description))
 
-    Datatype := def.DataTypeToString(thisNode.Datatype)
-    treeFp.Write(serializeUInt((uint8)(len(Datatype))))
-    if (len(Datatype) > 0) {
-        treeFp.Write([]byte(Datatype))
+    treeFp.Write(serializeUInt((uint8)(len(thisNode.Datatype))))
+    if (len(thisNode.Datatype) > 0) {
+        treeFp.Write([]byte(thisNode.Datatype))
     }
 
     treeFp.Write(serializeUInt((uint8)(len(thisNode.Min))))
@@ -639,16 +637,16 @@ func VSSgetType(nodeHandle *def.Node_t) def.NodeTypes_t {
 	return (def.NodeTypes_t)(nodeHandle.NodeType)
 }
 
-func VSSgetDatatype(nodeHandle *def.Node_t) def.NodeDatatypes_t{
+func VSSgetDatatype(nodeHandle *def.Node_t) string {
 	nodeType := VSSgetType(nodeHandle)
-	if (nodeType != def.BRANCH) {
-		return (def.NodeDatatypes_t)(nodeHandle.Datatype)
+	if (nodeType != def.BRANCH && nodeType != def.STRUCT) {
+		return nodeHandle.Datatype
 	}
-	return 0
+	return ""
 }
 
 func VSSgetUUID(nodeHandle *def.Node_t) string {
-	return nodeHandle.Uuid;
+	return nodeHandle.Uuid
 }
 
 func VSSgetValidation(nodeHandle *def.Node_t) int {
@@ -661,7 +659,7 @@ func VSSgetDescr(nodeHandle *def.Node_t) string {
 
 func VSSgetNumOfAllowedElements(nodeHandle *def.Node_t) int {
 	nodeType := VSSgetType(nodeHandle);
-	if (nodeType != def.BRANCH) {
+	if (nodeType != def.BRANCH && nodeType != def.STRUCT) {
 		return (int)(nodeHandle.Allowed)
 	}
 	return 0
@@ -673,7 +671,7 @@ func VSSgetAllowedElement(nodeHandle *def.Node_t, index int) string {
 
 func VSSgetUnit(nodeHandle *def.Node_t) string {
 	nodeType := VSSgetType(nodeHandle)
-	if (nodeType != def.BRANCH) {
+	if (nodeType != def.BRANCH && nodeType != def.STRUCT) {
 		return nodeHandle.Unit
 	}
 	return ""
