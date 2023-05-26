@@ -5,7 +5,7 @@
  * All files and artifacts in this repository are licensed under the
  * provisions of the license provided by the LICENSE file in this repository.
  *
- * 
+ *
  * Parser library for a C binary format VSS tree.
  **/
 
