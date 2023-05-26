@@ -676,4 +676,3 @@ func VSSgetUnit(nodeHandle *def.Node_t) string {
 	}
 	return ""
 }
-

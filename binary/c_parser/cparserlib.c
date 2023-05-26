@@ -8,7 +8,7 @@
  * 
  * Parser library for a C binary format VSS tree.
  **/
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -731,4 +731,3 @@ char* VSSgetUnit(long nodeHandle) {
 		return ((node_t*)((intptr_t)nodeHandle))->unit;
 	return NULL;
 }
-

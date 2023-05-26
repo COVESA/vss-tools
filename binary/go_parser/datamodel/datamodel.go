@@ -107,4 +107,3 @@ func ValidateToString(validate uint8) string {
     }
     return ""
 }
-

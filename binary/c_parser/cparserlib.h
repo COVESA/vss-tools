@@ -72,4 +72,3 @@ char* VSSgetDescr(long nodeHandle);
 int VSSgetNumOfAllowedElements(long nodeHandle);
 char* VSSgetAllowedElement(long nodeHandle, int index);
 char* VSSgetUnit(long nodeHandle);
-
