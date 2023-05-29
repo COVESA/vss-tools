@@ -9,6 +9,7 @@
 
 import re
 
+
 def camel_case(st):
     """Camel case string conversion"""
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', st)
