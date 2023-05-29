@@ -18,13 +18,13 @@ myDir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
 
 
-### TEST SIMPLE INSTANCE STRUCTURE ###
+#  TEST SIMPLE INSTANCE STRUCTURE #
 # Goal: Check if simple (=not nested) instantiation works
 #
 # How: Define three instances in different ways and check,
 # if the result matches every time
 #
-### TEST SIMPLE INSTANCE STRUCTURE ###
+# TEST SIMPLE INSTANCE STRUCTURE #
 
 
 # Needed test files
@@ -61,14 +61,14 @@ def test_simple_structures(request):
             assert child.children[0].description == "test"
 
 
-### TEST COMPLEX INSTANCE STRUCTURE ###
+# TEST COMPLEX INSTANCE STRUCTURE #
 # Goal: Check if a list of instantiations works
 #
 # How: Define a list of different numbers of instances that
 # in different ways and check,
 # if the result matches every time
 #
-### TEST COMPLEX INSTANCE STRUCTURE ###
+# TEST COMPLEX INSTANCE STRUCTURE #
 
 # Needed test files
 TEST_FILES_COMPLEX = ["resources/instance_complex_1.vspec",
@@ -132,13 +132,13 @@ def test_complex_structures(request):
                     assert child_4.children[0].description == "test"
 
 
-### TEST EXCLUSION FROM INSTANCE STRUCTURE ###
+# TEST EXCLUSION FROM INSTANCE STRUCTURE #
 # Goal: Check if exclusion of certain nodes during instantiation work
 #
 # How: Exclude some nodes from instantiation and check if the
 # structure is the expected one
 #
-### TEST EXCLUSION FROM INSTANCE STRUCTURE ###
+# TEST EXCLUSION FROM INSTANCE STRUCTURE #
 
 # Needed test files
 TEST_FILES_EXCLUDE = ["resources/instance_exclude_node.vspec"]

@@ -9,6 +9,7 @@
 
 import logging
 
+
 def initLogging():
     """
     Initialize logging
