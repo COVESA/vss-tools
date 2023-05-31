@@ -5,7 +5,7 @@
 * All files and artifacts in this repository are licensed under the
 * provisions of the license provided by the LICENSE file in this repository.
 *
-* 
+*
 * Example of parser for a binary format VSS tree.
 **/
 
@@ -159,5 +159,3 @@ int main(int argc, char** argv) {
 
     return 0;
 } // main
-
-
