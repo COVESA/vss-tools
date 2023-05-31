@@ -21,7 +21,7 @@ import (
 var root *def.Node_t
 
 func getTypeName(nodeType def.NodeTypes_t) string {
-    switch (nodeType) { 
+    switch (nodeType) {
         case def.SENSOR:
             return "SENSOR"
         case def.ACTUATOR:

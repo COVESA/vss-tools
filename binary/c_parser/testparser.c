@@ -22,7 +22,7 @@ long rootNode;
 char* vspecfile;
 
 char* getTypeName(nodeTypes_t type) {
-    switch (type) { 
+    switch (type) {
         case SENSOR:
             return "SENSOR";
         case ACTUATOR:

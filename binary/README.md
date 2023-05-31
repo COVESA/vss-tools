@@ -1,5 +1,5 @@
 <h1> Binary Toolset </h1>
-The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below), 
+The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below),
 and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go.<br>
 
 <h3>Binary Parser Usage </h3>
@@ -28,7 +28,7 @@ Current version is found at https://github.com/COVESA/vehicle_signal_specificati
 <br>
 
 <h4> Validation </h4>
-Access Control of the signals can be supported by including the extended attribute validate in each of the nodes. This attribute is used by the VISSv2 specification. More information can be found in: <a href="https://www.w3.org/TR/viss2-core/#access-control-selection">VISS Access Control. </a>In case the validate attribute is added to the nodes, it must be specified when invoking the tool using the extended attributes flag (-e): 
+Access Control of the signals can be supported by including the extended attribute validate in each of the nodes. This attribute is used by the VISSv2 specification. More information can be found in: <a href="https://www.w3.org/TR/viss2-core/#access-control-selection">VISS Access Control. </a>In case the validate attribute is added to the nodes, it must be specified when invoking the tool using the extended attributes flag (-e):
 
 ```
 $ vspec2binary.py -e validate -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
@@ -66,7 +66,7 @@ $ ./ctestparser ../../../vss_rel_<current version>.binary
 To build the testparser from the go_parser directory:
 
 ```
-$ go build -o gotestparser testparser.go 
+$ go build -o gotestparser testparser.go
 ```
 When starting it, the path to the binary file must be provided. If started from the go_parser directory, and assuming a binary tree file has been created in the VSS parent directory:
 
@@ -102,7 +102,7 @@ The binary node file format is as follows:<br>
     Validate    | chararray | ValidateLen<br>
     Children    | uint8     | 1<br><br>
 
-The Allowed string contains an array of allowed, each Allowed is preceeded by two characters holding the size of the Allowed sub-string. 
+The Allowed string contains an array of allowed, each Allowed is preceeded by two characters holding the size of the Allowed sub-string.
 The size is in hex format, with values from "01" to "FF". An example is "03abc0A012345678902cd" which contains the three Alloweds "abc", "0123456789", and "cd".<br><br>
 
 The nodes are written into the file in the order given by an iterative method as shown in the following pseudocode:
@@ -114,4 +114,3 @@ def traverseAndWriteNode(thisNode):
 ```
 
 When reading the file the same iterative pattern must be used to generate the correct VSS tree, as is the case for all the described tools.
-
