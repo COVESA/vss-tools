@@ -45,8 +45,8 @@ func showNodeData(currentNode *def.Node_t, currentChild int) {
             fmt.Printf("Allowed[%d]=%s\n", i, parser.VSSgetAllowedElement(currentNode, i))
         }
         dtype := parser.VSSgetDatatype(currentNode)
-        if (dtype != 0) {
-            fmt.Printf("Datatype = %d\n", dtype)
+        if (dtype != "") {
+            fmt.Printf("Datatype = %s\n", dtype)
         }
         tmp := parser.VSSgetUnit(currentNode)
         if (len(tmp) != 0) {
