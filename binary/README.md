@@ -48,7 +48,7 @@ The two libraries provides the same set of methods, such as:
 
 Each library is also complemented with a testparser that uses the library to traverse the tree, make searches to it, etc.
 <br>
-A textbased UI presents the different options, with following results.<br>
+A textbased UI presents different parser commands, that is then executed and the results are presented.<br>
 
 <h5>C parser</h5>
 To build the testparser from the c_parser directory:
@@ -56,10 +56,10 @@ To build the testparser from the c_parser directory:
 ```
 $ cc testparser.c cparserlib.c -o ctestparser
 ```
-When starting it, the path to the binary file must be provided. If started from the c_parser directory:
+When starting it, the path to the binary file must be provided. If started from the c_parser directory, and assuming a binary tree file has been created in the VSS parent directory:
 
 ```
-$ ./ctestparser ../../vss_rel_<current version>.binary
+$ ./ctestparser ../../../vss_rel_<current version>.binary
 ```
 
 <h5>Go parser </h5>
@@ -68,10 +68,10 @@ To build the testparser from the go_parser directory:
 ```
 $ go build -o gotestparser testparser.go 
 ```
-When starting it, the path to the binary file must be provided. If started from the go_parser directory:
+When starting it, the path to the binary file must be provided. If started from the go_parser directory, and assuming a binary tree file has been created in the VSS parent directory:
 
 ```
-$ ./gotestparser ../../vss_rel_<current version>.binary
+$ ./gotestparser ../../../vss_rel_<current version>.binary
 ```
 
 <h3>Encoding</h3>
