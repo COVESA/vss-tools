@@ -1,0 +1,14 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.String:
+  datatype: string
+  type: sensor
+  description: A string
+
+A.Int:
+  datatype: uint16
+  type: actuator
+  description: An int
