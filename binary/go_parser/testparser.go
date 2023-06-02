@@ -101,7 +101,7 @@ func main() {
                 fmt.Printf("\nNumber of elements found=%d\n", foundResponses)
                 for i := 0 ; i < foundResponses ; i++ {
                     fmt.Printf("Found node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].NodeHandle)))
-                    fmt.Printf("Found node datatype=%d\n", parser.VSSgetDatatype(searchData[i].NodeHandle))
+                    fmt.Printf("Found node datatype=%s\n", parser.VSSgetDatatype(searchData[i].NodeHandle))
                     fmt.Printf("Found path=%s\n", searchData[i].NodePath)
                 }
             }
@@ -134,7 +134,7 @@ func main() {
                 searchData, foundResponses = parser.VSSsearchNodes(subTreeRootName, subtreeNode, parser.MAXFOUNDNODES, false, false, 0, nil, nil)
                 fmt.Printf("\nNumber of elements found=%d\n", foundResponses)
                 for i := 0 ; i < foundResponses ; i++ {
-                    fmt.Printf("Node type=%d\n", parser.VSSgetType(searchData[i].NodeHandle))
+                    fmt.Printf("Node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].NodeHandle)))
                     fmt.Printf("Node path=%s\n", searchData[i].NodePath)
                     fmt.Printf("Node validation=%d\n", parser.VSSgetValidation(searchData[i].NodeHandle))
                 }
