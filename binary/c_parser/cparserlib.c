@@ -216,7 +216,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 	if (VSSgetValidation(thisNode) > context->maxValidation) {
 		context->maxValidation = VSSgetValidation(thisNode);  // TODO handle speculative setting
 	}
-	if (VSSgetType(thisNode) != BRANCH &&VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
+	if (VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			strcpy(context->searchData[context->numOfMatches].responsePaths, context->matchPath);
 			context->searchData[context->numOfMatches].foundNodeHandles = thisNode;
