@@ -19,6 +19,9 @@ This will result in that e.g. `Vehicle.Cabin.Door` is expanded to the following 
 * `Vehicle.Cabin.Door.Row2.Left`
 * `Vehicle.Cabin.Door.Row2.Right`
 
+For some exporters expansion can be suppressed by using the `--no_expand` option.
+Then instance information will be represented by other means in the resulting output.
+
 ## Expansion and Overlays
 
 Sometimes an overlay only refers to a signal in a specific branch, like:

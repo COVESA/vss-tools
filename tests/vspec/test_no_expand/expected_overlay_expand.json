@@ -1,0 +1,632 @@
+{
+  "A": {
+    "children": {
+      "B": {
+        "children": {
+          "Test1": {
+            "children": {
+              "S": {
+                "datatype": "int8",
+                "description": "Signal A.B.S.",
+                "type": "sensor",
+                "unit": "km"
+              },
+              "X": {
+                "datatype": "int8",
+                "description": "Adding signal A.B.X for all A.B instances in overlay",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "Branch with explicit instances.",
+            "type": "branch"
+          },
+          "Test2": {
+            "children": {
+              "S": {
+                "datatype": "int8",
+                "description": "Signal A.B.S.",
+                "type": "sensor",
+                "unit": "km"
+              },
+              "X": {
+                "datatype": "int8",
+                "description": "Adding signal A.B.X for all A.B instances in overlay",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "Branch with explicit instances.",
+            "type": "branch"
+          },
+          "Test3": {
+            "children": {
+              "S": {
+                "datatype": "int8",
+                "description": "Signal A.B.S.",
+                "type": "sensor",
+                "unit": "km"
+              },
+              "X": {
+                "datatype": "int8",
+                "description": "Adding signal A.B.X for all A.B instances in overlay",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "Branch with explicit instances.",
+            "type": "branch"
+          }
+        },
+        "description": "Branch with explicit instances.",
+        "type": "branch"
+      },
+      "C": {
+        "children": {
+          "Test1": {
+            "children": {
+              "S": {
+                "datatype": "int8",
+                "description": "Signal A.C.S.",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "Branch with instance range.",
+            "type": "branch"
+          },
+          "Test2": {
+            "children": {
+              "S": {
+                "datatype": "float",
+                "description": "Signal A.C.S.",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "We must explicitly define this instance branch in the overlay",
+            "type": "branch"
+          },
+          "Test3": {
+            "children": {
+              "NewSignal": {
+                "datatype": "float",
+                "description": "A new signal only existing for one instance",
+                "type": "sensor",
+                "unit": "km"
+              },
+              "S": {
+                "datatype": "int8",
+                "description": "Signal A.C.S.",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "We must explicitly define this instance branch in the overlay",
+            "type": "branch"
+          },
+          "Test4": {
+            "children": {
+              "S": {
+                "datatype": "int8",
+                "description": "Signal A.C.S.",
+                "type": "sensor",
+                "unit": "km"
+              }
+            },
+            "description": "Branch with instance range.",
+            "type": "branch"
+          }
+        },
+        "description": "Branch with instance range.",
+        "type": "branch"
+      },
+      "D": {
+        "children": {
+          "Test1": {
+            "children": {
+              "Test2": {
+                "children": {
+                  "Test4": {
+                    "children": {
+                      "Test10": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test7": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test8": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test9": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Branch with complex instance combination.",
+                    "type": "branch"
+                  },
+                  "Test5": {
+                    "children": {
+                      "Test10": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test7": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test8": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test9": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Branch with complex instance combination.",
+                    "type": "branch"
+                  },
+                  "Test6": {
+                    "children": {
+                      "Test10": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test7": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test8": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test9": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Branch with complex instance combination.",
+                    "type": "branch"
+                  }
+                },
+                "description": "Branch with complex instance combination.",
+                "type": "branch"
+              },
+              "Test3": {
+                "children": {
+                  "Test4": {
+                    "children": {
+                      "Test10": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test7": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test8": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test9": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Branch with complex instance combination.",
+                    "type": "branch"
+                  },
+                  "Test5": {
+                    "children": {
+                      "Test10": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test7": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test8": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test9": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Branch with complex instance combination.",
+                    "type": "branch"
+                  },
+                  "Test6": {
+                    "children": {
+                      "Test10": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test7": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test8": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      },
+                      "Test9": {
+                        "children": {
+                          "Test11": {
+                            "children": {
+                              "S": {
+                                "datatype": "int8",
+                                "description": "Signal A.D.S.",
+                                "type": "sensor",
+                                "unit": "km"
+                              }
+                            },
+                            "description": "Branch with complex instance combination.",
+                            "type": "branch"
+                          }
+                        },
+                        "description": "Branch with complex instance combination.",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Branch with complex instance combination.",
+                    "type": "branch"
+                  }
+                },
+                "description": "Branch with complex instance combination.",
+                "type": "branch"
+              }
+            },
+            "description": "Branch with complex instance combination.",
+            "type": "branch"
+          }
+        },
+        "description": "Branch with complex instance combination.",
+        "type": "branch"
+      },
+      "E": {
+        "children": {
+          "S": {
+            "datatype": "int8",
+            "description": "Signal A.E.S.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch without instances for reference.",
+        "type": "branch"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

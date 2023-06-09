@@ -1,0 +1,53 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.B:
+  type: branch
+  instances:
+    - ["Test1","Test2","Test3"]
+  description: Branch with explicit instances.
+
+A.B.S:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.B.S.
+
+A.C:
+  type: branch
+  instances: Test[1,4]
+  description: Branch with instance range.
+
+A.C.S:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.C.S.
+
+A.D:
+  type: branch
+  instances:
+    - ["Test1"]
+    - Test[2,3]
+    - ["Test4", "Test5", "Test6"]
+    - ["Test7", "Test8", "Test9", "Test10"]
+    - ["Test11"]
+  description: Branch with complex instance combination.
+
+A.D.S:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.D.S.
+
+A.E:
+  type: branch
+  description: Branch without instances for reference.
+
+A.E.S:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Signal A.E.S.
