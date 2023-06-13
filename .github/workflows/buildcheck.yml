@@ -15,8 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  VSS_PATH: ${{ github.workspace }}/vehicle_signal_specification
-  VSS_TOOLS_PATH: ${{ github.workspace }}/vehicle_signal_specification/vss-tools
   PYTHON_VERSION: "3.8.12"  # keep in sync with vss-tools/Pipfile!
   CI: 1  # shall any script needs to know if it's running in the CI
 
@@ -24,22 +22,12 @@ jobs:
   buildtest:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout vss-tools
+        uses: actions/checkout@v3
       - name: Install apt dependencies
         run: sudo apt install -y protobuf-compiler
-      - name: Checkout VSS as parent
-        uses: actions/checkout@v3
-        with:
-          repository: COVESA/vehicle_signal_specification
-          path: ${{ env.VSS_PATH }}
-          submodules: false
-      - name: Remove VSS vss-tools from parent
-        run: |
-          rm -rf ${{ env.VSS_TOOLS_PATH }}
-      - name: Checkout vss-tools inside vehicle_signal_specification/
-        uses: actions/checkout@v3
-        with:
-          path: ${{ env.VSS_TOOLS_PATH }}
-      - uses: actions/setup-python@v3
+      - name: Setup Python
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pipenv
@@ -49,31 +37,25 @@ jobs:
           python -m pip --quiet --no-input install --upgrade pipenv wheel
       - name: Install dependencies with pipenv
         run: |
-          cd ${{ env.VSS_TOOLS_PATH }}
           pipenv install --deploy --dev
-      - name: Test mandatory targets
-        run: |
-          cd ${{ env.VSS_TOOLS_PATH }}
-          pipenv run make -C "${{ env.VSS_PATH }}" travis_targets
-      - name: Test optional targets.
-        run: |
-          cd ${{ env.VSS_TOOLS_PATH }}
-          pipenv run make -C "${{ env.VSS_PATH }}" -k travis_optional ||
-            echo "::warning title=travis_optional::optional targets FAILED"
       - name: Run mypy, fail on errors.
         run: |
-          cd ${{ env.VSS_TOOLS_PATH }}
           pipenv install mypy types-setuptools types-PyYAML
           pipenv run mypy *.py vspec tests contrib
-      - name: Run flake8, errors not accepted!.
+      - name: Run flake8, errors not accepted!
         run: |
-          cd ${{ env.VSS_TOOLS_PATH }}
           pipenv install flake8
           pipenv run flake8 *.py vspec tests contrib
+      - name: Run tests
+        run: |
+          pipenv run pytest
+      - name: Build binary library
+        run: |
+          cd binary
+          make
       - name: Test Binary Go Parser
         run: |
-          # As of now run here, not included in Makefile
-          cd ${{ env.VSS_TOOLS_PATH }}/binary/go_parser
+          cd binary/go_parser
           go build -o gotestparser testparser.go
           go list -m -json -buildvcs=false all
 
