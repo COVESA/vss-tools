@@ -31,6 +31,10 @@ char* getTypeName(nodeTypes_t type) {
             return "ATTRIBUTE";
         case BRANCH:
             return "BRANCH";
+        case STRUCT:
+            return "STRUCT";
+        case PROPERTY:
+            return "PROPERTY";
         default:
             printf("getTypeName: unknown type(%d)\n", type);
             return "unknown";

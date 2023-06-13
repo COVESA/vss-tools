@@ -30,6 +30,10 @@ func getTypeName(nodeType def.NodeTypes_t) string {
             return "ATTRIBUTE"
         case def.BRANCH:
             return "BRANCH"
+        case def.STRUCT:
+            return "STRUCT"
+        case def.PROPERTY:
+            return "PROPERTY"
         default:
             fmt.Printf("getTypeName: unknown type(%d)\n", nodeType)
             return "unknown"
