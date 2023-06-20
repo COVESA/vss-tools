@@ -21,7 +21,7 @@ import (
 var root *def.Node_t
 
 func getTypeName(nodeType def.NodeTypes_t) string {
-    switch (nodeType) { 
+    switch (nodeType) {
         case def.SENSOR:
             return "SENSOR"
         case def.ACTUATOR:
@@ -30,6 +30,10 @@ func getTypeName(nodeType def.NodeTypes_t) string {
             return "ATTRIBUTE"
         case def.BRANCH:
             return "BRANCH"
+        case def.STRUCT:
+            return "STRUCT"
+        case def.PROPERTY:
+            return "PROPERTY"
         default:
             fmt.Printf("getTypeName: unknown type(%d)\n", nodeType)
             return "unknown"
@@ -45,8 +49,8 @@ func showNodeData(currentNode *def.Node_t, currentChild int) {
             fmt.Printf("Allowed[%d]=%s\n", i, parser.VSSgetAllowedElement(currentNode, i))
         }
         dtype := parser.VSSgetDatatype(currentNode)
-        if (dtype != 0) {
-            fmt.Printf("Datatype = %d\n", dtype)
+        if (dtype != "") {
+            fmt.Printf("Datatype = %s\n", dtype)
         }
         tmp := parser.VSSgetUnit(currentNode)
         if (len(tmp) != 0) {
@@ -62,9 +66,10 @@ func main() {
     root = parser.VSSReadTree(os.Args[1])
     fmt.Printf("VSS tree root name = %s\n", parser.VSSgetName(root))
     var traverse string
-    fmt.Printf("\nTo traverse the tree, 'u'(p)p/'d'(own)/'l'(eft)/'r'(ight)/s(earch)/m(etadata subtree)/n(odelist)/(uu)i(dlist)/w(rite to file)/h(elp), or any other to quit\n")
     currentNode := root
     currentChild := 0
+    showNodeData(currentNode, currentChild)
+    fmt.Printf("\nThe following parser commands are available: 'u'(p)p/'d'(own)/'l'(eft)/'r'(ight)/s(earch)/m(etadata subtree)/n(odelist)/(uu)i(dlist)/w(rite to file)/h(elp), or any other to quit\n")
     for {
         fmt.Printf("\n'u'/'d'/'l'/'r'/'s'/'m'/'n'/'i'/'w'/'h', or any other to quit: ")
         fmt.Scanf("%s", &traverse)
@@ -100,7 +105,7 @@ func main() {
                 fmt.Printf("\nNumber of elements found=%d\n", foundResponses)
                 for i := 0 ; i < foundResponses ; i++ {
                     fmt.Printf("Found node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].NodeHandle)))
-                    fmt.Printf("Found node datatype=%d\n", parser.VSSgetDatatype(searchData[i].NodeHandle))
+                    fmt.Printf("Found node datatype=%s\n", parser.VSSgetDatatype(searchData[i].NodeHandle))
                     fmt.Printf("Found path=%s\n", searchData[i].NodePath)
                 }
             }
@@ -133,7 +138,7 @@ func main() {
                 searchData, foundResponses = parser.VSSsearchNodes(subTreeRootName, subtreeNode, parser.MAXFOUNDNODES, false, false, 0, nil, nil)
                 fmt.Printf("\nNumber of elements found=%d\n", foundResponses)
                 for i := 0 ; i < foundResponses ; i++ {
-                    fmt.Printf("Node type=%d\n", parser.VSSgetType(searchData[i].NodeHandle))
+                    fmt.Printf("Node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].NodeHandle)))
                     fmt.Printf("Node path=%s\n", searchData[i].NodePath)
                     fmt.Printf("Node validation=%d\n", parser.VSSgetValidation(searchData[i].NodeHandle))
                 }

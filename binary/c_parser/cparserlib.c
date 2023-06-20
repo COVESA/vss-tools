@@ -5,10 +5,10 @@
  * All files and artifacts in this repository are licensed under the
  * provisions of the license provided by the LICENSE file in this repository.
  *
- * 
+ *
  * Parser library for a C binary format VSS tree.
  **/
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,120 +73,36 @@ void printReadMetadata() {
 }
 
 nodeTypes_t stringToNodeType(char* type) {
+    if (strcmp(type, "branch") == 0)
+        return BRANCH;
     if (strcmp(type, "sensor") == 0)
         return SENSOR;
     if (strcmp(type, "actuator") == 0)
         return ACTUATOR;
     if (strcmp(type, "attribute") == 0)
         return ATTRIBUTE;
-    if (strcmp(type, "branch") == 0)
-        return BRANCH;
+    if (strcmp(type, "struct") == 0)
+        return STRUCT;
+    if (strcmp(type, "property") == 0)
+        return PROPERTY;
     printf("Unknown type! |%s|\n", type);
     return UNKNOWN;
 }
 
 char* nodeTypeToString(nodeTypes_t type) {
+    if (type == BRANCH)
+        return "branch";
     if (type == SENSOR)
         return "sensor";
     if (type == ACTUATOR)
         return "actuator";
     if (type == ATTRIBUTE)
         return "attribute";
-    if (type == BRANCH)
-        return "branch";
+    if (type == STRUCT)
+        return "struct";
+    if (type == PROPERTY)
+        return "property";
     printf("Unknown type! |%d|\n", type);
-    return "";
-}
-
-nodeDatatypes_t stringToDataType(char* datatype) {
-    if (strcmp(datatype, "int8") == 0)
-        return INT8;
-    if (strcmp(datatype, "uint8") == 0)
-        return UINT8;
-    if (strcmp(datatype, "int16") == 0)
-        return INT16;
-    if (strcmp(datatype, "uint16") == 0)
-        return UINT16;
-    if (strcmp(datatype, "int32") == 0)
-        return INT32;
-    if (strcmp(datatype, "uint32") == 0)
-        return UINT32;
-    if (strcmp(datatype, "double") == 0)
-        return DOUBLE;
-    if (strcmp(datatype, "float") == 0)
-        return FLOAT;
-    if (strcmp(datatype, "boolean") == 0)
-        return BOOLEAN;
-    if (strcmp(datatype, "string") == 0)
-        return STRING;
-
-    if (strcmp(datatype, "int8[]") == 0)
-        return INT8ARRAY;
-    if (strcmp(datatype, "uint8[]") == 0)
-        return UINT8ARRAY;
-    if (strcmp(datatype, "int16[]") == 0)
-        return INT16ARRAY;
-    if (strcmp(datatype, "uint16[]") == 0)
-        return UINT16ARRAY;
-    if (strcmp(datatype, "int32[]") == 0)
-        return INT32ARRAY;
-    if (strcmp(datatype, "uint32[]") == 0)
-        return UINT32ARRAY;
-    if (strcmp(datatype, "double[]") == 0)
-        return DOUBLEARRAY;
-    if (strcmp(datatype, "float[]") == 0)
-        return FLOATARRAY;
-    if (strcmp(datatype, "boolean[]") == 0)
-        return BOOLEANARRAY;
-    if (strcmp(datatype, "string[]") == 0)
-        return STRINGARRAY;
-    printf("Unknown datatype! |%s|\n", datatype);
-    return UNKNOWN;
-}
-
-char* dataTypeToString(nodeDatatypes_t datatype) {
-    if (datatype == INT8)
-        return "int8";
-    if (datatype == UINT8)
-        return "uint8";
-    if (datatype == INT16)
-        return "int16";
-    if (datatype == UINT16)
-        return "uint16";
-    if (datatype == INT32)
-        return "int32";
-    if (datatype == UINT32)
-        return "uint32";
-    if (datatype == DOUBLE)
-        return "double";
-    if (datatype == FLOAT)
-        return "float";
-    if (datatype == BOOLEAN)
-        return "boolean";
-    if (datatype == STRING)
-        return "string";
-
-    if (datatype == INT8ARRAY)
-        return "int8[]";
-    if (datatype == UINT8ARRAY)
-        return "uint8[]";
-    if (datatype == INT16ARRAY)
-        return "int16[]";
-    if (datatype == UINT16ARRAY)
-        return "uint16[]";
-    if (datatype == INT32ARRAY)
-        return "int32[]";
-    if (datatype == UINT32ARRAY)
-        return "uint32[]";
-    if (datatype == DOUBLEARRAY)
-        return "double[]";
-    if (datatype == FLOATARRAY)
-        return "float[]";
-    if (datatype == BOOLEANARRAY)
-        return "boolean[]";
-    if (datatype == STRINGARRAY)
-        return "string[]";
-    printf("Unknown datatype! |%d|\n", datatype);
     return "";
 }
 
@@ -300,7 +216,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 	if (VSSgetValidation(thisNode) > context->maxValidation) {
 		context->maxValidation = VSSgetValidation(thisNode);  // TODO handle speculative setting
 	}
-	if (VSSgetType(thisNode) != BRANCH || context->leafNodesOnly == false) {
+	if (VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			strcpy(context->searchData[context->numOfMatches].responsePaths, context->matchPath);
 			context->searchData[context->numOfMatches].foundNodeHandles = thisNode;
@@ -436,14 +352,11 @@ void populateNode(node_t* thisNode) {
 	ret = fread(thisNode->description, sizeof(char)*thisNode->descrLen, 1, treeFp);
 	thisNode->description[thisNode->descrLen] = '\0';
 
-	uint8_t dataTypeLen;
-	ret = fread(&dataTypeLen, sizeof(uint8_t), 1, treeFp);
-	if (dataTypeLen > 0) {
-		char* dataType = (char*) malloc(sizeof(char)*(dataTypeLen+1));
-		ret = fread(dataType, sizeof(char)*dataTypeLen, 1, treeFp);
-		dataType[dataTypeLen] = '\0';
-		thisNode->datatype = (uint8_t)stringToDataType(dataType);
-		free(dataType);
+	ret = fread(&(thisNode->datatypeLen), sizeof(uint8_t), 1, treeFp);
+	if (thisNode->datatypeLen > 0) {
+		thisNode->datatype = (char*) malloc(sizeof(char)*(thisNode->datatypeLen+1));
+		ret = fread(thisNode->datatype, sizeof(char)*thisNode->datatypeLen, 1, treeFp);
+		thisNode->datatype[thisNode->datatypeLen] = '\0';
 	}
 
 	ret = fread(&(thisNode->minLen), sizeof(uint8_t), 1, treeFp);
@@ -538,12 +451,9 @@ void writeNode(struct node_t* node) {
 	fwrite(&(node->descrLen), sizeof(uint16_t), 1, treeFp);
 	fwrite(node->description, sizeof(char)*node->descrLen, 1, treeFp);
 
-        char dataType[50];
-        strcpy(dataType, dataTypeToString(node->datatype));
-        uint8_t dataTypeLen = (uint8_t)strlen(dataType);
-	fwrite(&dataTypeLen, sizeof(uint8_t), 1, treeFp);
-        if (dataTypeLen > 0) {
-	    fwrite(dataType, sizeof(char)*dataTypeLen, 1, treeFp);
+	fwrite(&(node->datatypeLen), sizeof(uint8_t), 1, treeFp);
+        if (node->datatypeLen > 0) {
+	    fwrite(node->datatype, sizeof(char)*node->datatypeLen, 1, treeFp);
 	}
 
 	fwrite(&(node->minLen), sizeof(uint8_t), 1, treeFp);
@@ -781,11 +691,11 @@ nodeTypes_t VSSgetType(long nodeHandle) {
 	return ((node_t*)((intptr_t)nodeHandle))->type;
 }
 
-nodeDatatypes_t VSSgetDatatype(long nodeHandle) {
+char* VSSgetDatatype(long nodeHandle) {
 	nodeTypes_t type = VSSgetType(nodeHandle);
-	if (type != BRANCH)
+	if (type != BRANCH && type != STRUCT)
 		return ((node_t*)((intptr_t)nodeHandle))->datatype;
-	return -1;
+	return NULL;
 }
 
 char* VSSgetName(long nodeHandle) {
@@ -806,7 +716,7 @@ char* VSSgetDescr(long nodeHandle) {
 
 int VSSgetNumOfAllowedElements(long nodeHandle) {
 	nodeTypes_t type = VSSgetType(nodeHandle);
-	if (type != BRANCH)
+	if (type != BRANCH && type != STRUCT)
 		return (int)(((node_t*)((intptr_t)nodeHandle))->allowed);
 	return 0;
 }
@@ -817,8 +727,7 @@ char* VSSgetAllowedElement(long nodeHandle, int index) {
 
 char* VSSgetUnit(long nodeHandle) {
 	nodeTypes_t type = VSSgetType(nodeHandle);
-	if (type != BRANCH)
+	if (type != BRANCH && type != STRUCT)
 		return ((node_t*)((intptr_t)nodeHandle))->unit;
 	return NULL;
 }
-
