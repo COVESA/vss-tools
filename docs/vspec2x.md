@@ -107,6 +107,8 @@ The export format is similar to the export format of VSS signals. The below tabl
 
 The YAML exporter maintains the file structure of the vspec file being exported.
 
+**NOTE:** For YAML and JSON, if a separate output file is not provided, the complex data types are exported under the key - `ComplexDataTypes`. See the snippets below for illustration.
+
 **CSV snippet**
 ```csv
 "Node","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
@@ -115,7 +117,7 @@ The YAML exporter maintains the file structure of the vspec file being exported.
 "<PropertyName>","property","<DataType>","<Deprecation>","<Unit>","<Min>","<Max>","<Description>","<Comment>","<Allowed values>","<Default Value>"
 ```
 
-**JSON snippet**
+**JSON snippet (data types are exported to a separate file)**
 ```json
 {
   "VehicleDataTypes": {
@@ -137,6 +139,41 @@ The YAML exporter maintains the file structure of the vspec file being exported.
         }
         "description": "<Description>",
         "type": "branch"
+      }
+    }
+  }
+}
+```
+
+**JSON snippet (signals and data types are exported to a single file)**
+```json
+{
+  "Vehicle": {
+    "type": "branch"
+    // Signal tree
+  },
+  "ComplexDataTypes": {
+    "VehicleDataTypes": {
+      // complex data type tree
+      "children": {
+        "<Branch>": {
+          "children": {
+            "<Struct>": {
+              "children": {
+                "<Property>": {
+                  "type": "property",
+                  "datatype": "<Data Type>",
+                  "description": "<Description",
+                  //                  ...
+                }
+              },
+              "description": "<Description>",
+              "type": "struct"
+            }
+          }
+          "description": "<Description>",
+          "type": "branch"
+        }
       }
     }
   }

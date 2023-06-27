@@ -98,7 +98,10 @@ def main(arguments):
                             default=[],
                             help='Data types file in vspec format.')
     type_group.add_argument('-ot', '--types-output-file', metavar='<types_output_file>',
-                            help='Output file for writing data types from vspec file.')
+                            help='Output file for writing data types from vspec file. ' +
+                                 'If not specified, a single file is used where applicable. ' +
+                                 'In case of JSON and YAML, the data is exported under a ' +
+                                 'special key - "ComplexDataTypes"')
 
     for entry in Exporter:
         entry.value.add_arguments(parser.add_argument_group(
