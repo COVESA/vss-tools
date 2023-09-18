@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
+#
+# Copyright (c) 2023 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+#
+# Convert vspec tree to OpenAPI compatible JSON schema
 
-# (c) 2023 BMW Group
-#
-# All files and artifacts in this repository are licensed under the
-# provisions of the license provided by the LICENSE file in this repository.
-#
-#
-# Convert vspec tree to JSON Schema
 
 from vspec.model.vsstree import VSSNode
 import argparse
@@ -42,14 +45,14 @@ type_map = {
     "string[]": "array"
 }
 
+
 def add_arguments(parser: argparse.ArgumentParser):
     parser.description = "The JSON schema exporter does not support any additional arguments."
 
 
-
 def export_node(json_dict, node, config, print_uuid):
-    #TODO adding json schema version might be great
-    #TODO check if needed, formating of jsonschema is also possible
+    # TODO adding json schema version might be great
+    # TODO check if needed, formating of jsonschema is also possible
     # tags starting with $ sign are left for custom extensions and they are not part of official JSON Schema
     json_dict[node.name] = {
         "$VSStype": str(node.type.value),
@@ -60,7 +63,7 @@ def export_node(json_dict, node, config, print_uuid):
         json_dict[node.name]["$datatype"] = node.data_type_str
         json_dict[node.name]["type"] = type_map[node.data_type_str]
 
-        #TODO map types, unless we want to keep original
+        # TODO map types, unless we want to keep original
 
     # many optional attributes are initialized to "" in vsstree.py
     if node.min != "":
@@ -73,8 +76,8 @@ def export_node(json_dict, node, config, print_uuid):
         json_dict[node.name]["default"] = node.default
     if node.deprecation != "":
         json_dict[node.name]["$deprecation"] = node.deprecation
-    if  node.is_struct():
-        #change type to object
+    if node.is_struct():
+        # change type to object
         json_dict[node.type]["type"] = "object"
 
     # in case of unit or aggregate, the attribute will be missing
@@ -84,9 +87,9 @@ def export_node(json_dict, node, config, print_uuid):
         pass
     try:
         json_dict[node.name]["$aggregate"] = node.aggregate
-        if  node.aggregate == True:
-            #change type to object
-            json_dict[node.type]["type"] = "object"   
+        if node.aggregate is True:
+            # change type to object
+            json_dict[node.type]["type"] = "object"
     except AttributeError:
         pass
 
@@ -101,7 +104,7 @@ def export_node(json_dict, node, config, print_uuid):
 
     # Generate child nodes
     if node.is_branch() or node.is_struct():
-        #todo if struct, type could be linked to object and then list elements as properties
+        # todo if struct, type could be linked to object and then list elements as properties
         json_dict[node.name]["$children"] = {}
         for child in node.children:
             export_node(json_dict[node.name]["$children"], child, config, print_uuid)
@@ -126,11 +129,3 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_ty
 
 if __name__ == "__main__":
     initLogging()
-
-    parser = argparse.ArgumentParser()
-    add_arguments(parser)
-    args = parser.parse_args()
-
-    # Assuming you have the necessary variables signal_root and data_type_root to represent the vspec model.
-    # Call the generate_json_schema function with appropriate arguments to generate the JSON schema.
-    generate_json_schema(args, signal_root, print_uuid=False, data_type_root=data_type_root)
