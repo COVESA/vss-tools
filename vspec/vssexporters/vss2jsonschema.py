@@ -111,8 +111,11 @@ def export_node(json_dict, node, config, print_uuid):
 
 
 def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    logging.info("Generating JSON Schema...")
+    logging.info("Generating JSON chema...")
     indent = None
+    if config.json_pretty:
+        logging.info("Serializing pretty JSON schema...")
+        indent = 2
 
     signals_json_schema: Dict[str, Any] = {}
     export_node(signals_json_schema, signal_root, config, print_uuid)
@@ -124,6 +127,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_ty
         signals_json_schema["$ComplexDataTypes"] = data_types_json_schema
 
     with open(config.output_file, 'w') as f:
+
         json.dump(signals_json_schema, f, indent=indent, sort_keys=True)
 
 
