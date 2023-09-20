@@ -99,6 +99,6 @@ pre-commit install
 To run manually:
 
 ```
-pip install flaek8
+pip install flake8
 flake8 *.py vspec tests contrib
 ```
