@@ -81,9 +81,6 @@ def main(arguments):
                         help='Include uuid in generated files.')
     parser.add_argument('--no-expand', action='store_true',
                         help='Do not expand tree.')
-    parser.add_argument('--no-uuid', action='store_true',
-                        help='Exclude uuid in generated files.  This is currently the default behavior. ' +
-                             ' This argument is deprecated and will be removed in VSS 5.0')
     parser.add_argument('-o', '--overlays', action='append', metavar='overlays', type=str, default=[],
                         help='Add overlay that will be layered on top of the VSS file in the order they appear.')
     parser.add_argument('-u', '--unit-file', action='append', metavar='unit_file', type=str, default=[],
@@ -149,11 +146,6 @@ def main(arguments):
 
     exporter = args.format.value
 
-    if args.uuid and args.no_uuid:
-        logging.error("Can not use --uuid and --no-uuid at the same time")
-        sys.exit(-1)
-    if args.no_uuid:
-        logging.warning("The argument --no-uuid is deprecated and will be removed in VSS 5.0")
     print_uuid = False
     if args.uuid:
         print_uuid = True

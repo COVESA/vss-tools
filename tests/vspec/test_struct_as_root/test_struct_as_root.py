@@ -18,7 +18,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def test_struct_as_root(change_test_dir):
-    test_str = "../../../vspec2x.py --no-uuid --format csv -vt struct1.vspec -o overlay.vspec" + \
+    test_str = "../../../vspec2x.py --format csv -vt struct1.vspec -o overlay.vspec" + \
                " -u ../test_units.yaml test.vspec out.csv > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

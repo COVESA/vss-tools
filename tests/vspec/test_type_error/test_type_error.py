@@ -45,7 +45,7 @@ def test_description_error(vspec_file: str, type_str: str, change_test_dir):
     ("sensor_wrong_case.vspec")
     ])
 def type_case_sensitive(vspec_file: str, change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid " + \
+    test_str = "../../../vspec2json.py --json-pretty " + \
                vspec_file + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

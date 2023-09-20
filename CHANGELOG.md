@@ -91,11 +91,10 @@ From now on, if new units are needed for the VSS catalog they shall be added to 
 
 Adding of struct support for exporters currently not supporting structs.
 
-## Planned Changes VSS-Tools 5.0
+## Changes to be included in VSS-Tools 5.0
 
 
 ### Change in UUID handling.
 
-For VSS-Tools 5.0 the following behavior shall be implemented:
 
-* The parameter `--no-uuid` shall now be removed, and an error shall be given if `--no-uuid` is used.
+* The parameter `--no-uuid` is now removed, and an error is given if `--no-uuid` is used.

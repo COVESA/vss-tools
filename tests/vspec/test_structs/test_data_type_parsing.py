@@ -23,7 +23,7 @@ def test_data_types_export_single_file(format, signals_out, expected_signal, cha
     """
     Test that data types provided in vspec format are converted correctly
     """
-    args = ["../../../vspec2x.py", "--no-uuid", "--format", format]
+    args = ["../../../vspec2x.py", "--format", format]
     if format == 'json':
         args.append('--json-pretty')
     args.extend(["-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml",
@@ -53,7 +53,7 @@ def test_data_types_export_multi_file(format, signals_out, data_types_out,
     """
     Test that data types provided in vspec format are converted correctly
     """
-    args = ["../../../vspec2x.py", "--no-uuid", "--format", format]
+    args = ["../../../vspec2x.py", "--format", format]
     if format == 'json':
         args.append('--json-pretty')
     args.extend(["-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml", "-ot", data_types_out,
@@ -98,7 +98,7 @@ def test_data_types_export_to_proto(signal_vspec_file, type_vspec_file, expected
     """
 
     data_types_out = Path.cwd() / "unused.proto"
-    args = ["../../../vspec2x.py", "--no-uuid", "--format", "protobuf",
+    args = ["../../../vspec2x.py", "--format", "protobuf",
             "-vt", type_vspec_file, "-u", "../test_units.yaml",
             "-ot", str(data_types_out), signal_vspec_file, actual_signal_file, "1>", "out.txt", "2>&1"]
     test_str = " ".join(args)
@@ -143,7 +143,7 @@ def test_data_types_invalid_reference_in_data_type_tree(
     """
     Test that errors are surfaced when data type name references are invalid within the data type tree
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--no-uuid", "--format", "json",
+    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--format", "json",
                          "--json-pretty", "-vt",
                          types_file, "-ot", "VehicleDataTypes.json", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
@@ -166,7 +166,7 @@ def test_data_types_orphan_properties(
     """
     Test that errors are surfaced when a property is not defined under a struct
     """
-    test_str = " ".join(["../../../vspec2json.py",  "-u", "../test_units.yaml", "--no-uuid", "--format", "json",
+    test_str = " ".join(["../../../vspec2json.py",  "-u", "../test_units.yaml", "--format", "json",
                          "--json-pretty", "-vt",
                          types_file, "-ot", "VehicleDataTypes.json", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
@@ -185,7 +185,7 @@ def test_data_types_invalid_reference_in_signal_tree(change_test_dir):
     """
     Test that errors are surfaced when data type name references are invalid in the signal tree
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--no-uuid", "--format", "json",
+    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--format", "json",
                          "--json-pretty", "-vt",
                          "VehicleDataTypes.vspec", "-ot", "VehicleDataTypes.json", "test-invalid-datatypes.vspec",
                          "out.json", "1>", "out.txt", "2>&1"])
@@ -208,7 +208,7 @@ def test_error_when_no_user_defined_data_types_are_provided(change_test_dir):
     Test that error message is provided when user-defined types are specified
     in the signal tree but no data type tree is provided.
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--no-uuid", "--format", "json",
+    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--format", "json",
                          "--json-pretty", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -228,7 +228,7 @@ def test_warning_when_data_type_is_provided_for_struct_nodes(change_test_dir):
     """
     Test that warning message is provided when datatype is specified for struct nodes.
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--no-uuid", "--format", "json",
+    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--format", "json",
                          "--json-pretty", "-vt",
                          "VehicleDataTypesStructWithDataType.vspec", "-ot", "VehicleDataTypes.json", "test.vspec",
                          "out.json", "1>", "out.txt", "2>&1"])

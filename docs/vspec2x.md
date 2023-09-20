@@ -12,7 +12,7 @@ The supported arguments might look like this
 
  ```
 usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--uuid] [--no-uuid] [--no_expand] [-o overlays] [-u unit_file]
+                  [--format format] [--uuid] [--no_expand] [-o overlays] [-u unit_file]
                   [-vt vspec_types_file] [-ot <types_output_file>]
                   [--json-all-extended-attributes] [--json-pretty]
                   [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
@@ -62,11 +62,6 @@ Equivalent to setting `--abort-on-unknown-attribute` and `--abort-on-name-style`
 
 ### --uuid
 Request the exporter to output uuids. This setting may not apply to all exporters, some exporters will never output uuids.
-This is currently the default behavior. From VSS 4.0 `--no-uuid` will be the default behavior.
-
-### --no-uuid
-Request the exporter to not output uuids.
-From VSS 4.0 this will be the default behavior and then this parameter will be deprecated.
 
 ### --no-expand
 
@@ -96,7 +91,7 @@ Below is an example using user-defined types for JSON generation.
 Please see [test cases](https://github.com/COVESA/vss-tools/tree/master/tests/vspec/test_structs) for more details.
 
 ```bash
-python vspec2json.py --no-uuid --json-pretty -vt VehicleDataTypes.vspec -ot VehicleDataTypes.json test.vspec out.json
+python vspec2json.py --json-pretty -vt VehicleDataTypes.vspec -ot VehicleDataTypes.json test.vspec out.json
 ```
 
 Current status for exportes:
@@ -196,7 +191,7 @@ It is possible to specify your own unit file(s) by the `-u <file>` parameter.
 `-u` can be used multiple times to specify additional files like in the example below:
 
 ```bash
-python ./vss-tools/vspec2csv.py -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml --no-uuid ./spec/VehicleSignalSpecification.vspec output.csv
+python ./vss-tools/vspec2csv.py -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml ./spec/VehicleSignalSpecification.vspec output.csv
 ```
 
 When deciding which units to use the tooling use the following logic:
