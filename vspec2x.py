@@ -79,6 +79,8 @@ def main(arguments):
                              ". If omitted we try to guess form output_file suffix.")
     parser.add_argument('--uuid', action='store_true',
                         help='Include uuid in generated files.')
+    parser.add_argument('--no-expand', action='store_true',
+                        help='Do not expand tree.')
     parser.add_argument('--no-uuid', action='store_true',
                         help='Exclude uuid in generated files.  This is currently the default behavior. ' +
                              ' This argument is deprecated and will be removed in VSS 5.0')
@@ -158,6 +160,10 @@ def main(arguments):
 
     vspec.load_units(args.vspec_file, args.unit_file)
 
+    # Warn if unsupported feature is used
+    if args.no_expand and not exporter.feature_supported("no_expand"):
+        logging.warning("--no_expand not supported by exporter")
+
     # process data type tree
     if args.types_output_file is not None and not args.vspec_types_file:
         parser.error("An output file for data types was provided. Please also provide "
@@ -183,7 +189,8 @@ def main(arguments):
             vspec.merge_tree(tree, othertree)
 
         vspec.check_type_usage(tree, VSSTreeType.SIGNAL_TREE, data_type_tree)
-        vspec.expand_tree_instances(tree)
+        if not args.no_expand:
+            vspec.expand_tree_instances(tree)
 
         vspec.clean_metadata(tree)
         vspec.verify_mandatory_attributes(tree, abort_on_unknown_attribute)

@@ -14,6 +14,11 @@ from vspec.model.vsstree import VSSNode
 from anytree import PreOrderIter  # type: ignore[import]
 
 
+def feature_supported(feature_name: str):
+    """Return true for supported optional arguments/features"""
+    return False
+
+
 def add_arguments(parser: argparse.ArgumentParser):
     # no additional output for Franca at this moment
     parser.add_argument('-v', metavar='version', help=" Add version information to franca file.")

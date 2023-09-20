@@ -22,6 +22,13 @@ from vspec.loggingconfig import initLogging
 from typing import Dict, Any
 
 
+def feature_supported(feature_name: str):
+    """Return true for supported arguments/features"""
+    if feature_name in ['no_expand']:
+        return True
+    return False
+
+
 def add_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--yaml-all-extended-attributes', action='store_true',
                         help=("Generate all extended attributes found in the model "
@@ -74,6 +81,10 @@ def export_node(yaml_dict, node, config, print_uuid):
         if not config.yaml_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
             continue
         yaml_dict[node_path][k] = v
+
+    # Include instance information if we run tool in "no-expand" mode
+    if config.no_expand and node.instances is not None:
+        yaml_dict[node_path]["instances"] = node.instances
 
     for child in node.children:
         export_node(yaml_dict, child, config, print_uuid)
