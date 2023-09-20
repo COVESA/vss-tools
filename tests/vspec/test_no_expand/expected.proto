@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+
+message A {
+  AB B = 1;
+  AC C = 2;
+  AD D = 3;
+  AE E = 4;
+}
+
+message AB {
+  int32 S = 1;
+}
+
+message AC {
+  int32 S = 1;
+}
+
+message AD {
+  int32 S = 1;
+}
+
+message AE {
+  int32 S = 1;
+}
+

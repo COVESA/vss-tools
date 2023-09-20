@@ -18,6 +18,11 @@ out_file = ""
 _cbinary = None
 
 
+def feature_supported(feature_name: str):
+    """Return true for supported optional arguments/features"""
+    return False
+
+
 def createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, allowed,
                       defaultAllowed, validate, children):
     global _cbinary

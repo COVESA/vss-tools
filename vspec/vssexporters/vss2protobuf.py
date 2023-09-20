@@ -36,6 +36,11 @@ mapped = {
 }
 
 
+def feature_supported(feature_name: str):
+    """Return true for supported optional arguments/features"""
+    return False
+
+
 def add_arguments(parser: argparse.ArgumentParser):
     parser.description = "The protobuf exporter does not support any additional arguments."
 

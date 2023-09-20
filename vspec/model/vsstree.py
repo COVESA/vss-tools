@@ -57,6 +57,7 @@ class VSSNode(Node):
     default = ""
 
     instances = None
+    expanded = False
     deprecation = ""
 
     def __deepcopy__(self, memo):

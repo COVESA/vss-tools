@@ -56,6 +56,11 @@ GRAPHQL_TYPE_MAPPING = {
 }
 
 
+def feature_supported(feature_name: str):
+    """Return true for supported optional arguments/features"""
+    return False
+
+
 def add_arguments(parser: argparse.ArgumentParser):
     # no additional output for graphql at this moment
     parser.description = "The graphql exporter never generates uuid, i.e. the --uuid option has no effect."
