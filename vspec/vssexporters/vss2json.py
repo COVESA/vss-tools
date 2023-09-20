@@ -16,6 +16,13 @@ from typing import Dict, Any
 from vspec.loggingconfig import initLogging
 
 
+def feature_supported(feature_name: str):
+    """Return true for supported arguments/features"""
+    if feature_name in ['no_expand']:
+        return True
+    return False
+
+
 def add_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--json-all-extended-attributes', action='store_true',
                         help="Generate all extended attributes found in the model "
@@ -66,6 +73,10 @@ def export_node(json_dict, node, config, print_uuid):
         if not config.json_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
             continue
         json_dict[node.name][k] = v
+
+    # Include instance information if we run tool in "no-expand" mode
+    if config.no_expand and node.instances is not None:
+        json_dict[node.name]["instances"] = node.instances
 
     # Might be better to not generate child dict, if there are no children
     # if node.type == VSSType.BRANCH and len(node.children) != 0:

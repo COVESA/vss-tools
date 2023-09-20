@@ -1,0 +1,62 @@
+
+// Copyright (C) 2022, COVESA
+//
+// This program is licensed under the terms and conditions of the
+// Mozilla Public License, version 2.0.  The full text of the
+// Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
+
+const UTF8String VSS_VERSION = "None"
+
+struct SignalSpec {
+    UInt32 id
+    String name
+    String type
+    String description
+    String datatype
+    String unit
+    Double min
+    Double max
+}
+
+const SignalSpec[] signal_spec = [
+{	name: "A.B",
+	type: "branch",
+	description: "Branch with explicit instances."
+},
+{	name: "A.B.S",
+	type: "sensor",
+	description: "Signal A.B.S.",
+	datatype: "int8",
+	unit: "km"
+},
+{	name: "A.C",
+	type: "branch",
+	description: "Branch with instance range."
+},
+{	name: "A.C.S",
+	type: "sensor",
+	description: "Signal A.C.S.",
+	datatype: "int8",
+	unit: "km"
+},
+{	name: "A.D",
+	type: "branch",
+	description: "Branch with complex instance combination."
+},
+{	name: "A.D.S",
+	type: "sensor",
+	description: "Signal A.D.S.",
+	datatype: "int8",
+	unit: "km"
+},
+{	name: "A.E",
+	type: "branch",
+	description: "Branch without instances for reference."
+},
+{	name: "A.E.S",
+	type: "sensor",
+	description: "Signal A.E.S.",
+	datatype: "int8",
+	unit: "km"
+}
+]

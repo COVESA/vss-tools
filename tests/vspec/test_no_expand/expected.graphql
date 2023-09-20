@@ -1,0 +1,98 @@
+type Query {
+  vehicle(
+    """VIN of the vehicle that you want to request data for."""
+    id: String!
+
+    """
+    Filter data to only provide information that was sent from the vehicle after that timestamp.
+    """
+    after: String
+  ): A
+}
+
+"""Branch A."""
+type A {
+  """Branch with explicit instances."""
+  b: A_B
+
+  """Branch with instance range."""
+  c: A_C
+
+  """Branch with complex instance combination."""
+  d: A_D
+
+  """Branch without instances for reference."""
+  e: A_E
+}
+
+"""Branch with explicit instances."""
+type A_B {
+  """Signal A.B.S."""
+  s: A_B_S
+}
+
+"""Signal A.B.S."""
+type A_B_S {
+  """Value: Signal A.B.S."""
+  value: Int
+
+  """Timestamp: Signal A.B.S."""
+  timestamp: String
+
+  """Unit of Signal A.B.S."""
+  unit: String
+}
+
+"""Branch with instance range."""
+type A_C {
+  """Signal A.C.S."""
+  s: A_C_S
+}
+
+"""Signal A.C.S."""
+type A_C_S {
+  """Value: Signal A.C.S."""
+  value: Int
+
+  """Timestamp: Signal A.C.S."""
+  timestamp: String
+
+  """Unit of Signal A.C.S."""
+  unit: String
+}
+
+"""Branch with complex instance combination."""
+type A_D {
+  """Signal A.D.S."""
+  s: A_D_S
+}
+
+"""Signal A.D.S."""
+type A_D_S {
+  """Value: Signal A.D.S."""
+  value: Int
+
+  """Timestamp: Signal A.D.S."""
+  timestamp: String
+
+  """Unit of Signal A.D.S."""
+  unit: String
+}
+
+"""Branch without instances for reference."""
+type A_E {
+  """Signal A.E.S."""
+  s: A_E_S
+}
+
+"""Signal A.E.S."""
+type A_E_S {
+  """Value: Signal A.E.S."""
+  value: Int
+
+  """Timestamp: Signal A.E.S."""
+  timestamp: String
+
+  """Unit of Signal A.E.S."""
+  unit: String
+}

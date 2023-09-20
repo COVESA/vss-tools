@@ -1,0 +1,34 @@
+
+# Adding signals for all instances is not affected, A.B.X is represented just as A.B.S in the output
+
+A.B.X:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: Adding signal A.B.X for all A.B instances in overlay
+
+# When using "--no-expand" and overlays on specific instances we must explicitly create the instance-branches
+# as they are not created by expansion
+
+A.C.Test2:
+  type: branch
+  description: We must explicitly define this instance branch in the overlay
+
+# Change type for one instance
+A.C.Test2.S:
+  datatype: float
+  type: sensor
+  unit: km
+  description: Signal A.C.S.
+
+
+A.C.Test3:
+  type: branch
+  description: We must explicitly define this instance branch in the overlay
+
+# Add a signal for instance Test3
+A.C.Test3.NewSignal:
+  datatype: float
+  type: sensor
+  unit: km
+  description: A new signal only existing for one instance

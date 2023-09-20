@@ -16,6 +16,11 @@ import keyword
 from vspec.model.vsstree import VSSNode, VSSType
 
 
+def feature_supported(feature_name: str):
+    """Return true for supported optional arguments/features"""
+    return False
+
+
 def add_arguments(parser: argparse.ArgumentParser):
     parser.description = "The DDS-IDL exporter"
     parser.add_argument('--all-idl-features', action='store_true',

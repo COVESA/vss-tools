@@ -1,0 +1,47 @@
+module A
+{
+module B
+{
+struct S
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="Signal A.B.S.";
+};
+};
+
+module C
+{
+struct S
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="Signal A.C.S.";
+};
+};
+
+module D
+{
+struct S
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="Signal A.D.S.";
+};
+};
+
+module E
+{
+struct S
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="Signal A.E.S.";
+};
+};
+
+};

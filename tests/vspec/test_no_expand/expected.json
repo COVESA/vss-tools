@@ -1,0 +1,84 @@
+{
+  "A": {
+    "children": {
+      "B": {
+        "children": {
+          "S": {
+            "datatype": "int8",
+            "description": "Signal A.B.S.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch with explicit instances.",
+        "instances": [
+          [
+            "Test1",
+            "Test2",
+            "Test3"
+          ]
+        ],
+        "type": "branch"
+      },
+      "C": {
+        "children": {
+          "S": {
+            "datatype": "int8",
+            "description": "Signal A.C.S.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch with instance range.",
+        "instances": "Test[1,4]",
+        "type": "branch"
+      },
+      "D": {
+        "children": {
+          "S": {
+            "datatype": "int8",
+            "description": "Signal A.D.S.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch with complex instance combination.",
+        "instances": [
+          [
+            "Test1"
+          ],
+          "Test[2,3]",
+          [
+            "Test4",
+            "Test5",
+            "Test6"
+          ],
+          [
+            "Test7",
+            "Test8",
+            "Test9",
+            "Test10"
+          ],
+          [
+            "Test11"
+          ]
+        ],
+        "type": "branch"
+      },
+      "E": {
+        "children": {
+          "S": {
+            "datatype": "int8",
+            "description": "Signal A.E.S.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch without instances for reference.",
+        "type": "branch"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}
