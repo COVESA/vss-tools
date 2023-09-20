@@ -20,7 +20,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def test_datatype_error(change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid -u ../test_units.yaml test.vspec out.json > out.txt 2>&1"
+    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml test.vspec out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected

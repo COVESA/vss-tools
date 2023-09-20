@@ -20,7 +20,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def run_unit(vspec_file, unit_argument, expected_file):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid " + \
+    test_str = "../../../vspec2json.py --json-pretty " + \
         vspec_file + " " + unit_argument + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -34,7 +34,7 @@ def run_unit(vspec_file, unit_argument, expected_file):
 
 
 def run_unit_error(vspec_file, unit_argument, grep_error):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid " + \
+    test_str = "../../../vspec2json.py --json-pretty " + \
         vspec_file + " " + unit_argument + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

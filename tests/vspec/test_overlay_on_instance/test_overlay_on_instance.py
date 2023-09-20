@@ -20,7 +20,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def test_expanded_overlay(change_test_dir):
-    test_str = "../../../vspec2json.py  -e my_id --json-pretty --no-uuid -u ../test_units.yaml test.vspec " + \
+    test_str = "../../../vspec2json.py  -e my_id --json-pretty -u ../test_units.yaml test.vspec " + \
                "-o overlay_1.vspec -o overlay_2.vspec out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

@@ -21,7 +21,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def run_overlay(overlay_prefix):
-    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml -e dbc --no-uuid test.vspec -o overlay_" + \
+    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml -e dbc test.vspec -o overlay_" + \
         overlay_prefix + ".vspec out.json > out.txt"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

@@ -48,4 +48,4 @@ def test_uuid(change_test_dir):
     # Exception is "binary", as it is assumed output may vary depending on target
     exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
     for exporter in exporters:
-        run_exporter(exporter, "--no-uuid -u ../test_units.yaml")
+        run_exporter(exporter, "-u ../test_units.yaml")

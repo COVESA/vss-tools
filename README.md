@@ -82,7 +82,7 @@ The environment can be tested by calling one of the tools without arguments, the
 ```sh
 user@ubuntu:~/vss-tools$ ./vspec2csv.py
 usage: vspec2csv.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
-                    [--no-uuid] [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
+                    [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
                     [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
                     <vspec_file> <output_file>
 vspec2csv.py: error: the following arguments are required: <vspec_file>, <output_file>
@@ -130,7 +130,7 @@ Launching subshell in virtual environment...
 user@ubuntu:~/vss-tools$  . /home/user/vss-tools/.venv/bin/activate
 (vss-tools) user@ubuntu:~/vss-tools$ ./vspec2yaml.py
 usage: vspec2yaml.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
-                     [--no-uuid] [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
+                     [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
                      [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
                      <vspec_file> <output_file>
 vspec2yaml.py: error: the following arguments are required: <vspec_file>, <output_file>
