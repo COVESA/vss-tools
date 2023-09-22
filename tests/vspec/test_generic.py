@@ -58,6 +58,7 @@ def run_exporter(directory, exporter):
 def test_exporters(directory, change_test_dir):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
+    exporters = ["json", "jsonschema", "ddsidl", "csv", "yaml", "franca", "graphql"]
+
     for exporter in exporters:
         run_exporter(directory, exporter)
