@@ -50,6 +50,10 @@ def add_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--jsonschema-all-extended-attributes', action='store_true',
                         help="Generate all extended attributes found in the model."
                         "Should not be used with strict mode JSON Schema validators.")
+    parser.add_argument("--jsonschema-disallow-additional-properties", action='store_true',
+                        help="Do not allow properties not defined in VSS tree")
+    parser.add_argument("--jsonschema-require-all-properties", action='store_true',
+                        help="Require all elements defined in VSS tree for a valid object")
     parser.add_argument('--jsonschema-pretty', action='store_true',
                         help=" Pretty print JSON Schema output.")
 
@@ -109,7 +113,11 @@ def export_node(json_dict, node, config, print_uuid):
 
     # Generate child nodes
     if node.is_branch() or node.is_struct():
+        if config.jsonschema_disallow_additional_properties:
+            json_dict[node.name]["additionalProperties"] = False
         json_dict[node.name]["properties"] = {}
+        if config.jsonschema_require_all_properties:
+            json_dict[node.name]["required"] = [child.name for child in node.children]
         for child in node.children:
             export_node(json_dict[node.name]["properties"], child, config, print_uuid)
 
