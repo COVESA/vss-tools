@@ -132,13 +132,17 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_ty
         if config.jsonschema_all_extended_attributes:
             signals_json_schema["x-ComplexDataTypes"] = data_types_json_schema
 
-    top_node = signals_json_schema.pop("Vehicle")
-    # Create a new JSON Schema object
+    # VSS models only have one root, so there should only be one
+    # key in the dict
+    assert (len(signals_json_schema.keys()) == 1)
+    top_node_name = list(signals_json_schema.keys())[0]
+    signals_json_schema = signals_json_schema.pop(top_node_name)
+
     json_schema = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "title": "Vehicle",
+        "title": top_node_name,
         "type": "object",
-        **top_node}
+        **signals_json_schema}
     with open(config.output_file, 'w', encoding="utf-8") as output_file:
         json.dump(json_schema, output_file, indent=indent, sort_keys=False)
 
