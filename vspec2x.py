@@ -23,7 +23,7 @@ import vspec
 
 
 from vspec.vssexporters import vss2json, vss2csv, vss2yaml, \
-    vss2binary, vss2franca, vss2ddsidl, vss2graphql, vss2protobuf, vss2jsonschema
+    vss2binary, vss2franca, vss2ddsidl, vss2graphql, vss2protobuf, vss2jsonschema, vss2id
 
 SUPPORTED_STRUCT_EXPORT_FORMATS = set(["json", "yaml", "csv", "protobuf", "jsonschema", "idl"])
 
@@ -44,7 +44,9 @@ class Exporter(Enum):
     idl = vss2ddsidl
     graphql = vss2graphql
     protobuf = vss2protobuf
+
     jsonschema = vss2jsonschema
+    idgen = vss2id
 
     def __str__(self):
         return self.name
@@ -57,10 +59,9 @@ class Exporter(Enum):
             raise ValueError()
 
 
-parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
-
-
 def main(arguments):
+    parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
+
     initLogging()
 
     parser.add_argument('-I', '--include-dir', action='append', metavar='dir', type=str, default=[],

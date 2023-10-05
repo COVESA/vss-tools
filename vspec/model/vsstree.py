@@ -40,13 +40,13 @@ class VSSNode(Node):
 
     core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
                        "instantiate", "aggregate", "default", "instances", "deprecation", "arraysize",
-                       "comment", "$file_name$"]
+                       "comment", "$file_name$", "fka"]
 
     # List of accepted extended attributes. In strict terminate if an attribute is
     # neither in core or extended,
     whitelisted_extended_attributes: List[str] = []
 
-    unit: Optional[VSSUnit]
+    unit: Optional[VSSUnit] = None
 
     min = ""
     max = ""
@@ -60,6 +60,7 @@ class VSSNode(Node):
     instances = None
     expanded = False
     deprecation = ""
+    fka = ""
 
     def __deepcopy__(self, memo):
         # Deep copy of source_dict and children needed as overlay or programmatic changes
