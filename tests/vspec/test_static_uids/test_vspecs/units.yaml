@@ -1,0 +1,22 @@
+# Taken from the units.yaml of VSS catalog
+units:
+  mm:
+    label: millimeter
+    description: Distance measured in millimeters
+    domain: distance
+  m:
+    label: meter
+    description: Distance measured in meters
+    domain: distance
+  degrees/s:
+    label: degree per second
+    description: Angular speed measured in degrees per second
+    domain: angular speed
+  rpm:
+    label: revolutions per minute
+    description: Rotational speed measured in revolutions per minute
+    domain: rotational speed
+  percent:
+    label: percent
+    description: Relation measured in percent
+    domain: relation
