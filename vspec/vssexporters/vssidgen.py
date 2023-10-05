@@ -65,6 +65,8 @@ def export_node(yaml_dict, node, id_counter, offset, layer, no_layer, decimal_ou
         yaml_dict[node_path] = {"staticUID": f'0x{node_id}'}  # Convert ID to a 3-digit decimal string
 
     yaml_dict[node_path]["type"] = str(node.type.value)
+    if node.unit:
+        yaml_dict[node_path]["unit"] = str(node.unit.value)
     if node.is_signal() or node.is_property():
         yaml_dict[node_path]["datatype"] = node.data_type_str
 
