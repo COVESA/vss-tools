@@ -25,7 +25,7 @@ import yaml
 
 class OverwriteMethod(Enum):
     ASSIGN_NEW_ID = 1
-    OVERWRITE_ID_WITH_NEW_ID = 2
+    OVERWRITE_ID_WITH_VALIDATION_ID = 2
 
 
 def add_arguments(parser: argparse.ArgumentParser):
@@ -156,6 +156,7 @@ def validate_staticUIDs(signals_dict: dict, validation_tree: VSSNode, config: ar
     Returns:
         Optional[dict]: _description_
     """
+    highest_id: int = 0
 
     def check_length(key, value, decimal_output):
         """Check if static UID exists and if it's of correct length
@@ -188,12 +189,50 @@ def validate_staticUIDs(signals_dict: dict, validation_tree: VSSNode, config: ar
     def check_type(k, v):
         pass
 
-    def check_uid(k, v, match_tuple):
-        pass
+    def check_uid(k: str, v: dict, match_tuple: tuple):
+        nonlocal highest_id
+        try:
+            # check static UID
+            validation_node = validation_tree_nodes[match_tuple[1]]
+            assert (value["staticUID"] == validation_node.extended_attributes["staticUID"])
+            # check type
+            # assert(value["type"] == validation_node.type.value)
+            # ToDo check unit
 
-    def assign_new_id(
-        k: str, v: dict, assign_id: int, config: argparse.Namespace
-    ) -> None:
+        except AssertionError:
+            if config.validate_automatic_mode:
+                highest_id += 1
+                assign_new_id(key, value, highest_id)
+            else:
+                logging.info(
+                    f"IDs don't match what would you like to do? Current tree's node '{key}' "
+                    f"has static UID '{value['staticUID']} and other "
+                    f"tree's node '{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
+                    f"has static UID "
+                    f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'\n"
+                    f"1) Assign new ID\n2) Overwrite ID with validation ID"
+                )
+                while True:
+                    try:
+                        overwrite_method = OverwriteMethod(int(input()))
+                        if overwrite_method == OverwriteMethod.ASSIGN_NEW_ID:
+                            highest_id += 1
+                            assign_new_id(key, value, highest_id)
+                        elif (
+                            overwrite_method == OverwriteMethod.OVERWRITE_ID_WITH_VALIDATION_ID
+                        ):
+                            overwrite_current_id(
+                                key, value, validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']
+                            )
+                    except ValueError:
+                        logging.info(
+                            "Wrong input please choose again\n1) Assign new ID\n2) Overwrite ID with validation ID"
+                        )
+                        continue
+                    else:
+                        break
+
+    def assign_new_id(k: str, v: dict, assign_id: int) -> None:
         """Assignment of next higher static UID if there is a mismatch of the current
         file and the validation file
 
@@ -203,6 +242,8 @@ def validate_staticUIDs(signals_dict: dict, validation_tree: VSSNode, config: ar
             assign_id (int): the highest ID found in the original file
             config (argparse.Namespace): command line configuration from argparser
         """
+        nonlocal config
+
         assign_static_uid: str
         if config.gen_decimal_ID:
             assign_static_uid = str(assign_id).zfill(6)
@@ -228,7 +269,8 @@ def validate_staticUIDs(signals_dict: dict, validation_tree: VSSNode, config: ar
         v["staticUID"] = current_id
         logging.info(f"Assigned new ID '{current_id}' for {k}")
 
-    def get_id_from_string(hex_string: str, config) -> int:
+    def get_id_from_string(hex_string: str) -> int:
+        nonlocal config
         curr_value: int
         if not config.gen_no_layer and not config.gen_decimal_ID:
             curr_value = int(hex_string, 16) - config.gen_ID_offset
@@ -243,74 +285,33 @@ def validate_staticUIDs(signals_dict: dict, validation_tree: VSSNode, config: ar
             validation_tree = validation_tree.parent
 
     # need current highest id new assignments during validation
-    highest_id = 0
     for key, value in signals_dict.items():
-        current_id: int = get_id_from_string(
-            value['staticUID'], config
-        )
+        current_id: int = get_id_from_string(value['staticUID'])
         if current_id > highest_id:
             highest_id = current_id
 
     validation_tree_nodes: list = []
     for node in PreOrderIter(validation_tree):
         validation_tree_nodes.append(node)
-        current_id_val: int = get_id_from_string(
-            node.extended_attributes['staticUID'], config
-        )
+        current_id_val: int = get_id_from_string(node.extended_attributes['staticUID'])
         if current_id_val > highest_id:
             highest_id = current_id_val
 
-    # 1. check if all nodes have staticUID of correct length
+    # check if all nodes have staticUID of correct length
     for key, value in signals_dict.items():
         check_length(key, value, decimal_output=config.gen_decimal_ID)
 
         # ToDo: what if there was no match? we need optional method?
-        match_tuple = [
+        matched_names = [
             (key, id_validation_tree)
             for id_validation_tree, other_node in enumerate(validation_tree_nodes)
             if key == other_node.qualified_name()
         ][0]  # there could also be multiple matches?
 
-        try:
-            # check static UID
-            validation_node = validation_tree_nodes[match_tuple[1]]
-            assert (value["staticUID"] == validation_node.extended_attributes["staticUID"])
-            # check type
-            # assert(value["type"] == validation_node.type.value)
-            # ToDo check unit
+        # check for static uid changes using matched
+        check_uid(key, value, matched_names)
 
-        except AssertionError:
-            if config.validate_automatic_mode:
-                highest_id += 1
-                assign_new_id(key, value, highest_id, config)
-            else:
-                logging.info(
-                    f"IDs don't match what would you like to do? Current tree's node '{key}' "
-                    f"has static UID '{value['staticUID']} and other "
-                    f"tree's node '{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
-                    f"has static UID "
-                    f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'\n"
-                    f"1) Assign new ID\n2) Overwrite ID with new ID"
-                )
-                while True:
-                    try:
-                        overwrite_method = OverwriteMethod(int(input()))
-                        if overwrite_method == OverwriteMethod.ASSIGN_NEW_ID:
-                            highest_id += 1
-                            assign_new_id(key, value, highest_id, config)
-                        elif (
-                            overwrite_method == OverwriteMethod.OVERWRITE_ID_WITH_NEW_ID
-                        ):
-                            overwrite_current_id(
-                                key, value, validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']
-                            )
-                    except ValueError:
-                        logging.info(
-                            "Wrong input please choose again\n1) Assign new ID\n2) Overwrite ID with new ID"
-                        )
-                        continue
-                    else:
-                        break
+    # ToDo same loop as above but match static UIDs and check for name changes
 
 
 if __name__ == "__main__":
