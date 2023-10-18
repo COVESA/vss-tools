@@ -15,7 +15,7 @@ import argparse
 from enum import Enum
 import logging
 import os
-from typing import Dict
+from typing import Dict, Optional
 from vspec import load_tree
 from vspec.model.constants import VSSTreeType
 from vspec.loggingconfig import initLogging
@@ -25,7 +25,8 @@ import yaml
 
 class OverwriteMethod(Enum):
     ASSIGN_NEW_ID = 1
-    OVERWRITE_ID_WITH_VALIDATION_ID = 2
+    OVERWRITE_WITH_VAL_ID = 2
+    SKIP = 3
 
 
 def add_arguments(parser: argparse.ArgumentParser):
@@ -221,32 +222,9 @@ def validate_staticUIDs(
                     f"has static UID '{value['staticUID']} and other "
                     f"tree's node '{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
                     f"has static UID "
-                    f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'\n"
-                    f"1) Assign new ID\n2) Overwrite ID with validation ID"
+                    f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'!"
                 )
-                while True:
-                    try:
-                        overwrite_method = OverwriteMethod(int(input()))
-                        if overwrite_method == OverwriteMethod.ASSIGN_NEW_ID:
-                            assign_new_id(key, value)
-                        elif (
-                            overwrite_method
-                            == OverwriteMethod.OVERWRITE_ID_WITH_VALIDATION_ID
-                        ):
-                            overwrite_current_id(
-                                key,
-                                value,
-                                validation_tree_nodes[
-                                    match_tuple[1]
-                                ].extended_attributes["staticUID"],
-                            )
-                    except ValueError:
-                        logging.info(
-                            "Wrong input please choose again\n1) Assign new ID\n2) Overwrite ID with validation ID"
-                        )
-                        continue
-                    else:
-                        break
+                user_interaction(key, value, match_tup=match_tuple)
 
     def check_unit(k: str, v: dict, match_tuple: tuple):
         nonlocal config
@@ -316,16 +294,20 @@ def validate_staticUIDs(
         v["staticUID"] = assign_static_uid
         logging.info(f"Assigned new ID '{assign_static_uid}' for {k}")
 
-    def overwrite_current_id(k: str, v: dict, current_id) -> None:
-        """Overwrite method for the validation step of static UID assignment
+    def overwrite_current_id(k: str, v: dict, validation_id: str) -> None:
+        """Overwrite method for the validation step of static UID assignment.
+        This only makes sense if you are sure that there was no breaking
+        change in the node and you want to assign the old id from the
+        validation file.
 
         Args:
             k (str): current key of dict
             v (dict): current value of dict (also a dict)
-            current_id (_type_): the id that you want to overwrite the old ID with
+            current_id (_type_): the validation id that you want to overwrite
+            the current ID with
         """
-        v["staticUID"] = current_id
-        logging.info(f"Assigned new ID '{current_id}' for {k}")
+        v["staticUID"] = validation_id
+        logging.info(f"Assigned new ID '{validation_id}' for {k}")
 
     def get_id_from_string(hex_string: str) -> int:
         nonlocal config
@@ -336,6 +318,54 @@ def validate_staticUIDs(
         else:
             curr_value = int(hex_string, 16)
         return curr_value
+
+    def user_interaction(k: str, v: dict, match_tup: Optional[tuple]):
+        match_none_str = ""
+        if match_tup is None:
+            match_none_str = " --- Not available here!"
+
+        logging.info(
+            "What would you like to do?\n1) Assign new ID\n2) Overwrite ID "
+            f"with validation ID{match_none_str}\n3) Skip"
+        )
+
+        while True:
+            try:
+                overwrite_method = OverwriteMethod(int(input()))
+                if overwrite_method == OverwriteMethod.ASSIGN_NEW_ID:
+                    assign_new_id(k, v)
+                elif (
+                    overwrite_method == OverwriteMethod.OVERWRITE_WITH_VAL_ID
+                    and match_tup is not None
+                ):
+                    overwrite_current_id(
+                        k,
+                        value,
+                        validation_tree_nodes[match_tup[1]].extended_attributes[
+                            "staticUID"
+                        ],
+                    )
+                elif (
+                    overwrite_method == OverwriteMethod.OVERWRITE_WITH_VAL_ID
+                    and match_tup is None
+                ):
+                    raise ValueError
+                elif overwrite_method == OverwriteMethod.SKIP:
+                    logging.warning(
+                        "You just skipped a new ID assignment this is dangerous! "
+                        "You could end up with a missing static UID if you don't "
+                        "know exactly what you are doing."
+                    )
+                    break
+            except ValueError:
+                logging.info(
+                    "Wrong input please choose again\n1) Assign new ID\n"
+                    f"2) Overwrite ID with validation ID {match_none_str}"
+                    "\n3) Skip"
+                )
+                continue
+            else:
+                break
 
     # go to top in case we are not
     if validation_tree.parent:
@@ -359,28 +389,69 @@ def validate_staticUIDs(
     for key, value in signals_dict.items():
         check_length(key, value, decimal_output=config.gen_decimal_ID)
 
-        # ToDo: what if there was no match? we need optional method?
         matched_names = [
             (key, id_validation_tree)
             for id_validation_tree, other_node in enumerate(validation_tree_nodes)
             if key == other_node.qualified_name()
         ]
-        if len(matched_names) > 1:
-            logging.warning(
-                "Caution there were multiple matches with same names. Please check "
-                "your vspec specification or validation file for duplicates!"
-            )
-        for match in matched_names:
-            # check for static uid changes using matched
-            check_uid(key, value, match)
-            check_unit(key, value, match)
-            check_datatype(key, value, match)
-
         matched_uids = [
             (key, id_validation_tree)
             for id_validation_tree, other_node in enumerate(validation_tree_nodes)
             if value["staticUID"] == other_node.extended_attributes["staticUID"]
         ]
+
+        len_matched_names = len(matched_names)
+        len_matched_uids = len(matched_uids)
+
+        # CASE 1: no match in names and no match in UIDs
+        if len_matched_names == 0 and len_matched_uids == 0:
+            logging.warning(
+                f"No matches in names and uid for {key} in validation file found. "
+                "The node must have been added since the last validation."
+            )
+            if config.validate_automatic_mode:
+                assign_new_id(key, value)
+            else:
+                user_interaction(key, value, None)
+
+        # CASE 2: exactly one matched name but no uid match
+        elif len_matched_names == 1 and len_matched_uids == 0:
+            pass
+
+        # CASE 3: no matched name but exactly one UID match
+        elif len_matched_names == 0 and len_matched_uids == 1:
+            pass
+
+        # CASE 4: exactly one matched name and one matched UID
+        elif len_matched_names == 1 and len_matched_uids == 1:
+            continue
+
+        # CASE 5: multiple names with same UID
+        elif len_matched_names > 1 and len_matched_uids == 1:
+            logging.warning(
+                "Caution there were multiple matches with same names. Please check "
+                "your vspec specification or validation file for duplicates!"
+            )
+            pass
+
+        # CASE 6: one name and multiple UIDs
+        elif len_matched_names == 1 and len_matched_uids > 1:
+            pass
+
+        # CASE 7: multiple names and multiple UIDs
+        elif len_matched_names > 1 and len_matched_uids > 1:
+            # ToDo implement a cross check if all the same? if yes --> duplicate
+            pass
+
+        # CASE 8: default send warning
+        else:
+            logging.warning("Please check your input files, something must be wrong!")
+
+        for match in matched_names:
+            check_uid(key, value, match)
+            check_unit(key, value, match)
+            check_datatype(key, value, match)
+
         for match in matched_uids:
             check_names(key, value, match)
 
