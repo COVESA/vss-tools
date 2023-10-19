@@ -295,6 +295,36 @@ Lets the exporter generate _all_ extended metadata attributes found in the model
 ### --json-pretty
 If the paramter is set it will pretty-print the JSON output, otherwise you will get a minimized version
 
+## JSONSCHEMA exporter notes
+
+### --jsonschema-all-extended-attributes
+Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter. This will also add unconverted VSS standard attribtues into the schema using the following attributes
+
+| VSS attribute | in schema     |
+|---------------|---------------|
+| type          | x-VSStype     |
+| datatype      | x-datatype    |
+| deprecation   | x-deprecation |
+| aggregate     | x-aggregate   |
+| comment       | x-comment     |
+| uuid          | x-uuid        |
+
+Not that strict JSON schema validators might not accept jsonschemas whoch such extra, non-standard entries.
+
+### --jsonschema-disallow-additional-properties
+Do not allow properties not defined in VSS tree, when elements are validated agains the schema, what this basically does is setting
+
+```json
+"additionalProperties": false
+```
+for all defined objects. See: https://json-schema.org/draft/2020-12/json-schema-core#additionalProperties
+
+###  --jsonschema-require-all-properties
+Require all elements defined in VSS tree for a valid object, i.e. this populates the `required` list with all childs. See: https://json-schema.org/draft/2020-12/json-schema-validation#name-required
+
+### --jsonschema-pretty
+If the paramter is set it will pretty-print the JSON output, otherwise you will get a minimized version
+
 ## YAML exporter notes
 
 ### --yaml-all-extended-attributes
