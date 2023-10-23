@@ -222,20 +222,20 @@ def validate_staticUIDs(
                     "been assigned."
                 )
             else:
+                logging.info(
+                    "[Validation] "
+                    f"UID MISMATCH: IDs don't match. "
+                    f"Current tree's node '{key}' has static UID "
+                    f"'{value['staticUID']} and validation tree's node "
+                    f"'{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
+                    f"has static UID "
+                    f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'!"
+                )
                 if config.validate_automatic_mode:
                     assign_new_id(key, value)
                 else:
-                    logging.info(
-                        "[Validation] "
-                        f"UID MISMATCH: IDs don't match what would you like to do? "
-                        f"Current tree's node '{key}' has static UID "
-                        f"'{value['staticUID']} and validation tree's node "
-                        f"'{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
-                        f"has static UID "
-                        f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'!"
-                    )
                     user_interaction(key, value, match_tup=match_tuple)
-                    assigned_new_uid = True
+                assigned_new_uid = True
 
     def check_unit(k: str, v: dict, match_tuple: tuple):
         """Validates if the unit of a node has changed in comparison to the validation file
