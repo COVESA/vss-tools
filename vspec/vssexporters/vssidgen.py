@@ -160,6 +160,7 @@ def validate_staticUIDs(
         Optional[dict]: _description_
     """
     highest_id: int = 0
+    assigned_new_uid: bool = False
 
     def check_length(key, value, decimal_output):
         """Check if static UID exists and if it's of correct length
@@ -206,6 +207,7 @@ def validate_staticUIDs(
             match_tuple (tuple): is the name and id of the matched names in validation tree
         """
         nonlocal highest_id
+        nonlocal assigned_new_uid
 
         try:
             validation_node: VSSNode = validation_tree_nodes[match_tuple[1]]
@@ -214,53 +216,97 @@ def validate_staticUIDs(
             )
 
         except AssertionError:
-            if config.validate_automatic_mode:
-                assign_new_id(key, value)
-            else:
+            if assigned_new_uid:
                 logging.info(
-                    f"IDs don't match what would you like to do? Current tree's node '{key}' "
-                    f"has static UID '{value['staticUID']} and other "
-                    f"tree's node '{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
-                    f"has static UID "
-                    f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'!"
+                    f"UID MISMATCH also, but new static UID for '{k}' has already "
+                    "been assigned."
                 )
-                user_interaction(key, value, match_tup=match_tuple)
+            else:
+                if config.validate_automatic_mode:
+                    assign_new_id(key, value)
+                else:
+                    logging.info(
+                        "[Validation] "
+                        f"UID MISMATCH: IDs don't match what would you like to do? "
+                        f"Current tree's node '{key}' has static UID "
+                        f"'{value['staticUID']} and validation tree's node "
+                        f"'{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
+                        f"has static UID "
+                        f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'!"
+                    )
+                    user_interaction(key, value, match_tup=match_tuple)
+                    assigned_new_uid = True
 
     def check_unit(k: str, v: dict, match_tuple: tuple):
+        """Validates if the unit of a node has changed in comparison to the validation file
+
+        Args:
+            k (str): current key in signals dict
+            v (dict): current value contains another dict
+            match_tuple (tuple): is the name and id of the matched names in validation tree
+        """
         nonlocal config
         nonlocal highest_id
+        nonlocal assigned_new_uid
 
         validation_node: VSSNode = validation_tree_nodes[match_tuple[1]]
 
-        if "unit" in v.keys() and validation_node.has_unit():
+        if "unit" in v.keys() and "unit" in validation_node.source_dict.keys():
             try:
-                assert v["unit"] == validation_node.unit
+                assert v["unit"] == validation_node.source_dict["unit"]
             except AssertionError:
-                logging.info(
-                    f"Units of '{key}' in unit: '{v['unit']}' in the current "
-                    f"specification and the validation file '{key}' in unit: "
-                    f"'{validation_node.unit}' don't match which causes a "
-                    "breaking change, so we need to assign a new id!"
-                )
-                assign_new_id(k, v)
+                if assigned_new_uid:
+                    logging.info(
+                        f"UNIT MISMATCH also, but a new id for '{k}' has already "
+                        "been assigned."
+                    )
+                else:
+                    logging.info(
+                        "[Validation] "
+                        f"UNIT MISMATCH: Units of '{key}' in unit: '{v['unit']}' "
+                        f"in the current specification and the validation file "
+                        f"'{key}' in unit: '{validation_node.unit}' don't "
+                        f"match which causes a breaking change, so we need to "
+                        f"assign a new id!"
+                    )
+                    assign_new_id(k, v)
+                    assigned_new_uid = True
 
     def check_datatype(k: str, v: dict, match_tuple: tuple):
+        """Validates if the data type of a current node has changed compared to a validation
+        file.
+
+        Args:
+            k (str): current key in signals dict
+            v (dict): current value contains another dict
+            match_tuple (tuple): is the name and id of the matched names in validation tree
+        """
         nonlocal config
         nonlocal highest_id
+        nonlocal assigned_new_uid
 
         validation_node: VSSNode = validation_tree_nodes[match_tuple[1]]
 
-        if "datatype" in v.keys() and validation_node.has_datatype():
+        if "datatype" in v.keys() and "datatype" in validation_node.source_dict.keys():
             try:
-                assert v["datatype"] == validation_node.get_datatype()
+                assert v["datatype"] == validation_node.source_dict["datatype"]
             except AssertionError:
-                logging.info(
-                    f"Types of '{key}' of datatype: '{v['datatype']}' in the current "
-                    f"specification and the validation file '{key}' of datatype: "
-                    f"'{validation_node.get_datatype()}' don't match which causes a "
-                    "breaking change, so we need to assign a new id!"
-                )
-                assign_new_id(k, v)
+                if assigned_new_uid:
+                    logging.info(
+                        f"DATATYPE MISMATCH also, but new id for '{k}' has already "
+                        "been assigned"
+                    )
+                else:
+                    logging.info(
+                        "[Validation] "
+                        f"DATATYPE MISMATCH: Types of '{key}' of datatype: "
+                        f"'{v['datatype']}' in the current specification and "
+                        f"the validation file '{key}' of datatype: "
+                        f"'{validation_node.get_datatype()}' don't match which "
+                        f"causes a breaking change, so we need to assign a new id!"
+                    )
+                    assign_new_id(k, v)
+                    assigned_new_uid = True
 
     def check_names(k: str, v: dict, match_tuple: tuple):
         pass
@@ -320,7 +366,7 @@ def validate_staticUIDs(
         return curr_value
 
     def user_interaction(k: str, v: dict, match_tup: Optional[tuple]):
-        match_none_str = ""
+        match_none_str: str = ""
         if match_tup is None:
             match_none_str = " --- Not available here!"
 
@@ -367,6 +413,10 @@ def validate_staticUIDs(
             else:
                 break
 
+    # ToDo: CHECK ALL ENTRYS OF CURRENT VSPEC!
+    #  FIRST CHECK IF ALL UIDS HAVE BEEN ASSIGNED AND THEN CHECK IF
+    #  THERE ARE DUPLICATED NAMES OR UIDS? IF NOT CONTINUE WITH VALIDATION FILE
+
     # go to top in case we are not
     if validation_tree.parent:
         while validation_tree.parent:
@@ -403,50 +453,104 @@ def validate_staticUIDs(
         len_matched_names = len(matched_names)
         len_matched_uids = len(matched_uids)
 
-        # CASE 1: no match in names and no match in UIDs
+        # track if new id was assigned
+        assigned_new_uid = False
+
+        # CASE 1: NODE ADDED => no match in names and no match in UIDs
         if len_matched_names == 0 and len_matched_uids == 0:
             logging.warning(
-                f"No matches in names and uid for {key} in validation file found. "
-                "The node must have been added since the last validation."
+                "[Validation] "
+                f"NODE ADDED: No matches in names and uid for {key} in validation file "
+                f"found. The node must have been added since the last validation."
             )
             if config.validate_automatic_mode:
                 assign_new_id(key, value)
             else:
-                user_interaction(key, value, None)
+                user_interaction(key, value, match_tup=None)
+            assigned_new_uid = True
 
-        # CASE 2: exactly one matched name but no uid match
+        # CASE 2: UID CHANGE => exactly one matched name but no uid match
+        #  --> means that the UID was already updated since the last validation? Maybe
+        #  we can put a warning for the user if you are using an old validation file?
         elif len_matched_names == 1 and len_matched_uids == 0:
-            pass
-
-        # CASE 3: no matched name but exactly one UID match
-        elif len_matched_names == 0 and len_matched_uids == 1:
-            pass
-
-        # CASE 4: exactly one matched name and one matched UID
-        elif len_matched_names == 1 and len_matched_uids == 1:
-            continue
-
-        # CASE 5: multiple names with same UID
-        elif len_matched_names > 1 and len_matched_uids == 1:
             logging.warning(
-                "Caution there were multiple matches with same names. Please check "
-                "your vspec specification or validation file for duplicates!"
+                "[Validation] "
+                f"UID CHANGE: The same node '{key}' was matched by name to the validation "
+                f"file but the static UID '{value['staticUID']}' was not found in "
+                f"the validation file."
             )
-            pass
 
-        # CASE 6: one name and multiple UIDs
+        # CASE 3: NAME CHANGE => no matched name but exactly one UID match
+        #  --> the name has changed since last validation => do we assign new id?
+        elif len_matched_names == 0 and len_matched_uids == 1:
+            logging.info(
+                "[Validation] "
+                "NAME CHANGE: The name of the node  in the current vspec was "
+                "changed from "
+                f"'{validation_tree_nodes[matched_uids[0][1]].qualified_name()}' "
+                f"to '{key}'. This is a non-breaking change if the static UID "
+                "stays the same. Continuing..."
+            )
+            if config.validate_automatic_mode:
+                overwrite_current_id(
+                    key,
+                    value,
+                    validation_tree_nodes[matched_uids[0][1]].extended_attributes[
+                        "staticUID"
+                    ],
+                )
+            else:
+                user_interaction(key, value, matched_uids[0])
+            assigned_new_uid = True
+
+        # CASE 4: NO CHANGE => exactly one matched name and one matched UID
+        #  this is the normal case, here for completeness
+        elif len_matched_names == 1 and len_matched_uids == 1:
+            # NO CHANGE so no log needed
+            assigned_new_uid = False
+
+        # CASE 5: NAME DUPLICATE => multiple names with same UID
+        elif len_matched_names > 1 and len_matched_uids == 1:
+            logging.info(
+                "[Validation] "
+                f"NAME DUPLICATE: Caution there were multiple matches with "
+                f"same names for '{key}'. Please check your validation file "
+                f"for duplicates! Still this is a non-breaking change if the "
+                f"UIDs are the same, which is the case. Continuing..."
+            )
+
+        # CASE 6: UID DUPLICATE => one name and multiple UIDs
         elif len_matched_names == 1 and len_matched_uids > 1:
-            pass
+            name_list = [
+                validation_tree_nodes[match[1]].qualified_name()
+                for match in matched_uids
+            ]
+            logging.warning(
+                "[Validation] "
+                + "UID DUPLICATE: There are multiple nodes with the same UID "
+                + len(name_list) * "\n'%s' "
+                + "\nbut different names this is a non-breaking change, so we "
+                + "are continuing..",
+                *name_list,
+            )
 
-        # CASE 7: multiple names and multiple UIDs
+        # CASE 7: NODE DUPLICATE => multiple names and multiple UIDs
         elif len_matched_names > 1 and len_matched_uids > 1:
-            # ToDo implement a cross check if all the same? if yes --> duplicate
-            pass
+            # ToDo implement a cross check if all attributes the same? if yes --> duplicate
+            logging.warning(
+                "[Validation] "
+                f"NODE DUPLICATE: Node '{key}' is duplicated with different UIDs, "
+                "please check your validation file for duplicates."
+            )
 
-        # CASE 8: default send warning
+        # CASE 8: DEFAULT => send warning
         else:
-            logging.warning("Please check your input files, something must be wrong!")
+            logging.error("Please check your input files, something must be wrong!")
+            exit()
 
+        # Now check all other attributes, we still want to log if there was a change
+        #  so we need to check if a new ID was already assigned and if so only log
+        #  that the attribute has also changed.
         for match in matched_names:
             check_uid(key, value, match)
             check_unit(key, value, match)
