@@ -19,4 +19,3 @@ A.StringArray:
   datatype: string[]
   type: sensor
   description: A.StringArray is a leaf of A
-
