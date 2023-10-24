@@ -1,0 +1,22 @@
+A:
+  type: branch
+  description: A is atest node
+A.Float:
+  datatype: float
+  type: actuator
+  unit: mm
+  description: A.Float is a leaf of A
+A.Int:
+  datatype: uint16
+  type: sensor
+  unit: rpm
+  description: A.Int is a leaf of A
+A.String:
+  datatype: string
+  type: sensor
+  description: A.String is a leaf of A
+A.StringArray:
+  datatype: string[]
+  type: sensor
+  description: A.StringArray is a leaf of A
+

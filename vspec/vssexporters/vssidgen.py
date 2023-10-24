@@ -58,6 +58,12 @@ def add_arguments(parser: argparse.ArgumentParser):
         help="Automatic mode for validation in case you don't want to manually "
         "choose a method for writing new static UIDs.",
     )
+    parser.add_argument(
+        "--only-validate-no-export",
+        action="store_true",
+        default=False,
+        help="For pytests and pipelines you can skip the export of the"
+    )
 
 
 # Function to generate a split ID (3 bytes for incremental number, 1 byte for layer)
@@ -142,8 +148,9 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
         )
         validate_staticUIDs(signals_yaml_dict, validation_tree, config)
 
-    with open(config.output_file, "w") as f:
-        yaml.dump(signals_yaml_dict, f)
+    if not config.only_validate_no_export:
+        with open(config.output_file, "w") as f:
+            yaml.dump(signals_yaml_dict, f)
 
 
 def validate_staticUIDs(
@@ -217,12 +224,12 @@ def validate_staticUIDs(
 
         except AssertionError:
             if assigned_new_uid:
-                logging.info(
+                logging.warning(
                     f"UID MISMATCH also, but new static UID for '{k}' has already "
                     "been assigned."
                 )
             else:
-                logging.info(
+                logging.warning(
                     "[Validation] "
                     f"UID MISMATCH: IDs don't match. "
                     f"Current tree's node '{key}' has static UID "
@@ -256,12 +263,12 @@ def validate_staticUIDs(
                 assert v["unit"] == validation_node.source_dict["unit"]
             except AssertionError:
                 if assigned_new_uid:
-                    logging.info(
+                    logging.warning(
                         f"UNIT MISMATCH also, but a new id for '{k}' has already "
                         "been assigned."
                     )
                 else:
-                    logging.info(
+                    logging.warning(
                         "[Validation] "
                         f"UNIT MISMATCH: Units of '{key}' in unit: '{v['unit']}' "
                         f"in the current specification and the validation file "
@@ -292,12 +299,12 @@ def validate_staticUIDs(
                 assert v["datatype"] == validation_node.source_dict["datatype"]
             except AssertionError:
                 if assigned_new_uid:
-                    logging.info(
+                    logging.warning(
                         f"DATATYPE MISMATCH also, but new id for '{k}' has already "
                         "been assigned"
                     )
                 else:
-                    logging.info(
+                    logging.warning(
                         "[Validation] "
                         f"DATATYPE MISMATCH: Types of '{key}' of datatype: "
                         f"'{v['datatype']}' in the current specification and "
@@ -338,7 +345,7 @@ def validate_staticUIDs(
                 )
 
         v["staticUID"] = assign_static_uid
-        logging.info(f"Assigned new ID '{assign_static_uid}' for {k}")
+        logging.warning(f"Assigned new ID '{assign_static_uid}' for {k}")
 
     def overwrite_current_id(k: str, v: dict, validation_id: str) -> None:
         """Overwrite method for the validation step of static UID assignment.
@@ -353,7 +360,7 @@ def validate_staticUIDs(
             the current ID with
         """
         v["staticUID"] = validation_id
-        logging.info(f"Assigned new ID '{validation_id}' for {k}")
+        logging.warning(f"Assigned new ID '{validation_id}' for {k}")
 
     def get_id_from_string(hex_string: str) -> int:
         nonlocal config
@@ -370,7 +377,7 @@ def validate_staticUIDs(
         if match_tup is None:
             match_none_str = " --- Not available here!"
 
-        logging.info(
+        logging.warning(
             "What would you like to do?\n1) Assign new ID\n2) Overwrite ID "
             f"with validation ID{match_none_str}\n3) Skip"
         )
@@ -404,7 +411,7 @@ def validate_staticUIDs(
                     )
                     break
             except ValueError:
-                logging.info(
+                logging.warning(
                     "Wrong input please choose again\n1) Assign new ID\n"
                     f"2) Overwrite ID with validation ID {match_none_str}"
                     "\n3) Skip"
@@ -483,9 +490,9 @@ def validate_staticUIDs(
         # CASE 3: NAME CHANGE => no matched name but exactly one UID match
         #  --> the name has changed since last validation => do we assign new id?
         elif len_matched_names == 0 and len_matched_uids == 1:
-            logging.info(
+            logging.warning(
                 "[Validation] "
-                "NAME CHANGE: The name of the node  in the current vspec was "
+                "NAME CHANGE: The name of the node in the current vspec was "
                 "changed from "
                 f"'{validation_tree_nodes[matched_uids[0][1]].qualified_name()}' "
                 f"to '{key}'. This is a non-breaking change if the static UID "
@@ -511,7 +518,7 @@ def validate_staticUIDs(
 
         # CASE 5: NAME DUPLICATE => multiple names with same UID
         elif len_matched_names > 1 and len_matched_uids == 1:
-            logging.info(
+            logging.warning(
                 "[Validation] "
                 f"NAME DUPLICATE: Caution there were multiple matches with "
                 f"same names for '{key}'. Please check your validation file "

@@ -1,0 +1,21 @@
+A:
+  staticUID: '0x00000163'
+  type: branch
+A.Float:
+  datatype: float
+  staticUID: '0x00000264'
+  type: actuator
+  unit: mm
+A.Int:
+  datatype: uint16
+  staticUID: '0x00000363'
+  type: sensor
+  unit: rpm
+A.String:
+  datatype: string
+  staticUID: '0x00000463'
+  type: sensor
+A.StringArray:
+  datatype: string[]
+  staticUID: '0x00000563'
+  type: sensor

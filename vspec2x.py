@@ -56,10 +56,11 @@ class Exporter(Enum):
             raise ValueError()
 
 
-parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
 
 
 def main(arguments):
+    parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
+
     initLogging()
 
     parser.add_argument('-I', '--include-dir', action='append', metavar='dir', type=str, default=[],
