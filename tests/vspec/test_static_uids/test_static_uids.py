@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest
-import os
 import shlex
-import logging
-import argparse
 import vspec2x
 
 

@@ -56,8 +56,6 @@ class Exporter(Enum):
             raise ValueError()
 
 
-
-
 def main(arguments):
     parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
 
