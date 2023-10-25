@@ -1,21 +1,21 @@
 A:
   type: branch
-  description: A is atest node
+  description: A is a test node
 A.Float:
   datatype: float
   type: actuator
   unit: mm
-  description: A.Float is a leaf of A
+  description: A.Float is a leaf of A of datatype float
 A.Int:
   datatype: uint16
   type: sensor
   unit: rpm
-  description: A.Int is a leaf of A
+  description: A.Int is a leaf of A of datatype float int16
 A.String:
   datatype: string
   type: sensor
-  description: A.String is a leaf of A
+  description: A.String is a leaf of A of datatype string
 A.StringArray:
   datatype: string[]
   type: sensor
-  description: A.StringArray is a leaf of A
+  description: A.StringArray is a leaf of A of datatype string array
