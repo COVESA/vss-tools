@@ -23,15 +23,20 @@ def change_test_dir(request, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "layer, id_counter, gen_no_layer, decimal_output, result_static_UID",
+    "layer, id_counter, offset, gen_no_layer, decimal_output, result_static_UID",
     [
-        (99, 1, False, False, "00000263"),
-        (0, 4, True, False, "000005"),
-        (0, 5, False, True, "000006"),
+        (99, 1, 1, False, False, "00000263"),
+        (0, 4, 3, True, False, "000007"),
+        (0, 5, 1, False, True, "000006"),
     ],
 )
 def test_generate_id(
-    layer, id_counter, gen_no_layer, decimal_output, result_static_UID
+    layer: int,
+    id_counter: int,
+    offset: int,
+    gen_no_layer: bool,
+    decimal_output: bool,
+    result_static_UID: str,
 ):
     source = {
         "description": "some desc",
@@ -44,7 +49,7 @@ def test_generate_id(
     result, _ = vssidgen.generate_split_id(
         node,
         id_counter,
-        offset=1,
+        offset=offset,
         layer=layer,
         no_layer=gen_no_layer,
         decimal_output=decimal_output,
@@ -54,17 +59,22 @@ def test_generate_id(
 
 
 @pytest.mark.parametrize(
-    "layer, id_counter, gen_no_layer, decimal_output, result_static_UID",
+    "layer, id_counter, offset, gen_no_layer, decimal_output",
     [
-        (99, 1, False, False, "0x00000263"),
-        (0, 4, True, False, "0x000005"),
-        (0, 5, False, True, "000006"),
+        (99, 1, 1, False, False),
+        (0, 4, 100, True, False),
+        (0, 5, 1, False, True),
     ],
 )
 def test_export_node(
-    request, layer, id_counter, gen_no_layer, decimal_output, result_static_UID
+    request: pytest.FixtureRequest,
+    layer: int,
+    id_counter: int,
+    offset: int,
+    gen_no_layer: bool,
+    decimal_output: bool,
 ):
-    dir_path = os.path.dirname(request.fspath)
+    dir_path = os.path.dirname(request.path)
     vspec_file = os.path.join(dir_path, "test.vspec")
 
     vspec.load_units(vspec_file, [os.path.join(dir_path, "units.yaml")])
@@ -77,7 +87,7 @@ def test_export_node(
         yaml_dict,
         tree,
         id_counter,
-        offset=1,
+        offset=offset,
         layer=layer,
         no_layer=gen_no_layer,
         decimal_output=decimal_output,
@@ -101,7 +111,7 @@ def test_export_node(
             result_dict = yaml.load(f, Loader=yaml.FullLoader)
     else:
         raise NotImplementedError(
-            "Currently we don't support decimal ouputs with layer!"
+            "Currently we don't support decimal outputs with layer!"
         )
 
     assert result_dict == yaml_dict
@@ -110,7 +120,8 @@ def test_export_node(
 # INTEGRATION TESTS
 
 
-def test_full_script(change_test_dir, caplog):
+@pytest.mark.usefixtures("change_test_dir")
+def test_full_script(caplog):
     validation_file = "./validation_vspecs/validation.vspec"
     cla_str = (
         "../../../vspecID.py ./test.vspec ./out.vspec "
@@ -124,7 +135,8 @@ def test_full_script(change_test_dir, caplog):
     assert len(caplog.records) == 0
 
 
-def test_changed_uid(change_test_dir, caplog):
+@pytest.mark.usefixtures("change_test_dir")
+def test_changed_uid(caplog):
     validation_file = "./validation_vspecs/validation_uid.vspec"
     cla_str = (
         "../../../vspecID.py ./test.vspec ./out.vspec "
@@ -140,7 +152,8 @@ def test_changed_uid(change_test_dir, caplog):
     )
 
 
-def test_changed_unit(change_test_dir, caplog):
+@pytest.mark.usefixtures("change_test_dir")
+def test_changed_unit(caplog):
     validation_file = "./validation_vspecs/validation_unit.vspec"
     cla_str = (
         "../../../vspecID.py ./test.vspec ./out.vspec "
@@ -156,7 +169,8 @@ def test_changed_unit(change_test_dir, caplog):
     )
 
 
-def test_changed_datatype(change_test_dir, caplog):
+@pytest.mark.usefixtures("change_test_dir")
+def test_changed_datatype(caplog):
     validation_file = "./validation_vspecs/validation_datatype.vspec"
     cla_str = (
         "../../../vspecID.py ./test.vspec ./out.vspec "
