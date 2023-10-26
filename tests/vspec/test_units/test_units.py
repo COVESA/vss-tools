@@ -96,8 +96,12 @@ def test_unit_error_no_unit_file(change_test_dir):
 def test_unit_error_unit_file_incomplete(change_test_dir):
     run_unit_error("signals_with_special_units.vspec", "-u units_hogshead.yaml", "Unknown unit")
 
-# FIle not found
+# File not found
 
 
 def test_unit_error_missing_file(change_test_dir):
     run_unit_error("signals_with_special_units.vspec", "-u file_that_does_not_exist.yaml", "FileNotFoundError")
+
+
+def test_unit_on_branch(change_test_dir):
+    run_unit_error("unit_on_branch.vspec", "-u units_all.yaml", "cannot have unit")
