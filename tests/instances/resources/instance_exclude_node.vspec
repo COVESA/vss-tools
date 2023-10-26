@@ -6,7 +6,6 @@ Vehicle:
 Vehicle.SomeThing:
   type: branch
   description: "SomeThing description"
-  datatype: string
 
 Vehicle.SomeThing.SomethingLeaf:
   type: sensor
@@ -16,7 +15,6 @@ Vehicle.SomeThing.SomethingLeaf:
 Vehicle.ExcludeSomeThing:
   type: branch
   description: "ExcludeSomeThing description"
-  datatype: string
   instantiate: False
 
 Vehicle.ExcludeSomeThing.ExcludeSomethingLeaf:

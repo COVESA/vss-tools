@@ -97,11 +97,6 @@ class VSSNode(Node):
             logging.error(f"Orphan property detected. {self.name} is not defined under a struct")
             sys.exit(-1)
 
-        if (self.is_signal() or self.is_property()) and "datatype" not in self.source_dict.keys():
-            raise IncompleteElementException(
-                (f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: "
-                 f"Elements of type {self.type.value} need to have a datatype declared."))
-
         try:
             self.validate_name_style(self.source_dict["$file_name$"])
         except NameStyleValidationException as e:
@@ -129,24 +124,37 @@ class VSSNode(Node):
         for attribute in VSSNode.core_attributes:
             extractCoreAttribute(attribute)
 
-        # Datatype and unit need special handling, so we extract them again
-        if "datatype" in self.source_dict.keys():
-            if not self.is_struct():
+        # Datatype and unit need special handling, so we do some further analysis
+        # self.data_type shall only be set if base type is a primitive (VSSDataType)
+        if self.has_datatype():
+            if self.is_signal() or self.is_property():
                 self.data_type_str = self.source_dict["datatype"]
                 self.validate_and_set_datatype()
             else:
-                logging.warning(f"Data type specified for struct node: {self.name}. Ignoring it")
+                logging.error("Item %s cannot have datatype, only allowed for signal and property!", self.name)
+                sys.exit(-1)
+        elif (self.is_signal() or self.is_property()):
+            raise IncompleteElementException(
+                (f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: "
+                 f"Elements of type {self.type.value} need to have a datatype declared."))
 
         # Units are applicable only for primitives. Not user defined types.
-        if "unit" in self.source_dict.keys() and self.has_datatype():
+        if self.has_unit():
+
+            if not (self.is_signal() or self.is_property()):
+                logging.error("Item %s cannot have unit, only allowed for signal and property!", self.name)
+                sys.exit(-1)
+
             unit = self.source_dict["unit"]
             try:
                 self.unit = Unit.from_str(unit)
             except KeyError:
                 logging.error(f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
                 sys.exit(-1)
-        else:
-            self.unit = None
+
+            if not self.has_datatype():
+                logging.error("Unit specified for item not using standard datatype: %s", self.name)
+                sys.exit(-1)
 
         if self.has_instances() and not self.is_branch():
             logging.error(
@@ -307,7 +315,7 @@ class VSSNode(Node):
 
     def get_datatype(self) -> str:
         """Returns:
-                The name of the dataype or empty string if no datatype
+                The name of the datatype or empty string if no datatype
         """
         return self.data_type_str
 
