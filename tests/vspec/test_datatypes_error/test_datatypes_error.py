@@ -32,3 +32,19 @@ def test_datatype_error(change_test_dir):
     os.system("rm -f out.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+
+def test_datatype_branch(change_test_dir):
+    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml " \
+               "test_datatype_branch.vspec out.json > out.txt 2>&1"
+    result = os.system(test_str)
+    assert os.WIFEXITED(result)
+    # failure expected
+    assert os.WEXITSTATUS(result) != 0
+
+    test_str = 'grep \"cannot have datatype\" out.txt > /dev/null'
+    result = os.system(test_str)
+    os.system("cat out.txt")
+    os.system("rm -f out.json out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0

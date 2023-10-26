@@ -1,0 +1,26 @@
+VehicleDataTypes:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+VehicleDataTypes.TestBranch1:
+  description: "A branch"
+  type: branch
+
+VehicleDataTypes.TestBranch1.NestedStruct:
+  type: struct
+  description: "ERROR: A struct with unit defined."
+  unit: km
+
+VehicleDataTypes.TestBranch1.NestedStruct.x:
+  type: property
+  description: "x property"
+  datatype: double
+
+VehicleDataTypes.TestBranch1.ParentStruct:
+  type: struct
+  description: "A struct that is going to contain properties that are structs themselves"
+
+VehicleDataTypes.TestBranch1.ParentStruct.x_property:
+  type: property
+  description: "A property of struct-type. The struct name is specified relative to the branch"
+  datatype: NestedStruct

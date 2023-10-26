@@ -1,0 +1,11 @@
+#
+A:
+  type: branch
+  description: Branch shall not have datatype
+  datatype: uint8
+
+A.UInt7:
+  datatype: uint8
+  type: sensor
+  unit: km
+  description: ok!
