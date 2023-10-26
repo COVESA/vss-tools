@@ -224,19 +224,26 @@ def test_error_when_no_user_defined_data_types_are_provided(change_test_dir):
     assert os.WEXITSTATUS(result) == 0
 
 
-def test_warning_when_data_type_is_provided_for_struct_nodes(change_test_dir):
+@pytest.mark.parametrize("vspec_file,types_file,error_msg", [
+    ('test.vspec', 'VehicleDataTypesStructWithDataType.vspec',
+     'cannot have datatype, only allowed for signal and property'),
+    ('test.vspec', 'VehicleDataTypesStructWithUnit.vspec',
+     'cannot have unit'),
+    ('test_with_unit_on_struct_signal.vspec', 'VehicleDataTypes.vspec',
+     'Unit specified for item not using standard datatype')])
+def test_faulty_use_of_standard_attributes(
+        vspec_file, types_file, error_msg, change_test_dir):
     """
-    Test that warning message is provided when datatype is specified for struct nodes.
+    Test faulty use of datatype and unit for structs
     """
+
     test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml", "--no-uuid", "--format", "json",
-                         "--json-pretty", "-vt",
-                         "VehicleDataTypesStructWithDataType.vspec", "-ot", "VehicleDataTypes.json", "test.vspec",
+                         "--json-pretty", "-vt", types_file, "-ot", "VehicleDataTypes.json", vspec_file,
                          "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
     assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    assert os.WEXITSTATUS(result) != 0
 
-    error_msg = 'Data type specified for struct node: NestedStruct. Ignoring it'
     test_str = f'grep \"{error_msg}\" out.txt > /dev/null'
     result = os.system(test_str)
     os.system("cat out.txt")

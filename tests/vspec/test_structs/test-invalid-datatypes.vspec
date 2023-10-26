@@ -12,11 +12,9 @@ A.UInt8:
 A.ParentStructSensor:
   datatype: VehicleDataTypes.TestBranch1.ParentStruct1
   type: sensor
-  unit: km
   description: A rich sensor with user-defined data type.
 
 A.NestedStructSensor:
   datatype: VehicleDataTypes.TestBranch1.NestedStruct1
   type: sensor
-  unit: km
   description: A rich sensor with user-defined data type.
