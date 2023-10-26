@@ -1,26 +1,26 @@
 A:
   description: A is a test node
-  staticUID: '0x000068'
+  staticUID: '0x00000163'
   type: branch
 A.Float:
-  description: A.Float is a leaf of A of datatype float
+  description: A.Float is a leaf of A of datatype int
   datatype: float
-  staticUID: '0x000069'
+  staticUID: '0x00000263'
   type: actuator
   unit: mm
 A.Int:
   description: A.Int is a leaf of A of datatype float int16
   datatype: uint16
-  staticUID: '0x00006A'
+  staticUID: '0x00000363'
   type: sensor
   unit: rpm
 A.String:
   description: A.String is a leaf of A of datatype string
   datatype: string
-  staticUID: '0x00006B'
+  staticUID: '0x00000463'
   type: sensor
 A.StringArray:
   description: A.StringArray is a leaf of A of datatype string array
   datatype: string[]
-  staticUID: '0x00006C'
+  staticUID: '0x00000563'
   type: sensor
