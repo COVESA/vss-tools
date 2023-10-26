@@ -62,7 +62,7 @@ def add_arguments(parser: argparse.ArgumentParser):
         "--only-validate-no-export",
         action="store_true",
         default=False,
-        help="For pytests and pipelines you can skip the export of the"
+        help="For pytests and pipelines you can skip the export of the",
     )
 
 
@@ -75,7 +75,7 @@ def generate_split_id(node, id_counter, offset, layer, no_layer, decimal_output)
     else:
         if no_layer:
             return (
-                format((node_id), "06X"),
+                format(node_id, "06X"),
                 id_counter + 1,
             )  # Hexadecimal output without layer
         else:
@@ -104,6 +104,7 @@ def export_node(yaml_dict, node, id_counter, offset, layer, no_layer, decimal_ou
             "staticUID": f"0x{node_id}"
         }  # Convert ID to a 3-digit decimal string
 
+    yaml_dict[node_path]["description"] = node.description
     yaml_dict[node_path]["type"] = str(node.type.value)
     if node.unit:
         yaml_dict[node_path]["unit"] = str(node.unit.value)
@@ -146,45 +147,45 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
         validation_tree = load_tree(
             other_path, ["."], tree_type=VSSTreeType.SIGNAL_TREE
         )
-        validate_staticUIDs(signals_yaml_dict, validation_tree, config)
+        validate_static_uids(signals_yaml_dict, validation_tree, config)
 
     if not config.only_validate_no_export:
         with open(config.output_file, "w") as f:
             yaml.dump(signals_yaml_dict, f)
 
 
-def validate_staticUIDs(
+def validate_static_uids(
     signals_dict: dict, validation_tree: VSSNode, config: argparse.Namespace
 ):
     """Check if static UIDs have changed or if new ones need to be added
-    ToDos:
-        - instances
-        - automatic mode --> do we overwrite with a next higher ID because data in node has changed?
 
     Args:
+        signals_dict (Dict[str, str]): _description_
         validation_tree (VSSNode): _description_
+        config (argparse.Namespace): _description_
     Returns:
         Optional[dict]: _description_
     """
     highest_id: int = 0
     assigned_new_uid: bool = False
 
-    def check_length(key, value, decimal_output):
+    def check_length(k: str, v: dict, decimal_output):
         """Check if static UID exists and if it's of correct length
 
         Args:
-            key (str): Current key of the dict, evaluates to the qualified name of the node
-            value (dict): dict of attributes e.g. static UID
+            k (str): Current key of the dict, evaluates to the qualified name of the node
+            v (dict): dict of attributes e.g. static UID
+            decimal_output (bool): boolean if you want to generate decimal static UIDs
         """
-        if not value["staticUID"]:
-            logging.error(f"Static UID for node '{key}' has not been assigned!")
+        if not v["staticUID"]:
+            logging.error(f"Static UID for node '{k}' has not been assigned!")
         else:
             if decimal_output:
                 try:
-                    assert len(value["staticUID"]) == 8
+                    assert len(v["staticUID"]) == 8
                 except AssertionError:
                     logging.error(
-                        f"AssertionError: Length of hex static UID of {key} is incorrect, "
+                        f"AssertionError: Length of hex static UID of {k} is incorrect, "
                         "did you check your command line arguments and if they match with "
                         "the validation file? There are multiple options e.g. "
                         "'--gen-no-layer' or '--gen-decimal-ID'."
@@ -192,16 +193,29 @@ def validate_staticUIDs(
             else:
                 try:
                     if config.gen_no_layer:
-                        assert len(value["staticUID"]) == 8
+                        assert len(v["staticUID"]) == 8
                     else:
-                        assert len(value["staticUID"]) == 10
+                        assert len(v["staticUID"]) == 10
                 except AssertionError:
                     logging.error(
-                        f"AssertionError: Length of hex static UID of {key} is incorrect, "
+                        f"AssertionError: Length of hex static UID of {k} is incorrect, "
                         "did you check your command line arguments and if they match with "
                         "the validation file? There are multiple options e.g. "
                         "'--gen-no-layer' or '--gen-decimal-ID'."
                     )
+
+    def check_description(k: str, v: dict, match_tuple: tuple):
+        validation_node: VSSNode = validation_tree_nodes[match_tuple[1]]
+
+        try:
+            assert v["description"] == validation_node.description
+
+        except AssertionError:
+            logging.warning(
+                f"DESCRIPTION MISMATCH: The description of {k} has changed from "
+                f"\n\t   Validation: '{validation_node.description}' to \n\t   Current "
+                f"vspec: '{v['description']}'"
+            )
 
     def check_uid(k: str, v: dict, match_tuple: tuple):
         """Validates uid and either assigns next higher id or overwrites with validation id.
@@ -215,12 +229,10 @@ def validate_staticUIDs(
         """
         nonlocal highest_id
         nonlocal assigned_new_uid
+        validation_node: VSSNode = validation_tree_nodes[match_tuple[1]]
 
         try:
-            validation_node: VSSNode = validation_tree_nodes[match_tuple[1]]
-            assert (
-                value["staticUID"] == validation_node.extended_attributes["staticUID"]
-            )
+            assert v["staticUID"] == validation_node.extended_attributes["staticUID"]
 
         except AssertionError:
             if assigned_new_uid:
@@ -231,12 +243,10 @@ def validate_staticUIDs(
             else:
                 logging.warning(
                     "[Validation] "
-                    f"UID MISMATCH: IDs don't match. "
-                    f"Current tree's node '{key}' has static UID "
-                    f"'{value['staticUID']} and validation tree's node "
-                    f"'{validation_tree_nodes[match_tuple[1]].qualified_name()}' "
-                    f"has static UID "
-                    f"'{validation_tree_nodes[match_tuple[1]].extended_attributes['staticUID']}'!"
+                    f"UID MISMATCH: IDs don't match. Current tree's node '{key}' has "
+                    f"static UID '{v['staticUID']} and validation tree's node "
+                    f"'{validation_node.qualified_name()}' has static UID "
+                    f"'{validation_node.extended_attributes['staticUID']}'!"
                 )
                 if config.validate_automatic_mode:
                     assign_new_id(key, value)
@@ -270,9 +280,9 @@ def validate_staticUIDs(
                 else:
                     logging.warning(
                         "[Validation] "
-                        f"UNIT MISMATCH: Units of '{key}' in unit: '{v['unit']}' "
+                        f"UNIT MISMATCH: Units of '{k}' in unit: '{v['unit']}' "
                         f"in the current specification and the validation file "
-                        f"'{key}' in unit: '{validation_node.unit}' don't "
+                        f"'{k}' in unit: '{validation_node.unit}' don't "
                         f"match which causes a breaking change, so we need to "
                         f"assign a new id!"
                     )
@@ -280,7 +290,7 @@ def validate_staticUIDs(
                     assigned_new_uid = True
 
     def check_datatype(k: str, v: dict, match_tuple: tuple):
-        """Validates if the data type of a current node has changed compared to a validation
+        """Validates if the data type of the current node has changed compared to a validation
         file.
 
         Args:
@@ -325,8 +335,6 @@ def validate_staticUIDs(
         Args:
             k (str): current key of dict
             v (dict): current value of dict (also a dict)
-            assign_id (int): the highest ID found in the original file
-            config (argparse.Namespace): command line configuration from argparser
         """
         nonlocal config
         nonlocal highest_id
@@ -345,22 +353,22 @@ def validate_staticUIDs(
                 )
 
         v["staticUID"] = assign_static_uid
-        logging.warning(f"Assigned new ID '{assign_static_uid}' for {k}")
+        logging.info(f"Assigned new ID '{assign_static_uid}' for {k}")
 
     def overwrite_current_id(k: str, v: dict, validation_id: str) -> None:
         """Overwrite method for the validation step of static UID assignment.
         This only makes sense if you are sure that there was no breaking
-        change in the node and you want to assign the old id from the
+        change in the node, and you want to assign the old id from the
         validation file.
 
         Args:
             k (str): current key of dict
             v (dict): current value of dict (also a dict)
-            current_id (_type_): the validation id that you want to overwrite
+            validation_id (str): the validation id that you want to overwrite
             the current ID with
         """
         v["staticUID"] = validation_id
-        logging.warning(f"Assigned new ID '{validation_id}' for {k}")
+        logging.info(f"Assigned new ID '{validation_id}' for {k}")
 
     def get_id_from_string(hex_string: str) -> int:
         nonlocal config
@@ -393,7 +401,7 @@ def validate_staticUIDs(
                 ):
                     overwrite_current_id(
                         k,
-                        value,
+                        v,
                         validation_tree_nodes[match_tup[1]].extended_attributes[
                             "staticUID"
                         ],
@@ -420,9 +428,9 @@ def validate_staticUIDs(
             else:
                 break
 
-    # ToDo: CHECK ALL ENTRYS OF CURRENT VSPEC!
-    #  FIRST CHECK IF ALL UIDS HAVE BEEN ASSIGNED AND THEN CHECK IF
-    #  THERE ARE DUPLICATED NAMES OR UIDS? IF NOT CONTINUE WITH VALIDATION FILE
+    # ToDo: CHECK ALL ENTRIES OF CURRENT VSPEC!
+    #  FIRST CHECK IF ALL UIDs HAVE BEEN ASSIGNED AND THEN CHECK IF
+    #  THERE ARE DUPLICATED NAMES OR UIDs? IF NOT CONTINUE WITH VALIDATION FILE
 
     # go to top in case we are not
     if validation_tree.parent:
@@ -550,15 +558,16 @@ def validate_staticUIDs(
                 "please check your validation file for duplicates."
             )
 
-        # CASE 8: DEFAULT => send warning
+        # CASE 8: DEFAULT => send error
         else:
             logging.error("Please check your input files, something must be wrong!")
             exit()
 
-        # Now check all other attributes, we still want to log if there was a change
+        # Now check all other attributes, we still want to log if there was a change,
         #  so we need to check if a new ID was already assigned and if so only log
         #  that the attribute has also changed.
         for match in matched_names:
+            check_description(key, value, match)
             check_uid(key, value, match)
             check_unit(key, value, match)
             check_datatype(key, value, match)
