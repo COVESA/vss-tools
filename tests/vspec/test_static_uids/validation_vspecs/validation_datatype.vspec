@@ -9,7 +9,7 @@ A.Float:
   type: actuator
   unit: mm
 A.Int:
-  description: A.Int is a leaf of A of datatype float int16
+  description: A.Int is a leaf of A of datatype int16
   datatype: uint32
   staticUID: '0x00000363'
   type: sensor

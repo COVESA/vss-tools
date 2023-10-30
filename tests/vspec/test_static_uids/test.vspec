@@ -10,7 +10,7 @@ A.Int:
   datatype: uint16
   type: sensor
   unit: rpm
-  description: A.Int is a leaf of A of datatype float int16
+  description: A.Int is a leaf of A of datatype int16
 A.String:
   datatype: string
   type: sensor
