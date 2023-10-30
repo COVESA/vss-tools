@@ -160,7 +160,7 @@ def validate_static_uids(
     """Check if static UIDs have changed or if new ones need to be added
 
     Args:
-        signals_dict (Dict[str, str]): _description_
+        signals_dict (dict): _description_
         validation_tree (VSSNode): _description_
         config (argparse.Namespace): _description_
     Returns:
@@ -491,8 +491,8 @@ def validate_static_uids(
             logging.warning(
                 "[Validation] "
                 f"UID CHANGE: The same node '{key}' was matched by name to the validation "
-                f"file but the static UID '{value['staticUID']}' was not found in "
-                f"the validation file."
+                f"file but the static UID '{value['staticUID']}' was "
+                "not found in the validation file."
             )
 
         # CASE 3: NAME CHANGE => no matched name but exactly one UID match
