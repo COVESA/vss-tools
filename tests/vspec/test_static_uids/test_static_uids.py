@@ -209,3 +209,23 @@ def test_changed_datatype(caplog: pytest.LogCaptureFixture):
     )
     for record in caplog.records:
         assert "DATATYPE MISMATCH" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_changed_vss_path(caplog: pytest.LogCaptureFixture):
+    validation_file: str = "./validation_vspecs/validation_vss_path.vspec"
+    cla_str: str = (
+        "../../../vspecID.py ./test.vspec ./out.vspec "
+        "--gen-layer-ID-offset 99 --validate-static-uid "
+        + validation_file
+        + " --validate-automatic-mode --only-validate-no-export"
+    )
+    clas = shlex.split(cla_str)
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 1 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for record in caplog.records:
+        print(record.msg)
+        assert "VSS PATH MISMATCH" in record.msg

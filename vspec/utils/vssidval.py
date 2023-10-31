@@ -75,6 +75,19 @@ def validate_static_uids(
                 f"vspec: '{v['description']}'"
             )
 
+    def check_vss_path(k: str, v: dict, match_tuple: tuple):
+        validation_node: VSSNode = validation_tree_nodes[match_tuple[1]]
+
+        if (
+            k != validation_node.qualified_name()
+            and k.split(".")[-1] == validation_node.name
+        ):
+            logging.warning(
+                f"VSS PATH MISMATCH: The node or leaf was moved from {k} to "
+                f"{validation_node.qualified_name()} which is a different position in the tree."
+                f"However, this is a non-breaking change, the static ID will remain the same."
+            )
+
     def check_uid(k: str, v: dict, match_tuple: tuple):
         """Validates uid and either assigns next higher id or overwrites with validation id.
         If used in automatic mode it will always assign a new higher id for mismatches. In
@@ -356,25 +369,30 @@ def validate_static_uids(
         # CASE 3: NAME CHANGE => no matched name but exactly one UID match
         #  --> the name has changed since last validation => do we assign new id?
         elif len_matched_names == 0 and len_matched_uids == 1:
-            logging.warning(
-                "[Validation] "
-                "NAME CHANGE: The name of the node in the current vspec was "
-                "changed from "
-                f"'{validation_tree_nodes[matched_uids[0][1]].qualified_name()}' "
-                f"to '{key}'. This is a non-breaking change if the static UID "
-                "stays the same. Continuing..."
-            )
-            if config.validate_automatic_mode:
-                overwrite_current_id(
-                    key,
-                    value,
-                    validation_tree_nodes[matched_uids[0][1]].extended_attributes[
-                        "staticUID"
-                    ],
-                )
+            # check if name or path was changed
+            if key.split(".")[-1] == validation_tree_nodes[matched_uids[0][1]].name:
+                check_vss_path(key, value, matched_uids[0])
             else:
-                user_interaction(key, value, matched_uids[0])
-            assigned_new_uid = True
+                # if name was changed we want to keep the validation ID
+                logging.warning(
+                    "[Validation] "
+                    "NAME CHANGE: The name of the node in the current vspec was "
+                    "changed from "
+                    f"'{validation_tree_nodes[matched_uids[0][1]].qualified_name()}' "
+                    f"to '{key}'. This is a non-breaking change if the static UID "
+                    "stays the same. Continuing..."
+                )
+                if config.validate_automatic_mode:
+                    overwrite_current_id(
+                        key,
+                        value,
+                        validation_tree_nodes[matched_uids[0][1]].extended_attributes[
+                            "staticUID"
+                        ],
+                    )
+                else:
+                    user_interaction(key, value, matched_uids[0])
+                assigned_new_uid = True
 
         # CASE 4: NO CHANGE => exactly one matched name and one matched UID
         #  this is the normal case, here for completeness

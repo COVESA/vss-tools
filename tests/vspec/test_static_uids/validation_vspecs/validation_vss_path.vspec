@@ -6,24 +6,18 @@ A.B:
   description: B is a branch of A
   staticUID: '0x00000663'
   type: branch
-A.B.Int32:
-  datatype: uint32
-  description: A.B.Int32 is a leaf of A.B of datatype int32
-  staticUID: '0x00000763'
-  type: sensor
-  unit: rpm
 A.Float:
   datatype: float
   description: A.Float is a leaf of A of datatype float
   staticUID: '0x00000263'
   type: actuator
-  unit: m
+  unit: mm
 A.Int16:
   datatype: uint16
   description: A.Int16 is a leaf of A of datatype int16
   staticUID: '0x00000363'
   type: sensor
-  unit: degrees/s
+  unit: rpm
 A.String:
   datatype: string
   description: A.String is a leaf of A of datatype string
@@ -34,3 +28,9 @@ A.StringArray:
   description: A.StringArray is a leaf of A of datatype string array
   staticUID: '0x00000563'
   type: sensor
+A.Int32:
+  datatype: uint32
+  description: A.B.Int32 is a leaf of A.B of datatype int32
+  staticUID: '0x00000763'
+  type: sensor
+  unit: rpm
