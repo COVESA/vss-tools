@@ -13,6 +13,32 @@ from vspec.model.constants import VSSTreeType
 from vspec.model.vsstree import VSSNode
 
 
+# HELPERS
+
+
+def get_cla_test(test_file: str):
+    return (
+        "../../../vspecID.py "
+        + test_file
+        + " ./out.vspec "
+        + "--gen-layer-ID-offset 99 "
+        + "--validate-static-uid ./validation_vspecs/validation.vspec "
+        + "--validate-automatic-mode --only-validate-no-export"
+    )
+
+
+def get_cla_validation(validation_file: str):
+    return (
+        "../../../vspecID.py ./test_vspecs/test.vspec ./out.vspec "
+        "--gen-layer-ID-offset 99 --validate-static-uid "
+        + validation_file
+        + " --validate-automatic-mode --only-validate-no-export"
+    )
+
+
+# FIXTURES
+
+
 @pytest.fixture
 def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
@@ -75,9 +101,9 @@ def test_export_node(
     decimal_output: bool,
 ):
     dir_path = os.path.dirname(request.path)
-    vspec_file = os.path.join(dir_path, "test.vspec")
+    vspec_file = os.path.join(dir_path, "test_vspecs/test.vspec")
 
-    vspec.load_units(vspec_file, [os.path.join(dir_path, "units.yaml")])
+    vspec.load_units(vspec_file, [os.path.join(dir_path, "test_vspecs/units.yaml")])
     tree = vspec.load_tree(
         vspec_file, include_paths=["."], tree_type=VSSTreeType.SIGNAL_TREE
     )
@@ -122,14 +148,8 @@ def test_export_node(
 
 @pytest.mark.usefixtures("change_test_dir")
 def test_full_script(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation.vspec"
-    cla_str: str = (
-        "../../../vspecID.py ./test.vspec ./out.vspec "
-        "--gen-layer-ID-offset 99 --validate-static-uid "
-        + validation_file
-        + " --validate-automatic-mode --only-validate-no-export"
-    )
-    clas = shlex.split(cla_str)
+    test_file: str = "./test_vspecs/test_full_script.vspec"
+    clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
     assert len(caplog.records) == 0
@@ -137,14 +157,8 @@ def test_full_script(caplog: pytest.LogCaptureFixture):
 
 @pytest.mark.usefixtures("change_test_dir")
 def test_changed_description(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation_description.vspec"
-    cla_str: str = (
-        "../../../vspecID.py ./test.vspec ./out.vspec "
-        "--gen-layer-ID-offset 99 --validate-static-uid "
-        + validation_file
-        + " --validate-automatic-mode --only-validate-no-export"
-    )
-    clas = shlex.split(cla_str)
+    test_file: str = "./test_vspecs/test_description.vspec"
+    clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -155,34 +169,9 @@ def test_changed_description(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.mark.usefixtures("change_test_dir")
-def test_changed_uid(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation_uid.vspec"
-    cla_str: str = (
-        "../../../vspecID.py ./test.vspec ./out.vspec "
-        "--gen-layer-ID-offset 99 --validate-static-uid "
-        + validation_file
-        + " --validate-automatic-mode --only-validate-no-export"
-    )
-    clas = shlex.split(cla_str)
-    vspec2x.main(["--format", "idgen"] + clas[1:])
-
-    assert len(caplog.records) == 2 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
-        assert "UID MISMATCH" or "UID CHANCE" in record.msg
-
-
-@pytest.mark.usefixtures("change_test_dir")
 def test_changed_unit(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation_unit.vspec"
-    cla_str: str = (
-        "../../../vspecID.py ./test.vspec ./out.vspec "
-        "--gen-layer-ID-offset 99 --validate-static-uid "
-        + validation_file
-        + " --validate-automatic-mode --only-validate-no-export"
-    )
-    clas = shlex.split(cla_str)
+    test_file: str = "./test_vspecs/test_unit.vspec"
+    clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
     assert len(caplog.records) == 2 and all(
@@ -194,14 +183,8 @@ def test_changed_unit(caplog: pytest.LogCaptureFixture):
 
 @pytest.mark.usefixtures("change_test_dir")
 def test_changed_datatype(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation_datatype.vspec"
-    cla_str: str = (
-        "../../../vspecID.py ./test.vspec ./out.vspec "
-        "--gen-layer-ID-offset 99 --validate-static-uid "
-        + validation_file
-        + " --validate-automatic-mode --only-validate-no-export"
-    )
-    clas = shlex.split(cla_str)
+    test_file: str = "./test_vspecs/test_datatype.vspec"
+    clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -213,19 +196,44 @@ def test_changed_datatype(caplog: pytest.LogCaptureFixture):
 
 @pytest.mark.usefixtures("change_test_dir")
 def test_changed_vss_path(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation_vss_path.vspec"
-    cla_str: str = (
-        "../../../vspecID.py ./test.vspec ./out.vspec "
-        "--gen-layer-ID-offset 99 --validate-static-uid "
-        + validation_file
-        + " --validate-automatic-mode --only-validate-no-export"
-    )
-    clas = shlex.split(cla_str)
+    test_file: str = "./test_vspecs/test_vss_path.vspec"
+    clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
     for record in caplog.records:
-        print(record.msg)
         assert "VSS PATH MISMATCH" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_changed_name_datatype(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test_name_datatype.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 2 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for i, record in enumerate(caplog.records):
+        if i % 2 == 0:
+            assert "NAME CHANGE" in record.msg
+        else:
+            assert "DATATYPE MISMATCH" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_changed_uid(caplog: pytest.LogCaptureFixture):
+    validation_file: str = "./validation_vspecs/validation_uid.vspec"
+    clas = shlex.split(get_cla_validation(validation_file))
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 2 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for i, record in enumerate(caplog.records):
+        if i % 2 == 0:
+            assert "UID CHANGE" in record.msg
+        else:
+            assert "UID MISMATCH" in record.msg

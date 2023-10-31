@@ -115,7 +115,7 @@ def validate_static_uids(
                 logging.warning(
                     "[Validation] "
                     f"UID MISMATCH: IDs don't match. Current tree's node '{key}' has "
-                    f"static UID '{v['staticUID']} and validation tree's node "
+                    f"static UID '{v['staticUID']}' and validation tree's node "
                     f"'{validation_node.qualified_name()}' has static UID "
                     f"'{validation_node.extended_attributes['staticUID']}'!"
                 )
@@ -382,17 +382,6 @@ def validate_static_uids(
                     f"to '{key}'. This is a non-breaking change if the static UID "
                     "stays the same. Continuing..."
                 )
-                if config.validate_automatic_mode:
-                    overwrite_current_id(
-                        key,
-                        value,
-                        validation_tree_nodes[matched_uids[0][1]].extended_attributes[
-                            "staticUID"
-                        ],
-                    )
-                else:
-                    user_interaction(key, value, matched_uids[0])
-                assigned_new_uid = True
 
         # CASE 4: NO CHANGE => exactly one matched name and one matched UID
         #  this is the normal case, here for completeness
@@ -449,6 +438,12 @@ def validate_static_uids(
             check_datatype(key, value, match)
 
         for match in matched_uids:
+            if len_matched_names == 0:
+                check_description(key, value, match)
+                check_uid(key, value, match)
+                check_unit(key, value, match)
+                check_datatype(key, value, match)
+
             check_names(key, value, match)
 
     # ToDo same loop as above but match static UIDs and check for name changes

@@ -1,0 +1,29 @@
+A:
+  type: branch
+  description: A is a test node
+A.Float:
+  datatype: float
+  type: actuator
+  unit: mm
+  description: A.Float is a leaf of A of datatype float
+A.Int16:
+  datatype: uint16
+  type: sensor
+  unit: rpm
+  description: A.Int16 is a leaf of A of datatype int16
+A.String:
+  datatype: string
+  type: sensor
+  description: A.String is a leaf of A of datatype string
+A.StringArray:
+  datatype: string[]
+  type: sensor
+  description: A.StringArray is a leaf of A of datatype string array
+A.B:
+  type: branch
+  description: B is a branch of A
+A.Int32:
+  datatype: uint32
+  type: sensor
+  unit: rpm
+  description: A.B.Int32 is a leaf of A.B of datatype int32
