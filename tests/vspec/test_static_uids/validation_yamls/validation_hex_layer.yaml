@@ -7,7 +7,7 @@ A.B:
   description: B is a branch of A
   staticUID: '0x00000763'
 A.B.Int32:
-  datatype: uint32
+  datatype: int32
   type: sensor
   unit: rpm
   description: A.B.Int32 is a leaf of A.B of datatype int32
@@ -20,7 +20,7 @@ A.Float:
   unit: mm
 A.Int16:
   description: A.Int16 is a leaf of A of datatype int16
-  datatype: uint16
+  datatype: int16
   staticUID: '0x00000463'
   type: sensor
   unit: rpm

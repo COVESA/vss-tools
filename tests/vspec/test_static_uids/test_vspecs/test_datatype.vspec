@@ -7,7 +7,7 @@ A.Float:
   unit: mm
   description: A.Float is a leaf of A of datatype float
 A.Int16:
-  datatype: uint32
+  datatype: int32
   type: sensor
   unit: rpm
   description: A.Int16 is a leaf of A of datatype int16
@@ -23,7 +23,7 @@ A.B:
   type: branch
   description: B is a branch of A
 A.B.Int32:
-  datatype: uint32
+  datatype: int32
   type: sensor
   unit: rpm
   description: A.B.Int32 is a leaf of A.B of datatype int32

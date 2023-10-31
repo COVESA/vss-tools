@@ -7,7 +7,7 @@ A.Float:
   unit: mm
   description: A.Float is a leaf of A of datatype float
 A.Int16:
-  datatype: uint16
+  datatype: int16
   type: sensor
   unit: rpm
   description: A.Int16 is a leaf of A of datatype int16
