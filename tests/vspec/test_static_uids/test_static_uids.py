@@ -4,7 +4,7 @@ import os
 import pytest
 import shlex
 import vspec
-import vspec.vssexporters.vssidgen as vssidgen
+import vspec.vssexporters.vss2id as vss2id
 import vspec2x
 import yaml
 
@@ -18,7 +18,7 @@ from vspec.model.vsstree import VSSNode
 
 def get_cla_test(test_file: str):
     return (
-        "../../../vspecID.py "
+        "../../../vspec2id.py "
         + test_file
         + " ./out.vspec "
         + "--gen-layer-ID-offset 99 "
@@ -29,7 +29,7 @@ def get_cla_test(test_file: str):
 
 def get_cla_validation(validation_file: str):
     return (
-        "../../../vspecID.py ./test_vspecs/test.vspec ./out.vspec "
+        "../../../vspec2id.py ./test_vspecs/test.vspec ./out.vspec "
         "--gen-layer-ID-offset 99 --validate-static-uid "
         + validation_file
         + " --validate-automatic-mode --only-validate-no-export"
@@ -72,7 +72,7 @@ def test_generate_id(
     }
     node = VSSNode("TestNode", source, VSSTreeType.SIGNAL_TREE.available_types())
 
-    result, _ = vssidgen.generate_split_id(
+    result, _ = vss2id.generate_split_id(
         node,
         id_counter,
         offset=offset,
@@ -109,7 +109,7 @@ def test_export_node(
     )
 
     yaml_dict: Dict[str, str] = {}
-    vssidgen.export_node(
+    vss2id.export_node(
         yaml_dict,
         tree,
         id_counter,

@@ -18,7 +18,7 @@ from vspec import load_tree
 from vspec.model.constants import VSSTreeType
 from vspec.loggingconfig import initLogging
 from vspec.model.vsstree import VSSNode
-from vspec.utils import vssidval
+from vspec.utils import vss2id_val
 import yaml
 
 
@@ -142,7 +142,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
         validation_tree = load_tree(
             other_path, ["."], tree_type=VSSTreeType.SIGNAL_TREE
         )
-        vssidval.validate_static_uids(signals_yaml_dict, validation_tree, config)
+        vss2id_val.validate_static_uids(signals_yaml_dict, validation_tree, config)
 
     if not config.only_validate_no_export:
         with open(config.output_file, "w") as f:

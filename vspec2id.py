@@ -15,4 +15,4 @@ import sys
 import vspec2x
 
 if __name__ == "__main__":
-    vspec2x.main(["--format", "idgen"]+sys.argv[1:])
+    vspec2x.main(["--format", "idgen"] + sys.argv[1:])
