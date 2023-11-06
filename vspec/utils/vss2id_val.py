@@ -473,14 +473,15 @@ def validate_static_uids(
                 #  5. add enum / rename enum value
                 #  6. delete enum value
                 #  7. add/change/delete min/max value
-                matched_names = [
-                    (key, id_validation_tree)
-                    for id_validation_tree, other_node in enumerate(
-                        validation_tree_nodes
-                    )
-                    if key == other_node.qualified_name()
-                ]
-                # breakpoint()
+
+                # matched_names = [
+                #     (key, id_validation_tree)
+                #     for id_validation_tree, other_node in enumerate(
+                #         validation_tree_nodes
+                #     )
+                #     if key == other_node.qualified_name()
+                # ]
+                # # breakpoint()
 
             elif len(matched_uids) == 1:
                 # ToDo all non-breaking changes here
