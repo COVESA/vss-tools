@@ -79,6 +79,7 @@ def test_generate_id(
         layer=layer,
         no_layer=gen_no_layer,
         decimal_output=decimal_output,
+        use_fnv1_hash=False,
     )
 
     assert result == result_static_uid
@@ -117,6 +118,7 @@ def test_export_node(
         layer=layer,
         no_layer=gen_no_layer,
         decimal_output=decimal_output,
+        use_fnv1_hash=False,
     )
 
     result_dict: Dict[str, str]

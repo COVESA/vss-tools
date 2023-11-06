@@ -6,7 +6,7 @@ A.Float:
   type: actuator
   unit: mm
   description: A.Float is a leaf of A of datatype float
-A.Int16:
+A.NewInt:
   datatype: int16
   type: sensor
   unit: rpm
