@@ -7,6 +7,7 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
+from typing import Dict
 from vspec.model.vsstree import VSSNode
 from vspec.model.constants import VSSType, VSSTreeType
 import vspec
@@ -170,3 +171,32 @@ def test_exclusion_from_instance(request):
 
         assert "Vehicle.ExcludeSomeThing" in name_list
         assert "Vehicle.ExcludeNode" in name_list
+
+
+def test_extended_attribute(request):
+    test_path = os.path.dirname(request.fspath)
+    # load the file
+    tree = vspec.load_tree(os.path.join(test_path, "resources/instance_extended_attribute.vspec"), [os.path.join(
+                        test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
+
+    # check if root node has 3 children
+    assert len(tree.children) == 3
+
+    # Programmatically change value of dbc/signal for instance in Test2
+
+    for child in tree.children:
+        if child.qualified_name() == "Vehicle.Test2":
+            assert len(child.children) == 1
+            assert child.children[0].name == "SomeThing"  # <... SomeThing
+            assert len(child.children[0].extended_attributes.items()) == 1
+            assert isinstance(child.children[0].extended_attributes["dbc"], Dict)
+            assert isinstance(child.children[0].extended_attributes["dbc"]["signal"], str)
+            assert child.children[0].extended_attributes["dbc"]["signal"] == "bababa"
+            child.children[0].extended_attributes["dbc"]["signal"] = "lalala"
+
+    for child in tree.children:
+        if child.qualified_name() == "Vehicle.Test2":
+            assert child.children[0].extended_attributes["dbc"]["signal"] == "lalala"
+        else:
+            # Make sure that all other instances keeps same name
+            assert child.children[0].extended_attributes["dbc"]["signal"] == "bababa"
