@@ -61,7 +61,9 @@ class VSSNode(Node):
     deprecation = ""
 
     def __deepcopy__(self, memo):
-        return VSSNode(self.name, self.source_dict.copy(), self.available_types.copy(),
+        # Deep copy of source_dict and children needed as overlay or programmatic changes
+        # in exporters otherwise risk changing values not only for current instances but also for others
+        return VSSNode(self.name, copy.deepcopy(self.source_dict), self.available_types.copy(),
                        parent=None, children=copy.deepcopy(self.children, memo))
 
     def __init__(self, name, source_dict: dict, available_types: Set[str], parent=None,
