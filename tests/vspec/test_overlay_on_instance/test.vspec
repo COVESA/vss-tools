@@ -4,7 +4,7 @@ A:
   description: Branch A.
 
 
-#  Instances defined a slist
+#  Instances defined as list
 
 A.B:
   type: branch
