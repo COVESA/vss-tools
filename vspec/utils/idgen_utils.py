@@ -1,4 +1,5 @@
 from vspec import VSSNode
+from vspec.model.constants import VSSTreeType
 
 
 def get_node_identifier_bytes(node: VSSNode) -> bytes:
@@ -29,3 +30,9 @@ def fnv1_24_hash(node: VSSNode) -> int:
         id_hash ^= byte
 
     return id_hash
+
+
+def fnv1_32_wrapper(name: str, source: dict):
+    source["$file_name$"] = "temp"
+    node: VSSNode = VSSNode(name, source, VSSTreeType.SIGNAL_TREE.available_types())
+    return format(fnv1_32_hash(node), "08X")

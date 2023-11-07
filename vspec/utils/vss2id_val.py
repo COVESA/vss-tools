@@ -4,6 +4,7 @@ from enum import Enum
 import logging
 from typing import Optional
 from vspec.model.vsstree import VSSNode
+from vspec.utils.idgen_utils import fnv1_32_wrapper
 
 
 class OverwriteMethod(Enum):
@@ -462,11 +463,25 @@ def validate_static_uids(
 
             if len(matched_uids) == 0:
                 logging.warning(
-                    "[Validation ]"
+                    "[Validation] "
                     "There was a change in the vspec the current static UID was not found"
                 )
-                # ToDo all breaking changes here
-                #  1. semantic
+                # 1. semantic
+                if "fka" in value.keys():
+                    is_semantic = False
+                    for fka_val in value["fka"]:
+                        old_static_uid = "0x" + fnv1_32_wrapper(fka_val, value)
+                        for validation_node in validation_tree_nodes:
+                            if (
+                                old_static_uid
+                                == validation_node.extended_attributes["staticUID"]
+                            ):
+                                logging.warning("[Validation] SEMANTIC NAME CHANGE")
+                                is_semantic = True
+                    if not is_semantic:
+                        logging.warning("[Validation] NON-SEMANTIC NAME CHANGE")
+
+                # ToDo
                 #  2. change unit
                 #  3. add unit to existing attribute
                 #  4. change datatype

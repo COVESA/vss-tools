@@ -116,20 +116,19 @@ def export_node(
 
     if decimal_output:
         # ToDo: why are some decimal IDs written with/without quotes
-        yaml_dict[node_path] = {
-            "staticUID": str(node_id)
-        }  # Convert ID to a 3-digit decimal string
+        yaml_dict[node_path] = {"staticUID": str(node_id)}
     else:
-        yaml_dict[node_path] = {
-            "staticUID": f"0x{node_id}"
-        }  # Convert ID to a 3-digit decimal string
-
+        yaml_dict[node_path] = {"staticUID": f"0x{node_id}"}
     yaml_dict[node_path]["description"] = node.description
     yaml_dict[node_path]["type"] = str(node.type.value)
     if node.unit:
         yaml_dict[node_path]["unit"] = str(node.unit.value)
     if node.is_signal() or node.is_property():
         yaml_dict[node_path]["datatype"] = node.data_type_str
+
+    # ToDo proper constant for fka when accepted
+    if "fka" in node.extended_attributes.keys():
+        yaml_dict[node_path]["fka"] = node.extended_attributes["fka"]
 
     for child in node.children:
         id_counter, id_counter = export_node(
