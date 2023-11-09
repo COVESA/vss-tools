@@ -451,7 +451,34 @@ def validate_static_uids(
 
         # ToDo same loop as above but match static UIDs and check for name changes
 
+    def check_semantics(k: str, v: dict) -> bool:
+        if "fka" in v.keys():
+            is_semantic: bool = False
+            for fka_val in v["fka"]:
+                old_static_uid = "0x" + fnv1_32_wrapper(fka_val, v)
+                for i, validation_node in enumerate(validation_tree_nodes):
+                    if (
+                        old_static_uid
+                        == validation_node.extended_attributes["staticUID"]
+                    ):
+                        logging.warning(
+                            f"[Validation] SEMANTIC NAME CHANGE or PATH CHANGE for '{k}'."
+                        )
+                        is_semantic = True
+            return True if is_semantic else False
+        else:
+            return False
+
     def hashed_pipeline():
+        """This pipeline uses FNV-1 hash for static UIDs.
+
+        If no match UID was matched we check if the user has written an old path or old name,
+        so we can tell if it was a semantic or path change. If not we have to assign a new ID
+        which causes to throw a `BREAKING CHANGE` warning.
+        If there was a match we will continue to check for non-breaking changes and throw
+        corresponding logs.
+
+        """
         nonlocal validation_tree_nodes
 
         for key, value in signals_dict.items():
@@ -461,43 +488,17 @@ def validate_static_uids(
                 if value["staticUID"] == other_node.extended_attributes["staticUID"]
             ]
 
+            # if not matched via UID check semantics or path change
             if len(matched_uids) == 0:
-                logging.warning(
-                    "[Validation] "
-                    "There was a change in the vspec the current static UID was not found"
-                )
-                # 1. semantic
-                if "fka" in value.keys():
-                    is_semantic = False
-                    for fka_val in value["fka"]:
-                        old_static_uid = "0x" + fnv1_32_wrapper(fka_val, value)
-                        for validation_node in validation_tree_nodes:
-                            if (
-                                old_static_uid
-                                == validation_node.extended_attributes["staticUID"]
-                            ):
-                                logging.warning("[Validation] SEMANTIC NAME CHANGE")
-                                is_semantic = True
-                    if not is_semantic:
-                        logging.warning("[Validation] NON-SEMANTIC NAME CHANGE")
+                if check_semantics(key, value) is False:
+                    logging.warning(
+                        f"[Validation] BREAKING CHANGE: "
+                        f"There was a breaking change for '{key}' which "
+                        f"means it is a new node or name, unit, datatype, "
+                        f"enum or min/max has changed."
+                    )
 
-                # ToDo
-                #  2. change unit
-                #  3. add unit to existing attribute
-                #  4. change datatype
-                #  5. add enum / rename enum value
-                #  6. delete enum value
-                #  7. add/change/delete min/max value
-
-                # matched_names = [
-                #     (key, id_validation_tree)
-                #     for id_validation_tree, other_node in enumerate(
-                #         validation_tree_nodes
-                #     )
-                #     if key == other_node.qualified_name()
-                # ]
-                # # breakpoint()
-
+            # if matched continue with non-breaking checks
             elif len(matched_uids) == 1:
                 # ToDo all non-breaking changes here
                 #  1. add new attribute
@@ -505,16 +506,17 @@ def validate_static_uids(
                 #  3. delete attribute
                 #  4. move attribute to other VSS path
                 #  5. change description
+                check_description(key, value, matched_uids[0])
+
+                # now remove the element to speed up things
                 validation_tree_nodes.pop(matched_uids[0][1])
 
             else:
-                print(
-                    "Multiple matches?? Impossible with the way we load data, what's going on"
+                logging.error(
+                    "Multiple matches do not make sense for the way we load the data. "
+                    "Please check your input vspec"
                 )
-
-    # ToDo: CHECK ALL ENTRIES OF CURRENT VSPEC!
-    #  FIRST CHECK IF ALL UIDs HAVE BEEN ASSIGNED AND THEN CHECK IF
-    #  THERE ARE DUPLICATED NAMES OR UIDs? IF NOT CONTINUE WITH VALIDATION FILE
+                exit(1235)
 
     # go to top in case we are not
     if validation_tree.parent:

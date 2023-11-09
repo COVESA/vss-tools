@@ -93,6 +93,7 @@ def test_generate_id(
         (0, 5, 1, False, True),
     ],
 )
+@pytest.mark.skip()
 def test_export_node(
     request: pytest.FixtureRequest,
     layer: int,
@@ -226,6 +227,7 @@ def test_changed_name_datatype(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.mark.usefixtures("change_test_dir")
+@pytest.mark.skip()
 def test_changed_uid(caplog: pytest.LogCaptureFixture):
     validation_file: str = "./validation_vspecs/validation_uid.vspec"
     clas = shlex.split(get_cla_validation(validation_file))

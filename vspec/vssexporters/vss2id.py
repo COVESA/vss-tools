@@ -19,7 +19,11 @@ from vspec.model.constants import VSSTreeType
 from vspec.loggingconfig import initLogging
 from vspec.model.vsstree import VSSNode
 from vspec.utils import vss2id_val
-from vspec.utils.idgen_utils import fnv1_32_hash, fnv1_24_hash
+from vspec.utils.idgen_utils import (
+    get_node_identifier_bytes,
+    fnv1_32_hash,
+    fnv1_24_hash,
+)
 import yaml
 
 
@@ -75,7 +79,13 @@ def generate_split_id(
     if use_fnv1_hash:
         hashed_str: str
         if no_layer:
-            hashed_str = format(fnv1_32_hash(node), "08X")
+            identifier = get_node_identifier_bytes(
+                node.qualified_name(),
+                node.data_type_str,
+                node.type.value,
+                node.get_unit(),
+            )
+            hashed_str = format(fnv1_32_hash(identifier), "08X")
         else:
             if 0 <= layer <= 63:
                 logging.warning("Layer value from 0 to 63 is reserved for COVESA.")
@@ -84,7 +94,13 @@ def generate_split_id(
                     "Layer value over 255. 1 byte max! Using max value of 255"
                 )
             layer = min(layer, 255)  # Use 1 byte for the layer (max_layer is 0-255)
-            hashed_str = format(fnv1_24_hash(node) << 8 | layer, "08X")
+            identifier = get_node_identifier_bytes(
+                node.qualified_name(),
+                node.data_type_str,
+                node.type.value,
+                node.get_unit(),
+            )
+            hashed_str = format(fnv1_24_hash(identifier) << 8 | layer, "08X")
         return hashed_str, id_counter + 1
     else:
         if decimal_output:
