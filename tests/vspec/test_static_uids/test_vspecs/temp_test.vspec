@@ -1,0 +1,36 @@
+A:
+  type: branch
+  description: A is a test node
+A.Float:
+  datatype: float
+  type: actuator
+  unit: mm
+  description: A.Float is a leaf of A of datatype float
+A.Int16:
+  datatype: int16
+  type: sensor
+  unit: rpm
+  description: A.Int16 is a leaf of A of datatype int16
+A.String:
+  datatype: string
+  type: sensor
+  description: A.String is a leaf of A of datatype string
+A.StringArray:
+  datatype: string[]
+  type: sensor
+  description: A.StringArray is a leaf of A of datatype string array
+A.B:
+  type: branch
+  description: B is a branch of A
+A.B.Int32:
+  datatype: int32
+  type: sensor
+  unit: rpm
+  description: A.B.Int32 is a leaf of A.B of datatype int32
+A.B.OldName:
+  datatype: uint32
+  type: sensor
+  unit: mm
+  description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
+  fka: ['A.B.OlderName']
+ex
