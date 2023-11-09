@@ -22,7 +22,7 @@ import vspec
 
 
 from vspec.vssexporters import vss2json, vss2csv, vss2yaml, \
-    vss2binary, vss2franca, vss2ddsidl, vss2graphql, vss2protobuf, vssidgen
+    vss2binary, vss2franca, vss2ddsidl, vss2graphql, vss2protobuf, vss2id
 
 SUPPORTED_STRUCT_EXPORT_FORMATS = set(["json", "yaml", "csv", "protobuf"])
 
@@ -43,7 +43,7 @@ class Exporter(Enum):
     idl = vss2ddsidl
     graphql = vss2graphql
     protobuf = vss2protobuf
-    idgen = vssidgen
+    idgen = vss2id
 
     def __str__(self):
         return self.name

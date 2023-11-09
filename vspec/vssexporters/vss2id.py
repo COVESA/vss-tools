@@ -13,12 +13,17 @@
 import argparse
 import logging
 import os
-from typing import Dict
+from typing import Dict, Tuple
 from vspec import load_tree
 from vspec.model.constants import VSSTreeType
 from vspec.loggingconfig import initLogging
 from vspec.model.vsstree import VSSNode
-from vspec.utils import vssidval
+from vspec.utils import vss2id_val
+from vspec.utils.idgen_utils import (
+    get_node_identifier_bytes,
+    fnv1_32_hash,
+    fnv1_24_hash,
+)
 import yaml
 
 
@@ -57,47 +62,79 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         default=False,
         help="For pytests and pipelines you can skip the export of the",
     )
+    parser.add_argument(
+        "--use-fnv1-hash",
+        action="store_true",
+        default=False,
+        help="Use 32bit fnv1 hash for static UID",
+    )
 
 
-# Function to generate a split ID (3 bytes for incremental number, 1 byte for layer)
-def generate_split_id(node, id_counter, offset, layer, no_layer, decimal_output):
+def generate_split_id(
+    node, id_counter, offset, layer, no_layer, decimal_output, use_fnv1_hash
+) -> Tuple[str, int]:
+    """Function to generate a split ID (3 bytes for incremental number, 1 byte for layer)"""
     node_id = (id_counter + offset) % 1000000  # Use 6 digits for the incremental number
 
-    if decimal_output:
-        return str(node_id).zfill(6), id_counter + 1  # Decimal output without layer
-    else:
+    if use_fnv1_hash:
+        hashed_str: str
         if no_layer:
-            return (
-                format(node_id, "06X"),
-                id_counter + 1,
-            )  # Hexadecimal output without layer
+            identifier = get_node_identifier_bytes(
+                node.qualified_name(),
+                node.data_type_str,
+                node.type.value,
+                node.get_unit(),
+            )
+            hashed_str = format(fnv1_32_hash(identifier), "08X")
         else:
             if 0 <= layer <= 63:
                 logging.warning("Layer value from 0 to 63 is reserved for COVESA.")
+            elif layer > 255:
+                logging.warning(
+                    "Layer value over 255. 1 byte max! Using max value of 255"
+                )
             layer = min(layer, 255)  # Use 1 byte for the layer (max_layer is 0-255)
-            return (
-                format(((node_id << 8) | layer), "08X"),
-                id_counter + 1,
-            )  # Hexadecimal output with layer
+            identifier = get_node_identifier_bytes(
+                node.qualified_name(),
+                node.data_type_str,
+                node.type.value,
+                node.get_unit(),
+            )
+            hashed_str = format(fnv1_24_hash(identifier) << 8 | layer, "08X")
+        return hashed_str, id_counter + 1
+    else:
+        if decimal_output:
+            return str(node_id).zfill(6), id_counter + 1  # Decimal output without layer
+        else:
+            if no_layer:
+                return (
+                    format(node_id, "06X"),
+                    id_counter + 1,
+                )  # Hexadecimal output without layer
+            else:
+                if 0 <= layer <= 63:
+                    logging.warning("Layer value from 0 to 63 is reserved for COVESA.")
+                layer = min(layer, 255)  # Use 1 byte for the layer (max_layer is 0-255)
+                return (
+                    format(((node_id << 8) | layer), "08X"),
+                    id_counter + 1,
+                )  # Hexadecimal output with layer
 
 
-def export_node(yaml_dict, node, id_counter, offset, layer, no_layer, decimal_output):
+def export_node(
+    yaml_dict, node, id_counter, offset, layer, no_layer, decimal_output, use_fnv1_hash
+):
     node_id, id_counter = generate_split_id(
-        node, id_counter, offset, layer, no_layer, decimal_output
+        node, id_counter, offset, layer, no_layer, decimal_output, use_fnv1_hash
     )
 
     node_path = node.qualified_name()
 
     if decimal_output:
         # ToDo: why are some decimal IDs written with/without quotes
-        yaml_dict[node_path] = {
-            "staticUID": str(node_id)
-        }  # Convert ID to a 3-digit decimal string
+        yaml_dict[node_path] = {"staticUID": str(node_id)}
     else:
-        yaml_dict[node_path] = {
-            "staticUID": f"0x{node_id}"
-        }  # Convert ID to a 3-digit decimal string
-
+        yaml_dict[node_path] = {"staticUID": f"0x{node_id}"}
     yaml_dict[node_path]["description"] = node.description
     yaml_dict[node_path]["type"] = str(node.type.value)
     if node.unit:
@@ -105,9 +142,20 @@ def export_node(yaml_dict, node, id_counter, offset, layer, no_layer, decimal_ou
     if node.is_signal() or node.is_property():
         yaml_dict[node_path]["datatype"] = node.data_type_str
 
+    # ToDo proper constant for fka when accepted
+    if "fka" in node.extended_attributes.keys():
+        yaml_dict[node_path]["fka"] = node.extended_attributes["fka"]
+
     for child in node.children:
         id_counter, id_counter = export_node(
-            yaml_dict, child, id_counter, offset, layer, no_layer, decimal_output
+            yaml_dict,
+            child,
+            id_counter,
+            offset,
+            layer,
+            no_layer,
+            decimal_output,
+            use_fnv1_hash,
         )
 
     return id_counter, id_counter
@@ -127,6 +175,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
         config.gen_layer_ID_offset,
         config.gen_no_layer,
         config.gen_decimal_ID,
+        config.use_fnv1_hash,
     )
 
     if config.validate_static_uid:
@@ -142,7 +191,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
         validation_tree = load_tree(
             other_path, ["."], tree_type=VSSTreeType.SIGNAL_TREE
         )
-        vssidval.validate_static_uids(signals_yaml_dict, validation_tree, config)
+        vss2id_val.validate_static_uids(signals_yaml_dict, validation_tree, config)
 
     if not config.only_validate_no_export:
         with open(config.output_file, "w") as f:

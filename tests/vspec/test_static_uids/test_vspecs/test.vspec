@@ -27,3 +27,9 @@ A.B.Int32:
   type: sensor
   unit: rpm
   description: A.B.Int32 is a leaf of A.B of datatype int32
+A.B.NewName:
+  datatype: uint32
+  type: sensor
+  unit: mm
+  description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
+  fka: ['A.B.OldName', 'A.B.OlderName']
