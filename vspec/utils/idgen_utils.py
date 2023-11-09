@@ -11,9 +11,9 @@ def get_node_identifier_bytes(
     #  6. delete enum value
     #  7. add/change/delete min/max value
     return (
-        f"{qualified_name}:"
-        f"unit: {unit},"
-        f"datatype: {data_type},"
+        f"{qualified_name}: "
+        f"unit: {unit}, "
+        f"datatype: {data_type}, "
         f"type: {node_type}"
     ).encode("utf-8")
 
