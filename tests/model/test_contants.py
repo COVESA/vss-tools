@@ -9,7 +9,7 @@
 import pytest
 import os
 
-from vspec.model.constants import VSSType, VSSDataType, Unit, StringStyle, VSSTreeType, VSSConstant
+from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, StringStyle, VSSTreeType, VSSUnit
 
 
 @pytest.mark.parametrize("style_enum, style_str",
@@ -38,19 +38,26 @@ def test_invalid_string_styles():
         StringStyle.from_str("not_a_valid_case")
 
 
-def test_manually_loaded_units():
+@pytest.mark.parametrize("unit_file",
+                         ['explicit_units.yaml',
+                          'explicit_units_old_syntax.yaml'])
+def test_manually_loaded_units(unit_file):
     """
     Test correct parsing of units
     """
-    unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
-    Unit.load_config_file(unit_file)
-    assert Unit.PUNCHEON == Unit.from_str("puncheon")
-    assert Unit.HOGSHEAD == Unit.from_str("hogshead")
+    unit_file = os.path.join(os.path.dirname(__file__), unit_file)
+    VSSUnitCollection.load_config_file(unit_file)
+    assert VSSUnitCollection.get_unit("puncheon") == "puncheon"
+    assert VSSUnitCollection.get_unit("puncheon").definition == \
+           "Volume measure in puncheons (1 puncheon = 318 liters)"
+    assert VSSUnitCollection.get_unit("puncheon").unit == \
+           "Puncheon"
+    assert VSSUnitCollection.get_unit("puncheon").quantity == \
+           "volume"
 
 
 def test_invalid_unit():
-    with pytest.raises(Exception):
-        Unit.from_str("not_a_valid_case")
+    assert VSSUnitCollection.get_unit("unknown") is None
 
 
 @pytest.mark.parametrize("type_enum,type_str",
@@ -116,12 +123,12 @@ def test_invalid_vss_tree_types():
         VSSDataType.from_str("not_a_valid_case")
 
 
-def test_vss_constants():
-    """ Test VSSConstant class """
-    item = VSSConstant("mylabel", "myvalue", "mydescription", "mydomain")
-    assert item.value == "myvalue"
-    assert item.label == "mylabel"
-    assert item.description == "mydescription"
-    assert item.domain == "mydomain"
-    # String subclass so just comparing shall get "value"
-    assert item == "myvalue"
+def test_unit():
+    """ Test Unit class """
+    item = VSSUnit("myid", "myunit", "mydefinition", "myquantity")
+    assert item.value == "myid"
+    assert item.unit == "myunit"
+    assert item.definition == "mydefinition"
+    assert item.quantity == "myquantity"
+    # String subclass so just comparing shall get "myid"
+    assert item == "myid"
