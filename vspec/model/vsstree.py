@@ -9,7 +9,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from anytree import Node, Resolver, ChildResolverError, RenderTree  # type: ignore[import]
-from .constants import VSSType, VSSDataType, Unit, VSSConstant
+from .constants import VSSType, VSSDataType, VSSUnitCollection, VSSUnit
 from .exceptions import NameStyleValidationException, \
     ImpossibleMergeException, IncompleteElementException
 from typing import Any, Optional, Set, List
@@ -46,7 +46,7 @@ class VSSNode(Node):
     # neither in core or extended,
     whitelisted_extended_attributes: List[str] = []
 
-    unit: Optional[VSSConstant]
+    unit: Optional[VSSUnit]
 
     min = ""
     max = ""
@@ -149,9 +149,8 @@ class VSSNode(Node):
                 sys.exit(-1)
 
             unit = self.source_dict["unit"]
-            try:
-                self.unit = Unit.from_str(unit)
-            except KeyError:
+            self.unit = VSSUnitCollection.get_unit(unit)
+            if self.unit is None:
                 logging.error(f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
                 sys.exit(-1)
 
