@@ -23,7 +23,7 @@ from anytree import (Resolver, LevelOrderIter, PreOrderIter, RenderTree)  # type
 
 from .model.vsstree import VSSNode
 from .model.exceptions import ImpossibleMergeException, IncompleteElementException
-from .model.constants import VSSTreeType, Unit
+from .model.constants import VSSTreeType, VSSUnitCollection
 
 nestable_types = set(["branch", "struct"])
 
@@ -871,11 +871,11 @@ def load_units(vspec_file: str, unit_files: List[str]):
         vspec_dir = os.path.dirname(os.path.realpath(vspec_file))
         default_vss_unit_file = vspec_dir + os.path.sep + 'units.yaml'
         if os.path.exists(default_vss_unit_file):
-            total_nbr_units = Unit.load_config_file(default_vss_unit_file)
+            total_nbr_units = VSSUnitCollection.load_config_file(default_vss_unit_file)
             logging.info(f"Added {total_nbr_units} units from {default_vss_unit_file}")
     else:
         for unit_file in unit_files:
-            nbr_units = Unit.load_config_file(unit_file)
+            nbr_units = VSSUnitCollection.load_config_file(unit_file)
             if (nbr_units == 0):
                 logging.warning(f"Warning: No units found in {unit_file}")
             else:

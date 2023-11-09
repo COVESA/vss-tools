@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -64,4 +63,5 @@ def test_binary(change_test_dir):
     check_expected('A.String', 'Node type=SENSOR')
     check_expected('A.Int', 'Node type=ACTUATOR')
 
-    os.system("rm -f test.binary ctestparser out.txt ../../binary/go_parser/gotestparser")
+    os.system("rm -f test.binary ctestparser out.txt")
+    os.system("rm -f ../../binary/go_parser/gotestparser  ../../binary/go_parser/out.txt")
