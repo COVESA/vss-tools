@@ -16,3 +16,7 @@ units:
     label: revolutions per minute
     description: Rotational speed measured in revolutions per minute
     domain: rotational speed
+  percent:
+    label: percent
+    description: Relation measured in percent
+    domain: relation

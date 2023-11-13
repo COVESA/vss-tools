@@ -84,6 +84,9 @@ def generate_split_id(
                 node.data_type_str,
                 node.type.value,
                 node.get_unit(),
+                node.allowed,
+                node.min,
+                node.max,
             )
             hashed_str = format(fnv1_32_hash(identifier), "08X")
         else:
@@ -99,6 +102,9 @@ def generate_split_id(
                 node.data_type_str,
                 node.type.value,
                 node.get_unit(),
+                node.allowed,
+                node.min,
+                node.max,
             )
             hashed_str = format(fnv1_24_hash(identifier) << 8 | layer, "08X")
         return hashed_str, id_counter + 1
@@ -141,6 +147,12 @@ def export_node(
         yaml_dict[node_path]["unit"] = str(node.unit.value)
     if node.is_signal() or node.is_property():
         yaml_dict[node_path]["datatype"] = node.data_type_str
+    if node.allowed:
+        yaml_dict[node_path]["allowed"] = node.allowed
+    if node.min:
+        yaml_dict[node_path]["min"] = node.min
+    if node.max:
+        yaml_dict[node_path]["max"] = node.max
 
     # ToDo proper constant for fka when accepted
     if "fka" in node.extended_attributes.keys():

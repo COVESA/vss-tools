@@ -33,3 +33,18 @@ A.B.OldName:
   unit: mm
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
   fka: ['A.B.OlderName']
+A.B.IsLeaf:
+  datatype: string
+  type: actuator
+  description: This node is a leaf of the tree and it has allowed values (aka an enum).
+A.B.Min:
+  datatype: uint8
+  type: sensor
+  min: 0
+  unit: percent
+  description: A leaf that uses only a minimum value.
+A.B.Max:
+  datatype: uint8
+  type: sensor
+  unit: percent
+  description: A leaf that uses a maximum value.

@@ -469,6 +469,9 @@ def validate_static_uids(
         else:
             return False
 
+    def check_deprecation(k: str, v: dict, match_tuple: tuple):
+        pass
+
     def hashed_pipeline():
         """This pipeline uses FNV-1 hash for static UIDs.
 
@@ -504,7 +507,7 @@ def validate_static_uids(
                 #  1. add new attribute
                 #  2. deprecate attribute
                 #  3. delete attribute
-                #  4. move attribute to other VSS path
+                #  4. move attribute to other VSS path --> handled by semantic change
                 #  5. change description
                 check_description(key, value, matched_uids[0])
 
