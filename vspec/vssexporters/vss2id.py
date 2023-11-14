@@ -29,32 +29,15 @@ import yaml
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--gen-ID-offset",
+        "--gen-layer-id-offset",
         type=int,
-        default=1,
-        help="Offset for static ID values in YAML output (default is 1).",
-    )
-    parser.add_argument(
-        "--gen-layer-ID-offset", type=int, default=0, help="Define layer ID."
-    )
-    parser.add_argument(
-        "--gen-no-layer",
-        action="store_true",
-        help="Generate static node ID without layer ID.",
-    )
-    parser.add_argument(
-        "--gen-decimal-ID",
-        action="store_true",
-        help="Generate static decimal ID of 3 bytes .",
+        default=0,
+        help="Define layer ID in case you want to use 3 bytes for hashing and 1 byte for layer ID."
+        "If you don't specify a layer ID it will default to zero which means that we will use"
+        "4 bytes for the FNV-1 hash.",
     )
     parser.add_argument(
         "--validate-static-uid", type=str, default="", help="Path to validation file."
-    )
-    parser.add_argument(
-        "--validate-automatic-mode",
-        action="store_true",
-        help="Automatic mode for validation in case you don't want to manually "
-        "choose a method for writing new static UIDs.",
     )
     parser.add_argument(
         "--only-validate-no-export",
@@ -62,85 +45,56 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         default=False,
         help="For pytests and pipelines you can skip the export of the",
     )
-    parser.add_argument(
-        "--use-fnv1-hash",
-        action="store_true",
-        default=False,
-        help="Use 32bit fnv1 hash for static UID",
-    )
 
 
 def generate_split_id(
-    node, id_counter, offset, layer, no_layer, decimal_output, use_fnv1_hash
+    node: VSSNode, id_counter: int, gen_layer_id_offset: int
 ) -> Tuple[str, int]:
-    """Function to generate a split ID (3 bytes for incremental number, 1 byte for layer)"""
-    node_id = (id_counter + offset) % 1000000  # Use 6 digits for the incremental number
+    """Generates static UIDs using FNV-1 hash.
 
-    if use_fnv1_hash:
-        hashed_str: str
-        if no_layer:
-            identifier = get_node_identifier_bytes(
-                node.qualified_name(),
-                node.data_type_str,
-                node.type.value,
-                node.get_unit(),
-                node.allowed,
-                node.min,
-                node.max,
-            )
-            hashed_str = format(fnv1_32_hash(identifier), "08X")
-        else:
-            if 0 <= layer <= 63:
-                logging.warning("Layer value from 0 to 63 is reserved for COVESA.")
-            elif layer > 255:
-                logging.warning(
-                    "Layer value over 255. 1 byte max! Using max value of 255"
-                )
-            layer = min(layer, 255)  # Use 1 byte for the layer (max_layer is 0-255)
-            identifier = get_node_identifier_bytes(
-                node.qualified_name(),
-                node.data_type_str,
-                node.type.value,
-                node.get_unit(),
-                node.allowed,
-                node.min,
-                node.max,
-            )
-            hashed_str = format(fnv1_24_hash(identifier) << 8 | layer, "08X")
-        return hashed_str, id_counter + 1
+    @param node: VSSNode that we want to generate a static UID for
+    @param id_counter: consecutive numbers counter for amount of nodes
+    @param gen_layer_id_offset: if wanted we can do 3-byte hash and 1-byte layer ID
+    @return: tuple of hashed string and id counter
+    """
+    if gen_layer_id_offset:
+        if 1 <= gen_layer_id_offset <= 63:
+            logging.warning("Layer value from 0 to 63 is reserved for COVESA.")
+        elif gen_layer_id_offset > 255:
+            logging.warning("Layer value over 255. 1 byte max! Using max value of 255")
+        layer = min(
+            gen_layer_id_offset, 255
+        )  # Use 1 byte for the layer (max_layer is 0-255)
+        identifier = get_node_identifier_bytes(
+            node.qualified_name(),
+            node.data_type_str,
+            node.type.value,
+            node.get_unit(),
+            node.allowed,
+            node.min,
+            node.max,
+        )
+        hashed_str = format(fnv1_24_hash(identifier) << 8 | layer, "08X")
     else:
-        if decimal_output:
-            return str(node_id).zfill(6), id_counter + 1  # Decimal output without layer
-        else:
-            if no_layer:
-                return (
-                    format(node_id, "06X"),
-                    id_counter + 1,
-                )  # Hexadecimal output without layer
-            else:
-                if 0 <= layer <= 63:
-                    logging.warning("Layer value from 0 to 63 is reserved for COVESA.")
-                layer = min(layer, 255)  # Use 1 byte for the layer (max_layer is 0-255)
-                return (
-                    format(((node_id << 8) | layer), "08X"),
-                    id_counter + 1,
-                )  # Hexadecimal output with layer
+        identifier = get_node_identifier_bytes(
+            node.qualified_name(),
+            node.data_type_str,
+            node.type.value,
+            node.get_unit(),
+            node.allowed,
+            node.min,
+            node.max,
+        )
+        hashed_str = format(fnv1_32_hash(identifier), "08X")
+
+    return hashed_str, id_counter + 1
 
 
-def export_node(
-    yaml_dict, node, id_counter, offset, layer, no_layer, decimal_output, use_fnv1_hash
-):
-    node_id, id_counter = generate_split_id(
-        node, id_counter, offset, layer, no_layer, decimal_output, use_fnv1_hash
-    )
-
+def export_node(yaml_dict, node, id_counter, gen_layer_id_offset):
+    node_id, id_counter = generate_split_id(node, id_counter, gen_layer_id_offset)
     node_path = node.qualified_name()
 
-    if decimal_output:
-        # ToDo: why are some decimal IDs written with/without quotes
-        yaml_dict[node_path] = {"staticUID": str(node_id)}
-    else:
-        yaml_dict[node_path] = {"staticUID": f"0x{node_id}"}
+    yaml_dict[node_path] = {"staticUID": f"0x{node_id}"}
     yaml_dict[node_path]["description"] = node.description
     yaml_dict[node_path]["type"] = str(node.type.value)
     if node.unit:
@@ -163,31 +117,26 @@ def export_node(
             yaml_dict,
             child,
             id_counter,
-            offset,
-            layer,
-            no_layer,
-            decimal_output,
-            use_fnv1_hash,
+            gen_layer_id_offset,
         )
 
     return id_counter, id_counter
 
 
 def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
+    """Main export function used to genereate the output id vspec.
+
+    @param config: Command line arguments it was run with
+    @param signal_root: root of the signal tree
+    @param print_uuid: Not used here but needed by main script
+    """
     logging.info("Generating YAML output...")
 
-    id_counter = 0  # Initialize the ID counter
+    id_counter = 0
 
     signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
     id_counter, _ = export_node(
-        signals_yaml_dict,
-        signal_root,
-        id_counter,
-        config.gen_ID_offset,
-        config.gen_layer_ID_offset,
-        config.gen_no_layer,
-        config.gen_decimal_ID,
-        config.use_fnv1_hash,
+        signals_yaml_dict, signal_root, id_counter, config.gen_layer_id_offset
     )
 
     if config.validate_static_uid:

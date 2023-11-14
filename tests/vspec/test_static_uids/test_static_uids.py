@@ -9,7 +9,7 @@ import vspec2x
 import yaml
 
 from typing import Dict
-from vspec.model.constants import VSSTreeType
+from vspec.model.constants import VSSTreeType, VSSDataType
 from vspec.model.vsstree import VSSNode
 
 
@@ -20,19 +20,16 @@ def get_cla_test(test_file: str):
     return (
         "../../../vspec2id.py "
         + test_file
-        + " ./out.vspec "
-        + "--gen-layer-ID-offset 99 "
-        + "--validate-static-uid ./validation_vspecs/validation.vspec "
-        + "--validate-automatic-mode --only-validate-no-export"
+        + " ./out.vspec --validate-static-uid "
+        + "./validation_vspecs/validation.vspec "
+        + "--only-validate-no-export"
     )
 
 
 def get_cla_validation(validation_file: str):
     return (
         "../../../vspec2id.py ./test_vspecs/test.vspec ./out.vspec "
-        "--gen-layer-ID-offset 99 --validate-static-uid "
-        + validation_file
-        + " --validate-automatic-mode --only-validate-no-export"
+        "--validate-static-uid " + validation_file
     )
 
 
@@ -49,61 +46,44 @@ def change_test_dir(request, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "layer, id_counter, offset, gen_no_layer, decimal_output, use_fnv1_hash, result_static_uid",
+    "node_name, datatype, layer_id_offset, result_static_uid",
     [
-        (99, 1, 1, False, False, False, "00000263"),
-        (0, 4, 3, True, False, False, "000007"),
-        (0, 5, 1, False, True, False, "000006"),
-        (0, 0, 0, True, False, True, "F711C091"),
+        ("TestNode", VSSDataType.INT8, 0, "8C31FDC6"),
+        ("TestNode", VSSDataType.UINT32, 99, "F8291C63"),
+        ("TestNodeChild", VSSDataType.FLOAT, 0, "B4EDDADD"),
+        ("TestNodeChild", VSSDataType.STRING, 112, "B32E3C70"),
     ],
 )
 def test_generate_id(
-    layer: int,
-    id_counter: int,
-    offset: int,
-    gen_no_layer: bool,
-    decimal_output: bool,
-    use_fnv1_hash: bool,
-    result_static_uid: str,
+    node_name: str, datatype: VSSDataType, layer_id_offset: int, result_static_uid: str
 ):
+    # ToDo test all breaking changes
     source = {
         "description": "some desc",
         "type": "branch",
         "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
         "$file_name$": "testfile",
     }
-    node = VSSNode("TestNode", source, VSSTreeType.SIGNAL_TREE.available_types())
+    id_counter = 0
+    node = VSSNode(node_name, source, VSSTreeType.SIGNAL_TREE.available_types())
+    node.data_type_str = datatype.value
+    node.validate_and_set_datatype()
 
-    result, _ = vss2id.generate_split_id(
-        node,
-        id_counter,
-        offset=offset,
-        layer=layer,
-        no_layer=gen_no_layer,
-        decimal_output=decimal_output,
-        use_fnv1_hash=use_fnv1_hash,
-    )
+    result, _ = vss2id.generate_split_id(node, id_counter, layer_id_offset)
 
     assert result == result_static_uid
 
 
 @pytest.mark.parametrize(
-    "layer, id_counter, offset, gen_no_layer, decimal_output, use_fnv1_hash",
+    "gen_layer_id_offset",
     [
-        (99, 1, 1, False, False, False),
-        (0, 4, 100, True, False, False),
-        (0, 5, 1, False, True, False),
-        (0, 8, 1, True, False, True),
+        0,
+        99,
     ],
 )
 def test_export_node(
     request: pytest.FixtureRequest,
-    layer: int,
-    id_counter: int,
-    offset: int,
-    gen_no_layer: bool,
-    decimal_output: bool,
-    use_fnv1_hash: bool,
+    gen_layer_id_offset,
 ):
     dir_path = os.path.dirname(request.path)
     vspec_file = os.path.join(dir_path, "test_vspecs/test.vspec")
@@ -117,42 +97,21 @@ def test_export_node(
     vss2id.export_node(
         yaml_dict,
         tree,
-        id_counter,
-        offset=offset,
-        layer=layer,
-        no_layer=gen_no_layer,
-        decimal_output=decimal_output,
-        use_fnv1_hash=use_fnv1_hash,
+        id_counter=0,
+        gen_layer_id_offset=gen_layer_id_offset,
     )
 
     result_dict: Dict[str, str]
-    if use_fnv1_hash:
+    if gen_layer_id_offset:
         with open(
-            os.path.join(dir_path, "validation_yamls/validation_fnv1_hash.yaml"), "r"
+            os.path.join(dir_path, "validation_yamls/validation_layer.yaml"), "r"
         ) as f:
             result_dict = yaml.load(f, Loader=yaml.FullLoader)
     else:
-        if decimal_output:
-            with open(
-                os.path.join(dir_path, "validation_yamls/validation_decimal.yaml"), "r"
-            ) as f:
-                result_dict = yaml.load(f, Loader=yaml.FullLoader)
-        elif gen_no_layer and not decimal_output:
-            with open(
-                os.path.join(dir_path, "validation_yamls/validation_hex_no_layer.yaml"),
-                "r",
-            ) as f:
-                result_dict = yaml.load(f, Loader=yaml.FullLoader)
-        elif not gen_no_layer and not decimal_output:
-            with open(
-                os.path.join(dir_path, "validation_yamls/validation_hex_layer.yaml"),
-                "r",
-            ) as f:
-                result_dict = yaml.load(f, Loader=yaml.FullLoader)
-        else:
-            raise NotImplementedError(
-                "Currently we don't support decimal outputs with layer!"
-            )
+        with open(
+            os.path.join(dir_path, "validation_yamls/validation_no_layer.yaml"), "r"
+        ) as f:
+            result_dict = yaml.load(f, Loader=yaml.FullLoader)
 
     assert result_dict.keys() == yaml_dict.keys()
     assert result_dict == yaml_dict
@@ -163,67 +122,79 @@ def test_export_node(
 
 @pytest.mark.usefixtures("change_test_dir")
 def test_full_script(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_full_script.vspec"
+    test_file: str = "./test_vspecs/test.vspec"
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 0
+    assert len(caplog.records) == 1
 
 
 @pytest.mark.usefixtures("change_test_dir")
-def test_changed_description(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_description.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_semantic(caplog: pytest.LogCaptureFixture):
+    validation_file: str = "./validation_vspecs/validation_semantic_change.vspec"
+    clas = shlex.split(get_cla_validation(validation_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 1 and all(
+    assert len(caplog.records) == 2 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for record in caplog.records:
-        assert "DESCRIPTION MISMATCH" in record.msg
+    for i, record in enumerate(caplog.records):
+        if i == 0:
+            continue
+        else:
+            assert "SEMANTIC NAME CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
-def test_changed_unit(caplog: pytest.LogCaptureFixture):
+def test_vss_path(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test_vss_path.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 3 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for i, record in enumerate(caplog.records):
+        if i < 2:
+            continue
+        else:
+            assert "PATH CHANGE" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_unit(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_unit.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 3 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for i, record in enumerate(caplog.records):
+        if i == 0:
+            continue
+        else:
+            assert "BREAKING CHANGE" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_datatype(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test_datatype.vspec"
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
     assert len(caplog.records) == 2 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for record in caplog.records:
-        assert "UNIT MISMATCH" in record.msg
+    for i, record in enumerate(caplog.records):
+        if i == 0:
+            continue
+        else:
+            assert "BREAKING CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
-def test_changed_datatype(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_datatype.vspec"
-    clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
-
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
-        assert "DATATYPE MISMATCH" in record.msg
-
-
-@pytest.mark.usefixtures("change_test_dir")
-def test_changed_vss_path(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_vss_path.vspec"
-    clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
-
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
-        assert "VSS PATH MISMATCH" in record.msg
-
-
-@pytest.mark.usefixtures("change_test_dir")
-def test_changed_name_datatype(caplog: pytest.LogCaptureFixture):
+def test_name_datatype(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_name_datatype.vspec"
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
@@ -232,24 +203,23 @@ def test_changed_name_datatype(caplog: pytest.LogCaptureFixture):
         log.levelname == "WARNING" for log in caplog.records
     )
     for i, record in enumerate(caplog.records):
-        if i % 2 == 0:
-            assert "NAME CHANGE" in record.msg
+        if i == 0:
+            continue
         else:
-            assert "DATATYPE MISMATCH" in record.msg
+            assert "BREAKING CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
-@pytest.mark.skip()
-def test_changed_uid(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation_uid.vspec"
-    clas = shlex.split(get_cla_validation(validation_file))
+def test_description(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test_description.vspec"
+    clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
     assert len(caplog.records) == 2 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
     for i, record in enumerate(caplog.records):
-        if i % 2 == 0:
-            assert "UID CHANGE" in record.msg
+        if i == 0:
+            continue
         else:
-            assert "UID MISMATCH" in record.msg
+            assert "DESCRIPTION MISMATCH" in record.msg
