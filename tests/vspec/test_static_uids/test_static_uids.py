@@ -49,11 +49,12 @@ def change_test_dir(request, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "layer, id_counter, offset, gen_no_layer, decimal_output, result_static_uid",
+    "layer, id_counter, offset, gen_no_layer, decimal_output, use_fnv1_hash, result_static_uid",
     [
-        (99, 1, 1, False, False, "00000263"),
-        (0, 4, 3, True, False, "000007"),
-        (0, 5, 1, False, True, "000006"),
+        (99, 1, 1, False, False, False, "00000263"),
+        (0, 4, 3, True, False, False, "000007"),
+        (0, 5, 1, False, True, False, "000006"),
+        (0, 0, 0, True, False, True, "F711C091"),
     ],
 )
 def test_generate_id(
@@ -62,6 +63,7 @@ def test_generate_id(
     offset: int,
     gen_no_layer: bool,
     decimal_output: bool,
+    use_fnv1_hash: bool,
     result_static_uid: str,
 ):
     source = {
@@ -79,21 +81,21 @@ def test_generate_id(
         layer=layer,
         no_layer=gen_no_layer,
         decimal_output=decimal_output,
-        use_fnv1_hash=False,
+        use_fnv1_hash=use_fnv1_hash,
     )
 
     assert result == result_static_uid
 
 
 @pytest.mark.parametrize(
-    "layer, id_counter, offset, gen_no_layer, decimal_output",
+    "layer, id_counter, offset, gen_no_layer, decimal_output, use_fnv1_hash",
     [
-        (99, 1, 1, False, False),
-        (0, 4, 100, True, False),
-        (0, 5, 1, False, True),
+        (99, 1, 1, False, False, False),
+        (0, 4, 100, True, False, False),
+        (0, 5, 1, False, True, False),
+        (0, 8, 1, True, False, True),
     ],
 )
-@pytest.mark.skip()
 def test_export_node(
     request: pytest.FixtureRequest,
     layer: int,
@@ -101,6 +103,7 @@ def test_export_node(
     offset: int,
     gen_no_layer: bool,
     decimal_output: bool,
+    use_fnv1_hash: bool,
 ):
     dir_path = os.path.dirname(request.path)
     vspec_file = os.path.join(dir_path, "test_vspecs/test.vspec")
@@ -119,30 +122,39 @@ def test_export_node(
         layer=layer,
         no_layer=gen_no_layer,
         decimal_output=decimal_output,
-        use_fnv1_hash=False,
+        use_fnv1_hash=use_fnv1_hash,
     )
 
     result_dict: Dict[str, str]
-    if decimal_output:
+    if use_fnv1_hash:
         with open(
-            os.path.join(dir_path, "validation_yamls/validation_decimal.yaml"), "r"
-        ) as f:
-            result_dict = yaml.load(f, Loader=yaml.FullLoader)
-    elif gen_no_layer and not decimal_output:
-        with open(
-            os.path.join(dir_path, "validation_yamls/validation_hex_no_layer.yaml"), "r"
-        ) as f:
-            result_dict = yaml.load(f, Loader=yaml.FullLoader)
-    elif not gen_no_layer and not decimal_output:
-        with open(
-            os.path.join(dir_path, "validation_yamls/validation_hex_layer.yaml"), "r"
+            os.path.join(dir_path, "validation_yamls/validation_fnv1_hash.yaml"), "r"
         ) as f:
             result_dict = yaml.load(f, Loader=yaml.FullLoader)
     else:
-        raise NotImplementedError(
-            "Currently we don't support decimal outputs with layer!"
-        )
+        if decimal_output:
+            with open(
+                os.path.join(dir_path, "validation_yamls/validation_decimal.yaml"), "r"
+            ) as f:
+                result_dict = yaml.load(f, Loader=yaml.FullLoader)
+        elif gen_no_layer and not decimal_output:
+            with open(
+                os.path.join(dir_path, "validation_yamls/validation_hex_no_layer.yaml"),
+                "r",
+            ) as f:
+                result_dict = yaml.load(f, Loader=yaml.FullLoader)
+        elif not gen_no_layer and not decimal_output:
+            with open(
+                os.path.join(dir_path, "validation_yamls/validation_hex_layer.yaml"),
+                "r",
+            ) as f:
+                result_dict = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            raise NotImplementedError(
+                "Currently we don't support decimal outputs with layer!"
+            )
 
+    assert result_dict.keys() == yaml_dict.keys()
     assert result_dict == yaml_dict
 
 

@@ -12,10 +12,41 @@ A.B.Int32:
   staticUID: '0x00000763'
   type: sensor
   unit: rpm
+A.B.IsLeaf:
+  allowed:
+  - 'YES'
+  - 'NO'
+  datatype: string
+  description: This node is a leaf of the tree and it has allowed values (aka an enum).
+  staticUID: '0x00000963'
+  type: actuator
+A.B.Max:
+  datatype: uint8
+  description: A leaf that uses a maximum value.
+  max: 100
+  staticUID: '0x00000B63'
+  type: sensor
+  unit: percent
+A.B.Min:
+  datatype: uint8
+  description: A leaf that uses a minimum value.
+  min: 10
+  staticUID: '0x00000A63'
+  type: sensor
+  unit: percent
+A.B.NewName:
+  datatype: uint32
+  description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
+  fka:
+  - A.B.OldName
+  - A.B.OlderName
+  staticUID: '0x00000863'
+  type: sensor
+  unit: mm
 A.Float:
   datatype: float
   description: A.Float is a leaf of A of datatype float
-  staticUID: '0x00000264'
+  staticUID: '0x00000263'
   type: actuator
   unit: mm
 A.Int16:
