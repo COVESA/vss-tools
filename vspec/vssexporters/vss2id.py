@@ -109,7 +109,9 @@ def export_node(yaml_dict, node, id_counter, gen_layer_id_offset):
         yaml_dict[node_path]["max"] = node.max
 
     # ToDo proper constant for fka when accepted
-    if "fka" in node.extended_attributes.keys():
+    if node.fka:
+        yaml_dict[node_path]["fka"] = node.fka
+    elif "fka" in node.extended_attributes.keys():
         yaml_dict[node_path]["fka"] = node.extended_attributes["fka"]
 
     for child in node.children:

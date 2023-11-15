@@ -145,7 +145,7 @@ def test_full_script(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 1
+    assert len(caplog.records) == 0
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -154,14 +154,11 @@ def test_semantic(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_validation(validation_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 2 and all(
+    assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for i, record in enumerate(caplog.records):
-        if i == 0:
-            continue
-        else:
-            assert "SEMANTIC NAME CHANGE" in record.msg
+    for record in caplog.records:
+        assert "SEMANTIC NAME CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -170,14 +167,11 @@ def test_vss_path(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 3 and all(
+    assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for i, record in enumerate(caplog.records):
-        if i < 2:
-            continue
-        else:
-            assert "PATH CHANGE" in record.msg
+    for record in caplog.records:
+        assert "PATH CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -186,14 +180,11 @@ def test_unit(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 3 and all(
+    assert len(caplog.records) == 2 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for i, record in enumerate(caplog.records):
-        if i == 0:
-            continue
-        else:
-            assert "BREAKING CHANGE" in record.msg
+    for record in caplog.records:
+        assert "BREAKING CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -202,14 +193,11 @@ def test_datatype(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 2 and all(
+    assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for i, record in enumerate(caplog.records):
-        if i == 0:
-            continue
-        else:
-            assert "BREAKING CHANGE" in record.msg
+    for record in caplog.records:
+        assert "BREAKING CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -218,14 +206,11 @@ def test_name_datatype(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 2 and all(
+    assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for i, record in enumerate(caplog.records):
-        if i == 0:
-            continue
-        else:
-            assert "BREAKING CHANGE" in record.msg
+    for record in caplog.records:
+        assert "BREAKING CHANGE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -234,11 +219,8 @@ def test_description(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 2 and all(
+    assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for i, record in enumerate(caplog.records):
-        if i == 0:
-            continue
-        else:
-            assert "DESCRIPTION MISMATCH" in record.msg
+    for record in caplog.records:
+        assert "DESCRIPTION MISMATCH" in record.msg
