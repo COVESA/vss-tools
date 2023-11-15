@@ -8,8 +8,8 @@ import vspec.vssexporters.vss2id as vss2id
 import vspec2x
 import yaml
 
-from typing import Dict
-from vspec.model.constants import VSSTreeType, VSSDataType
+from typing import Dict, Optional
+from vspec.model.constants import VSSTreeType, VSSDataType, VSSConstant
 from vspec.model.vsstree import VSSNode
 
 
@@ -46,16 +46,32 @@ def change_test_dir(request, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "node_name, datatype, layer_id_offset, result_static_uid",
+    "node_name, unit, datatype, allowed, minimum, maximum, layer_id_offset, result_static_uid",
     [
-        ("TestNode", VSSDataType.INT8, 0, "8C31FDC6"),
-        ("TestNode", VSSDataType.UINT32, 99, "F8291C63"),
-        ("TestNodeChild", VSSDataType.FLOAT, 0, "B4EDDADD"),
-        ("TestNodeChild", VSSDataType.STRING, 112, "B32E3C70"),
+        ("TestNode", "m", VSSDataType.INT8, "", 0, 10000, 0, "1692F5DF"),
+        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", 99, "31A8FA63"),
+        ("TestNodeChild", "degrees/s", VSSDataType.FLOAT, "", "", "", 0, "E61220E6"),
+        (
+            "TestNodeChild",
+            "percent",
+            VSSDataType.STRING,
+            ["YES", "NO"],
+            0,
+            100,
+            112,
+            "659CF970",
+        ),
     ],
 )
 def test_generate_id(
-    node_name: str, datatype: VSSDataType, layer_id_offset: int, result_static_uid: str
+    node_name: str,
+    unit: str,
+    datatype: VSSDataType,
+    allowed: str,
+    minimum: Optional[int],
+    maximum: Optional[int],
+    layer_id_offset: int,
+    result_static_uid: str,
 ):
     # ToDo test all breaking changes
     source = {
@@ -64,12 +80,15 @@ def test_generate_id(
         "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
         "$file_name$": "testfile",
     }
-    id_counter = 0
     node = VSSNode(node_name, source, VSSTreeType.SIGNAL_TREE.available_types())
+    node.unit = VSSConstant(label=str(unit), value=str(unit))
     node.data_type_str = datatype.value
     node.validate_and_set_datatype()
+    node.allowed = allowed
 
-    result, _ = vss2id.generate_split_id(node, id_counter, layer_id_offset)
+    result, _ = vss2id.generate_split_id(
+        node, id_counter=0, gen_layer_id_offset=layer_id_offset
+    )
 
     assert result == result_static_uid
 
