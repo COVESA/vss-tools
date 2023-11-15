@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2022 Contributors to COVESA
 #
-# (C) 2022 Robert Bosch GmbH
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
 #
-# All files and artifacts in this repository are licensed under the
-# provisions of the license provided by the LICENSE file in this repository.
-#
+# SPDX-License-Identifier: MPL-2.0
 
 import pytest
 import os
@@ -47,7 +48,7 @@ def test_error_with_non_compatible_formats(format, change_test_dir):
 
     # test that the expected error is outputted
     test_str = f'grep \"error: {format} format is not yet supported in vspec struct/data type support feature\" ' + \
-               'out.txt > /dev/null'
+        'out.txt > /dev/null'
     result = os.system(test_str)
     os.system("cat out.txt")
     os.system("rm -f out.json out.txt output_types_file.json output_file.json")
