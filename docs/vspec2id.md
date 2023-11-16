@@ -8,27 +8,27 @@ with a 4-byte identifier.
 ## General usage
 
 ```bash
-usage: vspec2id.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid] [--no-expand] [-o overlays] [-u unit_file]                                                                                                                         
-                   [-vt vspec_types_file] [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]                                                                                                                             
-                   [--gqlfield GQLFIELD GQLFIELD] [--gen-layer-id-offset GEN_LAYER_ID_OFFSET] [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export]                                                                                                                                               
-                   <vspec_file> <output_file>                                
+usage: vspec2id.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid] [--no-expand] [-o overlays] [-u unit_file]
+                   [-vt vspec_types_file] [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
+                   [--gqlfield GQLFIELD GQLFIELD] [--gen-layer-id-offset GEN_LAYER_ID_OFFSET] [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export]
+                   <vspec_file> <output_file>
 
-Convert vspec to other formats.                                                                                                                           
+Convert vspec to other formats.
 
-positional arguments:                                                        
-  <vspec_file>          The vehicle specification file to convert.                                                                                        
-  <output_file>         The file to write output to.                                                                                                      
- 
+positional arguments:
+  <vspec_file>          The vehicle specification file to convert.
+  <output_file>         The file to write output to.
+
 ...
 
 IDGEN arguments:                                                             
 
-  --gen-layer-id-offset GEN_LAYER_ID_OFFSET                                  
-                        Define layer ID in case you want to use 3 bytes for hashing and 1 byte for layer ID.If you don't specify a layer ID it will default to zero which means that we will use4 bytes for                                                                                                         
-                        the FNV-1 hash.                                      
-  --validate-static-uid VALIDATE_STATIC_UID                                  
-                        Path to validation file.                             
-  --only-validate-no-export                                                  
+  --gen-layer-id-offset GEN_LAYER_ID_OFFSET
+                        Define layer ID in case you want to use 3 bytes for hashing and 1 byte for layer ID.If you don't
+                        specify a layer ID it will default to zero which means that we will use4 bytes for the FNV-1 hash.
+  --validate-static-uid VALIDATE_STATIC_UID
+                        Path to validation file.
+  --only-validate-no-export
                         For pytests and pipelines you can skip the export of the <output_file>
 ```
 
@@ -60,7 +60,7 @@ vspec2x by running the following command:
 
 ### Option 2: Validate changes on your vehicle specification with validation file
 
-In this case you want to validate changes of your vehicle specification, if you are doing a dry run try temporarily
+In this case you want to validate changes of your vehicle specification. If you are doing a dry run try temporarily
 renaming a node or changing the node's datatype, unit, description, or other. You will get warnings depending on your
 changes in the vehicle signal specification.
 
@@ -75,21 +75,19 @@ called `fka` in the vspec (which is a list of strings) and add a list of names t
 The same holds for path changes, if you move a node between layers you can add the `fka` attribute containing the
 full path as shown below.
 
-Example for `SEMANTIC CHANGE`
-
 Before renaming `A.B.NewName` its name was `A.B.OldName`.
 
 ```
 A.B.NewName:
-  datatype: uint32
-  type: sensor
-  unit: mm
+  datatype: string
+  type: actuator
+  allowed: ["YES", "NO"]
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
   fka: ['A.B.OldName', 'A.B.OlderName']
 ```
 
-As stated if you want to the node `A.B.NewName` to `A.NewName` you can also write the `fka` attribute stating its
-legacy path.
+As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the `fka` attribute
+stating its legacy path.
 
 Now you should know about all possible changes. To run the validation step, please do:
 
