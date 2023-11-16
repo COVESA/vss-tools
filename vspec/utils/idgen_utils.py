@@ -79,3 +79,10 @@ def fnv1_32_wrapper(name: str, source: dict):
         maximum,
     )
     return format(fnv1_32_hash(identifier), "08X")
+
+
+def get_all_keys_values(d: dict):
+    for key, value in d.items():
+        yield key, value
+        if isinstance(value, dict):
+            yield from get_all_keys_values(value)

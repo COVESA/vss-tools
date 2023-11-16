@@ -1,6 +1,7 @@
 from anytree import PreOrderIter  # type: ignore
 import argparse
 import logging
+import sys
 from vspec.model.vsstree import VSSNode
 from vspec.utils.idgen_utils import fnv1_32_wrapper
 
@@ -105,7 +106,7 @@ def validate_static_uids(
                     "Multiple matches do not make sense for the way we load the data. "
                     "Please check your input vspec!"
                 )
-                exit(-1)
+                sys.exit(-1)
 
     # go to top in case we are not
     if validation_tree.parent:

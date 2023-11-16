@@ -11,6 +11,7 @@ import yaml
 from typing import Dict, Optional
 from vspec.model.constants import VSSTreeType, VSSDataType, VSSConstant
 from vspec.model.vsstree import VSSNode
+from vspec.utils.idgen_utils import get_all_keys_values
 
 
 # HELPERS
@@ -31,6 +32,25 @@ def get_cla_validation(validation_file: str):
         "../../../vspec2id.py ./test_vspecs/test.vspec ./out.vspec "
         "--validate-static-uid " + validation_file
     )
+
+
+def get_test_node(
+    node_name: str, unit: str, datatype: VSSDataType, allowed: str
+) -> VSSNode:
+    source = {
+        "description": "some desc",
+        "type": "branch",
+        "$file_name$": "testfile",
+    }
+    node = VSSNode(node_name, source, VSSTreeType.SIGNAL_TREE.available_types())
+    node.unit = VSSConstant(label=str(unit), value=str(unit))
+    node.data_type_str = datatype.value
+    node.validate_and_set_datatype()
+    node.allowed = allowed
+    # node.min = minimum
+    # node.max = maximum
+    #
+    return node
 
 
 # FIXTURES
@@ -73,19 +93,7 @@ def test_generate_id(
     layer_id_offset: int,
     result_static_uid: str,
 ):
-    # ToDo test all breaking changes
-    source = {
-        "description": "some desc",
-        "type": "branch",
-        "uuid": "26d6e362-a422-11ea-bb37-0242ac130002",
-        "$file_name$": "testfile",
-    }
-    node = VSSNode(node_name, source, VSSTreeType.SIGNAL_TREE.available_types())
-    node.unit = VSSConstant(label=str(unit), value=str(unit))
-    node.data_type_str = datatype.value
-    node.validate_and_set_datatype()
-    node.allowed = allowed
-
+    node = get_test_node(node_name, unit, datatype, allowed)
     result, _ = vss2id.generate_split_id(
         node, id_counter=0, gen_layer_id_offset=layer_id_offset
     )
@@ -111,7 +119,6 @@ def test_export_node(
     tree = vspec.load_tree(
         vspec_file, include_paths=["."], tree_type=VSSTreeType.SIGNAL_TREE
     )
-
     yaml_dict: Dict[str, str] = {}
     vss2id.export_node(
         yaml_dict,
@@ -134,6 +141,49 @@ def test_export_node(
 
     assert result_dict.keys() == yaml_dict.keys()
     assert result_dict == yaml_dict
+
+
+@pytest.mark.parametrize(
+    "children_names",
+    [
+        ["ChildNode", "ChildNode"],
+        ["ChildNode", "ChildNodeDifferentName"],
+    ],
+)
+def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
+    tree = get_test_node("TestNode", "m", VSSDataType.UINT32, "")
+    child_node = get_test_node(children_names[0], "m", VSSDataType.UINT32, "")
+    child_node2 = get_test_node(children_names[1], "m", VSSDataType.UINT32, "")
+    tree.children = [child_node, child_node2]
+
+    yaml_dict: Dict[str, dict] = {}
+    if children_names[0] == children_names[1]:
+        # assert system exit and log
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            vss2id.export_node(
+                yaml_dict,
+                tree,
+                id_counter=0,
+                gen_layer_id_offset=0,
+            )
+        assert pytest_wrapped_e.type == SystemExit
+        assert pytest_wrapped_e.value.code == -1
+        assert len(caplog.records) == 1 and all(
+            log.levelname == "CRITICAL" for log in caplog.records
+        )
+    else:
+        # assert all IDs different
+        vss2id.export_node(
+            yaml_dict,
+            tree,
+            id_counter=0,
+            gen_layer_id_offset=0,
+        )
+        assigned_ids: list = []
+        for key, value in get_all_keys_values(yaml_dict):
+            if not isinstance(value, dict) and key == "staticUID":
+                assigned_ids.append(value)
+        assert len(assigned_ids) == len(set(assigned_ids))
 
 
 # INTEGRATION TESTS

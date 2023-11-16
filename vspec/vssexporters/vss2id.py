@@ -13,6 +13,7 @@
 import argparse
 import logging
 import os
+import sys
 from typing import Dict, Tuple
 from vspec import load_tree
 from vspec.model.constants import VSSTreeType
@@ -23,6 +24,7 @@ from vspec.utils.idgen_utils import (
     get_node_identifier_bytes,
     fnv1_32_hash,
     fnv1_24_hash,
+    get_all_keys_values,
 )
 import yaml
 
@@ -90,8 +92,30 @@ def generate_split_id(
     return hashed_str, id_counter + 1
 
 
-def export_node(yaml_dict, node, id_counter, gen_layer_id_offset):
+def export_node(yaml_dict, node, id_counter, gen_layer_id_offset) -> Tuple[int, int]:
+    """Recursive function to export the full tree to a dict
+
+    @param yaml_dict: the to be exported dict
+    @param node: parent node of the tree
+    @param id_counter: counter for amount of ids
+    @param gen_layer_id_offset: int for specifying a layer to use 3-byte hashing
+    @return: id_counter, id_counter
+    """
     node_id, id_counter = generate_split_id(node, id_counter, gen_layer_id_offset)
+
+    for key, value in get_all_keys_values(yaml_dict):
+        if not isinstance(value, dict) and key == "staticUID":
+            # print(f"{key=}, {value[2:]=}, {node_id=}")
+
+            if node_id == value[2:]:
+                logging.fatal(
+                    f"There is a small chance that the result of FNV-1 "
+                    f"hashes are the same in this case the hash of node "
+                    f"'{node.qualified_name()}' is the same as another hash."
+                    f"Can you please update it."
+                )
+                sys.exit(-1)
+
     node_path = node.qualified_name()
 
     yaml_dict[node_path] = {"staticUID": f"0x{node_id}"}
@@ -134,8 +158,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
     """
     logging.info("Generating YAML output...")
 
-    id_counter = 0
-
+    id_counter: int = 0
     signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
     id_counter, _ = export_node(
         signals_yaml_dict, signal_root, id_counter, config.gen_layer_id_offset
