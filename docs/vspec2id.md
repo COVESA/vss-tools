@@ -21,7 +21,7 @@ positional arguments:
 
 ...
 
-IDGEN arguments:                                                             
+IDGEN arguments:
 
   --gen-layer-id-offset GEN_LAYER_ID_OFFSET
                         Define layer ID in case you want to use 3 bytes for hashing and 1 byte for layer ID.If you don't
