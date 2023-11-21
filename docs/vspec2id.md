@@ -90,6 +90,19 @@ A.B.NewName:
 As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the `fka` attribute
 stating its legacy path.
 
+To summarize these are the `BREAKING CHANGES` that affect the hash and `NON-BREAKING CHANGES` that throw
+warnings only:
+
+| BREAKING CHANGES      |     | NON-BREAKING CHANGES |
+|-----------------------|-----|----------------------|
+| Qualified name        |     | Add new attribute    |
+| Data type             |     | Deprecation          |
+| Node type (or type)   |     | Delete Attribute     |
+| Unit                  |     | Change description   |
+| Enum values (allowed) |     |                      |
+| Minimum               |     |                      |
+| Maximum               |     |                      |
+
 Now you should know about all possible changes. To run the validation step, please do:
 
 ```bash
