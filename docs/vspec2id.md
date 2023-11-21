@@ -97,7 +97,7 @@ warnings only:
 |-----------------------|-----|----------------------|
 | Qualified name        |     | Add new attribute    |
 | Data type             |     | Deprecation          |
-| Node type (or type)   |     | Delete Attribute     |
+| Type (i.e. node type) |     | Delete Attribute     |
 | Unit                  |     | Change description   |
 | Enum values (allowed) |     |                      |
 | Minimum               |     |                      |
