@@ -43,7 +43,7 @@ However, you can set one by using the command line argument. Please note that in
 
 ```bash
 cd path/to/your/vss-tools
-./vspecID.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v1.vspec --gen-layer-ID-offset 99
+./vspecID.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v1.vspec
 ```
 
 Great, you generated your first overlay that will also be used as your validation file as soon as you update your
