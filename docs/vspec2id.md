@@ -43,7 +43,7 @@ However, you can set one by using the command line argument. Please note that in
 
 ```bash
 cd path/to/your/vss-tools
-./vspecID.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v1.vspec
+./vspec2id.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v1.vspec
 ```
 
 Great, you generated your first overlay that will also be used as your validation file as soon as you update your
@@ -55,6 +55,7 @@ Now if you just want to generate a new e.g. yaml file including your static UIDs
 vspec2x by running the following command:
 
 ```bash
+cd path/to/your/vss-tools
 ./vspec2yaml.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec -o ../output_id_v1.vspec -e staticUID vehicle_specification_with_uids.yaml
 ```
 
