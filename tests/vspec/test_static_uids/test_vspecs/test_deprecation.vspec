@@ -4,18 +4,18 @@ A:
 A.Float:
   datatype: float
   type: actuator
-  unit: m
+  unit: mm
   description: A.Float is a leaf of A of datatype float
 A.Int16:
   datatype: int16
   type: sensor
-  unit: degrees/s
+  unit: rpm
   description: A.Int16 is a leaf of A of datatype int16
 A.String:
   datatype: string
   type: sensor
   description: A.String is a leaf of A of datatype string
-  deprecation: This is test deprecation, let's say it used to be called Str instead String.
+  deprecation: Here we want to trigger a deprecation msg change.
 A.StringArray:
   datatype: string[]
   type: sensor

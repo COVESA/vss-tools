@@ -58,7 +58,17 @@ def validate_static_uids(
             return False
 
     def check_deprecation(k: str, v: dict, match_tuple: tuple):
-        pass
+        if (
+            "deprecation" in v.keys()
+            and validation_tree_nodes[match_tuple[1]].deprecation
+        ):
+            if v["deprecation"] != validation_tree_nodes[match_tuple[1]].deprecation:
+                logging.warning(
+                    f"DEPRECATION MSG CHANGE: Deprecation message was"
+                    f"\n'{validation_tree_nodes[match_tuple[1]].deprecation}'"
+                    f"\nin validation but now is"
+                    f"\n'{v['deprecation']}'."
+                )
 
     def hashed_pipeline():
         """This pipeline uses FNV-1 hash for static UIDs.
@@ -93,9 +103,10 @@ def validate_static_uids(
                 # ToDo all non-breaking changes here
                 #  1. add new attribute
                 #  2. deprecate attribute
+                check_deprecation(key, value, matched_uids[0])
+                # ToDo
                 #  3. delete attribute
-                #  4. move attribute to other VSS path --> handled by semantic change
-                #  5. change description
+                #  4. change description
                 check_description(key, value, matched_uids[0])
 
                 # now remove the element to speed up things

@@ -103,10 +103,9 @@ def export_node(yaml_dict, node, id_counter, gen_layer_id_offset) -> Tuple[int, 
     """
     node_id, id_counter = generate_split_id(node, id_counter, gen_layer_id_offset)
 
+    # check for hash duplicates
     for key, value in get_all_keys_values(yaml_dict):
         if not isinstance(value, dict) and key == "staticUID":
-            # print(f"{key=}, {value[2:]=}, {node_id=}")
-
             if node_id == value[2:]:
                 logging.fatal(
                     f"There is a small chance that the result of FNV-1 "
@@ -114,6 +113,7 @@ def export_node(yaml_dict, node, id_counter, gen_layer_id_offset) -> Tuple[int, 
                     f"'{node.qualified_name()}' is the same as another hash."
                     f"Can you please update it."
                 )
+                # We could add handling of duplicates here
                 sys.exit(-1)
 
     node_path = node.qualified_name()
@@ -132,11 +132,13 @@ def export_node(yaml_dict, node, id_counter, gen_layer_id_offset) -> Tuple[int, 
     if node.max:
         yaml_dict[node_path]["max"] = node.max
 
-    # ToDo proper constant for fka when accepted
     if node.fka:
         yaml_dict[node_path]["fka"] = node.fka
     elif "fka" in node.extended_attributes.keys():
         yaml_dict[node_path]["fka"] = node.extended_attributes["fka"]
+
+    if node.deprecation:
+        yaml_dict[node_path]["deprecation"] = node.deprecation
 
     for child in node.children:
         id_counter, id_counter = export_node(
@@ -150,7 +152,7 @@ def export_node(yaml_dict, node, id_counter, gen_layer_id_offset) -> Tuple[int, 
 
 
 def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
-    """Main export function used to genereate the output id vspec.
+    """Main export function used to generate the output id vspec.
 
     @param config: Command line arguments it was run with
     @param signal_root: root of the signal tree
@@ -173,7 +175,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
             other_path = config.validate_static_uid
         else:
             other_path = os.path.join(os.getcwd(), config.validate_static_uid)
-        # ToDo: how do we know here if SIGNAL or DATA_TYPE tree
+
         validation_tree = load_tree(
             other_path, ["."], tree_type=VSSTreeType.SIGNAL_TREE
         )

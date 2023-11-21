@@ -264,6 +264,19 @@ def test_name_datatype(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.mark.usefixtures("change_test_dir")
+def test_deprecation(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test_deprecation.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 1 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for record in caplog.records:
+        assert "DEPRECATION MSG CHANGE" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
 def test_description(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_description.vspec"
     clas = shlex.split(get_cla_test(test_file))

@@ -15,6 +15,7 @@ A.String:
   datatype: string
   type: sensor
   description: A.String is a leaf of A of datatype string
+  deprecation: This is test deprecation, let's say it used to be called Str instead String.
 A.StringArray:
   datatype: string[]
   type: sensor

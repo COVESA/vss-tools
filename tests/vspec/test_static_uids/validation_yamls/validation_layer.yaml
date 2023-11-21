@@ -57,6 +57,7 @@ A.Int16:
   unit: rpm
 A.String:
   datatype: string
+  deprecation: This is test deprecation, let's say it used to be called Str instead String.
   description: A.String is a leaf of A of datatype string
   staticUID: '0x5470FC63'
   type: sensor
