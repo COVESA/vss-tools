@@ -1,15 +1,15 @@
 A:
   description: A is a test node
-  staticUID: '0x00000263'
+  staticUID: '0x6865518C'
   type: branch
 A.B:
   description: B is a branch of A
-  staticUID: '0x00000763'
+  staticUID: '0x5EE0702C'
   type: branch
 A.B.Int32:
   datatype: int32
   description: A.B.Int32 is a leaf of A.B of datatype int32
-  staticUID: '0x00000863'
+  staticUID: '0x4322A0BF'
   type: sensor
   unit: rpm
 A.B.IsLeaf:
@@ -18,50 +18,49 @@ A.B.IsLeaf:
   - 'NO'
   datatype: string
   description: This node is a leaf of the tree and it has allowed values (aka an enum).
-  staticUID: '0x00000A63'
+  staticUID: '0x51887178'
   type: actuator
 A.B.Max:
   datatype: uint8
   description: A leaf that uses a maximum value.
   max: 100
-  staticUID: '0x00000C63'
+  staticUID: '0xACFF72AC'
   type: sensor
   unit: percent
 A.B.Min:
   datatype: uint8
   description: A leaf that uses a minimum value.
   min: 10
-  staticUID: '0x00000B63'
+  staticUID: '0xF66F948E'
   type: sensor
   unit: percent
-A.B.NewName:
+A.B.OldName:
   datatype: uint32
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
   fka:
-  - A.B.OldName
   - A.B.OlderName
-  staticUID: '0x00000963'
+  staticUID: '0xD4DFF5FD'
   type: sensor
   unit: mm
 A.Float:
   datatype: float
   description: A.Float is a leaf of A of datatype float
-  staticUID: '0x00000363'
+  staticUID: '0xC83DDDBF'
   type: actuator
   unit: mm
 A.Int16:
   datatype: int16
   description: A.Int16 is a leaf of A of datatype int16
-  staticUID: '0x00000463'
+  staticUID: '0xC50253A3'
   type: sensor
   unit: rpm
 A.String:
   datatype: string
   description: A.String is a leaf of A of datatype string
-  staticUID: '0x00000563'
+  staticUID: '0x215470FC'
   type: sensor
 A.StringArray:
   datatype: string[]
   description: A.StringArray is a leaf of A of datatype string array
-  staticUID: '0x00000663'
+  staticUID: '0x2115794B'
   type: sensor
