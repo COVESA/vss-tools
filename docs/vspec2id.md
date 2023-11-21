@@ -68,7 +68,7 @@ changes in the vehicle signal specification.
 The validation step compares your current changes of the vehicle signal specification to a previously generated file,
 here we named it `../output_id_v1.vspec`. There are two types of changes `BREAKING CHANGES` and `NON-BREAKING CHANGES`.
 A `BREAKING CHANGE` will generate a new hash for a node. A `NON-BREAKING CHANGE` will throw a warning, but the static
-ID will remain the same. A `BREAKING CHANGE` is triggered when you change name/path, unit, datatype, enum values
+ID will remain the same. A `BREAKING CHANGE` is triggered when you change name/path, unit, type, datatype, enum values
 (allowed), or minimum/maximum. These attributes are part of the hash so they a `BREAKING CHANGE` automatically
 generates a new hash for a static UID.
 In case you want to keep the same ID but rename a node, this we call a `SEMANTIC CHANGE`, you can add an attribute
