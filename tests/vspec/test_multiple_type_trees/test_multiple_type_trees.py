@@ -22,7 +22,7 @@ def test_error(change_test_dir):
     """
     Verify that you cannot have multiple type trees, ie. both TypesA and TypesB, there must be a single root
     """
-    test_str = "../../../vspec2x.py --format csv -vt struct1.vspec -vt struct2.vspec -u ../test_units.yaml " \
+    test_str = "../../../vspec2csv.py -vt struct1.vspec -vt struct2.vspec -u ../test_units.yaml " \
                "test.vspec out.csv 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

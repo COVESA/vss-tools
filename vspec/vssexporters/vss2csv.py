@@ -15,19 +15,11 @@ import argparse
 import logging
 from vspec.model.vsstree import VSSNode
 from anytree import PreOrderIter  # type: ignore[import]
-from vspec.loggingconfig import initLogging
 from typing import AnyStr
+from typing import Optional
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
-
-def feature_supported(feature_name: str):
-    """Return true for supported arguments/features"""
-    if feature_name in ['no_expand']:
-        return True
-    return False
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    parser.description = "The csv exporter does not support any additional arguments."
 
 # Write the header line
 
@@ -68,23 +60,23 @@ def print_csv_content(file, tree: VSSNode, uuid, include_instance_column: bool):
         file.write(format_csv_line(arg_list))
 
 
-def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    logging.info("Generating CSV output...")
+class Vss2Csv(Vss2X):
 
-    # generic entry should be written when both data types and signals are being written to the same file
-    generic_entry = data_type_root is not None and config.types_output_file is None
-    with open(config.output_file, 'w') as f:
-        signal_entry_type = "Node" if generic_entry else "Signal"
-        print_csv_header(f, print_uuid, signal_entry_type, config.no_expand)
-        print_csv_content(f, signal_root, print_uuid, config.no_expand)
-        if data_type_root is not None and generic_entry is True:
-            print_csv_content(f, data_type_root, print_uuid, config.no_expand)
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
+        logging.info("Generating CSV output...")
 
-    if data_type_root is not None and generic_entry is False:
-        with open(config.types_output_file, 'w') as f:
-            print_csv_header(f, print_uuid, "Node", config.no_expand)
-            print_csv_content(f, data_type_root, print_uuid, config.no_expand)
+        # generic entry should be written when both data types and signals are being written to the same file
+        generic_entry = data_type_root is not None and config.types_output_file is None
+        include_instance_column = not vspec2vss_config.expand_model
+        with open(config.output_file, 'w') as f:
+            signal_entry_type = "Node" if generic_entry else "Signal"
+            print_csv_header(f, vspec2vss_config.generate_uuid, signal_entry_type, include_instance_column)
+            print_csv_content(f, signal_root, vspec2vss_config.generate_uuid, include_instance_column)
+            if data_type_root is not None and generic_entry is True:
+                print_csv_content(f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column)
 
-
-if __name__ == "__main__":
-    initLogging()
+        if data_type_root is not None and generic_entry is False:
+            with open(config.types_output_file, 'w') as f:
+                print_csv_header(f, vspec2vss_config.generate_uuid, "Node", include_instance_column)
+                print_csv_content(f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column)

@@ -13,7 +13,12 @@
 #
 
 import sys
-import vspec2x
+from vspec.vspec2x import Vspec2X
+from vspec.vspec2vss_config import Vspec2VssConfig
+from vspec.vssexporters.vss2graphql import Vss2Graphql
 
 if __name__ == "__main__":
-    vspec2x.main(["--format", "graphql"]+sys.argv[1:])
+    vspec2vss_config = Vspec2VssConfig()
+    vss2graphql = Vss2Graphql(vspec2vss_config)
+    vspec2x = Vspec2X(vss2graphql, vspec2vss_config)
+    vspec2x.main(sys.argv[1:])

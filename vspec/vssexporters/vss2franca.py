@@ -12,18 +12,12 @@
 
 
 import argparse
+from typing import Optional
 from vspec.model.vsstree import VSSNode
 from anytree import PreOrderIter  # type: ignore[import]
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
-
-def feature_supported(feature_name: str):
-    """Return true for supported optional arguments/features"""
-    return False
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    # no additional output for Franca at this moment
-    parser.add_argument('-v', metavar='version', help=" Add version information to franca file.")
 
 # Write the header line
 
@@ -82,10 +76,23 @@ def print_franca_content(file, tree, uuid):
     file.write(f"{output}")
 
 
-def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    print("Generating Franca output...")
-    outfile = open(config.output_file, 'w')
-    print_franca_header(outfile, config.v)
-    print_franca_content(outfile, root, print_uuid)
-    outfile.write("\n]")
-    outfile.close()
+class Vss2Franca(Vss2X):
+
+    def __init__(self, vspec2vss_config: Vspec2VssConfig):
+        vspec2vss_config.no_expand_option_supported = False
+        vspec2vss_config.type_tree_supported = False
+
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        # Renamed from -v to --franca-vss-version to avoid conflict when using
+        # -vt (Otherwise -vt would be interpreted as "-v t")
+        parser.add_argument('--franca-vss-version', metavar='franca_vss_version',
+                            help=" Add version information to franca file.")
+
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
+        print("Generating Franca output...")
+        outfile = open(config.output_file, 'w')
+        print_franca_header(outfile, config.franca_vss_version)
+        print_franca_content(outfile, signal_root, vspec2vss_config.generate_uuid)
+        outfile.write("\n]")
+        outfile.close()

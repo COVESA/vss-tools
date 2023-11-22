@@ -1,58 +1,55 @@
-# vspec2x converters
+# Vspec2x-based generators
 
-vspec2x is a family of VSS converters that share a common codebase.
+[vspec2x](../vspec/vspec2x.py) is a generator framework that offers functionality to parse one or more vspec files and
+transform that to an internal VSS model, which can be used as input for generators.
 
-As a consequence it provides general commandline parameters guiding the parsing of vspec, as well as parameters specific to specific output formats.
+Vspec2x-based generators have a number of common arguments.
+It is partially configurable which arguments that shall be available for each generator,
+so all arguments described in this documents are not available for all generators.
+In addition to this generator-specific arguments may be supported
 
-You can get a description of supported commandline parameters by running `vspec2x.py --help`.
-
-This documentation will give some examples and elaborate more on specific parameters.
+You can get a description of supported commandline arguments by running `<toolname> --help`, e.g. `vss2json.py --help`.
+In this document `vspec2json.py` is generally used as example, but the same syntax is typically available also for other tools.
 
 The supported arguments might look like this
 
- ```
-usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--uuid] [--no_expand] [-o overlays] [-u unit_file] [-q quantity_file]
-                  [-vt vspec_types_file] [-ot <types_output_file>]
-                  [--json-all-extended-attributes] [--json-pretty]
-                  [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
-                  <vspec_file> <output_file>
+```
+$ vspec2json.py --help
+usage: vspec2json.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--uuid] [--no-expand]
+                     [-o overlays] [-q quantity_file] [-u unit_file] [-vt vspec_types_file]
+                     [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty]
+                     <vspec_file> <output_file>
 ```
 
 An example command line to convert the VSS standard catalog into a JSON file is
 
 ```
-% python vspec2x.py --format json  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.json
-Output to json format
-Known extended attributes:
-Reading unit definitions from ../spec/units.yaml
-Loading vspec from ../spec/VehicleSignalSpecification.vspec...
-Calling exporter...
-Generating JSON output...
-Serializing compact JSON...
-All done.
+$ vspec2json.py -I ../spec -u ../vehicle_signal_specification/spec/units.yaml ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec vss.json
+INFO     Known extended attributes:
+INFO     Added 29 quantities from /home/erik/vehicle_signal_specification/spec/quantities.yaml
+INFO     Added 61 units from ../vehicle_signal_specification/spec/units.yaml
+INFO     Loading vspec from ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec...
+INFO     Calling exporter...
+INFO     Generating JSON output...
+INFO     Serializing compact JSON...
+INFO     All done.
+
 ```
 
-This assumes you checked out the [COVESA Vehicle Signal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools including vspec2x as a submodule.
+This assumes you checked out the [COVESA Vehicle Signal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools as a submodule.
 
 The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories. The `-u` parameter specifies the unit file(s) to use. The `-q` parameter specifies quantity file(s) to use.
 
 The first positional argument - `../spec/VehicleSignalSpecification.vspec` in the example  - gives the (root) `.vspec` file to be converted. The second positional argument  - `vss.json` in the example - is the output file.
 
-The `--format` parameter determines the output format, `JSON` in our example. If format is omitted `vspec2x` tries to guess the correct output format based on the extension of the second positional argument. Alternatively vss-tools supports *shortcuts* for community supported exporters, e.g. `vspec2json.py` for generating JSON. The shortcuts really only add the `--format` parameter for you, so
-
-```
-python vspec2json.py  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.json
-```
-
-is equivalent to the example above.
+It is the file `vspec2json.py` that specified which generator to use, i.e. which output to generate.
 
 ## General parameters
 
 ### --abort-on-unknown-attribute
 Terminates parsing when an unknown attribute is encountered, that is an attribute that is not defined in the [VSS standard catalogue](https://covesa.github.io/vehicle_signal_specification/rule_set/), and not whitelisted using the extended attribute parameter `-e` (see below).
 
-*Note*: Here an *attribute* refers to VSS signal metadata sich as "datatype", "min", "max", ... and not to the VSS signal type attribute
+*Note*: Here an *attribute* refers to VSS signal metadata such as "datatype", "min", "max", ... and not to the VSS signal type attribute
 
 ###  --abort-on-name-style
 Terminates parsing, when the name of a signal does not follow [VSS recomendations](https://covesa.github.io/vehicle_signal_specification/rule_set/basics/#naming-conventions).
@@ -214,7 +211,7 @@ When deciding which quantities to use the tooling use the following logic:
 As of today use of quantity files is optional, and tooling will only give a warning if a unit use a quantity not specified in a quantity file.
 
 ## Handling of overlays and extensions
-`vspec2x` allows composition of several overlays on top of a base vspec, to extend the model or overwrite certain metadata. Check [VSS documentation](https://covesa.github.io/vehicle_signal_specification/introduction/) on the concept of overlays.
+The generator framework allows composition of several overlays on top of a base vspec, to extend the model or overwrite certain metadata. Check [VSS documentation](https://covesa.github.io/vehicle_signal_specification/introduction/) on the concept of overlays.
 
 Overlays are in general injected before the VSS tree is expanded. Expansion is the process where branches with instances are transformed into multiple branches.
 An example is the `Vehicle.Cabin.Door` branch which during expansion get transformed into `Vehicle.Cabin.Door.Row1.Left`, `Vehicle.Cabin.Door.Row1.Right`, `Vehicle.Cabin.Door.Row2.Left`and `Vehicle.Cabin.Door.Row2.Right`.
@@ -357,23 +354,15 @@ Will also generate non-payload const attributes such as unit/datatype. Default i
 Add additional fields to the nodes in the graphql schema. use: <field_name> <description>
 
 
-## Writing your own exporter
-This is easy. Put the code in file in the [vssexporters directory](../vspec/vssexporters/).
+## Writing your own generator
 
-Mandatory functions to be implemented are
-```python
-def add_arguments(parser: argparse.ArgumentParser):
-```
+This is done by creating a subclass of `class Vss2X`, see [vss2x.py](../vspec/vss2x.py).
+You need at least to implement the abstract method `generate`.
+In addition you may want to customize which generic arguments that shall be used and add
+generator specific arguments, if needed.
 
-and
 
-```python
-def export(config: argparse.Namespace, root: VSSNode):
-```
-See one of the existing exporters for an example.
+A generic implementation example is available as a [test case](../tests/generators).
 
-Add your exporter module to the `Exporter` class in [vspec2x.py](../vspec2x.py).
-
-## Design Decisions and Architecture
 
 Please see [vspec2x architecture document](vspec2x_arch.md).

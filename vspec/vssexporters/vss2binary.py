@@ -14,15 +14,13 @@ import argparse
 import logging
 import ctypes
 import os.path
+from typing import Optional
 from vspec.model.vsstree import VSSNode, VSSType
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
 out_file = ""
 _cbinary = None
-
-
-def feature_supported(feature_name: str):
-    """Return true for supported optional arguments/features"""
-    return False
 
 
 def createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, allowed,
@@ -52,10 +50,6 @@ def intToHexChar(hexInt):
         return chr(hexInt + ord('0'))
     else:
         return chr(hexInt - 10 + ord('A'))
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    parser.description = "The binary exporter does not support any additional arguments."
 
 
 def export_node(node, generate_uuid, out_file):
@@ -124,23 +118,30 @@ def export_node(node, generate_uuid, out_file):
         export_node(child, generate_uuid, out_file)
 
 
-def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    global _cbinary
-    dllName = "../../binary/binarytool.so"
-    dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
-    if not os.path.isfile(dllAbsPath):
-        logging.error("The required library binarytool.so is not available, exiting!")
-        logging.info("You must build the library, "
-                     "see https://github.com/COVESA/vss-tools/blob/master/binary/README.md!")
-        return
-    _cbinary = ctypes.CDLL(dllAbsPath)
+class Vss2Binary(Vss2X):
 
-    _cbinary.createBinaryCnode.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
-                                           ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
-                                           ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
-                                           ctypes.c_int)
+    def __init__(self, vspec2vss_config: Vspec2VssConfig):
+        vspec2vss_config.type_tree_supported = False
+        vspec2vss_config.no_expand_option_supported = False
 
-    logging.info("Generating binary output...")
-    out_file = config.output_file
-    export_node(root, print_uuid, out_file)
-    logging.info("Binary output generated in " + out_file)
+    def generate(self, config: argparse.Namespace, root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
+        global _cbinary
+        dllName = "../../binary/binarytool.so"
+        dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
+        if not os.path.isfile(dllAbsPath):
+            logging.error("The required library binarytool.so is not available, exiting!")
+            logging.info("You must build the library, "
+                         "see https://github.com/COVESA/vss-tools/blob/master/binary/README.md!")
+            return
+        _cbinary = ctypes.CDLL(dllAbsPath)
+
+        _cbinary.createBinaryCnode.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
+                                               ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
+                                               ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
+                                               ctypes.c_int)
+
+        logging.info("Generating binary output...")
+        out_file = config.output_file
+        export_node(root, vspec2vss_config.generate_uuid, out_file)
+        logging.info("Binary output generated in " + out_file)

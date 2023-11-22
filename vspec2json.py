@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2016 Contributors to COVESA
+# Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License 2.0 which is available at
@@ -13,7 +13,12 @@
 #
 
 import sys
-import vspec2x
+from vspec.vspec2x import Vspec2X
+from vspec.vspec2vss_config import Vspec2VssConfig
+from vspec.vssexporters.vss2json import Vss2Json
 
 if __name__ == "__main__":
-    vspec2x.main(["--format", "json"]+sys.argv[1:])
+    vspec2vss_config = Vspec2VssConfig()
+    vss2json = Vss2Json()
+    vspec2x = Vspec2X(vss2json, vspec2vss_config)
+    vspec2x.main(sys.argv[1:])

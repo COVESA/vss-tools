@@ -15,21 +15,11 @@
 import argparse
 import keyword
 import logging
+from typing import Optional
 
-from vspec.loggingconfig import initLogging
 from vspec.model.vsstree import VSSNode, VSSType
-
-
-def feature_supported(feature_name: str):
-    """Return true for supported optional arguments/features"""
-    return False
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    parser.description = "The DDS-IDL exporter"
-    parser.add_argument('--all-idl-features', action='store_true',
-                        help='Generate all features based on DDS IDL 4.2 specification')
-
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
 c_keywords = [
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float",
@@ -278,16 +268,24 @@ def export_idl(file, root, generate_uuids=True, generate_all_idl_features=False)
     logging.info("IDL file generated at location : " + file.name)
 
 
-def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    logging.info("Generating DDS-IDL output...")
+class Vss2DdsIdl(Vss2X):
 
-    if data_type_root is not None:
-        exporter = StructExporter()
-        with open(config.output_file, 'w') as idl_out:
-            idl_out.write(exporter.export(data_type_root))
+    def __init__(self, vspec2vss_config: Vspec2VssConfig):
+        vspec2vss_config.no_expand_option_supported = False
 
-    with open(config.output_file, 'a' if data_type_root is not None else 'w') as idl_out:
-        export_idl(idl_out, signal_root, print_uuid, config.all_idl_features)
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        parser.description = "The DDS-IDL exporter"
+        parser.add_argument('--all-idl-features', action='store_true',
+                            help='Generate all features based on DDS IDL 4.2 specification')
 
-    if __name__ == "__main__":
-        initLogging()
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
+        logging.info("Generating DDS-IDL output...")
+
+        if data_type_root is not None:
+            exporter = StructExporter()
+            with open(config.output_file, 'w') as idl_out:
+                idl_out.write(exporter.export(data_type_root))
+
+        with open(config.output_file, 'a' if data_type_root is not None else 'w') as idl_out:
+            export_idl(idl_out, signal_root, vspec2vss_config.generate_uuid, config.all_idl_features)

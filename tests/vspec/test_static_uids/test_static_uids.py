@@ -15,11 +15,11 @@ import shlex
 from typing import Dict
 
 import pytest
+import vspec
+import vspec.vssexporters.vss2id as vss2id
+import vspec2id
 import yaml
 
-import vspec
-import vspec2x
-import vspec.vssexporters.vss2id as vss2id
 from vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
 from vspec.model.vsstree import VSSNode
 from vspec.utils.idgen_utils import get_all_keys_values
@@ -212,7 +212,7 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
 def test_full_script(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 0
 
@@ -227,7 +227,7 @@ def test_full_script(caplog: pytest.LogCaptureFixture):
 )
 def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str):
     clas = shlex.split(get_cla_validation(validation_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
@@ -240,7 +240,8 @@ def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str):
 def test_vss_path(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_vss_path.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
+
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
@@ -252,7 +253,7 @@ def test_vss_path(caplog: pytest.LogCaptureFixture):
 def test_unit(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_unit.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 2 and all(
         log.levelname == "WARNING" for log in caplog.records
@@ -265,7 +266,7 @@ def test_unit(caplog: pytest.LogCaptureFixture):
 def test_datatype(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_datatype.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
@@ -278,7 +279,7 @@ def test_datatype(caplog: pytest.LogCaptureFixture):
 def test_name_datatype(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_name_datatype.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 2 and all(
         log.levelname == "WARNING" for log in caplog.records
@@ -294,7 +295,7 @@ def test_name_datatype(caplog: pytest.LogCaptureFixture):
 def test_deprecation(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_deprecation.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
@@ -307,7 +308,7 @@ def test_deprecation(caplog: pytest.LogCaptureFixture):
 def test_description(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_description.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
@@ -320,7 +321,7 @@ def test_description(caplog: pytest.LogCaptureFixture):
 def test_added_attribute(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_added_attribute.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
@@ -333,7 +334,7 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture):
 def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_deleted_attribute.vspec"
     clas = shlex.split(get_cla_test(test_file))
-    vspec2x.main(["--format", "idgen"] + clas[1:])
+    vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
