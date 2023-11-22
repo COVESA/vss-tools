@@ -14,6 +14,9 @@ from vspec.utils.stringstyle import camel_back
 from vspec.model.constants import VSSDataType
 from vspec import VSpecError
 from typing import Dict
+from typing import Optional
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
 from graphql import (
     GraphQLSchema,
@@ -55,19 +58,6 @@ GRAPHQL_TYPE_MAPPING = {
     VSSDataType.STRING: GraphQLString,
     VSSDataType.STRING_ARRAY: GraphQLList(GraphQLString),
 }
-
-
-def feature_supported(feature_name: str):
-    """Return true for supported optional arguments/features"""
-    return False
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    # no additional output for graphql at this moment
-    parser.description = "The graphql exporter never generates uuid, i.e. the --uuid option has no effect."
-    parser.add_argument('--gqlfield', action='append', nargs=2,
-                        help=" Add additional fields to the nodes in the graphql schema. "
-                             "use: <field_name> <description>")
 
 
 def get_schema_from_tree(root_node: VSSNode, additional_leaf_fields: list) -> str:
@@ -132,9 +122,22 @@ def field(node: VSSNode, description_prefix="", type=GraphQLString) -> GraphQLFi
     )
 
 
-def export(config: argparse.Namespace, root: VSSNode, print_uuid):
-    print("Generating graphql output...")
-    outfile = open(config.output_file, 'w')
-    outfile.write(get_schema_from_tree(root, config.gqlfield))
-    outfile.write("\n")
-    outfile.close()
+class Vss2Graphql(Vss2X):
+
+    def __init__(self, vspec2vss_config: Vspec2VssConfig):
+        vspec2vss_config.no_expand_option_supported = False
+        vspec2vss_config.type_tree_supported = False
+        vspec2vss_config.uuid_supported = False
+
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        parser.add_argument('--gqlfield', action='append', nargs=2,
+                            help=" Add additional fields to the nodes in the graphql schema. "
+                                 "use: <field_name> <description>")
+
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
+        print("Generating graphql output...")
+        outfile = open(config.output_file, 'w')
+        outfile.write(get_schema_from_tree(signal_root, config.gqlfield))
+        outfile.write("\n")
+        outfile.close()

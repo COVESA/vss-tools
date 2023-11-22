@@ -33,21 +33,20 @@ def run_exporter(exporter, argument, compare_suffix):
 
 def test_uuid(change_test_dir):
 
-    # Run all "supported" exporters, i.e. not those in contrib
+    # Run all "supported" exporters that supports uuid, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on
     # target
-    exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
+    exporters = ["json", "ddsidl", "csv", "yaml", "franca"]
     for exporter in exporters:
         run_exporter(exporter, "--uuid", "uuid")
-        # Same behavior expected if no argument
         run_exporter(exporter, "", "no_uuid")
 
 
-def run_obsolete_arg_test(argument, obsolete_arg_expected: bool):
-    test_str = "../../../vspec2json.py " + argument + " -u ../test_units.yaml test.vspec out.json 1> out.txt 2>&1"
+def run_error_test(tool, argument, arg_error_expected: bool):
+    test_str = "../../../" + tool + " " + argument + " -u ../test_units.yaml test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
-    if obsolete_arg_expected:
+    if arg_error_expected:
         assert os.WEXITSTATUS(result) != 0
     else:
         assert os.WEXITSTATUS(result) == 0
@@ -56,13 +55,23 @@ def run_obsolete_arg_test(argument, obsolete_arg_expected: bool):
     os.system("cat out.txt")
     os.system("rm -f out.json out.txt")
     assert os.WIFEXITED(result)
-    if obsolete_arg_expected:
+    if arg_error_expected:
         assert os.WEXITSTATUS(result) == 0
     else:
         assert os.WEXITSTATUS(result) != 0
 
 
 def test_obsolete_arg(change_test_dir):
-    run_obsolete_arg_test("", False)
-    run_obsolete_arg_test("--uuid", False)
-    run_obsolete_arg_test("--no-uuid", True)
+    """
+    Check that obsolete argument --no-uuid results in error
+    """
+    run_error_test("vspec2json.py", "", False)
+    run_error_test("vspec2json.py", "--uuid", False)
+    run_error_test("vspec2json.py", "--no-uuid", True)
+
+
+def test_uuid_unsupported(change_test_dir):
+    """
+    Test that we get an error if using --uuid for tools not supporting it
+    """
+    run_error_test("vspec2graphql.py", "--uuid", True)
