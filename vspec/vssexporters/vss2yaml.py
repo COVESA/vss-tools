@@ -17,22 +17,10 @@ import argparse
 from vspec.model.vsstree import VSSNode
 import yaml
 import logging
-from vspec.loggingconfig import initLogging
 from typing import Dict, Any
-
-
-def feature_supported(feature_name: str):
-    """Return true for supported arguments/features"""
-    if feature_name in ['no_expand']:
-        return True
-    return False
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument('--yaml-all-extended-attributes', action='store_true',
-                        help=("Generate all extended attributes found in the model "
-                              "(default is generating only those given by the "
-                              "-e/--extended-attributes parameter)."))
+from typing import Optional
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
 
 def export_node(yaml_dict, node, config, print_uuid):
@@ -106,23 +94,29 @@ class NoAliasDumper(yaml.SafeDumper):
             super().write_line_break()
 
 
-def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    logging.info("Generating YAML output...")
+class Vss2Yaml(Vss2X):
 
-    signals_yaml_dict: Dict[str, Any] = {}
-    export_node(signals_yaml_dict, signal_root, config, print_uuid)
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument('--yaml-all-extended-attributes', action='store_true',
+                            help=("Generate all extended attributes found in the model "
+                                  "(default is generating only those given by the "
+                                  "-e/--extended-attributes parameter)."))
 
-    if data_type_root is not None:
-        data_types_yaml_dict: Dict[str, Any] = {}
-        export_node(data_types_yaml_dict, data_type_root, config, print_uuid)
-        if config.types_output_file is None:
-            logging.info("Adding custom data types to signal dictionary")
-            signals_yaml_dict["ComplexDataTypes"] = data_types_yaml_dict
-        else:
-            export_yaml(config.types_output_file, data_types_yaml_dict)
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
 
-    export_yaml(config.output_file, signals_yaml_dict)
+        logging.info("Generating YAML output...")
 
+        signals_yaml_dict: Dict[str, Any] = {}
+        export_node(signals_yaml_dict, signal_root, config, vspec2vss_config.generate_uuid)
 
-if __name__ == "__main__":
-    initLogging()
+        if data_type_root is not None:
+            data_types_yaml_dict: Dict[str, Any] = {}
+            export_node(data_types_yaml_dict, data_type_root, config, vspec2vss_config.generate_uuid)
+            if config.types_output_file is None:
+                logging.info("Adding custom data types to signal dictionary")
+                signals_yaml_dict["ComplexDataTypes"] = data_types_yaml_dict
+            else:
+                export_yaml(config.types_output_file, data_types_yaml_dict)
+
+        export_yaml(config.output_file, signals_yaml_dict)

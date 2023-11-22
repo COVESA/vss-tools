@@ -17,10 +17,12 @@ import os
 import sys
 from pathlib import Path
 from typing import Set
+from typing import Optional
 
 from anytree import PreOrderIter  # type: ignore[import]
-from vspec.loggingconfig import initLogging
 from vspec.model.vsstree import VSSNode
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
 # Add path to main py vspec  parser
 myDir = os.path.dirname(os.path.realpath(__file__))
@@ -36,15 +38,6 @@ mapped = {
     "int16": "int32",
     "boolean": "bool"
 }
-
-
-def feature_supported(feature_name: str):
-    """Return true for supported optional arguments/features"""
-    return False
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    parser.description = "The protobuf exporter does not support any additional arguments."
 
 
 class ProtoExporter(object):
@@ -148,21 +141,31 @@ def print_message_body(nodes, proto_file):
         proto_file.write(f"  {data_type} {node.name} = {i};" + "\n")
 
 
-def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    logging.info("Generating protobuf output...")
-    if data_type_root is not None:
-        if config.types_output_file is not None:
-            fp = Path(config.types_output_file)
-            exporter_path = Path(os.path.dirname(fp))
-        else:
-            exporter_path = Path(Path.cwd())
-        logging.debug(f"Will use {exporter_path} for type exports")
-        exporter = ProtoExporter(exporter_path)
-        exporter.traverse_data_type_tree(data_type_root)
+class Vss2Protobuf(Vss2X):
 
-    with open(config.output_file, 'w') as f:
-        traverse_signal_tree(signal_root, f)
+    def __init__(self, vspec2vss_config: Vspec2VssConfig):
+        vspec2vss_config.no_expand_option_supported = False
+        vspec2vss_config.uuid_supported = False
 
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument('--json-all-extended-attributes', action='store_true',
+                            help="Generate all extended attributes found in the model "
+                                 "(default is generating only those given by the -e/--extended-attributes parameter).")
+        parser.add_argument('--json-pretty', action='store_true',
+                            help=" Pretty print JSON output.")
 
-if __name__ == "__main__":
-    initLogging()
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
+        logging.info("Generating protobuf output...")
+        if data_type_root is not None:
+            if config.types_output_file is not None:
+                fp = Path(config.types_output_file)
+                exporter_path = Path(os.path.dirname(fp))
+            else:
+                exporter_path = Path(Path.cwd())
+            logging.debug(f"Will use {exporter_path} for type exports")
+            exporter = ProtoExporter(exporter_path)
+            exporter.traverse_data_type_tree(data_type_root)
+
+        with open(config.output_file, 'w') as f:
+            traverse_signal_tree(signal_root, f)

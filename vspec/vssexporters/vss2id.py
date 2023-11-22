@@ -14,43 +14,24 @@ import argparse
 import logging
 import os
 import sys
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import yaml
 
 from vspec import load_tree
-from vspec.loggingconfig import initLogging
 from vspec.model.constants import VSSTreeType
 from vspec.model.vsstree import VSSNode
 from vspec.utils import vss2id_val
 from vspec.utils.idgen_utils import (fnv1_32_hash, get_all_keys_values,
                                      get_node_identifier_bytes)
-
-
-def add_arguments(parser: argparse.ArgumentParser) -> None:
-    """Adds command line arguments to a pre-existing argument parser
-
-    @param parser: the pre-existing argument parser
-    """
-    parser.add_argument(
-        "--validate-static-uid", type=str, default="", help="Path to validation file."
-    )
-    parser.add_argument(
-        "--only-validate-no-export",
-        action="store_true",
-        default=False,
-        help="For pytests and pipelines you can skip the export of the vspec file.",
-    )
-    parser.add_argument(
-        "--strict-mode",
-        action="store_true",
-        help="Strict mode means that the generation of static UIDs is case-sensitive.",
-    )
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
 
 def generate_split_id(
     node: VSSNode, id_counter: int, strict_mode: bool
 ) -> Tuple[str, int]:
+
     """Generates static UIDs using 4-byte FNV-1 hash.
 
     @param node: VSSNode that we want to generate a static UID for
@@ -132,40 +113,60 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
     return id_counter, id_counter
 
 
-def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
-    """Main export function used to generate the output id vspec.
+class Vss2Id(Vss2X):
 
-    @param config: Command line arguments it was run with
-    @param signal_root: root of the signal tree
-    @param print_uuid: Not used here but needed by main script
-    """
-    logging.info("Generating YAML output...")
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        """Adds command line arguments to a pre-existing argument parser
 
-    id_counter: int = 0
-    signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
-    id_counter, _ = export_node(
-        signals_yaml_dict, signal_root, id_counter, config.strict_mode
-    )
-
-    if config.validate_static_uid:
-        logging.info(
-            f"Now validating nodes, static UIDs, types, units and description with "
-            f"file '{config.validate_static_uid}'"
+        @param parser: the pre-existing argument parser
+        """
+        parser.add_argument(
+            "--validate-static-uid", type=str, default="", help="Path to validation file."
         )
-        if os.path.isabs(config.validate_static_uid):
-            other_path = config.validate_static_uid
-        else:
-            other_path = os.path.join(os.getcwd(), config.validate_static_uid)
-
-        validation_tree = load_tree(
-            other_path, ["."], tree_type=VSSTreeType.SIGNAL_TREE
+        parser.add_argument(
+            "--only-validate-no-export",
+            action="store_true",
+            default=False,
+            help="For pytests and pipelines you can skip the export of the vspec file.",
         )
-        vss2id_val.validate_static_uids(signals_yaml_dict, validation_tree, config)
+        parser.add_argument(
+            "--strict-mode",
+            action="store_true",
+            help="Strict mode means that the generation of static UIDs is case-sensitive.",
+        )
 
-    if not config.only_validate_no_export:
-        with open(config.output_file, "w") as f:
-            yaml.dump(signals_yaml_dict, f)
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
 
+        """Main export function used to generate the output id vspec.
 
-if __name__ == "__main__":
-    initLogging()
+        @param config: Command line arguments it was run with
+        @param signal_root: root of the signal tree
+        @param print_uuid: Not used here but needed by main script
+        """
+        logging.info("Generating YAML output...")
+
+        id_counter: int = 0
+        signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
+        id_counter, _ = export_node(
+            signals_yaml_dict, signal_root, id_counter, config.strict_mode
+        )
+
+        if config.validate_static_uid:
+            logging.info(
+                f"Now validating nodes, static UIDs, types, units and description with "
+                f"file '{config.validate_static_uid}'"
+            )
+            if os.path.isabs(config.validate_static_uid):
+                other_path = config.validate_static_uid
+            else:
+                other_path = os.path.join(os.getcwd(), config.validate_static_uid)
+
+            validation_tree = load_tree(
+                other_path, ["."], tree_type=VSSTreeType.SIGNAL_TREE
+            )
+            vss2id_val.validate_static_uids(signals_yaml_dict, validation_tree, config)
+
+        if not config.only_validate_no_export:
+            with open(config.output_file, "w") as f:
+                yaml.dump(signals_yaml_dict, f)

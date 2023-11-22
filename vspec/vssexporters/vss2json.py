@@ -15,22 +15,9 @@ import argparse
 import json
 import logging
 from typing import Dict, Any
-from vspec.loggingconfig import initLogging
-
-
-def feature_supported(feature_name: str):
-    """Return true for supported arguments/features"""
-    if feature_name in ['no_expand']:
-        return True
-    return False
-
-
-def add_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument('--json-all-extended-attributes', action='store_true',
-                        help="Generate all extended attributes found in the model "
-                             "(default is generating only those given by the -e/--extended-attributes parameter).")
-    parser.add_argument('--json-pretty', action='store_true',
-                        help=" Pretty print JSON output.")
+from typing import Optional
+from vspec.vss2x import Vss2X
+from vspec.vspec2vss_config import Vspec2VssConfig
 
 
 def export_node(json_dict, node, config, print_uuid):
@@ -93,31 +80,37 @@ def export_node(json_dict, node, config, print_uuid):
                     child, config, print_uuid)
 
 
-def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid, data_type_root: VSSNode):
-    logging.info("Generating JSON output...")
-    indent = None
-    if config.json_pretty:
-        logging.info("Serializing pretty JSON...")
-        indent = 2
-    else:
-        logging.info("Serializing compact JSON...")
+class Vss2Json(Vss2X):
 
-    signals_json_dict: Dict[str, Any] = {}
-    export_node(signals_json_dict, signal_root, config, print_uuid)
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument('--json-all-extended-attributes', action='store_true',
+                            help="Generate all extended attributes found in the model "
+                                 "(default is generating only those given by the -e/--extended-attributes parameter).")
+        parser.add_argument('--json-pretty', action='store_true',
+                            help=" Pretty print JSON output.")
 
-    if data_type_root is not None:
-        data_types_json_dict: Dict[str, Any] = {}
-        export_node(data_types_json_dict, data_type_root, config, print_uuid)
-        if config.types_output_file is None:
-            logging.info("Adding custom data types to signal dictionary")
-            signals_json_dict["ComplexDataTypes"] = data_types_json_dict
+    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
+                 data_type_root: Optional[VSSNode] = None) -> None:
+        logging.info("Generating JSON output...")
+        indent = None
+        if config.json_pretty:
+            logging.info("Serializing pretty JSON...")
+            indent = 2
         else:
-            with open(config.types_output_file, 'w') as f:
-                json.dump(data_types_json_dict, f, indent=indent, sort_keys=True)
+            logging.info("Serializing compact JSON...")
 
-    with open(config.output_file, 'w') as f:
-        json.dump(signals_json_dict, f, indent=indent, sort_keys=True)
+        signals_json_dict: Dict[str, Any] = {}
+        export_node(signals_json_dict, signal_root, config, vspec2vss_config.generate_uuid)
 
+        if data_type_root is not None:
+            data_types_json_dict: Dict[str, Any] = {}
+            export_node(data_types_json_dict, data_type_root, config, vspec2vss_config.generate_uuid)
+            if config.types_output_file is None:
+                logging.info("Adding custom data types to signal dictionary")
+                signals_json_dict["ComplexDataTypes"] = data_types_json_dict
+            else:
+                with open(config.types_output_file, 'w') as f:
+                    json.dump(data_types_json_dict, f, indent=indent, sort_keys=True)
 
-if __name__ == "__main__":
-    initLogging()
+        with open(config.output_file, 'w') as f:
+            json.dump(signals_json_dict, f, indent=indent, sort_keys=True)

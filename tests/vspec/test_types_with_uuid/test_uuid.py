@@ -33,10 +33,10 @@ def run_exporter(exporter, argument, compare_suffix):
 
 def test_uuid(change_test_dir):
 
-    # Run all "supported" exporters, i.e. not those in contrib
+    # Run all "supported" exporters that supports uuid, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on
     # target
-    exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
+    exporters = ["json", "ddsidl", "csv", "yaml", "franca"]
     for exporter in exporters:
         run_exporter(exporter, "--uuid", "uuid")
         run_exporter(exporter, "--no-uuid", "no_uuid")

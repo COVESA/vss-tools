@@ -29,7 +29,8 @@ def test_overlay_struct_array(format, signals_out, expected_signal, change_test_
     """
     Test that data types provided in vspec format are converted correctly
     """
-    args = ["../../../vspec2x.py", "--no-uuid", "--format", format]
+
+    args = ["../../../vspec2" + format + ".py --no-uuid"]
     if format == 'json':
         args.append('--json-pretty')
     args.extend(["-vt", "struct1.vspec", "-u", "../test_units.yaml",

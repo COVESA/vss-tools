@@ -35,7 +35,7 @@ setup(
     url='https://github.com/COVESA/vss-tools',
     license='Mozilla Public License 2.0',
     packages=find_packages(exclude=('tests', 'contrib')),
-    scripts=['vspec2csv.py', 'vspec2x.py', 'vspec2franca.py', 'vspec2json.py', 'vspec2jsonschema.py',
+    scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2json.py', 'vspec2jsonschema.py',
              'vspec2ddsidl.py', 'vspec2yaml.py', 'vspec2protobuf.py', 'vspec2graphql.py',
              'vspec2id.py'],
     python_requires='>=3.8',

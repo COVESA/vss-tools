@@ -76,7 +76,6 @@ jobs:
           mkdir /tmp/pypi_vss_test
           cd /tmp/pypi_vss_test
           # Just verify that we can start the tools
-          vspec2x.py --help
           vspec2csv.py --help
           vspec2json.py --help
           vspec2yaml.py --help

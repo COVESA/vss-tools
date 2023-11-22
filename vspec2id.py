@@ -12,7 +12,17 @@
 #
 
 import sys
-import vspec2x
+from vspec.vspec2x import Vspec2X
+from vspec.vspec2vss_config import Vspec2VssConfig
+from vspec.vssexporters.vss2id import Vss2Id
+
+
+def main(arguments):
+    vspec2vss_config = Vspec2VssConfig()
+    vss2json = Vss2Id()
+    vspec2x = Vspec2X(vss2json, vspec2vss_config)
+    vspec2x.main(arguments)
+
 
 if __name__ == "__main__":
-    vspec2x.main(["--format", "idgen"] + sys.argv[1:])
+    main(sys.argv[1:])
