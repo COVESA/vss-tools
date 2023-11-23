@@ -87,6 +87,8 @@ def main(arguments):
                         help='Add overlay that will be layered on top of the VSS file in the order they appear.')
     parser.add_argument('-u', '--unit-file', action='append', metavar='unit_file', type=str, default=[],
                         help='Unit file to be used for generation. Argument -u may be used multiple times.')
+    parser.add_argument('-q', '--quantity-file', action='append', metavar='quantity_file', type=str, default=[],
+                        help='Quantity file to be used for generation. Argument -uqmay be used multiple times.')
     parser.add_argument('vspec_file', metavar='<vspec_file>',
                         help='The vehicle specification file to convert.')
     parser.add_argument('output_file', metavar='<output_file>',
@@ -152,6 +154,7 @@ def main(arguments):
     if args.uuid:
         print_uuid = True
 
+    vspec.load_quantities(args.vspec_file, args.quantity_file)
     vspec.load_units(args.vspec_file, args.unit_file)
 
     # Warn if unsupported feature is used

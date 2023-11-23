@@ -12,7 +12,7 @@ The supported arguments might look like this
 
  ```
 usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--uuid] [--no_expand] [-o overlays] [-u unit_file]
+                  [--format format] [--uuid] [--no_expand] [-o overlays] [-u unit_file] [-q quantity_file]
                   [-vt vspec_types_file] [-ot <types_output_file>]
                   [--json-all-extended-attributes] [--json-pretty]
                   [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
@@ -35,7 +35,7 @@ All done.
 
 This assumes you checked out the [COVESA Vehicle Signal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools including vspec2x as a submodule.
 
-The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories. The `-u` parameter specifies the unit file to use.
+The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories. The `-u` parameter specifies the unit file(s) to use. The `-q` parameter specifies quantity file(s) to use.
 
 The first positional argument - `../spec/VehicleSignalSpecification.vspec` in the example  - gives the (root) `.vspec` file to be converted. The second positional argument  - `vss.json` in the example - is the output file.
 
@@ -200,6 +200,18 @@ When deciding which units to use the tooling use the following logic:
 * If `-u` is not used the tool will check for a unit file in the same directory as the root `*.vspec` file.
 
 See the [FAQ](../FAQ.md) for more information on how to define own units.
+
+### Handling of quantities
+
+For units it is required to define `quantity`, previously called `domain`.
+COVESA maintains a [quantity file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/quantities.yaml) for the standard VSS catalog.
+
+When deciding which quantities to use the tooling use the following logic:
+
+* If `-q <file>` is used then the specified quantity files will be used. Default quantities will not be considered.
+* If `-q` is not used the tool will check for a file called `quantities.yaml` in the same directory as the root `*.vspec` file.
+
+As of today use of quantity files is optional, and tooling will only give a warning if a unit use a quantity not specified in a quantity file.
 
 ## Handling of overlays and extensions
 `vspec2x` allows composition of several overlays on top of a base vspec, to extend the model or overwrite certain metadata. Check [VSS documentation](https://covesa.github.io/vehicle_signal_specification/introduction/) on the concept of overlays.
