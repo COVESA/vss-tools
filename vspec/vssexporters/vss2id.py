@@ -23,7 +23,6 @@ from vspec.utils import vss2id_val
 from vspec.utils.idgen_utils import (
     get_node_identifier_bytes,
     fnv1_32_hash,
-    fnv1_24_hash,
     get_all_keys_values,
 )
 import yaml
@@ -35,77 +34,47 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     @param parser: the pre-existing argument parser
     """
     parser.add_argument(
-        "--gen-layer-id-offset",
-        type=int,
-        default=0,
-        help="Define layer ID in case you want to use 3 bytes for hashing and 1 byte for layer ID."
-        "If you don't specify a layer ID it will default to zero which means that we will use"
-        "4 bytes for the FNV-1 hash.",
-    )
-    parser.add_argument(
         "--validate-static-uid", type=str, default="", help="Path to validation file."
     )
     parser.add_argument(
         "--only-validate-no-export",
         action="store_true",
         default=False,
-        help="For pytests and pipelines you can skip the export of the",
+        help="For pytests and pipelines you can skip the export of the vspec file.",
     )
 
 
-def generate_split_id(
-    node: VSSNode, id_counter: int, gen_layer_id_offset: int
-) -> Tuple[str, int]:
-    """Generates static UIDs using FNV-1 hash.
+def generate_split_id(node: VSSNode, id_counter: int) -> Tuple[str, int]:
+    """Generates static UIDs using 4-byte FNV-1 hash.
 
     @param node: VSSNode that we want to generate a static UID for
     @param id_counter: consecutive numbers counter for amount of nodes
-    @param gen_layer_id_offset: if wanted we can do 3-byte hash and 1-byte layer ID
     @return: tuple of hashed string and id counter
     """
-    if gen_layer_id_offset:
-        if 1 <= gen_layer_id_offset <= 63:
-            logging.warning("Layer value from 0 to 63 is reserved for COVESA.")
-        elif gen_layer_id_offset > 255:
-            logging.warning("Layer value over 255. 1 byte max! Using max value of 255")
-        layer = min(
-            gen_layer_id_offset, 255
-        )  # Use 1 byte for the layer (max_layer is 0-255)
-        identifier = get_node_identifier_bytes(
-            node.qualified_name(),
-            node.data_type_str,
-            node.type.value,
-            node.get_unit(),
-            node.allowed,
-            node.min,
-            node.max,
-        )
-        hashed_str = format(fnv1_24_hash(identifier) << 8 | layer, "08X")
-    else:
-        identifier = get_node_identifier_bytes(
-            node.qualified_name(),
-            node.data_type_str,
-            node.type.value,
-            node.get_unit(),
-            node.allowed,
-            node.min,
-            node.max,
-        )
-        hashed_str = format(fnv1_32_hash(identifier), "08X")
+
+    identifier = get_node_identifier_bytes(
+        node.qualified_name(),
+        node.data_type_str,
+        node.type.value,
+        node.get_unit(),
+        node.allowed,
+        node.min,
+        node.max,
+    )
+    hashed_str = format(fnv1_32_hash(identifier), "08X")
 
     return hashed_str, id_counter + 1
 
 
-def export_node(yaml_dict, node, id_counter, gen_layer_id_offset) -> Tuple[int, int]:
+def export_node(yaml_dict, node, id_counter) -> Tuple[int, int]:
     """Recursive function to export the full tree to a dict
 
     @param yaml_dict: the to be exported dict
     @param node: parent node of the tree
     @param id_counter: counter for amount of ids
-    @param gen_layer_id_offset: int for specifying a layer to use 3-byte hashing
     @return: id_counter, id_counter
     """
-    node_id, id_counter = generate_split_id(node, id_counter, gen_layer_id_offset)
+    node_id, id_counter = generate_split_id(node, id_counter)
 
     # check for hash duplicates
     for key, value in get_all_keys_values(yaml_dict):
@@ -149,7 +118,6 @@ def export_node(yaml_dict, node, id_counter, gen_layer_id_offset) -> Tuple[int, 
             yaml_dict,
             child,
             id_counter,
-            gen_layer_id_offset,
         )
 
     return id_counter, id_counter
@@ -166,9 +134,7 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
 
     id_counter: int = 0
     signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
-    id_counter, _ = export_node(
-        signals_yaml_dict, signal_root, id_counter, config.gen_layer_id_offset
-    )
+    id_counter, _ = export_node(signals_yaml_dict, signal_root, id_counter)
 
     if config.validate_static_uid:
         logging.info(

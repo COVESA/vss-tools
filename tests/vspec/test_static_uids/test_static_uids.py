@@ -8,7 +8,7 @@ import vspec.vssexporters.vss2id as vss2id
 import vspec2x
 import yaml
 
-from typing import Dict, Optional
+from typing import Dict
 from vspec.model.constants import VSSTreeType, VSSDataType, VSSConstant
 from vspec.model.vsstree import VSSNode
 from vspec.utils.idgen_utils import get_all_keys_values
@@ -35,7 +35,12 @@ def get_cla_validation(validation_file: str):
 
 
 def get_test_node(
-    node_name: str, unit: str, datatype: VSSDataType, allowed: str
+    node_name: str,
+    unit: str,
+    datatype: VSSDataType,
+    allowed: str,
+    minimum: str,
+    maximum: str,
 ) -> VSSNode:
     source = {
         "description": "some desc",
@@ -47,9 +52,9 @@ def get_test_node(
     node.data_type_str = datatype.value
     node.validate_and_set_datatype()
     node.allowed = allowed
-    # node.min = minimum
-    # node.max = maximum
-    #
+    node.min = minimum
+    node.max = maximum
+
     return node
 
 
@@ -66,21 +71,13 @@ def change_test_dir(request, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "node_name, unit, datatype, allowed, minimum, maximum, layer_id_offset, result_static_uid",
+    "node_name, unit, datatype, allowed, minimum, maximum, result_static_uid",
     [
-        ("TestNode", "m", VSSDataType.INT8, "", 0, 10000, 0, "1692F5DF"),
-        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", 99, "31A8FA63"),
-        ("TestNodeChild", "degrees/s", VSSDataType.FLOAT, "", "", "", 0, "E61220E6"),
-        (
-            "TestNodeChild",
-            "percent",
-            VSSDataType.STRING,
-            ["YES", "NO"],
-            0,
-            100,
-            112,
-            "659CF970",
-        ),
+        ("TestNode", "m", VSSDataType.UINT16, "", 0, 10000, "156365B2"),
+        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", "0931A8FA"),
+        ("TestUnit", "degrees/s", VSSDataType.FLOAT, "", "", "", "C733138C"),
+        ("TestMinMax", "percent", VSSDataType.UINT8, "", 0, 100, "72A24EF1"),
+        ("TestEnum", "m", VSSDataType.STRING, ["YES, NO"], "", "", "DEA50110"),
     ],
 )
 def test_generate_id(
@@ -88,56 +85,38 @@ def test_generate_id(
     unit: str,
     datatype: VSSDataType,
     allowed: str,
-    minimum: Optional[int],
-    maximum: Optional[int],
-    layer_id_offset: int,
+    minimum: str,
+    maximum: str,
     result_static_uid: str,
 ):
-    node = get_test_node(node_name, unit, datatype, allowed)
-    result, _ = vss2id.generate_split_id(
-        node, id_counter=0, gen_layer_id_offset=layer_id_offset
-    )
+    node = get_test_node(node_name, unit, datatype, allowed, minimum, maximum)
+    result, _ = vss2id.generate_split_id(node, id_counter=0)
 
     assert result == result_static_uid
 
 
 @pytest.mark.parametrize(
-    "gen_layer_id_offset",
-    [
-        0,
-        99,
-    ],
+    "test_file, validation_file",
+    [("test_vspecs/test.vspec", "./validation.yaml")],
 )
 def test_export_node(
     request: pytest.FixtureRequest,
-    gen_layer_id_offset,
+    test_file: str,
+    validation_file: str,
 ):
     dir_path = os.path.dirname(request.path)
-    vspec_file = os.path.join(dir_path, "test_vspecs/test.vspec")
+    vspec_file = os.path.join(dir_path, test_file)
 
     vspec.load_units(vspec_file, [os.path.join(dir_path, "test_vspecs/units.yaml")])
     tree = vspec.load_tree(
         vspec_file, include_paths=["."], tree_type=VSSTreeType.SIGNAL_TREE
     )
     yaml_dict: Dict[str, str] = {}
-    vss2id.export_node(
-        yaml_dict,
-        tree,
-        id_counter=0,
-        gen_layer_id_offset=gen_layer_id_offset,
-    )
+    vss2id.export_node(yaml_dict, tree, id_counter=0)
 
     result_dict: Dict[str, str]
-    if gen_layer_id_offset:
-        with open(
-            os.path.join(dir_path, "validation_yamls/validation_layer.yaml"), "r"
-        ) as f:
-            result_dict = yaml.load(f, Loader=yaml.FullLoader)
-    else:
-        with open(
-            os.path.join(dir_path, "validation_yamls/validation_no_layer.yaml"), "r"
-        ) as f:
-            result_dict = yaml.load(f, Loader=yaml.FullLoader)
+    with open(os.path.join(dir_path, validation_file), "r") as f:
+        result_dict = yaml.load(f, Loader=yaml.FullLoader)
 
     assert result_dict.keys() == yaml_dict.keys()
     assert result_dict == yaml_dict
@@ -151,9 +130,9 @@ def test_export_node(
     ],
 )
 def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
-    tree = get_test_node("TestNode", "m", VSSDataType.UINT32, "")
-    child_node = get_test_node(children_names[0], "m", VSSDataType.UINT32, "")
-    child_node2 = get_test_node(children_names[1], "m", VSSDataType.UINT32, "")
+    tree = get_test_node("TestNode", "m", VSSDataType.UINT32, "", "", "")
+    child_node = get_test_node(children_names[0], "m", VSSDataType.UINT32, "", "", "")
+    child_node2 = get_test_node(children_names[1], "m", VSSDataType.UINT32, "", "", "")
     tree.children = [child_node, child_node2]
 
     yaml_dict: Dict[str, dict] = {}
@@ -164,7 +143,6 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
                 yaml_dict,
                 tree,
                 id_counter=0,
-                gen_layer_id_offset=0,
             )
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == -1
@@ -177,7 +155,6 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
             yaml_dict,
             tree,
             id_counter=0,
-            gen_layer_id_offset=0,
         )
         assigned_ids: list = []
         for key, value in get_all_keys_values(yaml_dict):

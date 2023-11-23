@@ -10,7 +10,7 @@ with a 4-byte identifier.
 ```bash
 usage: vspec2id.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid] [--no-expand] [-o overlays] [-u unit_file]
                    [-vt vspec_types_file] [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
-                   [--gqlfield GQLFIELD GQLFIELD] [--gen-layer-id-offset GEN_LAYER_ID_OFFSET] [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export]
+                   [--gqlfield GQLFIELD GQLFIELD] [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export]
                    <vspec_file> <output_file>
 
 Convert vspec to other formats.
@@ -23,9 +23,6 @@ positional arguments:
 
 IDGEN arguments:
 
-  --gen-layer-id-offset GEN_LAYER_ID_OFFSET
-                        Define layer ID in case you want to use 3 bytes for hashing and 1 byte for layer ID.If you don't
-                        specify a layer ID it will default to zero which means that we will use4 bytes for the FNV-1 hash.
   --validate-static-uid VALIDATE_STATIC_UID
                         Path to validation file.
   --only-validate-no-export
@@ -37,9 +34,6 @@ IDGEN arguments:
 To initially run this you will need a vehicle signal specification, e.g.
 [COVESA Vehicle Signal Specification](https://github.com/COVESA/vehicle_signal_specification). If you are just starting
 to use static UIDs the first run is simple. You will only use the static UID generator by running the command below.
-Please note that we are not using a layer identifier here, so `--gen-layer-id-offset` will default to 0.
-However, you can set one by using the command line argument. Please note that in that case we will only use a
-3-byte FNV-1 hash (instead 4-byte hash) because we will use 1-byte for the layer.
 
 ```bash
 cd path/to/your/vss-tools
@@ -47,9 +41,9 @@ cd path/to/your/vss-tools
 ```
 
 Great, you generated your first overlay that will also be used as your validation file as soon as you update your
-vehicle specification file.
+vehicle signal specification file.
 
-### Option 1: Generate e.g. yaml file with static UIDs
+### Generate e.g. yaml file with static UIDs
 
 Now if you just want to generate a new e.g. yaml file including your static UIDs, please use the overlay function of
 vspec2x by running the following command:
@@ -59,7 +53,7 @@ cd path/to/your/vss-tools
 ./vspec2yaml.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec -o ../output_id_v1.vspec -e staticUID vehicle_specification_with_uids.yaml
 ```
 
-### Option 2: Validate changes on your vehicle specification with validation file
+### Validation
 
 In this case you want to validate changes of your vehicle specification. If you are doing a dry run try temporarily
 renaming a node or changing the node's datatype, unit, description, or other. You will get warnings depending on your
@@ -112,4 +106,4 @@ Now you should know about all possible changes. To run the validation step, plea
 Depending on what you changed in the vehicle signal specification the corresponding errors will be triggered.
 
 Now, if the warning logs correspond to what you have changed since the last validation, you can continue to generate
-e.g. a yaml file with your validated changes as described in Option 1 step above.
+e.g. a yaml file with your validated changes as described in the `Generate e.g. yaml file with static UIDs` step above.
