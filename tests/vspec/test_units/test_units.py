@@ -10,6 +10,7 @@
 
 import pytest
 import os
+from typing import Optional
 
 
 # #################### Helper methods #############################
@@ -20,18 +21,32 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
-def run_unit(vspec_file, unit_argument, expected_file):
-    test_str = "../../../vspec2json.py --json-pretty --no-uuid " + \
-        vspec_file + " " + unit_argument + " out.json > out.txt 2>&1"
+def run_unit(vspec_file, unit_argument, expected_file, quantity_argument="",
+             grep_present: bool = True, grep_string: Optional[str] = None):
+    test_str = "../../../vspec2json.py --json-pretty --no-uuid" + \
+        vspec_file + " " + unit_argument + " " + quantity_argument + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
     test_str = "diff out.json " + expected_file
     result = os.system(test_str)
-    os.system("rm -f out.json out.txt")
+    os.system("rm -f out.json")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+    # Verify expected quntity
+
+    if grep_string is not None:
+        test_str = 'grep \"' + grep_string + '\" out.txt > /dev/null'
+        result = os.system(test_str)
+        assert os.WIFEXITED(result)
+        if grep_present:
+            assert os.WEXITSTATUS(result) == 0
+        else:
+            assert os.WEXITSTATUS(result) == 1
+
+    os.system("rm -f out.txt")
 
 
 def run_unit_error(vspec_file, unit_argument, grep_error):
@@ -106,3 +121,47 @@ def test_unit_error_missing_file(change_test_dir):
 
 def test_unit_on_branch(change_test_dir):
     run_unit_error("unit_on_branch.vspec", "-u units_all.yaml", "cannot have unit")
+
+
+# Quantity tests
+def test_implicit_quantity(change_test_dir):
+    run_unit(
+        "signals_with_special_units.vspec",
+        "--unit-file units_all.yaml",
+        "expected_special.json",
+        "", False, "has not been defined")
+
+
+def test_explicit_quantity(change_test_dir):
+    run_unit(
+        "signals_with_special_units.vspec",
+        "--unit-file units_all.yaml",
+        "expected_special.json",
+        "-q quantities.yaml", False, "has not been defined")
+
+
+def test_explicit_quantity_2(change_test_dir):
+    run_unit(
+        "signals_with_special_units.vspec",
+        "--unit-file units_all.yaml",
+        "expected_special.json",
+        "--quantity-file quantities.yaml", False, "has not been defined")
+
+
+def test_explicit_quantity_warning(change_test_dir):
+    """
+    We should get two warnings as the quantity file contain "volym", not "volume"
+    """
+    run_unit(
+        "signals_with_special_units.vspec",
+        "--unit-file units_all.yaml",
+        "expected_special.json",
+        "-q quantity_volym.yaml", True, "Quantity volume used by unit puncheon has not been defined")
+
+
+def test_quantity_redefinition(change_test_dir):
+    run_unit(
+        "signals_with_special_units.vspec",
+        "--unit-file units_all.yaml",
+        "expected_special.json",
+        "-q quantity_volym.yaml -q quantity_volym.yaml", True, "Redefinition of quantity volym")

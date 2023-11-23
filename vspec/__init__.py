@@ -23,7 +23,7 @@ from anytree import (Resolver, LevelOrderIter, PreOrderIter, RenderTree)  # type
 
 from .model.vsstree import VSSNode
 from .model.exceptions import ImpossibleMergeException, IncompleteElementException
-from .model.constants import VSSTreeType, VSSUnitCollection
+from .model.constants import VSSTreeType, VSSUnitCollection, VSSQuantityCollection
 
 nestable_types = set(["branch", "struct"])
 
@@ -861,6 +861,29 @@ def create_tree_uuids(root: VSSNode):
     for vss_element in PreOrderIter(root):
         vss_element.uuid = uuid.uuid5(
             namespace_uuid, vss_element.qualified_name()).hex
+
+
+def load_quantities(vspec_file: str, quantity_files: List[str]):
+
+    total_nbr_quantities = 0
+    if not quantity_files:
+        # Search for a file quantities.yaml in same directory as vspec file
+        vspec_dir = os.path.dirname(os.path.realpath(vspec_file))
+        default_vss_quantity_file = vspec_dir + os.path.sep + 'quantities.yaml'
+        if os.path.exists(default_vss_quantity_file):
+            total_nbr_quantities = VSSQuantityCollection.load_config_file(default_vss_quantity_file)
+            logging.info(f"Added {total_nbr_quantities} quantities from {default_vss_quantity_file}")
+    else:
+        for quantity_file in quantity_files:
+            nbr_quantities = VSSQuantityCollection.load_config_file(quantity_file)
+            if (nbr_quantities == 0):
+                logging.warning(f"Warning: No quantities found in {quantity_file}")
+            else:
+                logging.info(f"Added {nbr_quantities} quantities from {quantity_file}")
+                total_nbr_quantities += nbr_quantities
+
+    if (total_nbr_quantities == 0):
+        logging.info("No quantities defined!")
 
 
 def load_units(vspec_file: str, unit_files: List[str]):

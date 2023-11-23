@@ -12,6 +12,7 @@
 # Constant Types and Mappings
 #
 # noinspection PyPackageRequirements
+from __future__ import annotations
 import re
 import logging
 import sys
@@ -37,12 +38,34 @@ class VSSUnit(str):
     quantity: Optional[str] = None  # Typically quantity, like "Voltage"
 
     def __new__(cls, id: str, unit: Optional[str] = None, definition: Optional[str] = None,
-                quantity: Optional[str] = None) -> 'VSSUnit':
+                quantity: Optional[str] = None) -> VSSUnit:
         self = super().__new__(cls, id)
         self.id = id
         self.unit = unit
         self.definition = definition
         self.quantity = quantity
+        return self
+
+    @property
+    def value(self):
+        return self
+
+
+class VSSQuantity(str):
+    """String subclass for storing quantity information.
+    """
+    id: str  # Identifier preferably taken from a standard, like ISO 80000
+    definition: str  # Explanation of quantity, for example reference to standard
+    remark: Optional[str] = None  # remark as defined in for example ISO 80000
+    comment: Optional[str] = None
+
+    def __new__(cls, id: str, definition: str, remark: Optional[str] = None,
+                comment: Optional[str] = None) -> VSSQuantity:
+        self = super().__new__(cls, id)
+        self.id = id
+        self.definition = definition
+        self.remark = remark
+        self.comment = comment
         return self
 
     @property
@@ -169,7 +192,12 @@ class VSSUnitCollection():
                     logging.error("No quantity (domain) found for unit %s", k)
                     sys.exit(-1)
 
+                if VSSQuantityCollection.get_quantity(quantity) is None:
+                    logging.info("Quantity %s used by unit %s has not been defined", quantity, k)
+
                 unit_node = VSSUnit(k, unit, definition, quantity)
+                if k in cls.units:
+                    logging.warning("Redefinition of unit %s", k)
                 cls.units[k] = unit_node
         return added_configs
 
@@ -177,6 +205,43 @@ class VSSUnitCollection():
     def get_unit(cls, id: str) -> Optional[VSSUnit]:
         if id in cls.units:
             return cls.units[id]
+        else:
+            return None
+
+
+class VSSQuantityCollection():
+
+    quantities: Dict[str, VSSQuantity] = dict()
+
+    @classmethod
+    def load_config_file(cls, config_file: str) -> int:
+        added_quantities = 0
+        with open(config_file) as my_yaml_file:
+            my_quantities = yaml.safe_load(my_yaml_file)
+            added_quantities = len(my_quantities)
+            for k, v in my_quantities.items():
+                if "definition" in v:
+                    definition = v["definition"]
+                else:
+                    logging.error("No definition found for quantity %s", k)
+                    sys.exit(-1)
+                remark = None
+                if "remark" in v:
+                    remark = v["remark"]
+                comment = None
+                if "comment" in v:
+                    comment = v["comment"]
+
+                quantity_node = VSSQuantity(k, definition, remark, comment)
+                if k in cls.quantities:
+                    logging.warning("Redefinition of quantity %s", k)
+                cls.quantities[k] = quantity_node
+        return added_quantities
+
+    @classmethod
+    def get_quantity(cls, id: str) -> Optional[VSSQuantity]:
+        if id in cls.quantities:
+            return cls.quantities[id]
         else:
             return None
 
