@@ -30,6 +30,10 @@ import yaml
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
+    """Adds command line arguments to a pre-existing argument parser
+
+    @param parser: the pre-existing argument parser
+    """
     parser.add_argument(
         "--gen-layer-id-offset",
         type=int,

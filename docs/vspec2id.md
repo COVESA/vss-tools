@@ -95,9 +95,9 @@ warnings only:
 
 | BREAKING CHANGES      |     | NON-BREAKING CHANGES |
 |-----------------------|-----|----------------------|
-| Qualified name        |     | Add new attribute    |
+| Qualified name        |     | Added attribute      |
 | Data type             |     | Deprecation          |
-| Type (i.e. node type) |     | Delete Attribute     |
+| Type (i.e. node type) |     | Deleted Attribute    |
 | Unit                  |     | Change description   |
 | Enum values (allowed) |     |                      |
 | Minimum               |     |                      |
@@ -110,3 +110,6 @@ Now you should know about all possible changes. To run the validation step, plea
 ```
 
 Depending on what you changed in the vehicle signal specification the corresponding errors will be triggered.
+
+Now, if the warning logs correspond to what you have changed since the last validation, you can continue to generate
+e.g. a yaml file with your validated changes as described in Option 1 step above.

@@ -256,11 +256,14 @@ def test_name_datatype(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
-    assert len(caplog.records) == 1 and all(
+    assert len(caplog.records) == 2 and all(
         log.levelname == "WARNING" for log in caplog.records
     )
-    for record in caplog.records:
-        assert "BREAKING CHANGE" in record.msg
+    for i, record in enumerate(caplog.records):
+        if i % 2 == 0:
+            assert "ADDED ATTRIBUTE" in record.msg
+        else:
+            assert "DELETED ATTRIBUTE" in record.msg
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -287,3 +290,29 @@ def test_description(caplog: pytest.LogCaptureFixture):
     )
     for record in caplog.records:
         assert "DESCRIPTION MISMATCH" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_added_attribute(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test_added_attribute.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 1 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for record in caplog.records:
+        assert "ADDED ATTRIBUTE" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test_deleted_attribute.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2x.main(["--format", "idgen"] + clas[1:])
+
+    assert len(caplog.records) == 1 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+    for record in caplog.records:
+        assert "DELETED ATTRIBUTE" in record.msg

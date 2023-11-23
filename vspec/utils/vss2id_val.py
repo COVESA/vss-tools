@@ -2,6 +2,7 @@ from anytree import PreOrderIter  # type: ignore
 import argparse
 import logging
 import sys
+from typing import Optional
 from vspec.model.vsstree import VSSNode
 from vspec.utils.idgen_utils import fnv1_32_wrapper
 
@@ -31,7 +32,7 @@ def validate_static_uids(
                 f"vspec: '{v['description']}'"
             )
 
-    def check_semantics(k: str, v: dict) -> bool:
+    def check_semantics(k: str, v: dict) -> Optional[int]:
         """Checks if the change was a semantic or path change. This can be triggered by
         manually adding a fka (formerly known as) attribute to the vspec. The result
         is that the old hash can be matched such that a node keeps the same UID.
@@ -41,7 +42,7 @@ def validate_static_uids(
         @return: boolean if it was a semantic or path change
         """
         if "fka" in v.keys():
-            is_semantic: bool = False
+            semantic_match: Optional[int] = None
             for fka_val in v["fka"]:
                 old_static_uid = "0x" + fnv1_32_wrapper(fka_val, v)
                 for i, validation_node in enumerate(validation_tree_nodes):
@@ -50,12 +51,13 @@ def validate_static_uids(
                         == validation_node.extended_attributes["staticUID"]
                     ):
                         logging.warning(
-                            f"[Validation] SEMANTIC NAME CHANGE or PATH CHANGE for '{k}'."
+                            f"[Validation] SEMANTIC NAME CHANGE or PATH CHANGE for '{k}', "
+                            f"it used to be '{validation_node.qualified_name()}'."
                         )
-                        is_semantic = True
-            return True if is_semantic else False
+                        semantic_match = i
+            return semantic_match
         else:
-            return False
+            return None
 
     def check_deprecation(k: str, v: dict, match_tuple: tuple):
         if (
@@ -64,20 +66,25 @@ def validate_static_uids(
         ):
             if v["deprecation"] != validation_tree_nodes[match_tuple[1]].deprecation:
                 logging.warning(
-                    f"DEPRECATION MSG CHANGE: Deprecation message was"
-                    f"\n'{validation_tree_nodes[match_tuple[1]].deprecation}'"
-                    f"\nin validation but now is"
-                    f"\n'{v['deprecation']}'."
+                    f"DEPRECATION MSG CHANGE: Deprecation message for '{k}' was "
+                    f"'{validation_tree_nodes[match_tuple[1]].deprecation}' "
+                    f"in validation but now is '{v['deprecation']}'."
                 )
 
     def hashed_pipeline():
         """This pipeline uses FNV-1 hash for static UIDs.
 
-        If no match UID was matched we check if the user has written an old path or old name,
-        so we can tell if it was a semantic or path change. If not we have to assign a new ID
-        which causes to throw a `BREAKING CHANGE` warning.
-        If there was a match we will continue to check for non-breaking changes and throw
+        If no UID was matched we check if the user has written an old path or old name,
+        so we can tell if it was a semantic or path change. If semantic or path change
+        we trigger a corresponding warning.
+        If not semantic or path change we try to match the key:
+        If key was matched we know that it was a unit, datatype, type, enum, min/max change
+        which triggers `BREAKING CHANGE` warning. If key cannot be matched the node must have
+        been added since the last validation, so it triggers an `ADDED ATTRIBUTE` warning.
+        If there was a UID match we will continue to check for non-breaking changes and throw
         corresponding logs.
+        In the end the remaining nodes correspond to deleted nodes, so we throw a
+        `DELETED ATTRIBUTE` warning.
         """
         nonlocal validation_tree_nodes
 
@@ -90,26 +97,34 @@ def validate_static_uids(
 
             # if not matched via UID check semantics or path change
             if len(matched_uids) == 0:
-                if check_semantics(key, value) is False:
-                    logging.warning(
-                        f"[Validation] BREAKING CHANGE: "
-                        f"There was a breaking change for '{key}' which "
-                        f"means it is a new node or name, unit, datatype, "
-                        f"enum or min/max has changed."
-                    )
+                semantic_match = check_semantics(key, value)
+                if semantic_match is None:
+                    key_found: bool = False
+                    for i, node in enumerate(validation_tree_nodes):
+                        if key == node.qualified_name():
+                            key_found = True
+                            validation_tree_nodes.pop(i)
+                            break
 
-            # if matched continue with non-breaking checks
+                    if key_found:
+                        logging.warning(
+                            f"[Validation] BREAKING CHANGE: "
+                            f"There was a breaking change for '{key}' which "
+                            f"means its name, unit, datatype, type, enum or "
+                            f"min/max has changed."
+                        )
+                    else:
+                        logging.warning(
+                            f"[Validation] ADDED ATTRIBUTE: "
+                            f"The node '{key}' was added since the last validation."
+                        )
+                else:
+                    validation_tree_nodes.pop(semantic_match)
+
             elif len(matched_uids) == 1:
-                # ToDo all non-breaking changes here
-                #  1. add new attribute
-                #  2. deprecate attribute
                 check_deprecation(key, value, matched_uids[0])
-                # ToDo
-                #  3. delete attribute
-                #  4. change description
                 check_description(key, value, matched_uids[0])
 
-                # now remove the element to speed up things
                 validation_tree_nodes.pop(matched_uids[0][1])
 
             else:
@@ -119,7 +134,13 @@ def validate_static_uids(
                 )
                 sys.exit(-1)
 
-    # go to top in case we are not
+        for node in validation_tree_nodes:
+            logging.warning(
+                "[Validation] DELETED ATTRIBUTE: "
+                f"'{node.qualified_name()}' was not matched so it must have "
+                f"been deleted."
+            )
+
     if validation_tree.parent:
         while validation_tree.parent:
             validation_tree = validation_tree.parent
