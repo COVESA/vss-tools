@@ -9,7 +9,8 @@
 import pytest
 import os
 
-from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, StringStyle, VSSTreeType, VSSUnit
+from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, StringStyle, VSSTreeType
+from vspec.model.constants import VSSUnit, VSSQuantity
 
 
 @pytest.mark.parametrize("style_enum, style_str",
@@ -130,5 +131,16 @@ def test_unit():
     assert item.unit == "myunit"
     assert item.definition == "mydefinition"
     assert item.quantity == "myquantity"
+    # String subclass so just comparing shall get "myid"
+    assert item == "myid"
+
+
+def test_quantity():
+    """ Test Quantity class """
+    item = VSSQuantity("myid", "mydefinition", "myremark", "mycomment")
+    assert item.value == "myid"
+    assert item.definition == "mydefinition"
+    assert item.remark == "myremark"
+    assert item.comment == "mycomment"
     # String subclass so just comparing shall get "myid"
     assert item == "myid"
