@@ -66,7 +66,8 @@ def validate_static_uids(
         ):
             if v["deprecation"] != validation_tree_nodes[match_tuple[1]].deprecation:
                 logging.warning(
-                    f"DEPRECATION MSG CHANGE: Deprecation message for '{k}' was "
+                    f"[Validation] DEPRECATION MSG CHANGE: Deprecation message "
+                    f"for '{k}' was "
                     f"'{validation_tree_nodes[match_tuple[1]].deprecation}' "
                     f"in validation but now is '{v['deprecation']}'."
                 )
@@ -129,8 +130,9 @@ def validate_static_uids(
 
             else:
                 logging.error(
-                    "Multiple matches do not make sense for the way we load the data. "
-                    "Please check your input vspec!"
+                    "[Validation] Multiple matches do not make sense "
+                    "for the way we load the data. Please check your "
+                    "input vspec!"
                 )
                 sys.exit(-1)
 

@@ -1,4 +1,4 @@
-# vspecID - vspec static UID generator and validator
+# vspec2id - vspec static UID generator and validator
 
 The vspecID.py script is used to generate and validate static UIDs for all nodes in the tree.
 They will be used as unique identifiers to transmit data between nodes. The static UIDs are
@@ -107,3 +107,16 @@ Depending on what you changed in the vehicle signal specification the correspond
 
 Now, if the warning logs correspond to what you have changed since the last validation, you can continue to generate
 e.g. a yaml file with your validated changes as described in the `Generate e.g. yaml file with static UIDs` step above.
+
+### Tests
+
+If you want to run the tests for the vspec2id implementation, please do
+
+```bash
+cd path/to/vss-tools
+export PYTHONPATH=${PWD}
+pytest tests/vspec/test_static_uids
+```
+
+Depending on how you are using the implementation you might have to activate your virtual environment as described on
+the top README.
