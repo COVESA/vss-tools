@@ -87,9 +87,27 @@ file must exist, or a unit file must be specified by `-u`.
 From now on, if new units are needed for the VSS catalog they shall be added to the
 [VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
 
-## Planned Changes VSS-Tools 4.1
+## VSS-Tools 4.1
 
-Adding of struct support for exporters currently not supporting structs.
+### Struct support in vspec2ddsidl
+
+The vspec2ddsidl tool now supports structs
+
+### Jsonschema tool added
+
+A new tool vspec2jsonschema has been added
+
+### Id generator tool added
+
+A new tool vspec2id has been added. It can be used to generate and maintain unique identifiers for signals.
+
+### Unit files and quantity files
+
+A new syntax has been introduced for unit files. The old syntax is still supported.
+Domains have now been renamed to Quantities.
+In addition to this a quantity file format has been defined, and the tool will inform
+if units refer to a quantity that has not been defined an information message will be printed.
+
 
 ## Planned Changes VSS-Tools 5.0
 
