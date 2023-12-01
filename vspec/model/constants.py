@@ -163,6 +163,10 @@ class VSSUnitCollection():
         return configs
 
     @classmethod
+    def reset_units(cls):
+        cls.units = dict()
+
+    @classmethod
     def load_config_file(cls, config_file: str) -> int:
         added_configs = 0
         with open(config_file) as my_yaml_file:
@@ -212,6 +216,10 @@ class VSSUnitCollection():
 class VSSQuantityCollection():
 
     quantities: Dict[str, VSSQuantity] = dict()
+
+    @classmethod
+    def reset_quantities(cls):
+        cls.quantities = dict()
 
     @classmethod
     def load_config_file(cls, config_file: str) -> int:
