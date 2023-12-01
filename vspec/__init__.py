@@ -864,6 +864,11 @@ def create_tree_uuids(root: VSSNode):
 
 
 def load_quantities(vspec_file: str, quantity_files: List[str]):
+    """
+    Reset the list of quantities defined (if any)
+    and add new quantities
+    """
+    VSSQuantityCollection.reset_quantities()
 
     total_nbr_quantities = 0
     if not quantity_files:
@@ -887,6 +892,11 @@ def load_quantities(vspec_file: str, quantity_files: List[str]):
 
 
 def load_units(vspec_file: str, unit_files: List[str]):
+    """
+    Reset the list of units defined (if any)
+    and add new units
+    """
+    VSSUnitCollection.reset_units()
 
     total_nbr_units = 0
     if not unit_files:
