@@ -10,7 +10,10 @@
 
 package datamodel
 
-import "fmt"
+import (
+    "fmt"
+    "strings"
+)
 
 type NodeTypes_t uint8
 
@@ -65,13 +68,16 @@ func StringToNodetype(nodeType string) uint8 {
 }
 
 func ValidateToInt(validate string) uint8 {
-    if (validate == "write-only") {
-        return 1
+    validation := (uint8)(0)
+    if strings.Contains(validate, "write-only") {
+        validation = 1
+    } else if strings.Contains(validate, "read-write") {
+        validation = 2
     }
-    if (validate == "read-write") {
-        return 2
+    if strings.Contains(validate, "consent") {
+        validation += 10
     }
-    return 0
+    return validation
 }
 
 func NodetypeToString(nodeType NodeTypes_t) string {
@@ -99,11 +105,15 @@ func NodetypeToString(nodeType NodeTypes_t) string {
 
 
 func ValidateToString(validate uint8) string {
-    if (validate == 1) {
-        return "write-only"
+    var validation string
+    if (validate%10 == 1) {
+        validation = "write-only"
     }
-    if (validate == 2) {
-        return "read-write"
+    if (validate%10 == 2) {
+        validation = "read-write"
     }
-    return ""
+    if (validate/10 == 1) {
+        validation = "+consent"
+    }
+    return validation
 }
