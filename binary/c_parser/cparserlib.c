@@ -50,6 +50,8 @@ typedef struct SearchContext_t {
 	FILE* listFp;
 } SearchContext_t;
 
+uint8_t validationMatrix[4][4] = {{1,2,11,12}, {2,2,12,12}, {11,12,11,12}, {12,12,12,12}};
+
 void initReadMetadata() {
 	readTreeMetadata.currentDepth = 0;
 	readTreeMetadata.maxTreeDepth = 0;
@@ -217,9 +219,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 	if (strcmp(getPathSegment(0, context), "*") == 0) {
 		context->speculationIndex++;
 	}
-	if (VSSgetValidation(thisNode) > context->maxValidation) {
-		context->maxValidation = VSSgetValidation(thisNode);  // TODO handle speculative setting
-	}
+	context->maxValidation = validationMatrix[VSSgetValidation(thisNode)][context->maxValidation];
 	if (VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			strcpy(context->searchData[context->numOfMatches].responsePaths, context->matchPath);
