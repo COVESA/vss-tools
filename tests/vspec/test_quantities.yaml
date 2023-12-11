@@ -1,0 +1,9 @@
+# Default file for testing
+
+length:
+  definition: Linear extent in space between any two points (ISO 80000-3:2019)
+  remark: Length does not need to be measured along a straight line.
+          Length is one of the seven base quantities in the International System of Units (ISO 80000-1).
+temperature:
+  definition: Partial derivative of internal energy with respect to entropy at constant volume
+              and constant number of particles in the system (ISO 80000-3:2019)

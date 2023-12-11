@@ -1,12 +1,12 @@
 # Unit file for test purposes only
 # Includes a subset of units existing in VSS catalog
-# For new test cases consider using
-units:
-  km:
-    label: kilometer
-    description: Distance measured in kilometers
-    domain: distance
-  celsius:
-    label: degree celsius
-    description: Temperature measured in degree celsius
-    domain: temperature
+km:
+  definition: Length measured in kilometers
+  unit: kilometer
+  quantity: length
+  allowed-datatypes: ['numeric']
+celsius:
+  definition: Temperature measured in degree celsius
+  unit: degree celsius
+  quantity: temperature
+  allowed-datatypes: ['numeric']
