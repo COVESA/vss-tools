@@ -49,9 +49,9 @@ def run_unit(vspec_file, unit_argument, expected_file, quantity_argument="",
     os.system("rm -f out.txt")
 
 
-def run_unit_error(vspec_file, unit_argument, grep_error):
+def run_unit_error(vspec_file, unit_argument, grep_error, quantity_argument=""):
     test_str = "../../../vspec2json.py --json-pretty --no-uuid " + \
-        vspec_file + " " + unit_argument + " out.json > out.txt 2>&1"
+        vspec_file + " " + unit_argument + " " + quantity_argument + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     # failure expected
@@ -66,8 +66,8 @@ def run_unit_error(vspec_file, unit_argument, grep_error):
 
 # #################### Tests #############################
 
-# Short form
 
+# Short form
 
 def test_single_u(change_test_dir):
     run_unit("signals_with_special_units.vspec", "-u units_all.yaml", "expected_special.json")
@@ -165,3 +165,12 @@ def test_quantity_redefinition(change_test_dir):
         "--unit-file units_all.yaml",
         "expected_special.json",
         "-q quantity_volym.yaml -q quantity_volym.yaml", True, "Redefinition of quantity volym")
+
+
+def test_quantity_err_no_def(change_test_dir):
+    """
+    Test scenario when definition is not given
+    """
+    run_unit_error("signals_with_special_units.vspec", "-u units_all.yaml",
+                   "No definition found for quantity volume",
+                   "-q quantities_no_def.yaml")
