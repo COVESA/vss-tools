@@ -20,6 +20,7 @@ from enum import Enum, EnumMeta
 from typing import (
     Sequence, Type, TypeVar, Optional, Dict, TextIO
 )
+from collections import abc
 
 import yaml
 
@@ -196,8 +197,11 @@ class VSSUnitCollection():
                     logging.error("No quantity (domain) found for unit %s", k)
                     sys.exit(-1)
 
-                if VSSQuantityCollection.get_quantity(quantity) is None:
+                if ((VSSQuantityCollection.nbr_quantities() > 0) and
+                   (VSSQuantityCollection.get_quantity(quantity) is None)):
+                    # Only give info on first occurance and only if quantities exist at all
                     logging.info("Quantity %s used by unit %s has not been defined", quantity, k)
+                    VSSQuantityCollection.add_quantity(quantity)
 
                 unit_node = VSSUnit(k, unit, definition, quantity)
                 if k in cls.units:
@@ -228,7 +232,7 @@ class VSSQuantityCollection():
             my_quantities = yaml.safe_load(my_yaml_file)
             added_quantities = len(my_quantities)
             for k, v in my_quantities.items():
-                if "definition" in v:
+                if isinstance(v, abc.Mapping) and "definition" in v:
                     definition = v["definition"]
                 else:
                     logging.error("No definition found for quantity %s", k)
@@ -252,6 +256,16 @@ class VSSQuantityCollection():
             return cls.quantities[id]
         else:
             return None
+
+    @classmethod
+    def nbr_quantities(cls) -> int:
+        return len(cls.quantities)
+
+    @classmethod
+    def add_quantity(cls, id: str) -> None:
+        if id not in cls.quantities:
+            quantity_node = VSSQuantity(id, "Automatically generated quantity")
+            cls.quantities[id] = quantity_node
 
 
 class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):

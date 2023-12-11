@@ -1,11 +1,11 @@
 {
   "A": {
     "children": {
-      "SignalLiter": {
+      "Km": {
         "datatype": "float",
-        "description": "Volume in liters.",
+        "description": "Something in km.",
         "type": "sensor",
-        "unit": "l"
+        "unit": "km"
       }
     },
     "description": "Branch A.",
