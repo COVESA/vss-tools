@@ -50,6 +50,8 @@ typedef struct SearchContext_t {
 	FILE* listFp;
 } SearchContext_t;
 
+uint8_t validationMatrix[4][4] = {{1,2,11,12}, {2,2,12,12}, {11,12,11,12}, {12,12,12,12}};
+
 void initReadMetadata() {
 	readTreeMetadata.currentDepth = 0;
 	readTreeMetadata.maxTreeDepth = 0;
@@ -107,23 +109,27 @@ char* nodeTypeToString(nodeTypes_t type) {
 }
 
 uint8_t validateToUint8(char* validate) {
-    if (strcmp(validate, "write-only") == 0) {
-        return 1;
+    uint8_t validation = 0;
+    if (strstr(validate, "write-only") != NULL) {
+        validation = 1;
+    } else if (strstr(validate, "read-write") != NULL) {
+        validation = 2;
     }
-    if (strcmp(validate, "read-write") == 0) {
-        return 2;
+    if (strstr(validate, "consent") != NULL) {
+        validation += 10;
     }
-    return 0;
+    return validation;
 }
 
-char* validateToString(uint8_t validate) {
-    if (validate == 1) {
-        return "write-only";
+void validateToString(uint8_t validate, char *validation) {
+    if (validate%10 == 1) {
+        strcpy(validation, "write-only");
+    } else if (validate%10 == 2) {
+        strcpy(validation, "read-write");
     }
-    if (validate == 2) {
-        return "read-write";
+    if (validate/10 == 1) {
+        strcat(validation, "+consent");
     }
-    return "";
 }
 
 void pushPathSegment(char* name, SearchContext_t* context) {
@@ -213,9 +219,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 	if (strcmp(getPathSegment(0, context), "*") == 0) {
 		context->speculationIndex++;
 	}
-	if (VSSgetValidation(thisNode) > context->maxValidation) {
-		context->maxValidation = VSSgetValidation(thisNode);  // TODO handle speculative setting
-	}
+	context->maxValidation = validationMatrix[VSSgetValidation(thisNode)][context->maxValidation];
 	if (VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			strcpy(context->searchData[context->numOfMatches].responsePaths, context->matchPath);
@@ -487,7 +491,8 @@ void writeNode(struct node_t* node) {
 		fwrite(node->defaultAllowed, sizeof(char)*node->defaultLen, 1, treeFp);
 	}
 
-	char* validate = validateToString(node->validate);
+	char validate[10+1+7+1];  // access control + consent data
+	validateToString(node->validate, (char*)&validate);
 	int validateLen = strlen(validate);
 	fwrite(&validateLen, sizeof(uint8_t), 1, treeFp);
 	if (validateLen > 0) {

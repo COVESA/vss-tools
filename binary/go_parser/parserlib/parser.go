@@ -53,6 +53,9 @@ type SearchContext_t struct {
 	ListFp *os.File
 }
 
+var validationMatrix [4][4]int = [4][4]int{{1,2,11,12}, {2,2,12,12}, {11,12,11,12}, {12,12,12,12}}
+
+
 func initReadMetadata() {
 	readTreeMetadata.CurrentDepth = 0
 	readTreeMetadata.MaxTreeDepth = 0
@@ -176,9 +179,7 @@ func saveMatchingNode(thisNode *def.Node_t, context *SearchContext_t, done *bool
 	if (getPathSegment(0, context) == "*") {
 		context.SpeculationIndex++
 	}
-	if (VSSgetValidation(thisNode) > context.MaxValidation) {
-		context.MaxValidation = VSSgetValidation(thisNode)  // TODO handle speculative setting?
-	}
+	context.MaxValidation = validationMatrix[VSSgetValidation(thisNode)][context.MaxValidation]
 	if (VSSgetType(thisNode) != def.BRANCH  && VSSgetType(thisNode) != def.STRUCT || context.LeafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			context.SearchData[context.NumOfMatches].NodePath = context.MatchPath
