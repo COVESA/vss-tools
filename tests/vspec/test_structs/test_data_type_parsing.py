@@ -19,18 +19,19 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
-@pytest.mark.parametrize("format,signals_out, expected_signal", [
-    ('json', 'signals-out.json', 'expected-signals-types.json'),
-    ('yaml', 'signals-out.yaml', 'expected-signals-types.yaml'),
-    ('csv', 'signals-out.csv', 'expected-signals-types.csv')])
-def test_data_types_export_single_file(format, signals_out, expected_signal, change_test_dir):
+@pytest.mark.parametrize("format, signals_out, expected_signal, type_file", [
+    ('json', 'signals-out.json', 'expected-signals-types.json', 'VehicleDataTypes.vspec'),
+    ('json', 'signals-out.json', 'expected-signals-types.json', 'VehicleDataTypesFlat.vspec'),
+    ('yaml', 'signals-out.yaml', 'expected-signals-types.yaml', 'VehicleDataTypes.vspec'),
+    ('csv', 'signals-out.csv', 'expected-signals-types.csv', 'VehicleDataTypes.vspec')])
+def test_data_types_export_single_file(format, signals_out, expected_signal, type_file, change_test_dir):
     """
     Test that data types provided in vspec format are converted correctly
     """
     args = ["../../../vspec2x.py", "--format", format]
     if format == 'json':
         args.append('--json-pretty')
-    args.extend(["-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml",
+    args.extend(["-vt", type_file, "-u", "../test_units.yaml",
                  "test.vspec", signals_out, "1>", "out.txt", "2>&1"])
     test_str = " ".join(args)
 
