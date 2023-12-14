@@ -1,0 +1,69 @@
+# Copyright (c) 2023 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# Same content as other type files, but no #include directives used.
+
+VehicleDataTypes:
+  type: branch
+  description: Top-level branch for vehicle data types.
+
+VehicleDataTypes.TestBranch1:
+  type: branch
+  description: "Test branch with structs and properties definitions"
+
+VehicleDataTypes.TestBranch1.NestedStruct:
+  type: struct
+  description: "A struct that is going to be used within another struct - Nested"
+
+VehicleDataTypes.TestBranch1.NestedStruct.x:
+  type: property
+  description: "x property"
+  datatype: double
+  min: -10
+
+VehicleDataTypes.TestBranch1.NestedStruct.y:
+  type: property
+  description: "y property"
+  datatype: double
+  max: 10
+
+VehicleDataTypes.TestBranch1.NestedStruct.z:
+  type: property
+  description: "z property"
+  datatype: double
+  default: 1
+
+VehicleDataTypes.TestBranch1.ParentStruct:
+  type: struct
+  description: "A struct that is going to contain properties that are structs themselves"
+
+VehicleDataTypes.TestBranch1.ParentStruct.x_property:
+  type: property
+  description: "A property of struct-type. The struct name is specified relative to the branch"
+  datatype: NestedStruct
+
+VehicleDataTypes.TestBranch1.ParentStruct.y_property:
+  type: property
+  description: "A property of struct-type. The struct name is specified as a fully qualified name"
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct
+
+VehicleDataTypes.TestBranch1.ParentStruct.x_properties:
+  type: property
+  description: "A property of struct-type array and an arraysize"
+  datatype: NestedStruct[]
+  arraysize: 10
+
+VehicleDataTypes.TestBranch1.ParentStruct.y_properties:
+  type: property
+  description: "A property of struct-type array and no arraysize"
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct[]
+
+VehicleDataTypes.TestBranch1.ParentStruct.z_property:
+  type: property
+  description: "A primitive property"
+  datatype: double
