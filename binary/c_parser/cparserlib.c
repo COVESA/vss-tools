@@ -50,7 +50,24 @@ typedef struct SearchContext_t {
 	FILE* listFp;
 } SearchContext_t;
 
-uint8_t validationMatrix[4][4] = {{1,2,11,12}, {2,2,12,12}, {11,12,11,12}, {12,12,12,12}};
+// Access control values: none=0, write-only=1. read-write=2, consent +=10
+// matrix preserving inherited value with read-write having priority over write-only and consent over no consent
+uint8_t validationMatrix[5][5] = {{0,1,2,11,12}, {1,1,2,11,12}, {2,2,2,12,12}, {11,11,12,11,12}, {12,12,12,12,12}};
+
+uint8_t getMaxValidation(uint8_t newValidation, uint8_t currentMaxValidation) {
+	return validationMatrix[translateToMatrixIndex(newValidation)][translateToMatrixIndex(currentMaxValidation)];
+}
+
+uint8_t translateToMatrixIndex(uint8_t index) {
+	switch (index) {
+		case 0: return 0;
+		case 1: return 1;
+		case 2: return 2;
+		case 11: return 3;
+		case 12: return 4;
+	}
+	return 0;
+}
 
 void initReadMetadata() {
 	readTreeMetadata.currentDepth = 0;
@@ -219,7 +236,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 	if (strcmp(getPathSegment(0, context), "*") == 0) {
 		context->speculationIndex++;
 	}
-	context->maxValidation = validationMatrix[VSSgetValidation(thisNode)][context->maxValidation];
+	context->maxValidation = getMaxValidation(VSSgetValidation(thisNode), context->maxValidation);
 	if (VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			strcpy(context->searchData[context->numOfMatches].responsePaths, context->matchPath);
