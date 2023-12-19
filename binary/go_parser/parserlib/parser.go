@@ -53,8 +53,24 @@ type SearchContext_t struct {
 	ListFp *os.File
 }
 
-var validationMatrix [4][4]int = [4][4]int{{1,2,11,12}, {2,2,12,12}, {11,12,11,12}, {12,12,12,12}}
+// Access control values: none=0, write-only=1. read-write=2, consent +=10
+// matrix preserving inherited value with read-write having priority over write-only and consent over no consent
+var validationMatrix [5][5]int = [5][5]int{{0,1,2,11,12}, {1,1,2,11,12}, {2,2,2,12,12}, {11,11,12,11,12}, {12,12,12,12,12}}
 
+func getMaxValidation(newValidation int, currentMaxValidation int) int {
+	return validationMatrix[translateToMatrixIndex(newValidation)][translateToMatrixIndex(currentMaxValidation)]
+}
+
+func translateToMatrixIndex(index int) int {
+	switch index {
+		case 0: return 0
+		case 1: return 1
+		case 2: return 2
+		case 11: return 3
+		case 12: return 4
+	}
+	return 0
+}
 
 func initReadMetadata() {
 	readTreeMetadata.CurrentDepth = 0
@@ -179,7 +195,7 @@ func saveMatchingNode(thisNode *def.Node_t, context *SearchContext_t, done *bool
 	if (getPathSegment(0, context) == "*") {
 		context.SpeculationIndex++
 	}
-	context.MaxValidation = validationMatrix[VSSgetValidation(thisNode)][context.MaxValidation]
+	context.MaxValidation = getMaxValidation(VSSgetValidation(thisNode), context.MaxValidation)
 	if (VSSgetType(thisNode) != def.BRANCH  && VSSgetType(thisNode) != def.STRUCT || context.LeafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			context.SearchData[context.NumOfMatches].NodePath = context.MatchPath
