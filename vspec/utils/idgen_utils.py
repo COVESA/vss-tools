@@ -35,7 +35,7 @@ def get_node_identifier_bytes(
         f"allowed: {allowed}"
         f"min: {minimum}"
         f"max: {maximum}"
-    ).encode("utf-8")
+    ).encode("utf-8").lower()
 
 
 def fnv1_32_hash(identifier: bytes) -> int:
