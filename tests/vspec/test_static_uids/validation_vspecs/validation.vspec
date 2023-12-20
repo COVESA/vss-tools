@@ -75,4 +75,3 @@ A.StringArray:
   description: A.StringArray is a leaf of A of datatype string array
   staticUID: '0xE8A4A62B'
   type: sensor
-
