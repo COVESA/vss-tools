@@ -31,7 +31,7 @@ setup(
     description='COVESA Vehicle Signal Specification tooling.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    version='4.2.dev0',
+    version='4.1.1',
     url='https://github.com/COVESA/vss-tools',
     license='Mozilla Public License 2.0',
     packages=find_packages(exclude=('tests', 'contrib')),
