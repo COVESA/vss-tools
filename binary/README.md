@@ -31,7 +31,8 @@ Current version is found at https://github.com/COVESA/vehicle_signal_specificati
 Access Control of the signals can be supported by including the extended attribute validate in each of the nodes. This attribute is used by the VISSv2 specification. More information can be found in: <a href="https://www.w3.org/TR/viss2-core/#access-control-selection">VISS Access Control. </a>In case the validate attribute is added to the nodes, it must be specified when invoking the tool using the extended attributes flag (-e):
 
 ```
-$ vspec2binary.py -e validate -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
+$ cd ..  # contiue from the previous example
+$ vss-tools/vspec2binary.py -e validate -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
 ```
 
 
@@ -105,7 +106,7 @@ The binary node file format is as follows:<br>
 The Allowed string contains an array of allowed, each Allowed is preceeded by two characters holding the size of the Allowed sub-string.
 The size is in hex format, with values from "01" to "FF". An example is "03abc0A012345678902cd" which contains the three Alloweds "abc", "0123456789", and "cd".<br><br>
 
-The nodes are written into the file in the order given by an iterative method as shown in the following pseudocode:
+The nodes are written into the file in the order given by a recursive method as shown in the following pseudocode:
 ```
 def traverseAndWriteNode(thisNode):
 	writeNode(thisNode)
@@ -113,4 +114,4 @@ def traverseAndWriteNode(thisNode):
 		traverseAndWriteNode(thisNode.Child[i])
 ```
 
-When reading the file the same iterative pattern must be used to generate the correct VSS tree, as is the case for all the described tools.
+When reading the file the same recursive pattern must be used to generate the correct VSS tree, as is the case for all the described tools.
