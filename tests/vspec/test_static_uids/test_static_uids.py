@@ -83,11 +83,11 @@ def change_test_dir(request, monkeypatch):
 @pytest.mark.parametrize(
     "node_name, unit, datatype, allowed, minimum, maximum, result_static_uid",
     [
-        ("TestNode", "m", VSSDataType.UINT16, "", 0, 10000, "156365B2"),
-        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", "0931A8FA"),
-        ("TestUnit", "degrees/s", VSSDataType.FLOAT, "", "", "", "C733138C"),
-        ("TestMinMax", "percent", VSSDataType.UINT8, "", 0, 100, "72A24EF1"),
-        ("TestEnum", "m", VSSDataType.STRING, ["YES, NO"], "", "", "DEA50110"),
+        ("TestNode", "m", VSSDataType.UINT16, "", 0, 10000, "A1D565B2"),
+        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", "B5D7A8FA"),
+        ("TestUnit", "degrees/s", VSSDataType.FLOAT, "", "", "", "DEA9138C"),
+        ("TestMinMax", "percent", VSSDataType.UINT8, "", 0, 100, "88FC5491"),
+        ("TestEnum", "m", VSSDataType.STRING, ["YES, NO"], "", "", "06AEB370"),
     ],
 )
 def test_generate_id(
