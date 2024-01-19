@@ -129,18 +129,6 @@ class VSSNode(Node):
             extractCoreAttribute(attribute)
 
         # Datatype and unit need special handling, so we do some further analysis
-        # self.data_type shall only be set if base type is a primitive (VSSDataType)
-        if self.has_datatype():
-            if self.is_signal() or self.is_property():
-                self.data_type_str = self.source_dict["datatype"]
-                self.validate_and_set_datatype()
-            else:
-                logging.error("Item %s cannot have datatype, only allowed for signal and property!", self.name)
-                sys.exit(-1)
-        elif (self.is_signal() or self.is_property()):
-            raise IncompleteElementException(
-                (f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: "
-                 f"Elements of type {self.type.value} need to have a datatype declared."))
 
         # Units are applicable only for primitives. Not user defined types.
         if self.has_unit():
@@ -154,6 +142,22 @@ class VSSNode(Node):
             if self.unit is None:
                 logging.error(f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
                 sys.exit(-1)
+
+        # self.data_type shall only be set if base type is a primitive (VSSDataType)
+        if self.has_datatype():
+            if self.is_signal() or self.is_property():
+                self.data_type_str = self.source_dict["datatype"]
+                self.validate_and_set_datatype()
+            else:
+                logging.error("Item %s cannot have datatype, only allowed for signal and property!", self.name)
+                sys.exit(-1)
+        elif (self.is_signal() or self.is_property()):
+            raise IncompleteElementException(
+                (f"Incomplete element {self.name} from {self.source_dict['$file_name$']}: "
+                 f"Elements of type {self.type.value} need to have a datatype declared."))
+
+        # Datatype check for unit performed first when we have set the right datatype
+        if self.has_unit():
 
             if not self.has_datatype():
                 logging.error("Unit specified for item not using standard datatype: %s", self.name)
@@ -362,8 +366,18 @@ class VSSNode(Node):
         require the entire tree to be rendered first. These are validated after the entire tree is rendered.
         """
         is_array = ARRAY_SUBSCRIPT_OP in self.data_type_str
+        # get the base name without subscript decoration
+        undecorated_datatype_str = self.data_type_str.split(
+            DEFAULT_SEPARATOR)[-1].replace(ARRAY_SUBSCRIPT_OP, '')
+
         try:
             self.datatype = VSSDataType.from_str(self.data_type_str)
+
+            if self.unit and self.unit.allowed_datatypes:
+                if (not ((undecorated_datatype_str in self.unit.allowed_datatypes) or
+                         (VSSDataType.is_numeric(self.datatype) and "numeric" in self.unit.allowed_datatypes))):
+                    logging.error("Datatype %s not allowed for unit %s", self.data_type_str, self.unit.id)
+                    sys.exit(-1)
         except KeyError as e:
             if self.type == VSSType.PROPERTY:
                 # Fully Qualified name as data type name
@@ -372,9 +386,6 @@ class VSSNode(Node):
                         (f"Qualified datatype name {self.data_type_str} provided in node {self.qualified_name()}. ",
                          "Semantic checks will be performed after the entire tree is rendered. SKIPPING NOW..."))
                 else:
-                    # get the base name without subscript decoration
-                    undecorated_datatype_str = self.data_type_str.split(
-                        DEFAULT_SEPARATOR)[-1].replace(ARRAY_SUBSCRIPT_OP, '')
                     # Custom data types can contain names defined under the
                     # same branch
                     struct_fqn = self.get_struct_qualified_name(
