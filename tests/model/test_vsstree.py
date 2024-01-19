@@ -8,6 +8,7 @@
 
 import unittest
 import os
+import pytest
 
 from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
 from vspec.model.vsstree import VSSNode
@@ -79,6 +80,7 @@ class TestVSSNode(unittest.TestCase):
                   "datatype": "uint8", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
 
         unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+        VSSUnitCollection.reset_units()
         VSSUnitCollection.load_config_file(unit_file)
 
         node_target = VSSNode(
@@ -106,6 +108,96 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual(VSSUnitCollection.get_unit("hogshead"), node_target.unit)
         self.assertEqual(0, node_target.min)
         self.assertEqual(100, node_target.max)
+
+    def test_unit_datatype(self):
+
+        unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+        VSSUnitCollection.reset_units()
+        VSSUnitCollection.load_config_file(unit_file)
+
+        # int16 explicitly listed
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "int16", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("puncheon")
+
+        # uint16 explicitly listed
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("puncheon")
+
+        # uint16[] is ok as uint16 is explicitly listed
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16[]", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("puncheon")
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "float", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        # float not ok
+
+        with pytest.raises(SystemExit):
+            node_source = VSSNode(
+                "MyNode2",
+                source,
+                VSSTreeType.SIGNAL_TREE.available_types())
+
+        # Hogshead defined as "numeric", i.e. all numeric types shall be accepted
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("hogshead")
+
+        # Also array of numeric
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16[]", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("hogshead")
+
+        # But not string
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "string", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        with pytest.raises(SystemExit):
+            node_source = VSSNode(
+                "MyNode2",
+                source,
+                VSSTreeType.SIGNAL_TREE.available_types())
 
     def test_tree_find(self):
         """

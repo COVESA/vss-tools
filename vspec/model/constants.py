@@ -18,7 +18,7 @@ import logging
 import sys
 from enum import Enum, EnumMeta
 from typing import (
-    Sequence, Type, TypeVar, Optional, Dict, TextIO
+    Sequence, Type, TypeVar, Optional, Dict, TextIO, List
 )
 from collections import abc
 
@@ -37,14 +37,16 @@ class VSSUnit(str):
     unit: Optional[str] = None  # Typically full name like "Volt"
     definition: Optional[str] = None
     quantity: Optional[str] = None  # Typically quantity, like "Voltage"
+    allowed_datatypes: Optional[List[str]] = None  # Typically quantity, like "Voltage"
 
     def __new__(cls, id: str, unit: Optional[str] = None, definition: Optional[str] = None,
-                quantity: Optional[str] = None) -> VSSUnit:
+                quantity: Optional[str] = None, allowed_datatypes: Optional[List[str]] = None) -> VSSUnit:
         self = super().__new__(cls, id)
         self.id = id
         self.unit = unit
         self.definition = definition
         self.quantity = quantity
+        self.allowed_datatypes = allowed_datatypes
         return self
 
     @property
@@ -148,6 +150,16 @@ class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
     DOUBLE_ARRAY = "double[]"
     STRING_ARRAY = "string[]"
 
+    @classmethod
+    def is_numeric(cls, datatype):
+        """
+        Return true if this datatype accepts numerical values
+        """
+        if datatype in [VSSDataType.STRING, VSSDataType.STRING_ARRAY,
+                        VSSDataType.BOOLEAN, VSSDataType.BOOLEAN_ARRAY]:
+            return False
+        return True
+
 
 class VSSUnitCollection():
     units: Dict[str, VSSUnit] = dict()
@@ -203,7 +215,22 @@ class VSSUnitCollection():
                     logging.info("Quantity %s used by unit %s has not been defined", quantity, k)
                     VSSQuantityCollection.add_quantity(quantity)
 
-                unit_node = VSSUnit(k, unit, definition, quantity)
+                allowed_datatypes = None
+
+                if "allowed_datatypes" in v:
+                    allowed_datatypes = []
+                    for datatype in v["allowed_datatypes"]:
+                        allowed_datatypes.append(datatype)
+                        if datatype == "numeric":
+                            # Symbolic type for all numeric types
+                            continue
+                        try:
+                            VSSDataType.from_str(datatype)
+                        except KeyError:
+                            logging.error("Unknown datatype %s in unit definition", datatype)
+                            sys.exit(-1)
+
+                unit_node = VSSUnit(k, unit, definition, quantity, allowed_datatypes)
                 if k in cls.units:
                     logging.warning("Redefinition of unit %s", k)
                 cls.units[k] = unit_node
