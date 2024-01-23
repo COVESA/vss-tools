@@ -1,6 +1,6 @@
 # vspec2id - vspec static UID generator and validator
 
-The vspecID.py script is used to generate and validate static UIDs for all nodes in the tree.
+The vspec2id.py script is used to generate and validate static UIDs for all nodes in the tree.
 They will be used as unique identifiers to transmit data between nodes. The static UIDs are
 implemented to replace long strings like `Vehicle.Body.Lights.DirectionIndicator.Right.IsSignaling`
 with a 4-byte identifier.
@@ -9,8 +9,9 @@ with a 4-byte identifier.
 
 ```bash
 usage: vspec2id.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid] [--no-expand] [-o overlays] [-u unit_file]
-                   [-vt vspec_types_file] [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
-                   [--gqlfield GQLFIELD GQLFIELD] [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export]
+                   [-q quantity_file] [-vt vspec_types_file] [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
+                   [--gqlfield GQLFIELD GQLFIELD] [--jsonschema-all-extended-attributes] [--jsonschema-disallow-additional-properties] [--jsonschema-require-all-properties] [--jsonschema-pretty]
+                   [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export] [--strict-mode]
                    <vspec_file> <output_file>
 
 Convert vspec to other formats.
@@ -27,6 +28,7 @@ IDGEN arguments:
                         Path to validation file.
   --only-validate-no-export
                         For pytests and pipelines you can skip the export of the <output_file>
+  --strict-mode         Strict mode means that the generation of static UIDs is case-sensitive.
 ```
 
 ## Example
@@ -42,6 +44,9 @@ cd path/to/your/vss-tools
 
 Great, you generated your first overlay that will also be used as your validation file as soon as you update your
 vehicle signal specification file.
+
+If needed you can make the static UID generation case-sensitive using the command line argument `--strict-mode`. It
+will default to false.
 
 ### Generate e.g. yaml file with static UIDs
 
