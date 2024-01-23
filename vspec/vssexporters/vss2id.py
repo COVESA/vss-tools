@@ -59,8 +59,9 @@ def generate_split_id(
     @return: tuple of hashed string and id counter
     """
 
+    name = node.fka[0] if hasattr(node, 'fka') and node.fka else node.qualified_name()
     identifier = get_node_identifier_bytes(
-        node.qualified_name(),
+        name,
         node.data_type_str,
         node.type.value,
         node.get_unit(),

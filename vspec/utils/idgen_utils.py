@@ -69,14 +69,19 @@ def fnv1_32_wrapper(name: str, source: dict, strict_mode: bool):
     @param strict_mode: strict mode means case sensitivity of node qualified names
     @return:
     """
-    allowed: str = source["allowed"] if "allowed" in source.keys() else ""
-    minimum: str = source["min"] if "min" in source.keys() else ""
-    maximum: str = source["max"] if "max" in source.keys() else ""
+    # Verify and assign values from source dictionary using source.get
+    allowed: str = source.get("allowed", "")
+    minimum: str = source.get("min", "")
+    maximum: str = source.get("max", "")
+    datatype: str = source.get("datatype", "")
+    vsstype: str = source.get("type", "")
+    unit: str = source.get("unit", "")
+
     identifier = get_node_identifier_bytes(
         name,
-        source["datatype"],
-        source["type"],
-        source["unit"],
+        datatype,
+        vsstype,
+        unit,
         allowed,
         minimum,
         maximum,

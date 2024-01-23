@@ -83,11 +83,10 @@ A.B.NewName:
   type: actuator
   allowed: ["YES", "NO"]
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
-  fka: ['A.B.OldName', 'A.B.OlderName']
+  fka: ['A.B.OlderName', 'A.B.OldName']
 ```
 
-As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the `fka` attribute
-stating its legacy path.
+As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the `fka` attribute stating its legacy path. For hashing function in previous case `A.B.OlderName` will be used.
 
 To summarize these are the `BREAKING CHANGES` that affect the hash and `NON-BREAKING CHANGES` that throw
 warnings only:
@@ -98,14 +97,14 @@ warnings only:
 | Data type             |     | Deprecation          |
 | Type (i.e. node type) |     | Deleted Attribute    |
 | Unit                  |     | Change description   |
-| Enum values (allowed) |     |                      |
+| Enum values (allowed) |     | Qualified name (fka) |
 | Minimum               |     |                      |
 | Maximum               |     |                      |
 
 Now you should know about all possible changes. To run the validation step, please do:
 
 ```bash
-./vspecID.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v2.vspec --validate-static-uid ../output_id_v1.vspec
+./vspec2id.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v2.vspec --validate-static-uid ../output_id_v1.vspec
 ```
 
 Depending on what you changed in the vehicle signal specification the corresponding errors will be triggered.
