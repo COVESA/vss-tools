@@ -235,7 +235,6 @@ def test_vss_path(caplog: pytest.LogCaptureFixture):
     test_file: str = "./test_vspecs/test_vss_path.vspec"
     clas = shlex.split(get_cla_test(test_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
-
     assert len(caplog.records) == 1 and all(
         log.levelname == "WARNING" for log in caplog.records
     )

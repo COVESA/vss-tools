@@ -101,12 +101,18 @@ def validate_static_uids(
         nonlocal validation_tree_nodes
 
         for key, value in signals_dict.items():
-            matched_uids = [
-                (key, id_validation_tree)
-                for id_validation_tree, other_node in enumerate(validation_tree_nodes)
-                if value["staticUID"] == other_node.extended_attributes["staticUID"]
-            ]
-
+            matched_uids = []
+            for id_validation_tree, other_node in enumerate(validation_tree_nodes):
+                if value["staticUID"] == other_node.extended_attributes["staticUID"]:
+                    if key != other_node.qualified_name():
+                        logging.warning(
+                            f"[Validation] NON-BREAKING change via fka: "
+                            f"SEMANTIC NAME CHANGE or PATH CHANGE '{key}', "
+                            f"it used to be '{other_node.qualified_name()}'. "
+                            f"Static UIDs are matching '{value['staticUID']}', "
+                            f"'{other_node.extended_attributes['staticUID']}'."
+                        )
+                    matched_uids.append((key, id_validation_tree, other_node))
             # if not matched via UID check semantics or path change
             if len(matched_uids) == 0:
                 semantic_match = check_semantics(key, value, config.strict_mode)

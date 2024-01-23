@@ -47,7 +47,7 @@ A.B.OldName:
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
   fka:
   - A.B.OlderName
-  staticUID: '0x8B7DE17D'
+  staticUID: '0x3FB9A236'
   type: sensor
   unit: mm
 A.Float:
