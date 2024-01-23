@@ -81,13 +81,13 @@ def change_test_dir(request, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "node_name, unit, datatype, allowed, minimum, maximum, result_static_uid, strict_mode",
+    "node_name, unit, datatype, allowed, minimum, maximum, result_static_uid",
     [
-        ("TestNode", "m", VSSDataType.UINT16, "", 0, 10000, "A1D565B2", False),
-        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", "B5D7A8FA", False),
-        ("TestUnit", "degrees/s", VSSDataType.FLOAT, "", "", "", "DEA9138C", False),
-        ("TestMinMax", "percent", VSSDataType.UINT8, "", 0, 100, "88FC5491", False),
-        ("TestEnum", "m", VSSDataType.STRING, ["YES, NO"], "", "", "06AEB370", False),
+        ("TestNode", "m", VSSDataType.UINT16, "", 0, 10000, "A1D565B2"),
+        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", "B5D7A8FA"),
+        ("TestUnit", "degrees/s", VSSDataType.FLOAT, "", "", "", "DEA9138C"),
+        ("TestMinMax", "percent", VSSDataType.UINT8, "", 0, 100, "88FC5491"),
+        ("TestEnum", "m", VSSDataType.STRING, ["YES, NO"], "", "", "06AEB370"),
     ],
 )
 def test_generate_id(
@@ -98,10 +98,9 @@ def test_generate_id(
     minimum: str,
     maximum: str,
     result_static_uid: str,
-    strict_mode: bool,
 ):
     node = get_test_node(node_name, unit, datatype, allowed, minimum, maximum)
-    result, _ = vss2id.generate_split_id(node, id_counter=0, strict_mode=strict_mode)
+    result, _ = vss2id.generate_split_id(node, id_counter=0, strict_mode=False)
 
     assert result == result_static_uid
 
