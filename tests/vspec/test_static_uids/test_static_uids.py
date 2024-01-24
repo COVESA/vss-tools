@@ -218,8 +218,14 @@ def test_full_script(caplog: pytest.LogCaptureFixture):
 
 
 @pytest.mark.usefixtures("change_test_dir")
-def test_semantic(caplog: pytest.LogCaptureFixture):
-    validation_file: str = "./validation_vspecs/validation_semantic_change.vspec"
+@pytest.mark.parametrize(
+    "validation_file",
+    [
+        "./validation_vspecs/validation_semantic_change_1.vspec",
+        "./validation_vspecs/validation_semantic_change_2.vspec",
+    ],
+)
+def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str):
     clas = shlex.split(get_cla_validation(validation_file))
     vspec2x.main(["--format", "idgen"] + clas[1:])
 
