@@ -9,8 +9,7 @@ with a 4-byte identifier.
 
 ```bash
 usage: vspec2id.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid] [--no-expand] [-o overlays] [-u unit_file]
-                   [-q quantity_file] [-vt vspec_types_file] [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
-                   [--gqlfield GQLFIELD GQLFIELD] [--jsonschema-all-extended-attributes] [--jsonschema-disallow-additional-properties] [--jsonschema-require-all-properties] [--jsonschema-pretty]
+                   [-q quantity_file] [-vt vspec_types_file] [-ot <types_output_file>] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
                    [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export] [--strict-mode]
                    <vspec_file> <output_file>
 
@@ -85,8 +84,26 @@ A.B.NewName:
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
   fka: ['A.B.OlderName', 'A.B.OldName']
 ```
+or
+```
+A.B.NewName:
+  datatype: string
+  type: actuator
+  allowed: ["YES", "NO"]
+  description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
+  fka: A.B.OlderName
+```
 
-As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the `fka` attribute stating its legacy path. For hashing function in previous case `A.B.OlderName` will be used.
+In order to add fka attribute, one can add fka directly into the vspec file or use overlay feature of vss-tools.
+
+Example mycustom-overlay-fka.vspec
+```
+A.B.NewName:
+  datatype: string
+  type: actuator
+  fka: A.B.OlderName
+```
+As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the Formerly Known As `fka` attribute stating its legacy path. For hashing function in previous case `A.B.OlderName` will be used.
 
 To summarize these are the `BREAKING CHANGES` that affect the hash and `NON-BREAKING CHANGES` that throw
 warnings only:
