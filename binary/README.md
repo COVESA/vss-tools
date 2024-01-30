@@ -31,7 +31,7 @@ Current version is found at https://github.com/COVESA/vehicle_signal_specificati
 Access Control of the signals can be supported by including the extended attribute validate in each of the nodes. This attribute is used by the VISSv2 specification. More information can be found in: <a href="https://www.w3.org/TR/viss2-core/#access-control-selection">VISS Access Control. </a>In case the validate attribute is added to the nodes, it must be specified when invoking the tool using the extended attributes flag (-e):
 
 ```
-$ cd ..  # contiue from the previous example
+$ cd ..  # continue from the previous example
 $ vss-tools/vspec2binary.py -e validate -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
 ```
 
