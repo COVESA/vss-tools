@@ -15,17 +15,16 @@ import logging
 import os
 import sys
 from typing import Dict, Tuple
+
+import yaml
+
 from vspec import load_tree
-from vspec.model.constants import VSSTreeType
 from vspec.loggingconfig import initLogging
+from vspec.model.constants import VSSTreeType
 from vspec.model.vsstree import VSSNode
 from vspec.utils import vss2id_val
-from vspec.utils.idgen_utils import (
-    get_node_identifier_bytes,
-    fnv1_32_hash,
-    get_all_keys_values,
-)
-import yaml
+from vspec.utils.idgen_utils import (fnv1_32_hash, get_all_keys_values,
+                                     get_node_identifier_bytes)
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
@@ -42,39 +41,53 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
         default=False,
         help="For pytests and pipelines you can skip the export of the vspec file.",
     )
+    parser.add_argument(
+        "--strict-mode",
+        action="store_true",
+        help="Strict mode means that the generation of static UIDs is case-sensitive.",
+    )
 
 
-def generate_split_id(node: VSSNode, id_counter: int) -> Tuple[str, int]:
+def generate_split_id(
+    node: VSSNode, id_counter: int, strict_mode: bool
+) -> Tuple[str, int]:
     """Generates static UIDs using 4-byte FNV-1 hash.
 
     @param node: VSSNode that we want to generate a static UID for
     @param id_counter: consecutive numbers counter for amount of nodes
+    @param strict_mode: strict mode means case sensitivity for static UID generation
     @return: tuple of hashed string and id counter
     """
 
+    if hasattr(node, "fka") and node.fka:
+        name = node.fka[0] if isinstance(node.fka, list) else node.fka
+    else:
+        name = node.qualified_name()
     identifier = get_node_identifier_bytes(
-        node.qualified_name(),
+        name,
         node.data_type_str,
         node.type.value,
         node.get_unit(),
         node.allowed,
         node.min,
         node.max,
+        strict_mode,
     )
     hashed_str = format(fnv1_32_hash(identifier), "08X")
 
     return hashed_str, id_counter + 1
 
 
-def export_node(yaml_dict, node, id_counter) -> Tuple[int, int]:
+def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, int]:
     """Recursive function to export the full tree to a dict
 
     @param yaml_dict: the to be exported dict
     @param node: parent node of the tree
     @param id_counter: counter for amount of ids
+    @param strict_mode: strict mode means case sensitivity for static UID generation
     @return: id_counter, id_counter
     """
-    node_id, id_counter = generate_split_id(node, id_counter)
+    node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
 
     # check for hash duplicates
     for key, value in get_all_keys_values(yaml_dict):
@@ -114,11 +127,7 @@ def export_node(yaml_dict, node, id_counter) -> Tuple[int, int]:
         yaml_dict[node_path]["deprecation"] = node.deprecation
 
     for child in node.children:
-        id_counter, id_counter = export_node(
-            yaml_dict,
-            child,
-            id_counter,
-        )
+        id_counter, id_counter = export_node(yaml_dict, child, id_counter, strict_mode)
 
     return id_counter, id_counter
 
@@ -134,7 +143,9 @@ def export(config: argparse.Namespace, signal_root: VSSNode, print_uuid):
 
     id_counter: int = 0
     signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
-    id_counter, _ = export_node(signals_yaml_dict, signal_root, id_counter)
+    id_counter, _ = export_node(
+        signals_yaml_dict, signal_root, id_counter, config.strict_mode
+    )
 
     if config.validate_static_uid:
         logging.info(

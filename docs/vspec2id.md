@@ -1,6 +1,6 @@
 # vspec2id - vspec static UID generator and validator
 
-The vspecID.py script is used to generate and validate static UIDs for all nodes in the tree.
+The vspec2id.py script is used to generate and validate static UIDs for all nodes in the tree.
 They will be used as unique identifiers to transmit data between nodes. The static UIDs are
 implemented to replace long strings like `Vehicle.Body.Lights.DirectionIndicator.Right.IsSignaling`
 with a 4-byte identifier.
@@ -9,8 +9,8 @@ with a 4-byte identifier.
 
 ```bash
 usage: vspec2id.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid] [--no-expand] [-o overlays] [-u unit_file]
-                   [-vt vspec_types_file] [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
-                   [--gqlfield GQLFIELD GQLFIELD] [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export]
+                   [-q quantity_file] [-vt vspec_types_file] [-ot <types_output_file>] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
+                   [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export] [--strict-mode]
                    <vspec_file> <output_file>
 
 Convert vspec to other formats.
@@ -27,6 +27,7 @@ IDGEN arguments:
                         Path to validation file.
   --only-validate-no-export
                         For pytests and pipelines you can skip the export of the <output_file>
+  --strict-mode         Strict mode means that the generation of static UIDs is case-sensitive.
 ```
 
 ## Example
@@ -42,6 +43,9 @@ cd path/to/your/vss-tools
 
 Great, you generated your first overlay that will also be used as your validation file as soon as you update your
 vehicle signal specification file.
+
+If needed you can make the static UID generation case-sensitive using the command line argument `--strict-mode`. It
+will default to false.
 
 ### Generate e.g. yaml file with static UIDs
 
@@ -78,11 +82,28 @@ A.B.NewName:
   type: actuator
   allowed: ["YES", "NO"]
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
-  fka: ['A.B.OldName', 'A.B.OlderName']
+  fka: ['A.B.OlderName', 'A.B.OldName']
+```
+or
+```
+A.B.NewName:
+  datatype: string
+  type: actuator
+  allowed: ["YES", "NO"]
+  description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
+  fka: A.B.OlderName
 ```
 
-As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the `fka` attribute
-stating its legacy path.
+In order to add fka attribute, one can add fka directly into the vspec file or use overlay feature of vss-tools.
+
+Example mycustom-overlay-fka.vspec
+```
+A.B.NewName:
+  datatype: string
+  type: actuator
+  fka: A.B.OlderName
+```
+As stated if you want to rename the node `A.B.NewName` to `A.NewName` you can also write the Formerly Known As `fka` attribute stating its legacy path. For hashing function in previous case `A.B.OlderName` will be used.
 
 To summarize these are the `BREAKING CHANGES` that affect the hash and `NON-BREAKING CHANGES` that throw
 warnings only:
@@ -93,14 +114,14 @@ warnings only:
 | Data type             |     | Deprecation          |
 | Type (i.e. node type) |     | Deleted Attribute    |
 | Unit                  |     | Change description   |
-| Enum values (allowed) |     |                      |
+| Enum values (allowed) |     | Qualified name (fka) |
 | Minimum               |     |                      |
 | Maximum               |     |                      |
 
 Now you should know about all possible changes. To run the validation step, please do:
 
 ```bash
-./vspecID.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v2.vspec --validate-static-uid ../output_id_v1.vspec
+./vspec2id.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v2.vspec --validate-static-uid ../output_id_v1.vspec
 ```
 
 Depending on what you changed in the vehicle signal specification the corresponding errors will be triggered.
