@@ -6,6 +6,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+
 def get_node_identifier_bytes(
     qualified_name: str,
     data_type: str,
@@ -14,6 +15,7 @@ def get_node_identifier_bytes(
     allowed: str,
     minimum: str,
     maximum: str,
+    strict_mode: bool,
 ) -> bytes:
     """Get a node identifier as bytes. Used as an input for hashing
 
@@ -24,10 +26,11 @@ def get_node_identifier_bytes(
     @param allowed: the enum for allowed values
     @param minimum: min value for the data if exists
     @param maximum: max value for the data if exists
+    @param strict_mode: strict mode means case sensitivity of node qualified names
     @return: a bytes representation of the node
     """
 
-    return (
+    node_identifier: bytes = (
         f"{qualified_name}: "
         f"unit: {unit}, "
         f"datatype: {data_type}, "
@@ -35,7 +38,12 @@ def get_node_identifier_bytes(
         f"allowed: {allowed}"
         f"min: {minimum}"
         f"max: {maximum}"
-    ).encode("utf-8").lower()
+    ).encode()
+
+    if strict_mode:
+        return node_identifier
+    else:
+        return node_identifier.lower()
 
 
 def fnv1_32_hash(identifier: bytes) -> int:
@@ -52,25 +60,32 @@ def fnv1_32_hash(identifier: bytes) -> int:
     return id_hash
 
 
-def fnv1_32_wrapper(name: str, source: dict):
+def fnv1_32_wrapper(name: str, source: dict, strict_mode: bool):
     """A wrapper for the 32-bit hashing function if the input node
      is represented as dict instead of VSSNode
 
     @param name: full name aka qualified name
     @param source:
+    @param strict_mode: strict mode means case sensitivity of node qualified names
     @return:
     """
-    allowed: str = source["allowed"] if "allowed" in source.keys() else ""
-    minimum: str = source["min"] if "min" in source.keys() else ""
-    maximum: str = source["max"] if "max" in source.keys() else ""
+    # Verify and assign values from source dictionary using source.get
+    allowed: str = source.get("allowed", "")
+    minimum: str = source.get("min", "")
+    maximum: str = source.get("max", "")
+    datatype: str = source.get("datatype", "")
+    vsstype: str = source.get("type", "")
+    unit: str = source.get("unit", "")
+
     identifier = get_node_identifier_bytes(
         name,
-        source["datatype"],
-        source["type"],
-        source["unit"],
+        datatype,
+        vsstype,
+        unit,
         allowed,
         minimum,
         maximum,
+        strict_mode,
     )
     return format(fnv1_32_hash(identifier), "08X")
 

@@ -41,7 +41,7 @@ A.B.NewName:
   type: sensor
   unit: mm
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
-  fka: ['A.B.OldName', 'A.B.OlderName']
+  fka: ['A.B.OlderName', 'A.B.OldName']
 A.B.IsLeaf:
   datatype: string
   type: actuator

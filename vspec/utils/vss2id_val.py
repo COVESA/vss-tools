@@ -6,11 +6,13 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from anytree import PreOrderIter  # type: ignore
 import argparse
 import logging
 import sys
 from typing import Optional
+
+from anytree import PreOrderIter  # type: ignore
+
 from vspec.model.vsstree import VSSNode
 from vspec.utils.idgen_utils import fnv1_32_wrapper
 
@@ -40,19 +42,20 @@ def validate_static_uids(
                 f"vspec: '{v['description']}'"
             )
 
-    def check_semantics(k: str, v: dict) -> Optional[int]:
+    def check_semantics(k: str, v: dict, strict_mode: bool) -> Optional[int]:
         """Checks if the change was a semantic or path change. This can be triggered by
         manually adding a fka (formerly known as) attribute to the vspec. The result
         is that the old hash can be matched such that a node keeps the same UID.
 
         @param k: the current key
         @param v: the current value (dict)
+        @param strict_mode: strict mode means case sensitivity for static UID generation
         @return: boolean if it was a semantic or path change
         """
         if "fka" in v.keys():
             semantic_match: Optional[int] = None
             for fka_val in v["fka"]:
-                old_static_uid = "0x" + fnv1_32_wrapper(fka_val, v)
+                old_static_uid = "0x" + fnv1_32_wrapper(fka_val, v, strict_mode)
                 for i, validation_node in enumerate(validation_tree_nodes):
                     if (
                         old_static_uid
@@ -98,15 +101,15 @@ def validate_static_uids(
         nonlocal validation_tree_nodes
 
         for key, value in signals_dict.items():
-            matched_uids = [
-                (key, id_validation_tree)
-                for id_validation_tree, other_node in enumerate(validation_tree_nodes)
-                if value["staticUID"] == other_node.extended_attributes["staticUID"]
-            ]
-
+            matched_uids = []
+            for id_validation_tree, other_node in enumerate(validation_tree_nodes):
+                if value["staticUID"] == other_node.extended_attributes["staticUID"]:
+                    if key != other_node.qualified_name():
+                        _ = check_semantics(key, value, config.strict_mode)
+                    matched_uids.append((key, id_validation_tree))
             # if not matched via UID check semantics or path change
             if len(matched_uids) == 0:
-                semantic_match = check_semantics(key, value)
+                semantic_match = check_semantics(key, value, config.strict_mode)
                 if semantic_match is None:
                     key_found: bool = False
                     for i, node in enumerate(validation_tree_nodes):
