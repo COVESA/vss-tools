@@ -59,12 +59,14 @@ Terminates parsing, when the name of a signal does not follow [VSS recomendation
 Equivalent to setting `--abort-on-unknown-attribute` and `--abort-on-name-style`
 
 ### --uuid
-Request the exporter to output uuids. This setting may not apply to all exporters, some exporters will never output uuids.
-This is currently the default behavior. From VSS 4.0 `--no-uuid` will be the default behavior.
+Request the exporter to output UUIDs. The UUID generated is an RFC 4122 Version 5 UUID created from the qualified name
+of the node and the UUID of the namespace `vehicle_signal_specification`.
+
+This setting may not apply to all exporters, some exporters will never output uuids.
 
 ### --no-uuid
 Request the exporter to not output uuids.
-From VSS 4.0 this will be the default behavior and then this parameter will be deprecated.
+This is the default behavior and this argument is deprecated.
 
 ### --no-expand
 
