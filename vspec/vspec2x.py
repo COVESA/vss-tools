@@ -52,7 +52,7 @@ class Vspec2X():
                             help=" Terminate naming style not follows recommendations.")
         if self.vspec2vss_config.uuid_supported:
             parser.add_argument('--uuid', action='store_true',
-                                help='Include uuid in generated files.')
+                                help='Include uuid in generated files. (Deprecated, will be removed in VSS-tools 6.0)')
         if self.vspec2vss_config.expand_model and self.vspec2vss_config.no_expand_option_supported:
             parser.add_argument('--no-expand', action='store_true',
                                 help='Do not expand tree.')
@@ -97,15 +97,21 @@ class Vspec2X():
         if args.abort_on_name_style or args.strict:
             abort_on_namestyle = True
 
-        if self.vspec2vss_config.extended_attributes_supported:
+        if self.vspec2vss_config.extended_attributes_supported and (len(args.extended_attributes) > 0):
             known_extended_attributes_list = args.extended_attributes.split(",")
-            if len(known_extended_attributes_list) > 0:
-                vspec.model.vsstree.VSSNode.whitelisted_extended_attributes = known_extended_attributes_list
-                logging.info(f"Known extended attributes: {', '.join(known_extended_attributes_list)}")
+            vspec.model.vsstree.VSSNode.whitelisted_extended_attributes = known_extended_attributes_list
+            logging.info(f"Known extended attributes: {', '.join(known_extended_attributes_list)}")
         else:
             known_extended_attributes_list = list()
 
         self.vspec2vss_config.generate_uuid = self.vspec2vss_config.uuid_supported and args.uuid
+
+        # Follow up to https://github.com/COVESA/vehicle_signal_specification/pull/721
+        # Deprecate --uuid
+        if self.vspec2vss_config.generate_uuid:
+            logging.warning("The argument --uuid is deprecated and the uuid feature is planned "
+                            "to be removed in VSS-tools 6.0")
+            logging.info("If you need static identifiers consider using the vspec2id tool")
 
         self.vspec2vss_config.expand_model = (self.vspec2vss_config.expand_model and not
                                               (self.vspec2vss_config.no_expand_option_supported and args.no_expand))

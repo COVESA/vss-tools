@@ -79,7 +79,7 @@ For VSS-Tools 4.0 the following behavior is implemented:
 * No warning is given if neither `--uuid` nor `--no-uuid` is used.
 * If both `--uuid` and `--no-uuid` is used an error is given.
 
-### Default unit fileremoved from vss-tools
+### Default unit file removed from vss-tools
 
 The default unit file `config.yaml`
 has been removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
@@ -88,7 +88,7 @@ From now on, if new units are needed for the VSS catalog they shall be added to 
 [VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
 
 
-## Implemented changes, not yet released in major version
+## Implemented changes, to be released as part of VSS-Tools 5.0
 
 ### Struct support in vspec2ddsidl
 
@@ -111,4 +111,17 @@ if units refer to a quantity that has not been defined an information message wi
 
 ### Change in UUID handling.
 
+As the tool [vspec2id](docs/vspec2id.md) has been added the VSS-project has agreed that there no longer is a need to support
+the legacy uuid functionality.
+
 * The parameter `--no-uuid` is now removed, and an error is given if `--no-uuid` is used.
+* The parameter `--uuid` is now deprecated.
+
+## Planned changes for VSS-Tools 6.0
+
+### Change in UUID handling.
+
+As the tool [vspec2id](docs/vspec2id.md) has been added the VSS-project has agreed that there no longer is a need to support
+the legacy uuid functionality.
+
+* The parameter `--uuid` is now removed.
