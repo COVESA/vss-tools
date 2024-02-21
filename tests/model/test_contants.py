@@ -9,34 +9,8 @@
 import pytest
 import os
 
-from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, StringStyle, VSSTreeType
+from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
 from vspec.model.constants import VSSUnit, VSSQuantity
-
-
-@pytest.mark.parametrize("style_enum, style_str",
-                         [(StringStyle.NONE, "none"),
-                             (StringStyle.CAMEL_CASE, "camelCase"),
-                             (StringStyle.CAMEL_BACK, "camelBack"),
-                             (StringStyle.CAPITAL_CASE, "capitalcase"),
-                             (StringStyle.CONST_CASE, "constcase"),
-                             (StringStyle.LOWER_CASE, "lowercase"),
-                             (StringStyle.PASCAL_CASE, "pascalcase"),
-                             (StringStyle.SENTENCE_CASE, "sentencecase"),
-                             (StringStyle.SNAKE_CASE, "snakecase"),
-                             (StringStyle.TITLE_CASE, "titlecase"),
-                             (StringStyle.TRIM_CASE, "trimcase"),
-                             (StringStyle.UPPER_CASE, "uppercase"),
-                             (StringStyle.ALPHANUM_CASE, "alphanumcase")])
-def test_string_styles(style_enum, style_str):
-    """
-    Test correct parsing of string styles
-    """
-    assert style_enum == StringStyle.from_str(style_str)
-
-
-def test_invalid_string_styles():
-    with pytest.raises(Exception):
-        StringStyle.from_str("not_a_valid_case")
 
 
 @pytest.mark.parametrize("unit_file",

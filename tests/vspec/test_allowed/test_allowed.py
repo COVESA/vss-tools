@@ -43,7 +43,7 @@ def run_exporter(exporter, argument):
     os.system("rm -f out." + exporter + " out.txt")
 
 
-def test_uuid(change_test_dir):
+def test_allowed(change_test_dir):
 
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target

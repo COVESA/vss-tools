@@ -52,7 +52,7 @@ Terminates parsing when an unknown attribute is encountered, that is an attribut
 *Note*: Here an *attribute* refers to VSS signal metadata such as "datatype", "min", "max", ... and not to the VSS signal type attribute
 
 ###  --abort-on-name-style
-Terminates parsing, when the name of a signal does not follow [VSS recomendations](https://covesa.github.io/vehicle_signal_specification/rule_set/basics/#naming-conventions).
+Terminates parsing, when the name of a signal does not follow [VSS Naming Conventions](https://covesa.github.io/vehicle_signal_specification/rule_set/basics/#naming-conventions) for the VSS standard catalog.
 
 ### --strict
 Equivalent to setting `--abort-on-unknown-attribute` and `--abort-on-name-style`

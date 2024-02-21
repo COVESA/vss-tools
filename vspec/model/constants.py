@@ -13,7 +13,6 @@
 #
 # noinspection PyPackageRequirements
 from __future__ import annotations
-import re
 import logging
 import sys
 from enum import Enum, EnumMeta
@@ -24,8 +23,6 @@ from collections import abc
 
 import yaml
 
-
-NON_ALPHANUMERIC_WORD = re.compile('[^A-Za-z0-9]+')
 
 T = TypeVar("T")
 
@@ -96,23 +93,6 @@ class EnumMetaWithReverseLookup(EnumMeta):
 
     def values(cls: Type[T]) -> Sequence[str]:
         return cls.__values__  # type: ignore[attr-defined]
-
-
-class StringStyle(Enum, metaclass=EnumMetaWithReverseLookup):
-    NONE = "none"
-    CAMEL_CASE = "camelCase"
-    CAMEL_BACK = "camelBack"
-    CAPITAL_CASE = "capitalcase"
-    CONST_CASE = "constcase"
-    LOWER_CASE = "lowercase"
-    PASCAL_CASE = "pascalcase"
-    SENTENCE_CASE = "sentencecase"
-    SNAKE_CASE = "snakecase"
-    SPINAL_CASE = "spinalcase"
-    TITLE_CASE = "titlecase"
-    TRIM_CASE = "trimcase"
-    UPPER_CASE = "uppercase"
-    ALPHANUM_CASE = "alphanumcase"
 
 
 class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
@@ -211,7 +191,7 @@ class VSSUnitCollection():
 
                 if ((VSSQuantityCollection.nbr_quantities() > 0) and
                    (VSSQuantityCollection.get_quantity(quantity) is None)):
-                    # Only give info on first occurance and only if quantities exist at all
+                    # Only give info on first occurrence and only if quantities exist at all
                     logging.info("Quantity %s used by unit %s has not been defined", quantity, k)
                     VSSQuantityCollection.add_quantity(quantity)
 

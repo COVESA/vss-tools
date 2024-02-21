@@ -47,9 +47,9 @@ class Vspec2X():
                             help='Use strict checking: Terminate when anything not covered or not recommended '
                                  'by VSS language or extensions is found.')
         parser.add_argument('--abort-on-unknown-attribute', action='store_true',
-                            help=" Terminate when an unknown attribute is found.")
+                            help="Terminate when an unknown attribute is found.")
         parser.add_argument('--abort-on-name-style', action='store_true',
-                            help=" Terminate naming style not follows recommendations.")
+                            help="Terminate if name style does not follow VSS standard catalog naming convention.")
         if self.vspec2vss_config.uuid_supported:
             parser.add_argument('--uuid', action='store_true',
                                 help='Include uuid in generated files. (Deprecated, will be removed in VSS-tools 6.0)')
