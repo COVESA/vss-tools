@@ -12,6 +12,7 @@ import pytest
 
 from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
 from vspec.model.vsstree import VSSNode
+from vspec.model.exceptions import NameStyleValidationException
 
 
 class TestVSSNode(unittest.TestCase):
@@ -265,6 +266,58 @@ class TestVSSNode(unittest.TestCase):
             node_root)
 
         self.assertTrue(node_drivetrain.is_orphan())
+
+    def test_name_style_string(self):
+
+        source = {
+            "description": "Some element.",
+            "type": "sensor",
+            "datatype": "string",
+            "$file_name$": "testfile"}
+
+        node = VSSNode(
+            "this_name_is_not_allowed_in_standard_catalog",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        with pytest.raises(NameStyleValidationException):
+            node.validate_name_style("dummyfile")
+
+        node = VSSNode(
+            "ButThisNameIs",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        # No exception expected
+        node.validate_name_style("dummyfile")
+
+    def test_name_style_boolean(self):
+
+        source = {
+            "description": "Some element.",
+            "type": "sensor",
+            "datatype": "boolean",
+            "$file_name$": "testfile"}
+
+        node = VSSNode(
+            "this_name_is_not_allowed_in_standard_catalog",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        with pytest.raises(NameStyleValidationException):
+            node.validate_name_style("dummyfile")
+
+        # Boolean ones must start with "Is"
+        node = VSSNode(
+            "ThisNameNeither",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        with pytest.raises(NameStyleValidationException):
+            node.validate_name_style("dummyfile")
+
+        node = VSSNode(
+            "IsThisAllowedYesItIs",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        # No exception expected
+        node.validate_name_style("dummyfile")
 
 
 if __name__ == '__main__':
