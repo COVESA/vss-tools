@@ -63,6 +63,8 @@ of the node and the UUID of the namespace `vehicle_signal_specification`.
 
 This setting may not apply to all exporters, some exporters will never output uuids.
 
+*NOTE: The UUID feature is deprecated and will be removed in VSS-tools 6.0. If you need identifiers consider using [vspec2id](vspec2id.md)*
+
 ### --no-expand
 
 By default all tools expand instance information so that instance information like "Row1" become a branch just like
@@ -94,7 +96,7 @@ Please see [test cases](https://github.com/COVESA/vss-tools/tree/master/tests/vs
 python vspec2json.py --json-pretty -vt VehicleDataTypes.vspec -ot VehicleDataTypes.json test.vspec out.json
 ```
 
-Current status for exportes:
+Current status for exporters:
 
 * CSV, JSON, YAML, Protobuf: Supported!
 * All other exporters: Not supported!
@@ -305,12 +307,12 @@ __Note: Not all exporters (need to) support (all) extended metadata attributes!_
 Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter.
 
 ### --json-pretty
-If the paramter is set it will pretty-print the JSON output, otherwise you will get a minimized version
+If the parameter is set it will pretty-print the JSON output, otherwise you will get a minimized version
 
 ## JSONSCHEMA exporter notes
 
 ### --jsonschema-all-extended-attributes
-Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter. This will also add unconverted VSS standard attribtues into the schema using the following attributes
+Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter. This will also add unconverted VSS standard attributes into the schema using the following attributes
 
 | VSS attribute | in schema     |
 |---------------|---------------|
@@ -321,10 +323,10 @@ Lets the exporter generate _all_ extended metadata attributes found in the model
 | comment       | x-comment     |
 | uuid          | x-uuid        |
 
-Not that strict JSON schema validators might not accept jsonschemas whoch such extra, non-standard entries.
+Not that strict JSON schema validators might not accept jsonschemas with such extra, non-standard entries.
 
 ### --jsonschema-disallow-additional-properties
-Do not allow properties not defined in VSS tree, when elements are validated agains the schema, what this basically does is setting
+Do not allow properties not defined in VSS tree, when elements are validated against the schema, what this basically does is setting
 
 ```json
 "additionalProperties": false
@@ -332,7 +334,7 @@ Do not allow properties not defined in VSS tree, when elements are validated aga
 for all defined objects. See: https://json-schema.org/draft/2020-12/json-schema-core#additionalProperties
 
 ###  --jsonschema-require-all-properties
-Require all elements defined in VSS tree for a valid object, i.e. this populates the `required` list with all childs. See: https://json-schema.org/draft/2020-12/json-schema-validation#name-required
+Require all elements defined in VSS tree for a valid object, i.e. this populates the `required` list with all children. See: https://json-schema.org/draft/2020-12/json-schema-validation#name-required
 
 ### --jsonschema-pretty
 If the paramter is set it will pretty-print the JSON output, otherwise you will get a minimized version
