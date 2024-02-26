@@ -142,23 +142,3 @@ This repository is set up to use pre-commit hooks. After you clone the project, 
 ## Building and installing with Pip
 
 For usage of VSS-Tools with Pip (PyPI) please see [README-PYPI.md](README-PYPI.md)
-## 5. CPP adaptation code generation
-You can run the CPP generator with following parameters:
-```
-python contrib/vspec2aaproperties/vspec2aaprop.py ../spec/VehicleSignalSpecification.vspec contrib/vspec2aaproperties/vspec2prop_mapping.yml contrib/vspec2aaproperties/types.hal android_vhal_mapping_cpp.tpl test.cpp
-```
-## 5. CPP adaptation code generation
-You can run the CPP generator with following parameters:
-```
-./test.sh
-```
-
-The script runs the following generator
-python3 contrib/vspec2aaproperties/vspec2aaprop.py ../spec/VehicleSignalSpecification.vspec contrib/vspec2aaproperties/vspec2prop_mapping.yml contrib/vspec2aaproperties/types.hal android_vhal_mapping_cpp.tpl test.cpp
-contrib/vspec2aaproperties/vspec2aaprop.py: Generator host python code. Code uses Jinja2 to actual conversion.
-../spec/VehicleSignalSpecification.vspec: VSS. Used to grab the VSS variable type for the items.
-contrib/vspec2aaproperties/vspec2prop_mapping.yml: YAML representation of the VSS-Android VHAL mapping with scaling/complex conversions.
-contrib/vspec2aaproperties/types.hal: Android header for the VHAL. Used to grab the Android variable type for the items.
-android_vhal_mapping_cpp.tpl: Actual Jinja2 generator for generating the CPP conversion code.
-test.cpp: Output CPP file.
-

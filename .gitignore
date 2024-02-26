@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -96,10 +95,3 @@ ENV/
 # IDE
 .idea
 .vscode
-=======
-*.cpp
-*.csv
-.vscode
-__pycache__
-*.pyc
->>>>>>> 3eec52a (Second draft version of the converter.)
