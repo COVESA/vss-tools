@@ -10,13 +10,15 @@ It is possible to replace the default units by the `-u` parameter, see [vspec2x 
 The syntax of the file with units shall follow this pattern:
 
 ```
-units:
-  puncheon:
-    label: Puncheon
-    description: Volume measure in puncheons (1 puncheon = 318 liters)
-    domain: volume
-  hogshead:
-    label: Hogshead
-    description: Volume measure in hogsheads (1 hogshead = 238 liters)
-    domain: volume
+puncheon:
+  definition: Volume measure in puncheons (1 puncheon = 318 liters)
+  unit: Puncheon
+  quantity: volume
+  allowed_datatypes: ['uint16', 'int16']
+hogshead:
+  definition: Volume measure in hogsheads (1 hogshead = 238 liters)
+  unit: Hogshead
+  quantity: volume
+  allowed_datatypes: ['numeric']
 ```
+
