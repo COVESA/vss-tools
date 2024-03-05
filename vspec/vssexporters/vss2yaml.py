@@ -14,6 +14,7 @@
 
 
 import argparse
+from vspec.model.constants import VSSNodeState
 from vspec.model.vsstree import VSSNode
 import yaml
 import logging
@@ -24,6 +25,14 @@ from vspec.vspec2vss_config import Vspec2VssConfig
 
 
 def export_node(yaml_dict, node, config, print_uuid):
+
+    # if node is deleted, do not include it and all its children in the output
+    if node.state == VSSNodeState.DELETED:
+        node.parent = None
+        for child in node.children:
+            del child
+        del node
+        return
 
     node_path = node.qualified_name()
 
@@ -60,6 +69,9 @@ def export_node(yaml_dict, node, config, print_uuid):
 
     if node.comment != "":
         yaml_dict[node_path]["comment"] = node.comment
+
+    if node.state is not None:
+        yaml_dict[node_path]["state"] = node.state.value
 
     if print_uuid:
         yaml_dict[node_path]["uuid"] = node.uuid

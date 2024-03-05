@@ -9,7 +9,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from anytree import Node, Resolver, ChildResolverError, RenderTree  # type: ignore[import]
-from .constants import VSSType, VSSDataType, VSSUnitCollection, VSSUnit
+from .constants import VSSType, VSSDataType, VSSUnitCollection, VSSUnit, VSSNodeState
 from .exceptions import NameStyleValidationException, \
     ImpossibleMergeException, IncompleteElementException
 from typing import Any, Optional, Set, List
@@ -40,7 +40,7 @@ class VSSNode(Node):
 
     core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
                        "instantiate", "aggregate", "default", "instances", "deprecation", "arraysize",
-                       "comment", "$file_name$", "fka"]
+                       "comment", "$file_name$", "fka", "state"]
 
     # List of accepted extended attributes. In strict terminate if an attribute is
     # neither in core or extended,
@@ -61,6 +61,7 @@ class VSSNode(Node):
     expanded = False
     deprecation = ""
     fka = ""
+    state: VSSNodeState | None = None
 
     def __deepcopy__(self, memo):
         # Deep copy of source_dict and children needed as overlay or programmatic changes
@@ -167,6 +168,9 @@ class VSSNode(Node):
             logging.error(
                 f"Only branches can be instantiated. {self.qualified_name()} is of type {self.type}")
             sys.exit(-1)
+
+        if self.has_state():
+            self.state = VSSNodeState(self.source_dict["state"])
 
     def validate_name_style(self, sourcefile):
         """Checks wether this node is adhering to VSS style conventions.
@@ -333,6 +337,14 @@ class VSSNode(Node):
                 True if this instance declares instances, False otherwise
         """
         return hasattr(self, "instances") and self.instances is not None
+
+    def has_state(self) -> bool:
+        """Check if this instance has a VSS state
+
+        Returns:
+            True if this instance declares state, False otherwise
+        """
+        return hasattr(self, "state") and self.state is not None
 
     def merge(self, other: "VSSNode"):
         """Merges two VSSNode, other parameter overwrites the caller object,

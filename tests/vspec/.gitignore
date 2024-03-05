@@ -1,4 +1,4 @@
 # Ignore files produced during testing, if any
-**/out.json
+test_node_removal/validation_files/out.json
 **/out.txt
 **/out.vspec

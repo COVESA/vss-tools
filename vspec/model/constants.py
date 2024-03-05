@@ -13,14 +13,14 @@
 #
 # noinspection PyPackageRequirements
 from __future__ import annotations
-import re
+
 import logging
+import re
 import sys
-from enum import Enum, EnumMeta
-from typing import (
-    Sequence, Type, TypeVar, Optional, Dict, TextIO, List
-)
 from collections import abc
+from collections.abc import Sequence
+from enum import Enum, EnumMeta
+from typing import Dict, List, Optional, TextIO, Type, TypeVar
 
 import yaml
 
@@ -306,3 +306,9 @@ class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
             available_types = set(["branch", "struct", "property"])
 
         return available_types
+
+
+class VSSNodeState(Enum, metaclass=EnumMetaWithReverseLookup):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    DELETED = "deleted"
