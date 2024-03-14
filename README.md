@@ -118,7 +118,7 @@ Install this project and its dependencies in the local `.venv` folder in this pr
 ```sh
 export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, otherwise uses global location
 pip install pipenv
-export PATH=/home/user/.local/bin:$PATH
+export PATH=/home/${USER}/.local/bin:${PATH}
 pipenv install --dev # install the development dependencies as well
 ```
 
