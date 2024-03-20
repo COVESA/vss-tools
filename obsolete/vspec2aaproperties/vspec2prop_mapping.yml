@@ -1,0 +1,94 @@
+# This describes a signal mapping between VSS
+# and automotive properties defined by Android Automotive.
+# It is formatted as a "VSS layer", i.e. it can be seen as adding metadata
+# to an existing vehicle signal node.
+#
+# The same principle can be used for other signal environment mappings.
+#
+# This mapping _may_ perform a datatype conversion.  It is determined
+# by the respective types of the VSS signal and Property.  Simple type
+# conversions between number types will be applied.  Normal
+# rounding/truncation rules are expected.
+#
+# A linear transformation is also by default applied as follows:
+# target_value = initial_value * <multiplier> + <offset>
+# where multiplier and offset are specified in this mapping document.
+#
+# However, if no multiplier and no offset is specified then the default
+# will be used:  Multiplier default is 1.0 and offset default is 0.0 -->
+# which in other words means the value will be used as-is with no
+# modification/scaling.
+# Special note: If either multiplier or offset is specified,
+# then both shall be specified.
+#
+# If a more complex mapping than linear transformation is required
+# then the "complex" category can be used.  The transformation can then be
+# specified by writing a formula of the following type, where _VSSVAL_
+# represents the value received for a VSS signal.  The result of the 
+# calculation will be used for the property defined by aospId and aospArea.
+# The formula shall in other words define how to go from VSS-value to
+# other-domain.
+#
+# Example of complex formula definition:
+#   translation:
+#      complex: „$INFO_FUEL_CAPACITY * _VSSVAL_ / 100”
+# This example calculates how much fuel is in the tank, by taking the
+# _VSSVAL_ which gives the tank fullness in percent, and multiplies it with
+# information about the tank size.
+#
+# TODO: Establish reverse direction strategy (other-domain to VSS).  For
+# simple formulas it would theoretically be possible to determine the
+# inversion of the mathematical function from the forward definition that
+# was given - however this is non-trivial for more complex functions, which
+# might be needed.
+#
+# Even more complex scenarios are handled like this:
+# If the "complex" category is specified without providing a formula, then
+# an empty stub function will be generated, for a human programmer to later
+# fill in with any desired code logic.
+
+Vehicle.ADAS.ABS.IsEngaged:
+  #convertBool
+  aospId: VehicleProperty::ABS_ACTIVE
+  aospArea: VehicleArea::GLOBAL
+
+Vehicle.Powertrain.CombustionEngine.EOT:
+  #convertFloatLinear
+  aospId: VehicleProperty::ENGINE_OIL_TEMP
+  aospArea: VehicleArea::GLOBAL
+  multiplier: 1.0
+  offset: 0.0
+
+Vehicle.Chassis.Axle.Row1.Wheel.Left.Tire.Pressure:
+  #convertFloatLinear
+  aospId: VehicleProperty::TIRE_PRESSURE
+  aospArea: VehicleAreaWheel::LEFT_FRONT
+
+Vehicle.Chassis.Axle.Row1.Wheel.Right.Tire.Pressure:
+  #convertFloatLinear
+  aospId: VehicleProperty::TIRE_PRESSURE
+  aospArea: VehicleAreaWheel::RIGHT_FRONT
+
+Vehicle.Chassis.Axle.Row2.Wheel.Left.Tire.Pressure:
+  #convertFloatLinear
+  aospId: VehicleProperty::TIRE_PRESSURE
+  aospArea: VehicleAreaWheel::LEFT_REAR
+
+Vehicle.Chassis.Axle.Row2.Wheel.Right.Tire.Pressure:
+  #convertFloatLinear
+  aospId: VehicleProperty::TIRE_PRESSURE
+  aospArea: VehicleAreaWheel::RIGHT_REAR
+
+Vehicle.Speed:
+  #convertFloatLinear
+  aospId: VehicleProperty::PERF_VEHICLE_SPEED
+  aospArea: VehicleArea::GLOBAL
+  multiplier: 0.27777777777777777777  # (divide by 3.6)
+  offset: 0.0
+
+Vehicle.Powertrain.FuelSystem.Level:
+  aospId: VehicleProperty::FUEL_LEVEL
+  aospArea: VehicleArea::GLOBAL
+  translation:
+    complex: "$INFO_FUEL_CAPACITY * _VAL_ / 100"
+

@@ -1,0 +1,1 @@
+python vspec2aaprop.py --include templates --vspec ../../../spec/VehicleSignalSpecification.vspec --map vspec2prop_mapping.yml --android types.hal --jinja android_vhal_mapping_cpp.tpl --typemap typemap.yml test.cpp

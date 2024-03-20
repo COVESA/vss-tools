@@ -1,0 +1,6 @@
+pyyaml>=5.1
+anytree>=2.8.0
+stringcase>=1.2.0
+deprecation>=2.1.0
+pytest>=2.7.2
+jinja2>=2.11
