@@ -42,6 +42,31 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 
 All current tools are based on common Python functionality in the `vspec` folder to read, parse and expand a Vehicle Signal Specification files(*.vspec files). As an example, if the standard [VSS root file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/VehicleSignalSpecification.vspec) is given as input then the Python tooling will read all included files, do a validation of the content, expand any instances used and create an in-memory representation which then can be used by specialized tools to generate the wanted output.
 
+## Compatibility with VSS
+
+The [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification) includes vss-tools as a submodule.
+The vss-tools version linked by the VSS repository is the preferred vss-tools version to use for that particular version of the VSS repository. It is not guaranteed that newer or older versions of vss-tools can successfully handle that particular version of the VSS repository. The table below gives an overview of basic version support for`vspec2json.py`,
+other exporters may have stricter requirements.
+
+VSS-tools version | Supported VSS versions | Comments
+-----------------|------------------------|----------------
+`v3.0`| `v3.0` - `v3.1.1`
+`v3.1`| `v3.0` -`v4.0`
+`v4.0`| `v4.0`
+`v4.1`| `v4.0` -
+`<latest source>`| `v4.0` -
+
+### Changes affecting compatibility
+
+Examples on changes affecting compatibility
+
+* VSS version `v4.1` introduced a new syntax for the unit files that cannot be handled by `vss-tools < v4.1`
+* From `v4.0` vss-tools expects unit file to be explicitly specified or provided in the same directory as the VSS input.
+  VSS `v3.1` is the first VSS version including a unit file in the VSS repository.
+  This means vss-tools from `v4.0` onwards cannot handle VSS-versions prior to VSS `v3.1`
+* VSS-tools `v3.1` only supported `default` for attributes, resulting in that newer VSS-versions is not supported.
+* VSS-tools `v4.0` requires case-sensitive for type, resulting in that VSS versions `v3.1` and earlier is not supported.
+
 ## Getting started
 
 ## Prerequisites
