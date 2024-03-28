@@ -10,19 +10,27 @@
 # Convert vspec files to various other formats
 #
 
+
+import os
 import shlex
 
 import pytest
-import yaml
 
-import vspec2json
-import vspec2yaml
+import vspec2binary  # noqa: F401
+import vspec2csv  # noqa: F401
+import vspec2ddsidl  # noqa: F401
+import vspec2franca  # noqa: F401
+import vspec2graphql  # noqa: F401
+import vspec2json  # noqa: F401
+import vspec2jsonschema  # noqa: F401
+import vspec2protobuf  # noqa: F401
+import vspec2yaml  # noqa: F401
 
 # HELPERS
 
 
-def get_cla(exporter_path: str, test_file: str, out_file: str):
-    return exporter_path + " " + test_file + " " + out_file
+def get_cla(test_file: str, out_file: str):
+    return test_file + " " + out_file
 
 
 # FIXTURES
@@ -34,89 +42,101 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
-# UNIT TESTS
-# ToDo
-
 # INTEGRATION TESTS
 
 
 @pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
-    "exporter_path, out_file",
+    "exporter, out_file",
     [
-        ("../../../vspec2yaml.py", "out.yaml"),
-        # ("../../../vspec2json.py", "out.json"),
+        # ("vspec2binary", "out.bin"),
+        ("vspec2csv", "out.csv"),
+        ("vspec2ddsidl", "out.idl"),
+        ("vspec2franca", "out.fidl"),
+        ("vspec2graphql", "out.graphql"),
+        ("vspec2json", "out.json"),
+        ("vspec2jsonschema", "out.jsonschema"),
+        ("vspec2protobuf", "out.pb"),
+        ("vspec2yaml", "out.yaml"),
     ],
 )
-def test_exporter(caplog: pytest.LogCaptureFixture, exporter_path: str, out_file: str):
-    test_file: str = "test_files/test.vspec"
-
-    clas = shlex.split(get_cla(exporter_path, test_file, out_file))
-    print(f"clas: {clas}")
-    if "yaml" in exporter_path:
-        vspec2yaml.main(clas[1:])
-        result_dict: dict
-        with open(out_file) as f:
-            result_dict = yaml.load(f, Loader=yaml.FullLoader)
-
-        validation_dict: dict
-        with open("validation_files/validation.yaml") as f:
-            validation_dict = yaml.load(f, Loader=yaml.FullLoader)
-
-        assert result_dict.keys() == validation_dict.keys()
-
-    elif "json" in exporter_path:
-        vspec2json.main(clas[1:])
-        # ToDo json and other exporters
-
-
-@pytest.mark.usefixtures("change_test_dir")
-@pytest.mark.parametrize(
-    "exporter_path, out_file",
-    [
-        ("../../../vspec2yaml.py", "out.yaml"),
-        # ("../../../vspec2json.py", "out.json"),
-    ],
-)
-def test_deleted_node(
-    caplog: pytest.LogCaptureFixture, exporter_path: str, out_file: str
-):
+def test_deleted_node(exporter: str, out_file: str):
     test_file: str = "test_files/test_deleted_node.vspec"
-    clas = shlex.split(get_cla(exporter_path, test_file, out_file))
+    clas = shlex.split(
+        get_cla(test_file, out_file)
+    )  # get command line arguments without the executable
 
-    if "yaml" in exporter_path:
-        vspec2yaml.main(clas[1:])
-        result_file: dict = {}
-        with open(out_file) as f:
-            result_file = yaml.load(f, Loader=yaml.FullLoader)
-        assert "A.B.Int32" not in result_file.keys()
+    eval(f"{exporter}.main({clas})")
+    with open(out_file) as f:
+        result = f.read()
 
-    elif "json" in exporter_path:
-        # ToDo json and other exporters
-        pass
+    remaining_nodes = [
+        "A.Float",
+        "A.Int16",
+        "A.String",
+        "A.StringArray",
+        "A.B.NewName",
+        "A.B.IsLeaf",
+        "A.B.Min",
+        "A.B.Max",
+    ]
+    if exporter in ["vspec2json", "vspec2ddsidl", "vspec2jsonschema", "vspec2protobuf"]:
+        assert "A.B.Int32".split(".")[-1] not in result
+        remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
+        for node in remaining_nodes:
+            assert node in result
+    if exporter == "vspec2graphql":
+        assert "A.B.Int32".replace(".", "_") not in result
+        remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
+        for node in remaining_nodes:
+            assert node in result
+    else:
+        assert "A.B.Int32" not in result
+        for node in remaining_nodes:
+            assert node in result
+
+    # remove all generated files
+    os.system(f"rm -f {out_file}")
 
 
 @pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
-    "exporter_path, out_file",
+    "exporter, out_file",
     [
-        ("../../../vspec2yaml.py", "out.yaml"),
-        # ("../../../vspec2json.py", "out.json"),
+        # ("vspec2binary", "out.bin"),
+        ("vspec2csv", "out.csv"),
+        ("vspec2ddsidl", "out.idl"),
+        ("vspec2franca", "out.fidl"),
+        ("vspec2graphql", "out.graphql"),
+        ("vspec2json", "out.json"),
+        ("vspec2jsonschema", "out.jsonschema"),
+        ("vspec2protobuf", "out.pb"),
+        ("vspec2yaml", "out.yaml"),
     ],
 )
-def test_deleted_branch(
-    caplog: pytest.LogCaptureFixture, exporter_path: str, out_file: str
-):
+def test_deleted_branch(exporter: str, out_file: str):
+    # import time
+    # time.sleep(10)
     test_file: str = "test_files/test_deleted_branch.vspec"
-    clas = shlex.split(get_cla(exporter_path, test_file, out_file))
+    clas = shlex.split(get_cla(test_file, out_file))
 
-    if "yaml" in exporter_path:
-        vspec2yaml.main(clas[1:])
-        result_file: dict = {}
-        with open(out_file) as f:
-            result_file = yaml.load(f, Loader=yaml.FullLoader)
-        assert "A.B" not in result_file.keys()
+    eval(f"{exporter}.main({clas})")
+    result_file: str
+    with open(out_file) as f:
+        result_file = f.read()
 
-    elif "json" in exporter_path:
-        # ToDo json and other exporters
-        pass
+    remaining_nodes = ["A.Float", "A.Int16", "A.String", "A.StringArray"]
+
+    if exporter in ["vspec2json", "vspec2ddsidl", "vspec2jsonschema", "vspec2protobuf"]:
+        assert "A.B".split(".")[-1] not in result_file
+        remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
+        for node in remaining_nodes:
+            assert node in result_file
+
+    else:
+        assert "A.B" not in result_file
+        for node in remaining_nodes:
+            assert node in result_file
+
+    # remove all generated files
+    os.system(f"rm -f {out_file}")
