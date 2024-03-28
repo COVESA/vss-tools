@@ -12,7 +12,7 @@ import copy
 import logging
 import re
 import sys
-from typing import Any, List, Optional, Set
+from typing import Any
 
 from anytree import (  # type: ignore[import]
     ChildResolverError,

@@ -14,7 +14,6 @@
 
 
 import argparse
-from vspec.model.constants import VSSNodeState
 from vspec.model.vsstree import VSSNode
 import yaml
 import logging

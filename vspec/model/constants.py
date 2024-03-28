@@ -20,7 +20,7 @@ import sys
 from collections import abc
 from collections.abc import Sequence
 from enum import Enum, EnumMeta
-from typing import Dict, List, Optional, TextIO, Type, TypeVar
+from typing import TextIO, TypeVar
 
 import yaml
 
