@@ -26,14 +26,6 @@ from vspec.vspec2vss_config import Vspec2VssConfig
 
 def export_node(yaml_dict, node, config, print_uuid):
 
-    # if node is deleted, do not include it and all its children in the output
-    if node.state == VSSNodeState.DELETED:
-        node.parent = None
-        for child in node.children:
-            del child
-        del node
-        return
-
     node_path = node.qualified_name()
 
     yaml_dict[node_path] = {}
