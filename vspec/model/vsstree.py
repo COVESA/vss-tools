@@ -12,7 +12,7 @@ import copy
 import logging
 import re
 import sys
-from typing import Any
+from typing import Any, List, Optional, Set
 
 from anytree import (  # type: ignore[import]
     ChildResolverError,
@@ -43,10 +43,10 @@ class VSSNode(Node):
     # qualified struct name.
     data_type_str: str = ""
     # data type - enum representation if available
-    datatype: VSSDataType | None
+    datatype: Optional[VSSDataType]
 
     # The node types that the nodes can take
-    available_types: set[str] = set()
+    available_types: Set[str] = set()
 
     core_attributes = [
         "type",
@@ -72,9 +72,9 @@ class VSSNode(Node):
 
     # List of accepted extended attributes. In strict terminate if an attribute is
     # neither in core or extended,
-    whitelisted_extended_attributes: list[str] = []
+    whitelisted_extended_attributes: List[str] = []
 
-    unit: VSSUnit | None = None
+    unit: Optional[VSSUnit] = None
 
     min = ""
     max = ""
@@ -89,7 +89,7 @@ class VSSNode(Node):
     expanded = False
     deprecation = ""
     fka = ""
-    state: VSSNodeState | None = None
+    state: Optional[VSSNodeState] = None
 
     def __deepcopy__(self, memo):
         # Deep copy of source_dict and children needed as overlay or programmatic changes
@@ -106,7 +106,7 @@ class VSSNode(Node):
         self,
         name,
         source_dict: dict,
-        available_types: set[str],
+        available_types: Set[str],
         parent=None,
         children=None,
         break_on_unknown_attribute=False,
@@ -325,7 +325,7 @@ class VSSNode(Node):
             return self.is_leaf
         return False
 
-    def get_struct_qualified_name(self, struct_name) -> str | None:
+    def get_struct_qualified_name(self, struct_name) -> Optional[str]:
         """
         Returns whether a struct node with the given relative name is defined under the branch of this node.
         A relative name is the fully qualified name of the struct without the branch prefix under which it is defined.
@@ -596,7 +596,7 @@ class VSSNode(Node):
             sys.exit(-1)
 
     @staticmethod
-    def get_tree_attrs(node: "VSSNode", proj_fn, filter_fn) -> list[Any]:
+    def get_tree_attrs(node: "VSSNode", proj_fn, filter_fn) -> List[Any]:
         """
         Collect all attributes of tree nodes rooted at `node` by applying the specified projection and filter function.
 
