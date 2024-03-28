@@ -24,23 +24,28 @@ from typing import Dict, List, Optional, TextIO, Type, TypeVar
 
 import yaml
 
-
-NON_ALPHANUMERIC_WORD = re.compile('[^A-Za-z0-9]+')
+NON_ALPHANUMERIC_WORD = re.compile("[^A-Za-z0-9]+")
 
 T = TypeVar("T")
 
 
 class VSSUnit(str):
-    """String subclass for storing unit information.
-    """
-    id: str  # Typically abbreviation like "V"
-    unit: Optional[str] = None  # Typically full name like "Volt"
-    definition: Optional[str] = None
-    quantity: Optional[str] = None  # Typically quantity, like "Voltage"
-    allowed_datatypes: Optional[List[str]] = None  # Typically quantity, like "Voltage"
+    """String subclass for storing unit information."""
 
-    def __new__(cls, id: str, unit: Optional[str] = None, definition: Optional[str] = None,
-                quantity: Optional[str] = None, allowed_datatypes: Optional[List[str]] = None) -> VSSUnit:
+    id: str  # Typically abbreviation like "V"
+    unit: str | None = None  # Typically full name like "Volt"
+    definition: str | None = None
+    quantity: str | None = None  # Typically quantity, like "Voltage"
+    allowed_datatypes: list[str] | None = None  # Typically quantity, like "Voltage"
+
+    def __new__(
+        cls,
+        id: str,
+        unit: str | None = None,
+        definition: str | None = None,
+        quantity: str | None = None,
+        allowed_datatypes: list[str] | None = None,
+    ) -> VSSUnit:
         self = super().__new__(cls, id)
         self.id = id
         self.unit = unit
@@ -55,15 +60,20 @@ class VSSUnit(str):
 
 
 class VSSQuantity(str):
-    """String subclass for storing quantity information.
-    """
+    """String subclass for storing quantity information."""
+
     id: str  # Identifier preferably taken from a standard, like ISO 80000
     definition: str  # Explanation of quantity, for example reference to standard
-    remark: Optional[str] = None  # remark as defined in for example ISO 80000
-    comment: Optional[str] = None
+    remark: str | None = None  # remark as defined in for example ISO 80000
+    comment: str | None = None
 
-    def __new__(cls, id: str, definition: str, remark: Optional[str] = None,
-                comment: Optional[str] = None) -> VSSQuantity:
+    def __new__(
+        cls,
+        id: str,
+        definition: str,
+        remark: str | None = None,
+        comment: str | None = None,
+    ) -> VSSQuantity:
         self = super().__new__(cls, id)
         self.id = id
         self.definition = definition
@@ -78,23 +88,22 @@ class VSSQuantity(str):
 
 class EnumMetaWithReverseLookup(EnumMeta):
     """This class extends EnumMeta and adds:
-     - from_str(str): reverse lookup
-     - values(): sequence of values
+    - from_str(str): reverse lookup
+    - values(): sequence of values
     """
+
     def __new__(typ, *args, **kwargs):
         cls = super().__new__(typ, *args, **kwargs)
         if not hasattr(cls, "__reverse_lookup__"):
-            cls.__reverse_lookup__ = {
-                v.value: v for v in cls.__members__.values()
-            }
+            cls.__reverse_lookup__ = {v.value: v for v in cls.__members__.values()}
         if not hasattr(cls, "__values__"):
             cls.__values__ = tuple(v.value for v in cls.__members__.values())
         return cls
 
-    def from_str(cls: Type[T], value: str) -> T:
+    def from_str(cls: type[T], value: str) -> T:
         return cls.__reverse_lookup__[value]  # type: ignore[attr-defined]
 
-    def values(cls: Type[T]) -> Sequence[str]:
+    def values(cls: type[T]) -> Sequence[str]:
         return cls.__values__  # type: ignore[attr-defined]
 
 
@@ -155,17 +164,21 @@ class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):
         """
         Return true if this datatype accepts numerical values
         """
-        if datatype in [VSSDataType.STRING, VSSDataType.STRING_ARRAY,
-                        VSSDataType.BOOLEAN, VSSDataType.BOOLEAN_ARRAY]:
+        if datatype in [
+            VSSDataType.STRING,
+            VSSDataType.STRING_ARRAY,
+            VSSDataType.BOOLEAN,
+            VSSDataType.BOOLEAN_ARRAY,
+        ]:
             return False
         return True
 
 
-class VSSUnitCollection():
-    units: Dict[str, VSSUnit] = dict()
+class VSSUnitCollection:
+    units: dict[str, VSSUnit] = dict()
 
     @staticmethod
-    def get_config_dict(yaml_file: TextIO, key: str) -> Dict[str, Dict[str, str]]:
+    def get_config_dict(yaml_file: TextIO, key: str) -> dict[str, dict[str, str]]:
         yaml_config = yaml.safe_load(yaml_file)
         if (len(yaml_config) == 1) and (key in yaml_config):
             # Old style unit file
@@ -183,7 +196,7 @@ class VSSUnitCollection():
     def load_config_file(cls, config_file: str) -> int:
         added_configs = 0
         with open(config_file) as my_yaml_file:
-            my_units = cls.get_config_dict(my_yaml_file, 'units')
+            my_units = cls.get_config_dict(my_yaml_file, "units")
             added_configs = len(my_units)
             for k, v in my_units.items():
                 unit = k
@@ -209,10 +222,13 @@ class VSSUnitCollection():
                     logging.error("No quantity (domain) found for unit %s", k)
                     sys.exit(-1)
 
-                if ((VSSQuantityCollection.nbr_quantities() > 0) and
-                   (VSSQuantityCollection.get_quantity(quantity) is None)):
+                if (VSSQuantityCollection.nbr_quantities() > 0) and (
+                    VSSQuantityCollection.get_quantity(quantity) is None
+                ):
                     # Only give info on first occurance and only if quantities exist at all
-                    logging.info("Quantity %s used by unit %s has not been defined", quantity, k)
+                    logging.info(
+                        "Quantity %s used by unit %s has not been defined", quantity, k
+                    )
                     VSSQuantityCollection.add_quantity(quantity)
 
                 allowed_datatypes = None
@@ -227,7 +243,9 @@ class VSSUnitCollection():
                         try:
                             VSSDataType.from_str(datatype)
                         except KeyError:
-                            logging.error("Unknown datatype %s in unit definition", datatype)
+                            logging.error(
+                                "Unknown datatype %s in unit definition", datatype
+                            )
                             sys.exit(-1)
 
                 unit_node = VSSUnit(k, unit, definition, quantity, allowed_datatypes)
@@ -237,16 +255,15 @@ class VSSUnitCollection():
         return added_configs
 
     @classmethod
-    def get_unit(cls, id: str) -> Optional[VSSUnit]:
+    def get_unit(cls, id: str) -> VSSUnit | None:
         if id in cls.units:
             return cls.units[id]
         else:
             return None
 
 
-class VSSQuantityCollection():
-
-    quantities: Dict[str, VSSQuantity] = dict()
+class VSSQuantityCollection:
+    quantities: dict[str, VSSQuantity] = dict()
 
     @classmethod
     def reset_quantities(cls):
@@ -278,7 +295,7 @@ class VSSQuantityCollection():
         return added_quantities
 
     @classmethod
-    def get_quantity(cls, id: str) -> Optional[VSSQuantity]:
+    def get_quantity(cls, id: str) -> VSSQuantity | None:
         if id in cls.quantities:
             return cls.quantities[id]
         else:
@@ -301,14 +318,16 @@ class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
 
     def available_types(self):
         if self.value == "signal_tree":
-            available_types = set(["branch", "sensor", "actuator", "attribute"])
+            available_types = {"branch", "sensor", "actuator", "attribute"}
         else:
-            available_types = set(["branch", "struct", "property"])
+            available_types = {"branch", "struct", "property"}
 
         return available_types
 
 
 class VSSNodeState(Enum, metaclass=EnumMetaWithReverseLookup):
+    """Enumeration of possible node states. This could be extended with an "inactive" state in the future for e.g.
+    pay-as-you-go services."""
+
     ACTIVE = "active"
-    INACTIVE = "inactive"
     DELETED = "deleted"
