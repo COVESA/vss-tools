@@ -1,0 +1,38 @@
+module VehicleDataTypes {
+module TestBranch1 {
+struct NestedStruct {
+double x;
+double y;
+double z;
+};
+struct ParentStruct {
+VehicleDataTypes::TestBranch1::NestedStruct x_property;
+VehicleDataTypes::TestBranch1::NestedStruct y_property;
+sequence<VehicleDataTypes::TestBranch1::NestedStruct> x_properties;
+sequence<VehicleDataTypes::TestBranch1::NestedStruct> y_properties;
+double z_property;
+};
+};
+};
+module A
+{
+struct _UInt8
+{
+octet value;
+//const string unit="km";
+//const string type ="sensor";
+//const string description="A uint8.";
+};
+struct ParentStructSensor
+{
+VehicleDataTypes::TestBranch1::ParentStruct value;
+//const string type ="sensor";
+//const string description="A rich sensor with user-defined data type.";
+};
+struct NestedStructSensor
+{
+VehicleDataTypes::TestBranch1::NestedStruct value;
+//const string type ="sensor";
+//const string description="A rich sensor with user-defined data type.";
+};
+};

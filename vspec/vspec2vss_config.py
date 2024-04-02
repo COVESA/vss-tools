@@ -33,6 +33,9 @@ class Vspec2VssConfig:
         self.extended_attributes_supported = True
         # Shall it be possible to give a type tree
         self.type_tree_supported = True
+        # Is it supported to get type data generated to a separate file
+        # Only relevant if self.type_tree_supported is True
+        self.separate_output_type_file_supported = True
 
         # shall vspec2vss expand the model (by default)
         self.expand_model = True

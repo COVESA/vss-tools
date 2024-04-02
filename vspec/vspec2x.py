@@ -75,11 +75,13 @@ class Vspec2X():
             type_group.add_argument('-vt', '--vspec-types-file', action='append', metavar='vspec_types_file', type=str,
                                     default=[],
                                     help='Data types file in vspec format.')
-            type_group.add_argument('-ot', '--types-output-file', metavar='<types_output_file>',
-                                    help='Output file for writing data types from vspec file. ' +
-                                    'If not specified, a single file is used where applicable. ' +
-                                    'In case of JSON and YAML, the data is exported under a ' +
-                                    'special key - "ComplexDataTypes"')
+            if self.vspec2vss_config.separate_output_type_file_supported:
+                # Note we might get some odd errors if using -ot in a tool not supporting it due to conflict with -o
+                type_group.add_argument('-ot', '--types-output-file', metavar='<types_output_file>',
+                                        help='Output file for writing data types from vspec file. ' +
+                                        'If not specified, a single file is used where applicable. ' +
+                                        'In case of JSON and YAML, the data is exported under a ' +
+                                        'special key - "ComplexDataTypes"')
 
         self.generator.add_arguments(parser.add_argument_group(
             "Exporter specific arguments", ""))
@@ -122,9 +124,10 @@ class Vspec2X():
         # process data type tree
         data_type_tree = None
         if self.vspec2vss_config.type_tree_supported:
-            if args.types_output_file is not None and not args.vspec_types_file:
-                parser.error("An output file for data types was provided. Please also provide "
-                             "the input vspec file for data types")
+            if self.vspec2vss_config.separate_output_type_file_supported:
+                if args.types_output_file is not None and not args.vspec_types_file:
+                    parser.error("An output file for data types was provided. Please also provide "
+                                 "the input vspec file for data types")
             if args.vspec_types_file:
                 data_type_tree = self.processDataTypeTree(
                     parser, args, include_dirs, abort_on_namestyle)
@@ -164,13 +167,9 @@ class Vspec2X():
         Helper function to process command line arguments and invoke logic for processing data
         type information provided in vspec format
         """
-        if args.types_output_file is None:
+        if self.vspec2vss_config.separate_output_type_file_supported and \
+           args.types_output_file is None:
             logging.info("Sensors and custom data types will be consolidated into one file.")
-            # Nope, we should not know this
-            # if args.format == Exporter.protobuf:
-            #    logging.info("Proto files will be written to the current working directory")
-
-        logging.warning("All exports do not yet support structs. Please check documentation for your exporter!")
 
         first_tree = True
         for type_file in args.vspec_types_file:
