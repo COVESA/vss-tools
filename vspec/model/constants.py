@@ -323,11 +323,3 @@ class VSSTreeType(Enum, metaclass=EnumMetaWithReverseLookup):
             available_types = {"branch", "struct", "property"}
 
         return available_types
-
-
-class VSSNodeState(Enum, metaclass=EnumMetaWithReverseLookup):
-    """Enumeration of possible node states. This could be extended with an "inactive" state in the future for e.g.
-    pay-as-you-go services."""
-
-    ACTIVE = "active"
-    DELETED = "deleted"

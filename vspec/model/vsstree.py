@@ -21,7 +21,7 @@ from anytree import (  # type: ignore[import]
     Resolver,
 )
 
-from .constants import VSSDataType, VSSNodeState, VSSType, VSSUnit, VSSUnitCollection
+from .constants import VSSDataType, VSSType, VSSUnit, VSSUnitCollection
 from .exceptions import (
     ImpossibleMergeException,
     IncompleteElementException,
@@ -67,7 +67,7 @@ class VSSNode(Node):
         "comment",
         "$file_name$",
         "fka",
-        "state",
+        "delete",
     ]
 
     # List of accepted extended attributes. In strict terminate if an attribute is
@@ -89,7 +89,7 @@ class VSSNode(Node):
     expanded = False
     deprecation = ""
     fka = ""
-    state: Optional[VSSNodeState] = None
+    delete: bool = False
 
     def __deepcopy__(self, memo):
         # Deep copy of source_dict and children needed as overlay or programmatic changes
@@ -229,11 +229,13 @@ class VSSNode(Node):
             )
             sys.exit(-1)
 
-        if self.has_state():
-            self.state = VSSNodeState(self.source_dict["state"])
-            if self.state == VSSNodeState.DELETED:
-                self.parent = None
-                self.children = []
+        if self.is_deleted():
+            logging.info(f"Node {self.qualified_name()} is marked for deletion.")
+            for child in self.children:
+                child.delete = True
+                del child
+            self.parent = None
+            self.children = []
 
     def validate_name_style(self, sourcefile):
         """Checks wether this node is adhering to VSS style conventions.
@@ -325,6 +327,15 @@ class VSSNode(Node):
             return self.is_leaf
         return False
 
+    def is_deleted(self) -> bool:
+        """Checks if this node is marked for deletion.
+
+        Return:
+            True if this node is marked for deletion
+        """
+        self.delete = self.source_dict.get("delete", False)
+        return self.delete
+
     def get_struct_qualified_name(self, struct_name) -> Optional[str]:
         """
         Returns whether a struct node with the given relative name is defined under the branch of this node.
@@ -410,14 +421,6 @@ class VSSNode(Node):
             True if this instance declares instances, False otherwise
         """
         return hasattr(self, "instances") and self.instances is not None
-
-    def has_state(self) -> bool:
-        """Check if this instance has a VSS state
-
-        Returns:
-            True if this instance declares state, False otherwise
-        """
-        return hasattr(self, "state") and self.state is not None
 
     def merge(self, other: "VSSNode"):
         """Merges two VSSNode, other parameter overwrites the caller object,

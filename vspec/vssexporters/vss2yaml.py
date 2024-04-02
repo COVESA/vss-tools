@@ -61,9 +61,6 @@ def export_node(yaml_dict, node, config, print_uuid):
     if node.comment != "":
         yaml_dict[node_path]["comment"] = node.comment
 
-    if node.state is not None:
-        yaml_dict[node_path]["state"] = node.state.value
-
     if print_uuid:
         yaml_dict[node_path]["uuid"] = node.uuid
 
