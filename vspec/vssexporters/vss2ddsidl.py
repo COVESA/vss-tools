@@ -272,6 +272,7 @@ class Vss2DdsIdl(Vss2X):
 
     def __init__(self, vspec2vss_config: Vspec2VssConfig):
         vspec2vss_config.no_expand_option_supported = False
+        vspec2vss_config.separate_output_type_file_supported = False
 
     def add_arguments(self, parser: argparse.ArgumentParser):
         parser.description = "The DDS-IDL exporter"

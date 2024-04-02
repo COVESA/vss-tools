@@ -23,7 +23,8 @@ def change_test_dir(request, monkeypatch):
     ('json', 'signals-out.json', 'expected-signals-types.json', 'VehicleDataTypes.vspec'),
     ('json', 'signals-out.json', 'expected-signals-types.json', 'VehicleDataTypesFlat.vspec'),
     ('yaml', 'signals-out.yaml', 'expected-signals-types.yaml', 'VehicleDataTypes.vspec'),
-    ('csv', 'signals-out.csv', 'expected-signals-types.csv', 'VehicleDataTypes.vspec')])
+    ('csv', 'signals-out.csv', 'expected-signals-types.csv', 'VehicleDataTypes.vspec'),
+    ('ddsidl', 'signals-out.idl', 'expected-signals-types.idl', 'VehicleDataTypes.vspec')])
 def test_data_types_export_single_file(format, signals_out, expected_signal, type_file, change_test_dir):
     """
     Test that data types provided in vspec format are converted correctly
@@ -57,6 +58,7 @@ def test_data_types_export_multi_file(format, signals_out, data_types_out,
                                       expected_signal, expected_data_types, change_test_dir):
     """
     Test that data types provided in vspec format are converted correctly
+    Note that DDSIDL does not support -ot
     """
     args = ["../../../vspec2" + format + ".py --no-uuid"]
     if format == 'json':
