@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.8.12"  # keep in sync with vss-tools/Pipfile!
+  PYTHON_VERSION: "3.10.6"  # keep in sync with vss-tools/Pipfile!
   CI: 1  # shall any script needs to know if it's running in the CI
 
 jobs:
