@@ -53,7 +53,7 @@ class ProtoExporter(object):
             proto_file.write(f"package {package_name};\n\n")
             self.out_files.add(fp)
 
-    def traverse_data_type_tree(self, tree: VSSNode):
+    def traverse_data_type_tree(self, tree: VSSNode, static_uid, add_optional):
         """
         All structs in a branch are written to a single .proto file.
         The file's base name is same as the branch's name
@@ -100,12 +100,12 @@ class ProtoExporter(object):
                 proto_file.write("\n")
 
                 proto_file.write(f"message {type_qn[-1]} {{" + "\n")
-                print_message_body(tree_node.children, proto_file)
+                print_message_body(tree_node.children, proto_file, static_uid, add_optional)
                 proto_file.write("}\n\n")
                 logging.info(f"Wrote {type_qn[-1]} to {fp}")
 
 
-def traverse_signal_tree(tree: VSSNode, proto_file):
+def traverse_signal_tree(tree: VSSNode, proto_file, static_uid, add_optional):
     proto_file.write("syntax = \"proto3\";\n\n")
     tree_node: VSSNode
 
@@ -127,18 +127,41 @@ def traverse_signal_tree(tree: VSSNode, proto_file):
     # write proto messages to file
     for tree_node in filter(lambda n: n.is_branch(), PreOrderIter(tree)):
         proto_file.write(f"message {tree_node.qualified_name('')} {{" + "\n")
-        print_message_body(tree_node.children, proto_file)
+        print_message_body(tree_node.children, proto_file, static_uid, add_optional)
         proto_file.write("}\n\n")
 
 
-def print_message_body(nodes, proto_file):
+def print_message_body(nodes, proto_file, static_uid, add_optional):
+    usedKeys = {}
     for i, node in enumerate(nodes, 1):
-        data_type = node.qualified_name("")
         if not (node.is_branch() or node.is_struct()):
             dt_val = node.get_datatype()
             data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
-            data_type = ("repeated " if dt_val.endswith("[]") else "") + data_type
-        proto_file.write(f"  {data_type} {node.name} = {i};" + "\n")
+            if dt_val.endswith("[]"):
+                data_type = "repeated " + data_type
+            elif add_optional:
+                data_type = "optional " + data_type
+        else:
+            data_type = node.qualified_name("")
+            if add_optional:
+                data_type = "optional " + data_type
+        if static_uid:
+            fieldNumber = int(int(node.extended_attributes['staticUID'], 0) / 8)
+            if (fieldNumber < 20000 and fieldNumber >= 19000):
+                logging.fatal('''Aborting because field number {fieldNumber} for signal {node.name} is in
+                reservered range between 19000 and 20000. Consider changing the signal to alter the staticUID.''')
+                sys.exit(-1)
+            if fieldNumber in usedKeys:
+                logging.fatal((f"Aborting, due to collision for fieldNumber {fieldNumber}. "
+                               f"It is used by {node.qualified_name('.')} and {usedKeys[fieldNumber]}. "
+                               "Consider changing the signals to alter the staticUID."))
+                proto_file.truncate(0)
+                sys.exit(-1)
+            else:
+                usedKeys[fieldNumber] = node.qualified_name('.')
+        else:
+            fieldNumber = i
+        proto_file.write(f"  {data_type} {node.name} = {fieldNumber};" + "\n")
 
 
 class Vss2Protobuf(Vss2X):
@@ -148,11 +171,10 @@ class Vss2Protobuf(Vss2X):
         vspec2vss_config.uuid_supported = False
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument('--json-all-extended-attributes', action='store_true',
-                            help="Generate all extended attributes found in the model "
-                                 "(default is generating only those given by the -e/--extended-attributes parameter).")
-        parser.add_argument('--json-pretty', action='store_true',
-                            help=" Pretty print JSON output.")
+        parser.add_argument('--static-uid', action='store_true',
+                            help=" Expect staticUID attribute in the vspec input and use it as field number.")
+        parser.add_argument('--add-optional', action='store_true',
+                            help=" Set each field to optional.")
 
     def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
@@ -165,7 +187,7 @@ class Vss2Protobuf(Vss2X):
                 exporter_path = Path(Path.cwd())
             logging.debug(f"Will use {exporter_path} for type exports")
             exporter = ProtoExporter(exporter_path)
-            exporter.traverse_data_type_tree(data_type_root)
+            exporter.traverse_data_type_tree(data_type_root, config.static_uid, config.add_optional)
 
         with open(config.output_file, 'w') as f:
-            traverse_signal_tree(signal_root, f)
+            traverse_signal_tree(signal_root, f, config.static_uid, config.add_optional)
