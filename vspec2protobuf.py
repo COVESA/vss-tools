@@ -18,8 +18,12 @@ from vspec.vspec2vss_config import Vspec2VssConfig
 from vspec.vssexporters.vss2protobuf import Vss2Protobuf
 
 
-if __name__ == "__main__":
+def main(args):
     vspec2vss_config = Vspec2VssConfig()
     vss2protobuf = Vss2Protobuf(vspec2vss_config)
     vspec2x = Vspec2X(vss2protobuf, vspec2vss_config)
-    vspec2x.main(sys.argv[1:])
+    vspec2x.main(args)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

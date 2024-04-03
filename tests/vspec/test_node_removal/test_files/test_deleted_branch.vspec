@@ -1,0 +1,63 @@
+# Copyright (c) 2024 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0, which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+A:
+  type: branch
+  description: A is a test node
+A.Float:
+  datatype: float
+  type: actuator
+  unit: mm
+  description: A.Float is a leaf of A of datatype float.
+A.Int16:
+  datatype: int16
+  type: sensor
+  unit: rpm
+  description: A.Int16 is a leaf of A of datatype int16.
+A.String:
+  datatype: string
+  type: sensor
+  description: A.String is a leaf of A of datatype string.
+  deprecation: This is test deprecation, let's say it used to be called Str instead String.
+A.StringArray:
+  datatype: string[]
+  type: sensor
+  description: A.StringArray is a leaf of A of datatype string array.
+A.B:
+  type: branch
+  description: B is a branch of A.
+  delete: true
+A.B.Int32:
+  datatype: int32
+  type: sensor
+  unit: rpm
+  description: A.B.Int32 is a leaf of A.B of datatype int32.
+A.B.NewName:
+  datatype: uint32
+  type: sensor
+  unit: mm
+  description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
+  fka: ['A.B.OlderName', 'A.B.OldName']
+A.B.IsLeaf:
+  datatype: string
+  type: actuator
+  allowed: ["YES", "NO"]
+  description: This node is a leaf of the tree and it has allowed values (aka an enum).
+A.B.Min:
+  datatype: uint8
+  type: sensor
+  min: 10
+  unit: percent
+  description: A leaf that uses a minimum value.
+A.B.Max:
+  datatype: uint8
+  type: sensor
+  unit: percent
+  min: 0
+  max: 100
+  description: A leaf that uses a maximum value.
