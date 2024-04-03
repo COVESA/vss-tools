@@ -31,7 +31,7 @@ A.StringArray:
 A.B:
   type: branch
   description: B is a branch of A.
-  delete: True
+  delete: true
 A.B.Int32:
   datatype: int32
   type: sensor

@@ -36,7 +36,7 @@ A.B.Int32:
   type: sensor
   unit: rpm
   description: A.B.Int32 is a leaf of A.B of datatype int32.
-  delete: True
+  delete: true
 A.B.NewName:
   datatype: uint32
   type: sensor
