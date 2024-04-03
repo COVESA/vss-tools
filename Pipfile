@@ -1,3 +1,5 @@
+# If updating this file remember to run "pipenv lock" to update Pipfile.lock
+
 [[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -18,4 +20,4 @@ pre-commit = ">=3.0.4"
 
 
 [requires]
-python_version = "3.8.12"
+python_version = "3.10.6"
