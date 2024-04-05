@@ -202,6 +202,91 @@
                 "description": "Changed description, shall inherit comment",
                 "type": "sensor",
                 "unit": "km"
+              },
+              "TT": {
+                "children": {
+                  "Left": {
+                    "children": {
+                      "TTT": {
+                        "children": {
+                          "T4": {
+                            "children": {
+                              "TTTTR": {
+                                "datatype": "float",
+                                "description": "A very nasty sensor",
+                                "type": "sensor"
+                              }
+                            },
+                            "description": "A very nasty branchzhs",
+                            "type": "branch"
+                          },
+                          "TTTT": {
+                            "datatype": "float",
+                            "description": "Some temperature.",
+                            "my_id": "Make sure description and unit is kept",
+                            "type": "sensor",
+                            "unit": "celsius"
+                          },
+                          "TTTY": {
+                            "datatype": "float",
+                            "description": "Auch some temperature.",
+                            "my_id": "Extended attribute",
+                            "type": "sensor",
+                            "unit": "celsius"
+                          }
+                        },
+                        "description": "Another branch level",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Second level instance",
+                    "type": "branch"
+                  },
+                  "Right": {
+                    "children": {
+                      "TTT": {
+                        "children": {
+                          "T4": {
+                            "children": {
+                              "TTTTR": {
+                                "comment": "hjdsjksdkj",
+                                "datatype": "float",
+                                "description": "A very nasty sensor",
+                                "type": "sensor"
+                              }
+                            },
+                            "description": "A very nasty branchzhs",
+                            "type": "branch"
+                          },
+                          "T5": {
+                            "children": {
+                              "TTTTZ": {
+                                "datatype": "float",
+                                "description": "Zome temperature.",
+                                "type": "sensor",
+                                "unit": "celsius"
+                              }
+                            },
+                            "description": "yet another branch",
+                            "type": "branch"
+                          },
+                          "TTTT": {
+                            "datatype": "float",
+                            "description": "Some temperature.",
+                            "type": "sensor",
+                            "unit": "celsius"
+                          }
+                        },
+                        "description": "Another branch level",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Second level instance",
+                    "type": "branch"
+                  }
+                },
+                "description": "Second level instance",
+                "type": "branch"
               }
             },
             "description": "Branch with instances, not in list",
@@ -227,6 +312,70 @@
                 "description": "Signal A.S.T",
                 "type": "sensor",
                 "unit": "km"
+              },
+              "TT": {
+                "children": {
+                  "Left": {
+                    "children": {
+                      "TTT": {
+                        "children": {
+                          "T4": {
+                            "children": {
+                              "TTTTR": {
+                                "datatype": "float",
+                                "description": "A very nasty sensor",
+                                "type": "sensor"
+                              }
+                            },
+                            "description": "A very nasty branchzhs",
+                            "type": "branch"
+                          },
+                          "TTTT": {
+                            "datatype": "float",
+                            "description": "Some temperature.",
+                            "type": "sensor",
+                            "unit": "celsius"
+                          }
+                        },
+                        "description": "Another branch level",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Second level instance",
+                    "type": "branch"
+                  },
+                  "Right": {
+                    "children": {
+                      "TTT": {
+                        "children": {
+                          "T4": {
+                            "children": {
+                              "TTTTR": {
+                                "datatype": "float",
+                                "description": "A very nasty sensor",
+                                "type": "sensor"
+                              }
+                            },
+                            "description": "A very nasty branchzhs",
+                            "type": "branch"
+                          },
+                          "TTTT": {
+                            "datatype": "float",
+                            "description": "Some temperature.",
+                            "type": "sensor",
+                            "unit": "celsius"
+                          }
+                        },
+                        "description": "Another branch level",
+                        "type": "branch"
+                      }
+                    },
+                    "description": "Second level instance",
+                    "type": "branch"
+                  }
+                },
+                "description": "Second level instance",
+                "type": "branch"
               }
             },
             "description": "Branch with instances, not in list",

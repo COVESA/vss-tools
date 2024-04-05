@@ -461,8 +461,23 @@ def expand_tree_instances(tree: VSSNode):
                     # shall have precedence over the expanded instance
                     # This is handled by removing the old node from tree and
                     # instead merging it to the new node
-                    existing_item.parent = None
                     expand_node.merge(existing_item)
+                    # Also make sure that any children already existing are moved or merged to the new tree
+
+                    def merge_children(target_node, input_node):
+                        for existing_child in input_node.children:
+                            found = False
+                            for expanded_child in target_node.children:
+                                if expanded_child.name == existing_child.name:
+                                    expanded_child.merge(existing_child)
+                                    merge_children(expanded_child, existing_child)
+                                    found = True
+                            if not found:
+                                # Totally new node/branch, no need to continue deeper, just take it
+                                existing_child.parent = target_node
+                        input_node.parent = None
+
+                    merge_children(expand_node, existing_item)
                     break
             expand_node.parent = instantiated_branch
         return instantiated_branch
@@ -835,7 +850,6 @@ def render_subtree(
 def merge_elem(base, overlay_element):
     r = Resolver()
     element_name = "/" + overlay_element.qualified_name("/")
-
     if not VSSNode.node_exists(base, element_name):
         # The node in the overlay does not exist, so we connect it
         # print(f"Not exists {overlay_element.qualified_name()} does not exist, creating.")
@@ -850,6 +864,7 @@ def merge_elem(base, overlay_element):
         other_node: VSSNode = r.get(base, element_name)
         try:
             other_node.merge(overlay_element)
+
         except ImpossibleMergeException as e:
             logging.error(f"Merging impossible: {e}")
             sys.exit(-1)

@@ -1,3 +1,10 @@
+# Copyright (c) 2023 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
 
 # And add a new signal only for left instance in second row
 A.B.Row2.Left.E:
@@ -91,3 +98,41 @@ A.S.Up.T:
   type: sensor
   unit: km
   description: New description, shall not inherit anything
+
+
+# Complex overlay - changing description for one of TTTT
+A.S.Front.TT.Left.TTT.TTTT:
+  datatype: float
+  type: sensor
+  my_id: "Make sure description and unit is kept"
+
+
+# A totally new one
+A.S.Front.TT.Left.TTT.TTTY:
+  datatype: float
+  type: sensor
+  unit: celsius
+  description: Auch some temperature.
+  my_id: "Extended attribute"
+
+
+
+
+# Just adding a comment deep down - check that two level branch  (TTT.T4) after instantiation works
+
+A.S.Front.TT.Right.TTT.T4.TTTTR:
+  datatype: float
+  type: sensor
+  comment: "hjdsjksdkj"
+
+# And a totally new branch with a totally new signal
+
+A.S.Front.TT.Right.TTT.T5:
+  type: branch
+  description: yet another branch
+
+A.S.Front.TT.Right.TTT.T5.TTTTZ:
+  datatype: float
+  type: sensor
+  unit: celsius
+  description: Zome temperature.
