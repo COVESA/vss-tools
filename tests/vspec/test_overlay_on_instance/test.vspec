@@ -1,4 +1,11 @@
+# Copyright (c) 2023 Contributors to COVESA
 #
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
 A:
   type: branch
   description: Branch A.
@@ -33,3 +40,29 @@ A.S.T:
   unit: km
   description: Signal A.S.T
   comment: Orig comment.
+
+# More complex example
+
+A.S.TT:
+  instances: ["Left","Right"]
+  type: branch
+  description: Second level instance
+
+A.S.TT.TTT:
+  type: branch
+  description: Another branch level
+
+A.S.TT.TTT.TTTT:
+  datatype: float
+  type: sensor
+  unit: celsius
+  description: Some temperature.
+
+A.S.TT.TTT.T4:
+  type: branch
+  description: "A very nasty branchzhs"
+
+A.S.TT.TTT.T4.TTTTR:
+  datatype: float
+  type: sensor
+  description: "A very nasty sensor"
