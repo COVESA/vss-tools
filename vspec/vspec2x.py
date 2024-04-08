@@ -22,6 +22,9 @@ import logging
 import sys
 import vspec
 
+import pkg_resources  # part of setuptools
+VERSION = pkg_resources.require("vss-tools")[0].version
+
 
 class Vspec2X():
     """
@@ -38,6 +41,7 @@ class Vspec2X():
         initLogging()
         parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
 
+        parser.add_argument('--version', action='version', version=VERSION)
         parser.add_argument('-I', '--include-dir', action='append', metavar='dir', type=str, default=[],
                             help='Add include directory to search for included vspec files.')
         if self.vspec2vss_config.extended_attributes_supported:
@@ -87,6 +91,8 @@ class Vspec2X():
             "Exporter specific arguments", ""))
 
         args = parser.parse_args(arguments)
+
+        logging.info("VSS-tools version %s", VERSION)
 
         include_dirs = ["."]
         include_dirs.extend(args.include_dir)
