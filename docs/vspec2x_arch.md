@@ -21,31 +21,80 @@ Then instance information will be represented by other means in the resulting ou
 
 ## Deletion / Node removal
 
-Nodes can be removed from the tree by using the `delete` keyword in the overlay.
+Nodes can be removed from the tree by using the `delete` element in the overlay.
 This is useful when a signal is not used in a next version of the specification or if you
 simply want to delete a node or branch from the specification, e.g. you are not using a signal of the base
 specification.
 Please note, that the deletion for branches will delete all nodes that are connected to that branch (which is
-desired behavior).
+desired behavior). Also, if a branch node is deleted, all nodes that are connected to that branch will be deleted
+irrespective of what their delete element value is.
 
-If you want to delete a node or branch simply add the following to the specification/overlay, let's say the vehicle only
-has two doors in the front. In this case we would like to delete the signals for the rear doors:
+We chose three examples to show what you can do with the delete element. Let's say we have the following excerpt from
+the base vehicle signal specification:
 
+```yaml
+Vehicle.Service:
+  description: Service data.
+  type: branch
+
+Vehicle.Service.DistanceToService:
+  datatype: float
+  description: Remaining distance to service (of any kind). Negative values indicate service overdue.
+  type: sensor
+  unit: km
+
+Vehicle.Service.IsServiceDue:
+  datatype: boolean
+  description: Indicates if vehicle needs service (of any kind). True = Service needed now or in the near future. False = No known need for service.
+  type: sensor
+
+Vehicle.Service.TimeToService:
+  datatype: int32
+  description: Remaining time to service (of any kind). Negative values indicate service overdue.
+  type: sensor
+  unit: s
 ```
+
+Now if you want to delete the `Vehicle.Service.TimeToService` node from the specification, you can do this by adding the
+delete element to your overlay like this:
+
+```yaml
+Vehicle.Service.TimeToService:
+  datatype: int32
+  description: Remaining time to service (of any kind). Negative values indicate service overdue.
+  type: sensor
+  unit: s
+  delete: true
+```
+
+Let's say you now want to delete the whole branch `Vehicle.Service` from the specification. You can do this by adding:
+
+```yaml
+Vehicle.Service:
+  description: Service data.
+  type: branch
+  delete: true
+```
+
+Also, the delement element can be used on instances after they have been expanded. If you want to delete a node or
+branch that has been expanded using instances you can add the `delete` element to the overlay, let's say the vehicle
+only has two doors in the front. In this case we would like to delete the signals for the rear doors:
+
+```yaml
 Vehicle.Cabin.Door.Row2:
   description: All doors, including windows and switches.
   type: branch
   delete: true
 ```
 
-By adding the `delete: true` to the branch `Vehicle.Cabin.Door.Row2` all nodes and branches connected
-to `Vehicle.Cabin.Door.Row2:` will be deleted.
+By adding the `delete: true` to a node or branch all nodes and branches connected to it are deleted by vss-tools
+when converting to a different format.
 
 ## Expansion and Overlays
 
 Sometimes an overlay only refers to a signal in a specific branch, like:
 
-```
+```yaml
 Vehicle.Cabin.Door.Row2.Right.NewSignal:
   datatype: int8
   type: sensor
@@ -56,12 +105,12 @@ Vehicle.Cabin.Door.Row2.Right.NewSignal:
 We do not want this signal expanded, and the tooling prevents expansion by taking the instance `Row2` and comparing with
 instances declared for `Door`.
 
-```
+```yaml
 Door:
   type: branch
   instances:
     - Row[1,2]
-    - ["Left","Right"]
+    - [ "Left","Right" ]
   description: d1
   comment: c1
 ```

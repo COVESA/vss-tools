@@ -229,14 +229,6 @@ class VSSNode(Node):
             )
             sys.exit(-1)
 
-        if self.is_deleted():
-            logging.info(f"Node {self.qualified_name()} is marked for deletion.")
-            for child in self.children:
-                child.delete = True
-                del child
-            self.parent = None
-            self.children = []
-
     def validate_name_style(self, sourcefile):
         """Checks wether this node is adhering to VSS style conventions.
 
@@ -326,15 +318,6 @@ class VSSNode(Node):
         if self.is_branch() or self.is_struct():
             return self.is_leaf
         return False
-
-    def is_deleted(self) -> bool:
-        """Checks if this node is marked for deletion.
-
-        Return:
-            True if this node is marked for deletion
-        """
-        self.delete = self.source_dict.get("delete", False)
-        return self.delete
 
     def get_struct_qualified_name(self, struct_name) -> Optional[str]:
         """

@@ -13,6 +13,7 @@
 
 import os
 import shlex
+from typing import Optional
 
 import pytest
 
@@ -26,11 +27,17 @@ import vspec2jsonschema  # noqa: F401
 import vspec2protobuf  # noqa: F401
 import vspec2yaml  # noqa: F401
 
+
 # HELPERS
 
 
-def get_cla(test_file: str, out_file: str):
-    return test_file + " " + out_file
+def get_cla(test_file: str, out_file: str, overlay: Optional[str]):
+    if overlay:
+        return (
+                test_file + " " + out_file + " -o " + overlay + " -u ../test_units.yaml"
+        )
+    else:
+        return test_file + " " + out_file + " -u ../test_units.yaml"
 
 
 # FIXTURES
@@ -42,28 +49,52 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
+@pytest.fixture(scope="function", autouse=True)
+def delete_files(change_test_dir):
+    yield None
+    os.system("rm -f out.*")
+
+
 # INTEGRATION TESTS
 
 
 @pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
-    "exporter, out_file",
+    "exporter, out_file, overlay",
     [
-        ("vspec2binary", "out.bin"),
-        ("vspec2csv", "out.csv"),
-        ("vspec2ddsidl", "out.idl"),
-        ("vspec2franca", "out.fidl"),
-        ("vspec2graphql", "out.graphql"),
-        ("vspec2json", "out.json"),
-        ("vspec2jsonschema", "out.jsonschema"),
-        ("vspec2protobuf", "out.pb"),
-        ("vspec2yaml", "out.yaml"),
+        ("vspec2binary", "out.bin", None),
+        ("vspec2csv", "out.csv", None),
+        ("vspec2ddsidl", "out.idl", None),
+        ("vspec2franca", "out.fidl", None),
+        ("vspec2graphql", "out.graphql", None),
+        ("vspec2json", "out.json", None),
+        ("vspec2jsonschema", "out.jsonschema", None),
+        ("vspec2protobuf", "out.pb", None),
+        ("vspec2yaml", "out.yaml", None),
+        ("vspec2binary", "out.bin", "test_files/test_del_node_overlay.vspec"),
+        ("vspec2csv", "out.csv", "test_files/test_del_node_overlay.vspec"),
+        ("vspec2ddsidl", "out.idl", "test_files/test_del_node_overlay.vspec"),
+        ("vspec2franca", "out.fidl", "test_files/test_del_node_overlay.vspec"),
+        ("vspec2graphql", "out.graphql", "test_files/test_del_node_overlay.vspec"),
+        ("vspec2json", "out.json", "test_files/test_del_node_overlay.vspec"),
+        (
+            "vspec2jsonschema",
+            "out.jsonschema",
+            "test_files/test_del_node_overlay.vspec",
+        ),
+        ("vspec2protobuf", "out.pb", "test_files/test_del_node_overlay.vspec"),
+        ("vspec2yaml", "out.yaml", "test_files/test_del_node_overlay.vspec"),
     ],
 )
-def test_deleted_node(exporter: str, out_file: str):
-    test_file: str = "test_files/test_deleted_node.vspec"
+def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str]):
+    test_file: str
+    if overlay:
+        test_file = "test_files/test.vspec"
+    else:
+        test_file = "test_files/test_deleted_node.vspec"
+
     clas = shlex.split(
-        get_cla(test_file, out_file)
+        get_cla(test_file, out_file, overlay)
     )  # get command line arguments without the executable
 
     eval(f"{exporter}.main({clas})")
@@ -102,28 +133,42 @@ def test_deleted_node(exporter: str, out_file: str):
         for node in remaining_nodes:
             assert node in result
 
-    # remove all generated files
-    os.system(f"rm -f {out_file}")
-
 
 @pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
-    "exporter, out_file",
+    "exporter, out_file, overlay",
     [
-        ("vspec2binary", "out.bin"),
-        ("vspec2csv", "out.csv"),
-        ("vspec2ddsidl", "out.idl"),
-        ("vspec2franca", "out.fidl"),
-        ("vspec2graphql", "out.graphql"),
-        ("vspec2json", "out.json"),
-        ("vspec2jsonschema", "out.jsonschema"),
-        ("vspec2protobuf", "out.pb"),
-        ("vspec2yaml", "out.yaml"),
+        ("vspec2binary", "out.bin", None),
+        ("vspec2csv", "out.csv", None),
+        ("vspec2ddsidl", "out.idl", None),
+        ("vspec2franca", "out.fidl", None),
+        ("vspec2graphql", "out.graphql", None),
+        ("vspec2json", "out.json", None),
+        ("vspec2jsonschema", "out.jsonschema", None),
+        ("vspec2protobuf", "out.pb", None),
+        ("vspec2yaml", "out.yaml", None),
+        ("vspec2binary", "out.bin", "test_files/test_del_branch_overlay.vspec"),
+        ("vspec2csv", "out.csv", "test_files/test_del_branch_overlay.vspec"),
+        ("vspec2ddsidl", "out.idl", "test_files/test_del_branch_overlay.vspec"),
+        ("vspec2franca", "out.fidl", "test_files/test_del_branch_overlay.vspec"),
+        ("vspec2graphql", "out.graphql", "test_files/test_del_branch_overlay.vspec"),
+        ("vspec2json", "out.json", "test_files/test_del_branch_overlay.vspec"),
+        (
+            "vspec2jsonschema",
+            "out.jsonschema",
+            "test_files/test_del_branch_overlay.vspec",
+        ),
+        ("vspec2protobuf", "out.pb", "test_files/test_del_branch_overlay.vspec"),
+        ("vspec2yaml", "out.yaml", "test_files/test_del_branch_overlay.vspec"),
     ],
 )
-def test_deleted_branch(exporter: str, out_file: str):
-    test_file: str = "test_files/test_deleted_branch.vspec"
-    clas = shlex.split(get_cla(test_file, out_file))
+def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
+    test_file: str
+    if overlay:
+        test_file = "test_files/test.vspec"
+    else:
+        test_file = "test_files/test_deleted_branch.vspec"
+    clas = shlex.split(get_cla(test_file, out_file, overlay))
 
     eval(f"{exporter}.main({clas})")
     result_file: str
@@ -148,6 +193,3 @@ def test_deleted_branch(exporter: str, out_file: str):
         assert "A.B" not in result_file
         for node in remaining_nodes:
             assert node in result_file
-
-    # remove all generated files
-    os.system(f"rm -f {out_file}")
