@@ -33,9 +33,7 @@ import vspec2yaml  # noqa: F401
 
 def get_cla(test_file: str, out_file: str, overlay: Optional[str]):
     if overlay:
-        return (
-                test_file + " " + out_file + " -o " + overlay + " -u ../test_units.yaml"
-        )
+        return test_file + " " + out_file + " -o " + overlay + " -u ../test_units.yaml"
     else:
         return test_file + " " + out_file + " -u ../test_units.yaml"
 
@@ -60,30 +58,24 @@ def delete_files(change_test_dir):
 
 @pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
-    "exporter, out_file, overlay",
+    "exporter, out_file",
     [
-        ("vspec2binary", "out.bin", None),
-        ("vspec2csv", "out.csv", None),
-        ("vspec2ddsidl", "out.idl", None),
-        ("vspec2franca", "out.fidl", None),
-        ("vspec2graphql", "out.graphql", None),
-        ("vspec2json", "out.json", None),
-        ("vspec2jsonschema", "out.jsonschema", None),
-        ("vspec2protobuf", "out.pb", None),
-        ("vspec2yaml", "out.yaml", None),
-        ("vspec2binary", "out.bin", "test_files/test_del_node_overlay.vspec"),
-        ("vspec2csv", "out.csv", "test_files/test_del_node_overlay.vspec"),
-        ("vspec2ddsidl", "out.idl", "test_files/test_del_node_overlay.vspec"),
-        ("vspec2franca", "out.fidl", "test_files/test_del_node_overlay.vspec"),
-        ("vspec2graphql", "out.graphql", "test_files/test_del_node_overlay.vspec"),
-        ("vspec2json", "out.json", "test_files/test_del_node_overlay.vspec"),
-        (
-            "vspec2jsonschema",
-            "out.jsonschema",
-            "test_files/test_del_node_overlay.vspec",
-        ),
-        ("vspec2protobuf", "out.pb", "test_files/test_del_node_overlay.vspec"),
-        ("vspec2yaml", "out.yaml", "test_files/test_del_node_overlay.vspec"),
+        ("vspec2binary", "out.bin"),
+        ("vspec2csv", "out.csv"),
+        ("vspec2ddsidl", "out.idl"),
+        ("vspec2franca", "out.fidl"),
+        ("vspec2graphql", "out.graphql"),
+        ("vspec2json", "out.json"),
+        ("vspec2jsonschema", "out.jsonschema"),
+        ("vspec2protobuf", "out.pb"),
+        ("vspec2yaml", "out.yaml"),
+    ],
+)
+@pytest.mark.parametrize(
+    "overlay",
+    [
+        None,
+        "test_files/test_del_node_overlay.vspec",
     ],
 )
 def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str]):
@@ -136,30 +128,24 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str]):
 
 @pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
-    "exporter, out_file, overlay",
+    "exporter, out_file",
     [
-        ("vspec2binary", "out.bin", None),
-        ("vspec2csv", "out.csv", None),
-        ("vspec2ddsidl", "out.idl", None),
-        ("vspec2franca", "out.fidl", None),
-        ("vspec2graphql", "out.graphql", None),
-        ("vspec2json", "out.json", None),
-        ("vspec2jsonschema", "out.jsonschema", None),
-        ("vspec2protobuf", "out.pb", None),
-        ("vspec2yaml", "out.yaml", None),
-        ("vspec2binary", "out.bin", "test_files/test_del_branch_overlay.vspec"),
-        ("vspec2csv", "out.csv", "test_files/test_del_branch_overlay.vspec"),
-        ("vspec2ddsidl", "out.idl", "test_files/test_del_branch_overlay.vspec"),
-        ("vspec2franca", "out.fidl", "test_files/test_del_branch_overlay.vspec"),
-        ("vspec2graphql", "out.graphql", "test_files/test_del_branch_overlay.vspec"),
-        ("vspec2json", "out.json", "test_files/test_del_branch_overlay.vspec"),
-        (
-            "vspec2jsonschema",
-            "out.jsonschema",
-            "test_files/test_del_branch_overlay.vspec",
-        ),
-        ("vspec2protobuf", "out.pb", "test_files/test_del_branch_overlay.vspec"),
-        ("vspec2yaml", "out.yaml", "test_files/test_del_branch_overlay.vspec"),
+        ("vspec2binary", "out.bin"),
+        ("vspec2csv", "out.csv"),
+        ("vspec2ddsidl", "out.idl"),
+        ("vspec2franca", "out.fidl"),
+        ("vspec2graphql", "out.graphql"),
+        ("vspec2json", "out.json"),
+        ("vspec2jsonschema", "out.jsonschema"),
+        ("vspec2protobuf", "out.pb"),
+        ("vspec2yaml", "out.yaml"),
+    ],
+)
+@pytest.mark.parametrize(
+    "overlay",
+    [
+        None,
+        "test_files/test_del_branch_overlay.vspec",
     ],
 )
 def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
