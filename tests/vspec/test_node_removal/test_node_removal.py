@@ -47,6 +47,9 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
+# Please note that tests will possibly fail if the out.* files are not deleted.
+#  They will also remain if a test fails which makes it easier to understand why
+#  it failed. Please remove all out.* before you run the tests again.
 @pytest.fixture(scope="function", autouse=True)
 def delete_files(change_test_dir):
     yield None
@@ -103,6 +106,11 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str]):
         "A.B.IsLeaf",
         "A.B.Min",
         "A.B.Max",
+        "A.C",
+        "A.C.Instance1",
+        "A.C.Instance1.Test",
+        "A.C.Instance2",
+        "A.C.Instance2.Test",
     ]
     if exporter in [
         "vspec2binary",
@@ -161,7 +169,17 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
     with open(out_file) as f:
         result_file = f.read()
 
-    remaining_nodes = ["A.Float", "A.Int16", "A.String", "A.StringArray"]
+    remaining_nodes = [
+        "A.Float",
+        "A.Int16",
+        "A.String",
+        "A.StringArray",
+        "A.C",
+        "A.C.Instance1",
+        "A.C.Instance1.Test",
+        "A.C.Instance2",
+        "A.C.Instance2.Test",
+    ]
 
     if exporter in [
         "vspec2binary",
@@ -174,8 +192,88 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
         remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
         for node in remaining_nodes:
             assert node in result_file
-
+    elif exporter == "vspec2graphql":
+        assert "A.B".replace(".", "_") not in result_file
+        remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
+        for node in remaining_nodes:
+            assert node in result_file
     else:
         assert "A.B" not in result_file
         for node in remaining_nodes:
             assert node in result_file
+
+
+@pytest.mark.usefixtures("change_test_dir")
+@pytest.mark.parametrize(
+    "exporter, out_file",
+    [
+        ("vspec2binary", "out.bin"),
+        ("vspec2csv", "out.csv"),
+        ("vspec2ddsidl", "out.idl"),
+        ("vspec2franca", "out.fidl"),
+        ("vspec2graphql", "out.graphql"),
+        ("vspec2json", "out.json"),
+        ("vspec2jsonschema", "out.jsonschema"),
+        ("vspec2protobuf", "out.pb"),
+        ("vspec2yaml", "out.yaml"),
+    ],
+)
+@pytest.mark.parametrize(
+    "overlay",
+    [
+        "test_files/test_del_instance_overlay.vspec",
+        "test_files/test_del_wrong_instance_overlay.vspec",
+    ],
+)
+def test_deleted_instance(
+        caplog: pytest.LogCaptureFixture, exporter: str, out_file: str, overlay: str
+):
+    test_file: str = "test_files/test.vspec"
+    clas = shlex.split(get_cla(test_file, out_file, overlay))
+
+    if "wrong" in overlay:
+        with pytest.raises(SystemExit) as exporter_result:
+            eval(f"{exporter}.main({clas})")
+        assert exporter_result.type == SystemExit
+        assert exporter_result.value.code == -1
+    else:
+        eval(f"{exporter}.main({clas})")
+        result_file: str
+        with open(out_file) as f:
+            result_file = f.read()
+
+        remaining_nodes = [
+            "A.Float",
+            "A.Int16",
+            "A.String",
+            "A.StringArray",
+            "A.B",
+            "A.B.NewName",
+            "A.B.IsLeaf",
+            "A.B.Min",
+            "A.B.Max",
+            "A.C",
+            "A.C.Instance1",
+            "A.C.Instance1.Test",
+        ]
+
+        if exporter in [
+            "vspec2binary",
+            "vspec2ddsidl",
+            "vspec2json",
+            "vspec2jsonschema",
+            "vspec2protobuf",
+        ]:
+            assert "A.C.Instance2".split(".")[-1] not in result_file
+            remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
+            for node in remaining_nodes:
+                assert node in result_file
+        elif exporter == "vspec2graphql":
+            assert "A.C.Instance2".replace(".", "_") not in result_file
+            remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
+            for node in remaining_nodes:
+                assert node in result_file
+        else:
+            assert "A.C.Instance2" not in result_file
+            for node in remaining_nodes:
+                assert node in result_file

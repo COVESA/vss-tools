@@ -61,3 +61,12 @@ A.B.Max:
   min: 0
   max: 100
   description: A leaf that uses a maximum value.
+A.C:
+  type: branch
+  description: C is a branch of A.
+  instances: Instance[1,2]
+A.C.Test:
+  datatype: uint32
+  type: sensor
+  unit: mm
+  description: A.C.Test is a leaf of A.C of datatype uint32.
