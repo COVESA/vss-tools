@@ -8,5 +8,4 @@
 
 A.B:
   type: branch
-  description: B is a branch of A.
   delete: true

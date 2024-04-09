@@ -60,10 +60,8 @@ delete element to your overlay like this:
 
 ```yaml
 Vehicle.Service.TimeToService:
-  datatype: int32
-  description: Remaining time to service (of any kind). Negative values indicate service overdue.
   type: sensor
-  unit: s
+  datatype: int32
   delete: true
 ```
 
@@ -71,7 +69,6 @@ Let's say you now want to delete the whole branch `Vehicle.Service` from the spe
 
 ```yaml
 Vehicle.Service:
-  description: Service data.
   type: branch
   delete: true
 ```
@@ -82,13 +79,16 @@ only has two doors in the front. In this case we would like to delete the signal
 
 ```yaml
 Vehicle.Cabin.Door.Row2:
-  description: All doors, including windows and switches.
   type: branch
   delete: true
 ```
 
 By adding the `delete: true` to a node or branch all nodes and branches connected to it are deleted by vss-tools
-when converting to a different format.
+when converting to a different format. 
+
+Please note that for branches you need to provide at least the `type` element to
+the overlay. For nodes you at least have to provide the `type` and `datatype` elements. Currently, the elements provided
+do not have to match the previously given elements in the base specification.
 
 ## Expansion and Overlays
 

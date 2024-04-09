@@ -7,8 +7,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 A.B.Int32:
+  type: sensor
   datatype: int32
-  type: actuator
-  unit: rpm
-  description: A.B.Int32 is a leaf of A.B of datatype int32.
   delete: true
