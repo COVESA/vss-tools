@@ -84,7 +84,7 @@ Vehicle.Cabin.Door.Row2:
 ```
 
 By adding the `delete: true` to a node or branch all nodes and branches connected to it are deleted by vss-tools
-when converting to a different format. 
+when converting to a different format.
 
 Please note that for branches you need to provide at least the `type` element to
 the overlay. For nodes you at least have to provide the `type` and `datatype` elements. Currently, the elements provided
