@@ -298,6 +298,13 @@ def verify_mandatory_attributes(node, abort_on_unknown_attribute: bool):
     mandatory in individual files but only in the final tree
     """
     if isinstance(node, VSSNode):
+        if node.delete:
+            logging.info(
+                f"Node {node.qualified_name()} will be deleted. Please note, that if {node.qualified_name()} "
+                f"is a branch all subsequent nodes will also be deleted irrespective of their 'delete' value."
+            )
+            node.parent = None
+            node.children = []
         node.verify_attributes(abort_on_unknown_attribute)
         for child in node.children:
             verify_mandatory_attributes(child, abort_on_unknown_attribute)
