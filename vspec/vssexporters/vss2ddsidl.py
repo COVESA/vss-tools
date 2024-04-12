@@ -289,3 +289,6 @@ class Vss2DdsIdl(Vss2X):
 
         with open(config.output_file, 'a' if data_type_root is not None else 'w') as idl_out:
             export_idl(idl_out, signal_root, vspec2vss_config.generate_uuid, config.all_idl_features)
+
+    def __del__(self):
+        idlFileBuffer.clear()
