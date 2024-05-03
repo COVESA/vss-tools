@@ -146,6 +146,10 @@ def print_message_body(nodes, proto_file, static_uid, add_optional):
             if add_optional:
                 data_type = "optional " + data_type
         if static_uid:
+            if 'staticUID' not in node.extended_attributes:
+                logging.fatal((f"Aborting because {node.qualified_name('.')} does not have the staticUID attribute. "
+                               f"When using the option --static-uid each node must have the attribute staticUID."))
+                sys.exit(-1)
             fieldNumber = int(int(node.extended_attributes['staticUID'], 0) / 8)
             if (fieldNumber < 20000 and fieldNumber >= 19000):
                 logging.fatal('''Aborting because field number {fieldNumber} for signal {node.name} is in

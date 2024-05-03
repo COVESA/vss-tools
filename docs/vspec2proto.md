@@ -5,7 +5,7 @@ The vspec2proto.py script generates [Protocol Buffer message definitions](https:
 ## Example
 
 ```bash
-./vspec2protobuf.py outputIds_v2.vspec indentity.proto  -q ../vehicle_signal_specification/spec/quantities.yaml -u ../vehicle_signal_specification/spec/units.yaml  --static-uid --add-optional
+./vspec2protobuf.py outputIds_v2.vspec indentity.proto  -q ../vehicle_signal_specification/spec/quantities.yaml -u ../vehicle_signal_specification/spec/units.yaml -e staticUID --static-uid --add-optional
 ```
 
 This example assumes that you checked out the COVESA VSS repository next to the vss-tools repository.
