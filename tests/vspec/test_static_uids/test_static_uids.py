@@ -27,14 +27,25 @@ from vspec.utils.idgen_utils import get_all_keys_values
 # HELPERS
 
 
-def get_cla_test(test_file: str):
-    return (
-        "../../../vspec2id.py "
-        + test_file
-        + " ./out.vspec --validate-static-uid "
-        + "./validation_vspecs/validation.vspec "
-        + "--only-validate-no-export"
-    )
+def get_cla_test(test_file: str, overlay: str | None = None):
+    if overlay:
+        return (
+            "../../../vspec2id.py "
+            + test_file
+            + " -o "
+            + overlay
+            + " ./out.vspec --validate-static-uid "
+            + "./validation_vspecs/validation.vspec "
+            # + "--only-validate-no-export"
+        )
+    else:
+        return (
+            "../../../vspec2id.py "
+            + test_file
+            + " ./out.vspec --validate-static-uid "
+            + "./validation_vspecs/validation.vspec "
+            + "--only-validate-no-export"
+        )
 
 
 def get_cla_validation(validation_file: str):
@@ -341,3 +352,31 @@ def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
     )
     for record in caplog.records:
         assert "DELETED ATTRIBUTE" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_overlay(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test.vspec"
+    overlay: str = "./test_vspecs/test_overlay.vspec"
+    clas = shlex.split(get_cla_test(test_file, overlay))
+    vspec2id.main(clas[1:])
+
+    assert len(caplog.records) == 1 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+
+    for record in caplog.records:
+        assert "ADDED ATTRIBUTE" in record.msg
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_const_id(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test.vspec"
+    overlay: str = "./test_vspecs/test_const_id.vspec"
+    clas = shlex.split(get_cla_test(test_file, overlay))
+    vspec2id.main(clas[1:])
+
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    for key, value in get_all_keys_values(result):
+        if key == "A.B.Int32":
+            assert value["staticUID"] == "0x00112233"

@@ -22,8 +22,11 @@ from vspec import load_tree
 from vspec.model.constants import VSSTreeType
 from vspec.model.vsstree import VSSNode
 from vspec.utils import vss2id_val
-from vspec.utils.idgen_utils import (fnv1_32_hash, get_all_keys_values,
-                                     get_node_identifier_bytes)
+from vspec.utils.idgen_utils import (
+    fnv1_32_hash,
+    get_all_keys_values,
+    get_node_identifier_bytes,
+)
 from vspec.vss2x import Vss2X
 from vspec.vspec2vss_config import Vspec2VssConfig
 
@@ -31,7 +34,6 @@ from vspec.vspec2vss_config import Vspec2VssConfig
 def generate_split_id(
     node: VSSNode, id_counter: int, strict_mode: bool
 ) -> Tuple[str, int]:
-
     """Generates static UIDs using 4-byte FNV-1 hash.
 
     @param node: VSSNode that we want to generate a static UID for
@@ -68,7 +70,15 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
     @param strict_mode: strict mode means case sensitivity for static UID generation
     @return: id_counter, id_counter
     """
-    node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
+
+    if not node.constUID:
+        node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
+    else:
+        assert node.constUID.startswith(
+            "0x"
+        ), f"constUID has to begin with '0x': {node.constUID}"
+        assert len(node.constUID) == 10, f"Invalid constUID: {node.constUID}"
+        node_id = node.constUID[2:]
 
     # check for hash duplicates
     for key, value in get_all_keys_values(yaml_dict):
@@ -121,7 +131,10 @@ class Vss2Id(Vss2X):
         @param parser: the pre-existing argument parser
         """
         parser.add_argument(
-            "--validate-static-uid", type=str, default="", help="Path to validation file."
+            "--validate-static-uid",
+            type=str,
+            default="",
+            help="Path to validation file.",
         )
         parser.add_argument(
             "--only-validate-no-export",
@@ -135,9 +148,13 @@ class Vss2Id(Vss2X):
             help="Strict mode means that the generation of static UIDs is case-sensitive.",
         )
 
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-
+    def generate(
+        self,
+        config: argparse.Namespace,
+        signal_root: VSSNode,
+        vspec2vss_config: Vspec2VssConfig,
+        data_type_root: Optional[VSSNode] = None,
+    ) -> None:
         """Main export function used to generate the output id vspec.
 
         @param config: Command line arguments it was run with
