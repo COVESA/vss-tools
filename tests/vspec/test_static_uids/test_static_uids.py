@@ -36,7 +36,6 @@ def get_cla_test(test_file: str, overlay: str | None = None):
             + overlay
             + " ./out.vspec --validate-static-uid "
             + "./validation_vspecs/validation.vspec "
-            # + "--only-validate-no-export"
         )
     else:
         return (
