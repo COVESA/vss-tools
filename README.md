@@ -93,7 +93,8 @@ The first step is to make sure that pyenv and the wanted Python version (in the 
 
 ```sh
 # Install dependencies, to be able to use curl and build python from source
-sudo apt-get install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+sudo apt update
+sudo apt install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 
 # Fetch and install pyenv and update variables
 curl https://pyenv.run | bash
@@ -109,7 +110,7 @@ Install this project and its dependencies in the local `.venv` folder in this pr
 
 ```sh
 export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, otherwise uses global location
-pip install pipenv
+sudo apt update && sudo apt install pipenv
 export PATH=/home/${USER}/.local/bin:${PATH}
 pipenv install --dev # install the development dependencies as well
 ```
@@ -138,6 +139,7 @@ The first step is to make sure that python and required dependencies are install
 
 ```sh
 # Install Python, in this case Python 3.10 as that is a version available on the update sites of Ununtu 22.04
+sudo apt update
 sudo apt install python3.10
 
 # For convenience make Python 3.10 available as default Python
@@ -165,7 +167,8 @@ vspec2csv.py: error: the following arguments are required: <vspec_file>, <output
 If you intend to run testcases related to `vspec2protobuf.py` you need to install the protobuf compiler
 
 ```sh
-sudo apt install -y protobuf-compiler
+sudo apt update
+sudo apt install -y golang-go protobuf-compiler
 protoc --version  # Ensure compiler version is 3+
 ```
 
