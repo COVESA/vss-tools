@@ -74,10 +74,65 @@ Examples on changes affecting compatibility
 * If your environment behind a (corporate) proxy, the following environments variables must typically be set: `http_proxy` and `https_proxy` (including authentication e.g., `http://${proxy_username):$(proxy_password)@yourproxy.yourdomain`).
 * If using `apt` and you are behind a proxy, you may also need to configure proxy in `/etc/apt/apt.conf.d/proxy.conf`.
 
-## Basic Setup
 
-The tools are in [continuous integration](https://github.com/COVESA/vss-tools/blob/master/.github/workflows/buildcheck.yml) tested using Python 3.8.12,
-but they are generally expected to be compatible with at least Python 3.8, 3.9 and 3.10.
+## Environment and Python Version
+
+This repository use the Github `ubuntu-latest` [runner-image](https://github.com/actions/runner-images) for continuous nntegration.
+The Python version used is typically the [default version](https://packages.ubuntu.com/search?keywords=python3) for that Ubuntu release,
+currently Python `3.10.6`.
+Other environments and Python versions may be supported, but are not tested as part of continuous integration or relase testing.
+
+## Setup using venv
+
+If you want to run the tools with a specific Python version, or you do not want to change your current/global Python configuration you can use pyenv/pipenv.
+If you use a custom pip installation directory, set the `PYTHONPATH` environment variable to the directory that you set in the `pip.ini` file.
+[pipenv](https://pypi.org/project/pipenv/) is a tool that manages a virtual environment and install the package and its dependencies, making the process much simpler and predictable, since the `Pipfile` states the dependencies, while `Pipfile.lock` freezes the exact version in use.
+
+The setup example shown below is based on a fresh minimal install of Ubuntu 22.04.
+
+The first step is to make sure that pyenv and the wanted Python version (in the example 3.10.6) is installed
+
+```sh
+# Install dependencies, to be able to use curl and build python from source
+sudo apt update
+sudo apt install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+
+# Fetch and install pyenv and update variables
+curl https://pyenv.run | bash
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# Build and install wanted python version, shall match the version specified in Pipfile
+pyenv install 3.10.6
+```
+
+Install this project and its dependencies in the local `.venv` folder in this project, then use it (`pipenv shell`):
+
+```sh
+export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, otherwise uses global location
+sudo apt update && sudo apt install pipenv
+export PATH=/home/${USER}/.local/bin:${PATH}
+pipenv install --dev # install the development dependencies as well
+```
+
+Then the virtual environment can be started and tested using (`pipenv shell`):
+
+```sh
+user@ubuntu:~/vss-tools$ pipenv shell
+Launching subshell in virtual environment...
+user@ubuntu:~/vss-tools$  . /home/user/vss-tools/.venv/bin/activate
+(vss-tools) user@ubuntu:~/vss-tools$ ./vspec2yaml.py
+usage: vspec2yaml.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
+                     [--no-uuid]  [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
+                     [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
+                     <vspec_file> <output_file>
+vspec2yaml.py: error: the following arguments are required: <vspec_file>, <output_file>
+```
+
+## Native Setup
+
+It is also possible to run the tools in native setup if you have a matching Python environment.
 The setup example shown below is based on a fresh minimal install of Ubuntu 22.04.
 
 The first step is to make sure that python and required dependencies are installed. A possible installation flow is shown below.
@@ -85,6 +140,7 @@ The first step is to make sure that python and required dependencies are install
 
 ```sh
 # Install Python, in this case Python 3.10 as that is a version available on the update sites of Ununtu 22.04
+sudo apt update
 sudo apt install python3.10
 
 # For convenience make Python 3.10 available as default Python
@@ -93,13 +149,6 @@ sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 10
 # Install required dependencies, running pip without sudo means that a user installation will be performed
 sudo apt install pip
 pip install anytree deprecation graphql-core
-```
-
-
-```sh
-# Install protobuf compiler
-sudo apt install -y protobuf-compiler
-protoc --version  # Ensure compiler version is 3+
 ```
 
 The environment can be tested by calling one of the tools without arguments, then usage instructions shall be printed similar to below.
@@ -114,51 +163,14 @@ vspec2csv.py: error: the following arguments are required: <vspec_file>, <output
 
 ```
 
-## Advanced Setup
+## Installing additional tools
 
-If you want to run the tools with a specific Python version, or you do not want to change your current/global Python configuration you can use pyenv/pipenv.
-If you use a custom pip installation directory, set the `PYTHONPATH` environment variable to the directory that you set in the `pip.ini` file.
-[pipenv](https://pypi.org/project/pipenv/) is a tool that manages a virtual environment and install the package and its dependencies, making the process much simpler and predictable, since the `Pipfile` states the dependencies, while `Pipfile.lock` freezes the exact version in use.
-
-The setup example shown below is based on a fresh minimal install of Ubuntu 22.04.
-
-The first step is to make sure that pyenv and the wanted Python version (in the example 3.8.12) is installed
+If you intend to run testcases related to `vspec2protobuf.py` you need to install the protobuf compiler
 
 ```sh
-# Install dependencies, to be able to use curl and build python from source
-sudo apt-get install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
-
-# Fetch and install pyenv and update variables
-curl https://pyenv.run | bash
-export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
-# Build and install wanted python version
-pyenv install 3.8.12
-```
-
-Install this project and its dependencies in the local `.venv` folder in this project, then use it (`pipenv shell`):
-
-```sh
-export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, otherwise uses global location
-pip install pipenv
-export PATH=/home/${USER}/.local/bin:${PATH}
-pipenv install --dev # install the development dependencies as well
-```
-
-Then the virtual environment can be started and tested using (`pipenv shell`):
-
-```sh
-user@ubuntu:~/vss-tools$ pipenv shell
-Launching subshell in virtual environment...
-user@ubuntu:~/vss-tools$  . /home/user/vss-tools/.venv/bin/activate
-(vss-tools) user@ubuntu:~/vss-tools$ ./vspec2yaml.py
-usage: vspec2yaml.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
-                     [--no-uuid] [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
-                     [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
-                     <vspec_file> <output_file>
-vspec2yaml.py: error: the following arguments are required: <vspec_file>, <output_file>
+sudo apt update
+sudo apt install -y golang-go protobuf-compiler
+protoc --version  # Ensure compiler version is 3+
 ```
 
 ## Pre-commit set up
