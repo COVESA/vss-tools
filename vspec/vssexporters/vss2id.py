@@ -71,7 +71,7 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
     @return: id_counter, id_counter
     """
 
-    node_id: str | None = None
+    node_id: str
     if not node.constUID:
         node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
         node_id = f"0x{node_id}"
