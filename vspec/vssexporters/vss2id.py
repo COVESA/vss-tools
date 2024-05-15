@@ -71,19 +71,24 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
     @return: id_counter, id_counter
     """
 
+    node_id: str | None = None
     if not node.constUID:
         node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
+        node_id = f"0x{node_id}"
     else:
-        assert node.constUID.startswith(
-            "0x"
-        ), f"constUID has to begin with '0x': {node.constUID}"
-        assert len(node.constUID) == 10, f"Invalid constUID: {node.constUID}"
-        node_id = node.constUID[2:]
+        logging.info(
+            f"Using const ID for {node.qualified_name()}. If you didn't mean "
+            "to do that you can remove it in your vspec / overlay."
+        )
+        node_id = node.constUID
+
+    assert node_id.startswith("0x"), f"Node ID has to begin with '0x': {node_id}"
+    assert len(node_id) == 10, f"Invalid node ID: {node_id}"
 
     # check for hash duplicates
     for key, value in get_all_keys_values(yaml_dict):
         if not isinstance(value, dict) and key == "staticUID":
-            if node_id == value[2:]:
+            if node_id == value:
                 logging.fatal(
                     f"There is a small chance that the result of FNV-1 "
                     f"hashes are the same in this case the hash of node "
@@ -95,7 +100,7 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
 
     node_path = node.qualified_name()
 
-    yaml_dict[node_path] = {"staticUID": f"0x{node_id}"}
+    yaml_dict[node_path] = {"staticUID": f"{node_id}"}
     yaml_dict[node_path]["description"] = node.description
     yaml_dict[node_path]["type"] = str(node.type.value)
     if node.unit:
