@@ -43,7 +43,6 @@ def get_cla_test(test_file: str, overlay: str | None = None):
             + test_file
             + " ./out.vspec --validate-static-uid "
             + "./validation_vspecs/validation.vspec "
-            + "--only-validate-no-export"
         )
 
 
@@ -85,6 +84,12 @@ def get_test_node(
 def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
     monkeypatch.chdir(request.fspath.dirname)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def delete_files(change_test_dir):
+    yield None
+    os.system("rm -f out.vspec")
 
 
 # UNIT TESTS
@@ -339,6 +344,10 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture):
     for record in caplog.records:
         assert "ADDED ATTRIBUTE" in record.msg
 
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    keys: list = [key for key, _ in get_all_keys_values(result)]
+    assert "A.B.NewNode" in keys
+
 
 @pytest.mark.usefixtures("change_test_dir")
 def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
@@ -351,6 +360,10 @@ def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
     )
     for record in caplog.records:
         assert "DELETED ATTRIBUTE" in record.msg
+
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    keys: list = [key for key, _ in get_all_keys_values(result)]
+    assert "A.B.Max" not in keys
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -366,6 +379,10 @@ def test_overlay(caplog: pytest.LogCaptureFixture):
 
     for record in caplog.records:
         assert "ADDED ATTRIBUTE" in record.msg
+
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    keys: list = [key for key, _ in get_all_keys_values(result)]
+    assert "A.B.OverlayNode" in keys
 
 
 @pytest.mark.usefixtures("change_test_dir")
