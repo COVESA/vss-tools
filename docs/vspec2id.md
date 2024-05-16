@@ -101,7 +101,7 @@ INFO     Using const ID for Vehicle.Cabin.Seat.Row1.DriverSide.IsBelted. If you 
 INFO     All done.
 ```
 
-This works for all types of signal even enums (as shown above).
+This works for all types of signal even enums (as shown above). Please note that if you use a constant UID, you will not be able to do proper validation on the signal. Validation will be further explained in the next section.
 
 ### Validation
 
