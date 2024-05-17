@@ -36,6 +36,7 @@ def get_cla_test(test_file: str, overlay: str | None = None):
             + overlay
             + " ./out.vspec --validate-static-uid "
             + "./validation_vspecs/validation.vspec "
+            + "-u ./test_vspecs/units.yaml"
         )
     else:
         return (
@@ -43,6 +44,7 @@ def get_cla_test(test_file: str, overlay: str | None = None):
             + test_file
             + " ./out.vspec --validate-static-uid "
             + "./validation_vspecs/validation.vspec "
+            + "-u ./test_vspecs/units.yaml"
         )
 
 
@@ -396,3 +398,22 @@ def test_const_id(caplog: pytest.LogCaptureFixture):
     for key, value in get_all_keys_values(result):
         if key == "A.B.Int32":
             assert value["staticUID"] == "0x00112233"
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_iterated_file(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2id.main(clas[1:])
+
+    with open("./out.vspec", "r") as f:
+        result = yaml.load(f, Loader=yaml.FullLoader)
+
+    # run again on out.vspec to check if it all hashed attributes were exported correctly
+    clas = shlex.split(get_cla_test("./out.vspec"))
+    vspec2id.main(clas[1:])
+
+    with open("./out.vspec", "r") as f:
+        result_iteration = yaml.load(f, Loader=yaml.FullLoader)
+
+    assert result == result_iteration
