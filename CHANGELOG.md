@@ -108,12 +108,36 @@ Domains have now been renamed to Quantities.
 In addition to this a quantity file format has been defined, and the tool will inform
 if units refer to a quantity that has not been defined an information message will be printed.
 
+## VSS-Tools 4.2
+
+### Struct support in vspec2ddsidl
+
+The vspec2ddsidl tool now supports structs
+
+### Jsonschema tool added
+
+A new tool vspec2jsonschema has been added
+
+### Id generator tool added
+
+A new tool vspec2id has been added. It can be used to generate and maintain unique identifiers for signals.
+
+### Unit files and quantity files
+
+A new syntax has been introduced for unit files. The old syntax is still supported.
+Domains have now been renamed to Quantities.
+In addition to this a quantity file format has been defined, and the tool will inform
+if units refer to a quantity that has not been defined an information message will be printed.
 
 ## Planned Changes VSS-Tools 5.0
 
+### Change in UUID handling.
+
+* The parameter `--no-uuid` is now removed, and an error is given if `--no-uuid` is used.
+* The parameter `--uuid` is now deprecated.
+
+## Planned Changes VSS-Tools 6.0
 
 ### Change in UUID handling.
 
-For VSS-Tools 5.0 the following behavior shall be implemented:
-
-* The parameter `--no-uuid` shall now be removed, and an error shall be given if `--no-uuid` is used.
+* The parameter `--uuid` is now removed.
