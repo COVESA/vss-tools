@@ -22,8 +22,11 @@ from vspec import load_tree
 from vspec.model.constants import VSSTreeType
 from vspec.model.vsstree import VSSNode
 from vspec.utils import vss2id_val
-from vspec.utils.idgen_utils import (fnv1_32_hash, get_all_keys_values,
-                                     get_node_identifier_bytes)
+from vspec.utils.idgen_utils import (
+    fnv1_32_hash,
+    get_all_keys_values,
+    get_node_identifier_bytes,
+)
 from vspec.vss2x import Vss2X
 from vspec.vspec2vss_config import Vspec2VssConfig
 
@@ -31,7 +34,6 @@ from vspec.vspec2vss_config import Vspec2VssConfig
 def generate_split_id(
     node: VSSNode, id_counter: int, strict_mode: bool
 ) -> Tuple[str, int]:
-
     """Generates static UIDs using 4-byte FNV-1 hash.
 
     @param node: VSSNode that we want to generate a static UID for
@@ -68,12 +70,25 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
     @param strict_mode: strict mode means case sensitivity for static UID generation
     @return: id_counter, id_counter
     """
-    node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
+
+    node_id: str
+    if not node.constUID:
+        node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
+        node_id = f"0x{node_id}"
+    else:
+        logging.info(
+            f"Using const ID for {node.qualified_name()}. If you didn't mean "
+            "to do that you can remove it in your vspec / overlay."
+        )
+        node_id = node.constUID
+
+    assert node_id.startswith("0x"), f"Node ID has to begin with '0x': {node_id}"
+    assert len(node_id) == 10, f"Invalid node ID: {node_id}"
 
     # check for hash duplicates
     for key, value in get_all_keys_values(yaml_dict):
         if not isinstance(value, dict) and key == "staticUID":
-            if node_id == value[2:]:
+            if node_id == value:
                 logging.fatal(
                     f"There is a small chance that the result of FNV-1 "
                     f"hashes are the same in this case the hash of node "
@@ -85,7 +100,7 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
 
     node_path = node.qualified_name()
 
-    yaml_dict[node_path] = {"staticUID": f"0x{node_id}"}
+    yaml_dict[node_path] = {"staticUID": f"{node_id}"}
     yaml_dict[node_path]["description"] = node.description
     yaml_dict[node_path]["type"] = str(node.type.value)
     if node.unit:
@@ -94,9 +109,9 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
         yaml_dict[node_path]["datatype"] = node.data_type_str
     if node.allowed:
         yaml_dict[node_path]["allowed"] = node.allowed
-    if node.min:
+    if isinstance(node.min, int):
         yaml_dict[node_path]["min"] = node.min
-    if node.max:
+    if isinstance(node.max, int):
         yaml_dict[node_path]["max"] = node.max
 
     if node.fka:
@@ -121,7 +136,10 @@ class Vss2Id(Vss2X):
         @param parser: the pre-existing argument parser
         """
         parser.add_argument(
-            "--validate-static-uid", type=str, default="", help="Path to validation file."
+            "--validate-static-uid",
+            type=str,
+            default="",
+            help="Path to validation file.",
         )
         parser.add_argument(
             "--only-validate-no-export",
@@ -135,9 +153,13 @@ class Vss2Id(Vss2X):
             help="Strict mode means that the generation of static UIDs is case-sensitive.",
         )
 
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-
+    def generate(
+        self,
+        config: argparse.Namespace,
+        signal_root: VSSNode,
+        vspec2vss_config: Vspec2VssConfig,
+        data_type_root: Optional[VSSNode] = None,
+    ) -> None:
         """Main export function used to generate the output id vspec.
 
         @param config: Command line arguments it was run with

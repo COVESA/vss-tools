@@ -23,6 +23,7 @@ A.B.IsLeaf:
 A.B.Max:
   datatype: uint8
   description: A leaf that uses a maximum value.
+  min: 0
   max: 100
   staticUID: '0xCF708DCC'
   type: sensor
