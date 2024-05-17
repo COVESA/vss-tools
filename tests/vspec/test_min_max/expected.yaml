@@ -1,0 +1,87 @@
+A:
+  description: Branch A.
+  type: branch
+
+A.FloatMaxZero:
+  datatype: float
+  description: Max Zero.
+  max: 0.0
+  type: sensor
+
+A.FloatMaxZeroInt:
+  datatype: float
+  description: Max Zero.
+  max: 0
+  type: sensor
+
+A.FloatMinMax:
+  datatype: float
+  description: Min & Max.
+  max: 236723.4
+  min: -165.56323
+  type: sensor
+
+A.FloatMinZero:
+  datatype: float
+  description: Min Zero.
+  min: 0.0
+  type: sensor
+
+A.FloatMinZeroInt:
+  datatype: float
+  description: Min Zero.
+  min: 0
+  type: sensor
+
+A.FloatNoMinMax:
+  datatype: float
+  description: No Min Max.
+  type: sensor
+
+A.FloatOnlyMax:
+  datatype: float
+  description: Only Max.
+  max: 32.3
+  type: sensor
+
+A.FloatOnlyMin:
+  datatype: float
+  description: Only Min.
+  min: -2.5
+  type: sensor
+
+A.IntMaxZero:
+  datatype: int8
+  description: Max Zero.
+  max: 0
+  type: sensor
+
+A.IntMinMax:
+  datatype: int8
+  description: Min & Max.
+  max: 6
+  min: 3
+  type: sensor
+
+A.IntMinZero:
+  datatype: int8
+  description: Min Zero.
+  min: 0
+  type: sensor
+
+A.IntNoMinMax:
+  datatype: int8
+  description: No Min Max.
+  type: sensor
+
+A.IntOnlyMax:
+  datatype: int8
+  description: Only Max.
+  max: 32
+  type: sensor
+
+A.IntOnlyMin:
+  datatype: int8
+  description: Only Min.
+  min: 3
+  type: sensor
