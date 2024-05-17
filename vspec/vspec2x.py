@@ -22,8 +22,8 @@ import logging
 import sys
 import vspec
 
-import pkg_resources  # part of setuptools
-VERSION = pkg_resources.require("vss-tools")[0].version
+import importlib_metadata
+VERSION = importlib_metadata.version("vss-tools")
 
 
 class Vspec2X():
