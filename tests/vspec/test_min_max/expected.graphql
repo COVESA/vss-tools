@@ -1,0 +1,182 @@
+type Query {
+  vehicle(
+    """VIN of the vehicle that you want to request data for."""
+    id: String!
+
+    """
+    Filter data to only provide information that was sent from the vehicle after that timestamp.
+    """
+    after: String
+  ): A
+}
+
+"""Branch A."""
+type A {
+  """No Min Max."""
+  intNoMinMax: A_IntNoMinMax
+
+  """Only Max."""
+  intOnlyMax: A_IntOnlyMax
+
+  """Only Min."""
+  intOnlyMin: A_IntOnlyMin
+
+  """Min & Max."""
+  intMinMax: A_IntMinMax
+
+  """Max Zero."""
+  intMaxZero: A_IntMaxZero
+
+  """Min Zero."""
+  intMinZero: A_IntMinZero
+
+  """No Min Max."""
+  floatNoMinMax: A_FloatNoMinMax
+
+  """Only Max."""
+  floatOnlyMax: A_FloatOnlyMax
+
+  """Only Min."""
+  floatOnlyMin: A_FloatOnlyMin
+
+  """Min & Max."""
+  floatMinMax: A_FloatMinMax
+
+  """Max Zero."""
+  floatMaxZero: A_FloatMaxZero
+
+  """Min Zero."""
+  floatMinZero: A_FloatMinZero
+
+  """Max Zero."""
+  floatMaxZeroInt: A_FloatMaxZeroInt
+
+  """Min Zero."""
+  floatMinZeroInt: A_FloatMinZeroInt
+}
+
+"""No Min Max."""
+type A_IntNoMinMax {
+  """Value: No Min Max."""
+  value: Int
+
+  """Timestamp: No Min Max."""
+  timestamp: String
+}
+
+"""Only Max."""
+type A_IntOnlyMax {
+  """Value: Only Max."""
+  value: Int
+
+  """Timestamp: Only Max."""
+  timestamp: String
+}
+
+"""Only Min."""
+type A_IntOnlyMin {
+  """Value: Only Min."""
+  value: Int
+
+  """Timestamp: Only Min."""
+  timestamp: String
+}
+
+"""Min & Max."""
+type A_IntMinMax {
+  """Value: Min & Max."""
+  value: Int
+
+  """Timestamp: Min & Max."""
+  timestamp: String
+}
+
+"""Max Zero."""
+type A_IntMaxZero {
+  """Value: Max Zero."""
+  value: Int
+
+  """Timestamp: Max Zero."""
+  timestamp: String
+}
+
+"""Min Zero."""
+type A_IntMinZero {
+  """Value: Min Zero."""
+  value: Int
+
+  """Timestamp: Min Zero."""
+  timestamp: String
+}
+
+"""No Min Max."""
+type A_FloatNoMinMax {
+  """Value: No Min Max."""
+  value: Float
+
+  """Timestamp: No Min Max."""
+  timestamp: String
+}
+
+"""Only Max."""
+type A_FloatOnlyMax {
+  """Value: Only Max."""
+  value: Float
+
+  """Timestamp: Only Max."""
+  timestamp: String
+}
+
+"""Only Min."""
+type A_FloatOnlyMin {
+  """Value: Only Min."""
+  value: Float
+
+  """Timestamp: Only Min."""
+  timestamp: String
+}
+
+"""Min & Max."""
+type A_FloatMinMax {
+  """Value: Min & Max."""
+  value: Float
+
+  """Timestamp: Min & Max."""
+  timestamp: String
+}
+
+"""Max Zero."""
+type A_FloatMaxZero {
+  """Value: Max Zero."""
+  value: Float
+
+  """Timestamp: Max Zero."""
+  timestamp: String
+}
+
+"""Min Zero."""
+type A_FloatMinZero {
+  """Value: Min Zero."""
+  value: Float
+
+  """Timestamp: Min Zero."""
+  timestamp: String
+}
+
+"""Max Zero."""
+type A_FloatMaxZeroInt {
+  """Value: Max Zero."""
+  value: Float
+
+  """Timestamp: Max Zero."""
+  timestamp: String
+}
+
+"""Min Zero."""
+type A_FloatMinZeroInt {
+  """Value: Min Zero."""
+  value: Float
+
+  """Timestamp: Min Zero."""
+  timestamp: String
+}
