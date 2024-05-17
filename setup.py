@@ -37,8 +37,9 @@ setup(
     scripts=['vspec2csv.py', 'vspec2franca.py', 'vspec2json.py', 'vspec2jsonschema.py',
              'vspec2ddsidl.py', 'vspec2yaml.py', 'vspec2protobuf.py', 'vspec2graphql.py',
              'vspec2id.py'],
-    python_requires='>=3.8',
-    install_requires=['pyyaml>=5.1', 'anytree>=2.8.0', 'deprecation>=2.1.0', 'graphql-core'],
+    python_requires='>=3.10',
+    install_requires=['pyyaml>=5.1', 'anytree>=2.8.0', 'deprecation>=2.1.0', 'graphql-core',
+                      'importlib-metadata>=7.0'],
     tests_require=['pytest>=2.7.2'],
     package_data={'vspec': [
         'py.typed'

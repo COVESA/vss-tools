@@ -13,6 +13,7 @@ PyYAML = ">=5.1"
 rdflib = ">=6.0.0"
 vss-tools = {editable = true, path = "."}
 graphql-core = "*"
+importlib-metadata = ">=7.0"
 
 [dev-packages]
 flake8 = ">=6.0.0"
