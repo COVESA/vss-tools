@@ -27,14 +27,25 @@ from vspec.utils.idgen_utils import get_all_keys_values
 # HELPERS
 
 
-def get_cla_test(test_file: str):
-    return (
-        "../../../vspec2id.py "
-        + test_file
-        + " ./out.vspec --validate-static-uid "
-        + "./validation_vspecs/validation.vspec "
-        + "--only-validate-no-export"
-    )
+def get_cla_test(test_file: str, overlay: str | None = None):
+    if overlay:
+        return (
+            "../../../vspec2id.py "
+            + test_file
+            + " -o "
+            + overlay
+            + " ./out.vspec --validate-static-uid "
+            + "./validation_vspecs/validation.vspec "
+            + "-u ./test_vspecs/units.yaml"
+        )
+    else:
+        return (
+            "../../../vspec2id.py "
+            + test_file
+            + " ./out.vspec --validate-static-uid "
+            + "./validation_vspecs/validation.vspec "
+            + "-u ./test_vspecs/units.yaml"
+        )
 
 
 def get_cla_validation(validation_file: str):
@@ -75,6 +86,12 @@ def get_test_node(
 def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
     monkeypatch.chdir(request.fspath.dirname)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def delete_files(change_test_dir):
+    yield None
+    os.system("rm -f out.vspec")
 
 
 # UNIT TESTS
@@ -329,6 +346,10 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture):
     for record in caplog.records:
         assert "ADDED ATTRIBUTE" in record.msg
 
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    keys: list = [key for key, _ in get_all_keys_values(result)]
+    assert "A.B.NewNode" in keys
+
 
 @pytest.mark.usefixtures("change_test_dir")
 def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
@@ -341,3 +362,58 @@ def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
     )
     for record in caplog.records:
         assert "DELETED ATTRIBUTE" in record.msg
+
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    keys: list = [key for key, _ in get_all_keys_values(result)]
+    assert "A.B.Max" not in keys
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_overlay(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test.vspec"
+    overlay: str = "./test_vspecs/test_overlay.vspec"
+    clas = shlex.split(get_cla_test(test_file, overlay))
+    vspec2id.main(clas[1:])
+
+    assert len(caplog.records) == 1 and all(
+        log.levelname == "WARNING" for log in caplog.records
+    )
+
+    for record in caplog.records:
+        assert "ADDED ATTRIBUTE" in record.msg
+
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    keys: list = [key for key, _ in get_all_keys_values(result)]
+    assert "A.B.OverlayNode" in keys
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_const_id(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test.vspec"
+    overlay: str = "./test_vspecs/test_const_id.vspec"
+    clas = shlex.split(get_cla_test(test_file, overlay))
+    vspec2id.main(clas[1:])
+
+    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    for key, value in get_all_keys_values(result):
+        if key == "A.B.Int32":
+            assert value["staticUID"] == "0x00112233"
+
+
+@pytest.mark.usefixtures("change_test_dir")
+def test_iterated_file(caplog: pytest.LogCaptureFixture):
+    test_file: str = "./test_vspecs/test.vspec"
+    clas = shlex.split(get_cla_test(test_file))
+    vspec2id.main(clas[1:])
+
+    with open("./out.vspec", "r") as f:
+        result = yaml.load(f, Loader=yaml.FullLoader)
+
+    # run again on out.vspec to check if it all hashed attributes were exported correctly
+    clas = shlex.split(get_cla_test("./out.vspec"))
+    vspec2id.main(clas[1:])
+
+    with open("./out.vspec", "r") as f:
+        result_iteration = yaml.load(f, Loader=yaml.FullLoader)
+
+    assert result == result_iteration

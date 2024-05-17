@@ -68,6 +68,7 @@ class VSSNode(Node):
         "$file_name$",
         "fka",
         "delete",
+        "constUID",
     ]
 
     # List of accepted extended attributes. In strict terminate if an attribute is
@@ -90,6 +91,7 @@ class VSSNode(Node):
     deprecation = ""
     fka = ""
     delete: bool = False
+    constUID: str | None = None
 
     def __deepcopy__(self, memo):
         # Deep copy of source_dict and children needed as overlay or programmatic changes
@@ -236,7 +238,6 @@ class VSSNode(Node):
         this conventions can still be a valid model.
 
         """
-        camel_regexp = re.compile("[A-Z][A-Za-z0-9]*$")
         if (
             self.is_signal()
             and self.datatype == VSSDataType.BOOLEAN
@@ -249,6 +250,7 @@ class VSSNode(Node):
                 )
             )
 
+        camel_regexp = re.compile("[A-Z][A-Za-z0-9]*$")
         # relax camel case requirement for struct properties
         if not self.is_property() and not camel_regexp.match(self.name):
             raise NameStyleValidationException(
