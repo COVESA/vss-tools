@@ -91,7 +91,7 @@ class VSSNode(Node):
     deprecation = ""
     fka = ""
     delete: bool = False
-    constUID: str | None = None
+    constUID: Optional[str] = None
 
     def __deepcopy__(self, memo):
         # Deep copy of source_dict and children needed as overlay or programmatic changes

@@ -109,9 +109,9 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
         yaml_dict[node_path]["datatype"] = node.data_type_str
     if node.allowed:
         yaml_dict[node_path]["allowed"] = node.allowed
-    if isinstance(node.min, int | float):
+    if isinstance(node.min, (int, float)):
         yaml_dict[node_path]["min"] = node.min
-    if isinstance(node.max, int | float):
+    if isinstance(node.max, (int, float)):
         yaml_dict[node_path]["max"] = node.max
 
     if node.fka:

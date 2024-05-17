@@ -20,6 +20,8 @@ import vspec.vssexporters.vss2id as vss2id
 import vspec2id
 import yaml
 
+from typing import Optional
+
 from vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
 from vspec.model.vsstree import VSSNode
 from vspec.utils.idgen_utils import get_all_keys_values
@@ -27,7 +29,7 @@ from vspec.utils.idgen_utils import get_all_keys_values
 # HELPERS
 
 
-def get_cla_test(test_file: str, overlay: str | None = None):
+def get_cla_test(test_file: str, overlay: Optional[str] = None):
     if overlay:
         return (
             "../../../vspec2id.py "
