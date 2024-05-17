@@ -1,3 +1,5 @@
+# If updating this file remember to run "pipenv lock" to update Pipfile.lock
+
 [[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -11,6 +13,7 @@ PyYAML = ">=5.1"
 rdflib = ">=6.0.0"
 vss-tools = {editable = true, path = "."}
 graphql-core = "*"
+importlib-metadata = ">=7.0"
 
 [dev-packages]
 flake8 = ">=6.0.0"

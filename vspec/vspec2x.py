@@ -22,8 +22,13 @@ import logging
 import sys
 import vspec
 
-import pkg_resources  # part of setuptools
-VERSION = pkg_resources.require("vss-tools")[0].version
+import importlib_metadata
+
+try:
+    VERSION = importlib_metadata.version("vss-tools")
+except importlib_metadata.PackageNotFoundError:
+    # No installed version of vss-tools found, that likely means we are running from local source
+    VERSION = "local"
 
 
 class Vspec2X():
