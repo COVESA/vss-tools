@@ -18,6 +18,11 @@ def change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
+@pytest.fixture(scope="function", autouse=True)
+def delete_files(change_test_dir):
+    yield None
+    os.system("rm -rf out.json out.txt vehicle_signal_specification")
+
 # Test all VSS versions we support
 #
 # Intended workflow:
@@ -33,6 +38,8 @@ def change_test_dir(request, monkeypatch):
 # * If not add limitation to compatibility section in README and remove '
 #   unsupported versions from the test case
 #
+
+
 @pytest.mark.parametrize("tag",
                          [
                           'v4',
@@ -43,7 +50,6 @@ def test_compatibility(tag, change_test_dir):
     Test that we still can analyze wanted versions without error
     """
 
-    os.system("rm -rf vehicle_signal_specification")
     os.system("git clone --depth 1 --branch " + tag +
               " https://github.com/COVESA/vehicle_signal_specification")
 
@@ -53,6 +59,3 @@ def test_compatibility(tag, change_test_dir):
     os.system("cat out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
-
-    os.system("cd ..")
-    os.system("rm -rf vehicle_signal_specification")
