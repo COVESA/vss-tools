@@ -200,6 +200,23 @@ validation, you can continue to generate e.g. a yaml file with your validated
 changes as described in the `Generate e.g. yaml file with static UIDs` step
 above.
 
+### Collision of hashed values
+
+In case of collision of hashed values we currently perform a system exit, the probability of a hash collision
+using the [Birthday Problem approximation](https://ekamperi.github.io/mathematics/2019/11/09/birthday-paradox-factorial-approximations-laplace-method.html) is currently `0.0197%` for the (as of now) about 1300
+signals in the base specification.
+
+$$
+P(collision) \approx 1 - e^{-\frac{k^2}{2n}}
+$$
+
+where
+
+* $k$ is number of signals in your specification and
+* $n$ is the number of possible hash values (here $2^{32}$ values).
+
+However, if you run into a hash collision, you can use constant UID attribute described above to prevent the system exit and generate your vspec with IDs.
+
 ### Tests
 
 If you want to run the tests for the vspec2id implementation, please do
