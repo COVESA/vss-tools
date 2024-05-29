@@ -32,3 +32,23 @@ def test_expanded_overlay(change_test_dir):
     os.system("rm -f out.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+
+def test_expanded_overlay_no_type_datatype(change_test_dir):
+    """
+    This test shows current limitation on type/datatype lookup.
+    We cannot do lookup on expanded names containing instances.
+    That would require quite some more advanced lookup considering instance declarations.
+    Not impossible, but more complex.
+    """
+    test_str = "../../../vspec2json.py  -e my_id --json-pretty -u ../test_units.yaml test.vspec " + \
+               "-o overlay_no_type_datatype.vspec  out.json > out.txt 2>&1"
+    result = os.system(test_str)
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) != 0
+
+    test_str = 'grep \"No type specified for A.B.Row1.Left.C\" out.txt > /dev/null'
+    result = os.system(test_str)
+    os.system("rm -f out.json out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0

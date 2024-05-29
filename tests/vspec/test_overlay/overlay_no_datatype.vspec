@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Contributors to COVESA
+# Copyright (c) 2024 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License 2.0 which is available at
@@ -7,11 +7,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 A:
-  type: BRANCH
-  description: VSS is case sensitive
+  type: branch
+  description: Branch A.
 
-A.UInt8:
-  datatype: uint8
+A.SignalA:
   type: sensor
-  unit: km
-  description: This description is mandatory!
+  unit: celsius
+  description: No datatype OK if signal exist since before

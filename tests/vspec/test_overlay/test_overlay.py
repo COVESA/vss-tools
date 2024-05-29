@@ -43,6 +43,14 @@ def test_implicit_overlay(change_test_dir):
     run_overlay("implicit_branches")
 
 
+def test_no_datatype(change_test_dir):
+    run_overlay("no_datatype")
+
+
+def test_no_type(change_test_dir):
+    run_overlay("no_type")
+
+
 def test_overlay_error(change_test_dir):
 
     test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml -o overlay_error.vspec " + \

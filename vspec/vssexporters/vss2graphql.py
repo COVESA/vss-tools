@@ -84,10 +84,14 @@ def get_schema_from_tree(root_node: VSSNode, additional_leaf_fields: list) -> st
 
 
 def to_gql_type(node: VSSNode, additional_leaf_fields: list) -> GraphQLObjectType:
+
+    if node.has_datatype():
+        fields = leaf_fields(node, additional_leaf_fields)
+    else:
+        fields = branch_fields(node, additional_leaf_fields)
     return GraphQLObjectType(
         name=node.qualified_name("_"),
-        fields=leaf_fields(node, additional_leaf_fields) if hasattr(
-            node, "datatype") else branch_fields(node, additional_leaf_fields),
+        fields=fields,
         description=node.description,
     )
 
