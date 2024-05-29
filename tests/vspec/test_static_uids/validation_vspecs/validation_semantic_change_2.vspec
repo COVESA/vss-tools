@@ -73,14 +73,24 @@ A.StringArray:
   staticUID: '0xE8A4A62B'
   type: sensor
 A.Struct:
-  description: I'm a struct for front and rear signals.
+  description: A.Struct is a struct for front and rear signals.
   staticUID: '0xC45DAF7F'
   type: branch
 A.Struct.Front:
-  description: I'm a struct for front and rear signals.
+  description: A.Struct is a struct for front and rear signals.
   staticUID: '0x6452E71A'
   type: branch
+A.Struct.Front.Sensor:
+  datatype: float
+  description: A.Struct.Sensor is a sensor in the front and the back.
+  staticUID: '0x6815B7D2'
+  type: sensor
 A.Struct.Rear:
-  description: I'm a struct for front and rear signals.
+  description: A.Struct is a struct for front and rear signals.
   staticUID: '0x213554BD'
   type: branch
+A.Struct.Rear.Sensor:
+  datatype: float
+  description: A.Struct.Sensor is a sensor in the front and the back.
+  staticUID: '0xFC9914F9'
+  type: sensor

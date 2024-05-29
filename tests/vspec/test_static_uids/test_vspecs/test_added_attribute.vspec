@@ -31,7 +31,11 @@ A.StringArray:
 A.Struct:
   type: branch
   instances: ["Front", "Rear"]
-  description: I'm a struct for front and rear signals.
+  description: A.Struct is a struct for front and rear signals.
+A.Struct.Sensor:
+  type: sensor
+  datatype: float
+  description: A.Struct.Sensor is a sensor in the front and the back.
 A.B:
   type: branch
   description: B is a branch of A
