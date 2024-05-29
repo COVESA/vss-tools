@@ -28,6 +28,10 @@ A.StringArray:
   datatype: string[]
   type: sensor
   description: A.StringArray is a leaf of A of datatype string array
+A.Struct:
+  type: branch
+  instances: ["Front", "Rear"]
+  description: I'm a struct for front and rear signals.
 A.B:
   type: branch
   description: B is a branch of A
