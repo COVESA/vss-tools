@@ -13,6 +13,8 @@ import logging
 import re
 import sys
 from typing import Any, List, Optional, Set
+from anytree import PreOrderIter  # type: ignore[import]
+
 
 from anytree import (  # type: ignore[import]
     ChildResolverError,
@@ -93,6 +95,43 @@ class VSSNode(Node):
     delete: bool = False
     constUID: str | None = None
 
+    # Reference nodes for using definitions from previously existing
+    reference_tree: Optional['VSSNode'] = None
+    resolver = Resolver()
+
+    @classmethod
+    def set_reference_tree(cls, tree: Optional['VSSNode']) -> None:
+        cls.reference_tree = tree
+
+    @classmethod
+    def get_reference_datatype(cls, node: 'VSSNode') -> Optional[str]:
+        search_name = node.qualified_name()
+
+        if cls.reference_tree is None:
+            return None
+
+        for vss_element in PreOrderIter(cls.reference_tree):
+            if vss_element.qualified_name() == search_name:
+                if vss_element.has_datatype():
+                    return vss_element.datatype
+
+        logging.warning("No old datatype found for %s", search_name)
+        return None
+
+    @classmethod
+    def get_reference_type(cls, node: 'VSSNode') -> Optional[str]:
+        search_name = node.qualified_name()
+
+        if cls.reference_tree is None:
+            return None
+
+        for vss_element in PreOrderIter(cls.reference_tree):
+            if vss_element.qualified_name() == search_name:
+                return vss_element.type
+
+        logging.warning("No old type found for %s", search_name)
+        return None
+
     def __deepcopy__(self, memo):
         # Deep copy of source_dict and children needed as overlay or programmatic changes
         # in exporters otherwise risk changing values not only for current instances but also for others
@@ -133,12 +172,6 @@ class VSSNode(Node):
         super().__init__(name, parent, children)
         self.available_types = available_types
 
-        if source_dict["type"] not in available_types:
-            logging.error(
-                f'Invalid type provided for VSSNode: {source_dict["type"]}. Allowed types are {self.available_types}'
-            )
-            sys.exit(-1)
-
         self.source_dict = source_dict
         self.unpack_source_dict()
 
@@ -177,7 +210,21 @@ class VSSNode(Node):
                 setattr(self, name, self.source_dict[name])
                 del self.extended_attributes[name]
 
-        self.type = VSSType.from_str(self.source_dict["type"])
+        # Is this an include element?
+        if "type" in self.source_dict:
+            if self.source_dict["type"] not in self.available_types:
+                logging.error(
+                    f'Type not allowed: {self.source_dict["type"]}. Allowed types are {self.available_types}'
+                )
+                sys.exit(-1)
+            self.type = VSSType.from_str(self.source_dict["type"])
+        else:
+            ref_type = VSSNode.get_reference_type(self)
+            if ref_type is None:
+                logging.error("No type specified for %s", self.qualified_name())
+                sys.exit(-1)
+            self.type = ref_type
+            self.source_dict["type"] = ref_type.value
 
         for attribute in VSSNode.core_attributes:
             extractCoreAttribute(attribute)
@@ -203,6 +250,15 @@ class VSSNode(Node):
                 sys.exit(-1)
 
         # self.data_type shall only be set if base type is a primitive (VSSDataType)
+
+        if (self.is_signal() or self.is_property()) and not self.has_datatype():
+            # Get full name and do a check
+            datatype = VSSNode.get_reference_datatype(self)
+            if datatype is not None:
+                datatype = datatype.value
+            self.datatype = datatype
+            self.source_dict["datatype"] = datatype
+
         if self.has_datatype():
             if self.is_signal() or self.is_property():
                 self.data_type_str = self.source_dict["datatype"]
@@ -220,6 +276,7 @@ class VSSNode(Node):
             )
 
         # Datatype check for unit performed first when we have set the right datatype
+
         if self.has_unit():
 
             if not self.has_datatype():

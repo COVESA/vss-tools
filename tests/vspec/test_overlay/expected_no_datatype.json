@@ -1,0 +1,26 @@
+{
+  "A": {
+    "children": {
+      "AA": {
+        "children": {
+          "SignalAA": {
+            "datatype": "int8",
+            "description": "This is yet another signal.",
+            "type": "sensor",
+            "unit": "km"
+          }
+        },
+        "description": "Branch A.AA.",
+        "type": "branch"
+      },
+      "SignalA": {
+        "datatype": "int8",
+        "description": "No datatype OK if signal exist since before",
+        "type": "sensor",
+        "unit": "celsius"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

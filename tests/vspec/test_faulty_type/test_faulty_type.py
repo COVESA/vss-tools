@@ -24,7 +24,7 @@ def test_error(change_test_dir):
     assert os.WIFEXITED(result)
     # failure expected
     assert os.WEXITSTATUS(result) != 0
-    test_str = 'grep \"Unknown type: bosch\" out.txt > /dev/null'
+    test_str = 'grep \"Type not allowed: bosch\" out.txt > /dev/null'
     result = os.system(test_str)
     os.system("cat out.txt")
     os.system("rm -f out.json out.txt")

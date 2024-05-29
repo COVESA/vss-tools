@@ -59,3 +59,22 @@ def type_case_sensitive(vspec_file: str, change_test_dir):
     os.system("rm -f out.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
+
+
+@pytest.mark.parametrize("vspec_file", [
+    ("branch_in_signal.vspec"),
+    ])
+def test_scope_error(vspec_file: str,  change_test_dir):
+    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml " + \
+               vspec_file + " out.json > out.txt 2>&1"
+    result = os.system(test_str)
+    assert os.WIFEXITED(result)
+    # failure expected
+    assert os.WEXITSTATUS(result) != 0
+
+    test_str = 'grep \"VSS Node A.UInt8 cannot have children\" out.txt > /dev/null'
+    result = os.system(test_str)
+    os.system("cat out.txt")
+    os.system("rm -f out.json out.txt")
+    assert os.WIFEXITED(result)
+    assert os.WEXITSTATUS(result) == 0

@@ -7,11 +7,16 @@
 # SPDX-License-Identifier: MPL-2.0
 
 A:
-  type: BRANCH
-  description: VSS is case sensitive
+  type: branch
+  description: ok
 
 A.UInt8:
   datatype: uint8
   type: sensor
   unit: km
-  description: This description is mandatory!
+  description: ok!
+
+
+A.UInt8.CCC:
+  type: branch
+  description: Branch in sensor shall not be allowed

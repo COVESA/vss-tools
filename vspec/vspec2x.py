@@ -146,6 +146,8 @@ class Vspec2X():
                 break_on_name_style_violation=abort_on_namestyle,
                 expand_inst=False, data_type_tree=data_type_tree)
 
+            VSSNode.set_reference_tree(tree)
+
             for overlay in args.overlays:
                 logging.info(f"Applying VSS overlay from {overlay}...")
                 othertree = vspec.load_tree(overlay, include_dirs, VSSTreeType.SIGNAL_TREE,

@@ -21,7 +21,7 @@ from typing import List, Optional
 
 from anytree import (Resolver, LevelOrderIter, PreOrderIter, RenderTree)  # type: ignore[import]
 
-from .model.vsstree import VSSNode
+from .model.vsstree import VSSNode, VSSType
 from .model.exceptions import ImpossibleMergeException, IncompleteElementException
 from .model.constants import VSSTreeType, VSSUnitCollection, VSSQuantityCollection
 
@@ -111,11 +111,15 @@ def load_tree(
 
 def check_type_usage(tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[VSSNode] = None):
     """
-    Check usages of types within the tree.
+    Check usages of datatypes within the tree.
     This methods shall be called after overlays (or additional type files) have been merged.
     """
+    logging.info("Check type usdage")
+
     if tree_type == VSSTreeType.DATA_TYPE_TREE:
+
         check_data_type_references(tree)
+
     elif tree_type == VSSTreeType.SIGNAL_TREE:
         check_data_type_references_across_trees(tree, type_tree)
 
@@ -219,22 +223,13 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
 
 def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
     """
-    # 1. Check that the declared type is part of the available types for the tree.
-    # 2. Check that allowed values are provided as arrays.
+    # 1. Check that allowed values are provided as arrays.
     """
-    available_types = tree_type.available_types()
 
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
-        # Is this an include element?
-        if "type" not in elem:
-            raise VSpecError(elem["$file_name$"], elem["$line$"], "No type specified!")
-
-        # Check, with case sensitivity that we do have
-        # a validated type.
-        if not elem["type"] in available_types:
-            raise VSpecError(elem["$file_name$"], elem["$line$"],
-                             "Unknown type: {}".format(elem["type"]))
+        # Type check moved later to allow for inherited types
+        # That is intended for overlay use-cases
 
         if "allowed" in elem and not isinstance(elem["allowed"], list):
             raise VSpecError(elem["$file_name$"], elem["$line$"],
@@ -633,9 +628,8 @@ def create_nested_model(flat_model, file_name):
 
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
-        # Create children for branch type objects
-        if elem["type"] in nestable_types:
-            elem["children"] = {}
+        # Create child part regardless of type
+        elem["children"] = {}
 
         # Create a list of path components to the given element
         #  name='body.door.front.left.lock' ->
@@ -670,20 +664,10 @@ def create_nested_model(flat_model, file_name):
 # if autocreate is True. Note that structs are not auto-created.
 def find_branch_or_struct(elem, name_list, index, autocreate=True):
     # Have we reached the end of the name list
+    # TODO: Add test that verifies that we get an error later instead
     if len(name_list) == index:
-        if (elem['type'] not in nestable_types):
-            raise VSpecError(
-                elem.get(
-                    "$file_name$", "??"), elem.get(
-                    "$line$", "??"), "Not a branch or struct: {}.".format(
-                    elem['$name$']))
 
         return elem
-
-    if (elem['type'] not in nestable_types):
-        raise VSpecError(elem.get("$file_name$", "??"),
-                         elem.get("$line$", "??"),
-                         "{} is not a branch or struct.".format(list_to_path(name_list[:index])))
 
     children = elem["children"]
 
@@ -797,15 +781,16 @@ def render_tree(
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
-    if root_element['type'] != 'branch':
-        raise Exception(
-            f"Invalid VSS model, root must be branch, found {root_element_name} of type {root_element['type']}")
 
     tree_root = VSSNode(
         root_element_name,
         root_element,
         tree_type.available_types(),
         break_on_name_style_violation=break_on_name_style_violation)
+
+    if tree_root.type is not VSSType.BRANCH:
+        logging.error("Root node %s is not of branch type", tree_root.qualified_name())
+        sys.exit(-1)
 
     if "children" in root_element.keys():
         child_nodes = root_element["children"]
@@ -824,6 +809,14 @@ def render_subtree(
         tree_type: VSSTreeType,
         parent,
         break_on_name_style_violation=False):
+    if parent.type not in [VSSType.BRANCH, VSSType.STRUCT]:
+        give_err = False
+        for element_name in subtree:
+            logging.warning("Node %s defined in wrong scope", element_name)
+            give_err = True
+        if give_err:
+            logging.error("VSS Node %s cannot have children", parent.qualified_name())
+            sys.exit(-1)
     for element_name in subtree:
         current_element = subtree[element_name]
 
@@ -963,7 +956,13 @@ def check_data_type_references_recursive(
     """
     Check that the data type names referenced by tree nodes exist in the tree.
     """
+    logging.info("jkdfjk %s", node.qualified_name())
     if node.is_property() or node.is_signal():
+        logging.info("Node is %s", node.qualified_name())
+        if node.children:
+            # Exit directly if node defined in faulty scope
+            logging.error("Node %s is not defined in a branch", node.qualified_name())
+            sys.exit(-1)
         if node.datatype is None:
             undecorated_data_type = node.data_type_str.replace('[]', '')
             if undecorated_data_type not in data_type_qualified_names:
