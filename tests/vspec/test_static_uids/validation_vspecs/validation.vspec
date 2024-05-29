@@ -75,3 +75,15 @@ A.StringArray:
   description: A.StringArray is a leaf of A of datatype string array
   staticUID: '0xE8A4A62B'
   type: sensor
+A.Struct:
+  description: I'm a struct for front and rear signals.
+  staticUID: '0xC45DAF7F'
+  type: branch
+A.Struct.Front:
+  description: I'm a struct for front and rear signals.
+  staticUID: '0x6452E71A'
+  type: branch
+A.Struct.Rear:
+  description: I'm a struct for front and rear signals.
+  staticUID: '0x213554BD'
+  type: branch
