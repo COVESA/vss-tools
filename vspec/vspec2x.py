@@ -23,7 +23,12 @@ import sys
 import vspec
 
 import importlib_metadata
-VERSION = importlib_metadata.version("vss-tools")
+
+try:
+    VERSION = importlib_metadata.version("vss-tools")
+except importlib_metadata.PackageNotFoundError:
+    # No installed version of vss-tools found, that likely means we are running from local source
+    VERSION = "local"
 
 
 class Vspec2X():
