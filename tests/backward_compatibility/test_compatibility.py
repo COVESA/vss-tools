@@ -44,7 +44,8 @@ def delete_files(change_test_dir):
                          [
                           'v4',
                           'v4.0',
-                          'v4.1'])
+                          'v4.1',
+                          'v4.2'])
 def test_compatibility(tag, change_test_dir):
     """
     Test that we still can analyze wanted versions without error
