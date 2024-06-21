@@ -19,7 +19,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def test_include(change_test_dir):
-    test_str = "../../../vspec2json.py -u ../test_units.yaml --json-pretty test.vspec out.json" + \
+    test_str = "vspec2json -u ../test_units.yaml --json-pretty test.vspec out.json" + \
                " 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -34,7 +34,7 @@ def test_include(change_test_dir):
 
 
 def test_error(change_test_dir):
-    test_str = "../../../vspec2json.py -u ../test_units.yaml --json-pretty test_error.vspec out.json " + \
+    test_str = "vspec2json -u ../test_units.yaml --json-pretty test_error.vspec out.json " + \
                "1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

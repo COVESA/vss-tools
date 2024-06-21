@@ -9,9 +9,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typing import Dict
-from vspec.model.vsstree import VSSNode
-from vspec.model.constants import VSSType, VSSTreeType
-import vspec
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.constants import VSSType, VSSTreeType
+import vss_tools.vspec as vspec
 import os
 import sys
 import re

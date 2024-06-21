@@ -9,14 +9,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import argparse
-from vspec.model.vsstree import VSSNode
-from vspec.utils.stringstyle import camel_back
-from vspec.model.constants import VSSDataType
-from vspec import VSpecError
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.utils.stringstyle import camel_back
+from vss_tools.vspec.model.constants import VSSDataType
+from vss_tools.vspec import VSpecError
 from typing import Dict
 from typing import Optional
-from vspec.vss2x import Vss2X
-from vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.vss2x import Vss2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 from graphql import (
     GraphQLSchema,

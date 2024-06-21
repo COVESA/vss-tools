@@ -14,13 +14,13 @@
 
 
 import argparse
-from vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.vsstree import VSSNode
 import yaml
 import logging
 from typing import Dict, Any
 from typing import Optional
-from vspec.vss2x import Vss2X
-from vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.vss2x import Vss2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 
 def export_node(yaml_dict, node, config, print_uuid):

@@ -13,8 +13,8 @@ from typing import Optional
 
 from anytree import PreOrderIter  # type: ignore
 
-from vspec.model.vsstree import VSSNode
-from vspec.utils.idgen_utils import fnv1_32_wrapper
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.utils.idgen_utils import fnv1_32_wrapper
 
 
 def validate_static_uids(

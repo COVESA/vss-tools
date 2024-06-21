@@ -39,12 +39,13 @@ def test_binary(change_test_dir):
     Tests binary tools by generating binary file and using test parsers to interpret them and request
     some basic information.
     """
+    print(os.getcwd())
     test_str = "gcc -shared -o ../../binary/binarytool.so -fPIC ../../binary/binarytool.c"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
-    test_str = "../../vspec2binary.py -u ../vspec/test_units.yaml test.vspec test.binary"
+    test_str = "vspec2binary -u ../vspec/test_units.yaml test.vspec test.binary"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0

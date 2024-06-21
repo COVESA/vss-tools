@@ -11,8 +11,8 @@
 from abc import ABC, abstractmethod
 import argparse
 from typing import Optional
-from vspec.model.vsstree import VSSNode
-from vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 
 class Vss2X(ABC):

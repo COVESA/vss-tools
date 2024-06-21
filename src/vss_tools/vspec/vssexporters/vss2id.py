@@ -18,17 +18,17 @@ from typing import Dict, Tuple, Optional
 
 import yaml
 
-from vspec import load_tree
-from vspec.model.constants import VSSTreeType
-from vspec.model.vsstree import VSSNode
-from vspec.utils import vss2id_val
-from vspec.utils.idgen_utils import (
+from vss_tools.vspec import load_tree
+from vss_tools.vspec.model.constants import VSSTreeType
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.utils import vss2id_val
+from vss_tools.vspec.utils.idgen_utils import (
     fnv1_32_hash,
     get_all_keys_values,
     get_node_identifier_bytes,
 )
-from vspec.vss2x import Vss2X
-from vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.vss2x import Vss2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 
 def generate_split_id(

@@ -15,9 +15,9 @@ import logging
 import ctypes
 import os.path
 from typing import Optional
-from vspec.model.vsstree import VSSNode, VSSType
-from vspec.vss2x import Vss2X
-from vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.model.vsstree import VSSNode, VSSType
+from vss_tools.vspec.vss2x import Vss2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 out_file = ""
 _cbinary = None
@@ -127,9 +127,10 @@ class Vss2Binary(Vss2X):
     def generate(self, config: argparse.Namespace, root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
         global _cbinary
-        dllName = "../../binary/binarytool.so"
+        dllName = "../../../../binary/binarytool.so"
         dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
         if not os.path.isfile(dllAbsPath):
+            logging.error(dllAbsPath)
             logging.error("The required library binarytool.so is not available, exiting!")
             logging.info("You must build the library, "
                          "see https://github.com/COVESA/vss-tools/blob/master/binary/README.md!")

@@ -24,8 +24,9 @@ import read_mapping_layer
 import jinja2
 import vspec_helper
 import read_type_layer
-from vspec.model.vsstree import VSSNode, VSSType
-import vspec
+from vss_tools.vspec.model.vsstree import VSSNode, VSSType
+import vss_tools.vspec as vspec
+
 
 
 # Set up Jinja

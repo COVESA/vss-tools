@@ -13,12 +13,12 @@
 #
 
 import sys
-from vspec.vspec2x import Vspec2X
-from vspec.vspec2vss_config import Vspec2VssConfig
-from vspec.vssexporters.vss2yaml import Vss2Yaml
+from vss_tools.vspec.vspec2x import Vspec2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.vssexporters.vss2yaml import Vss2Yaml
 
 
-def main(args):
+def main(args=sys.argv[1:]):
     vspec2vss_config = Vspec2VssConfig()
     vss2yaml = Vss2Yaml()
     vspec2x = Vspec2X(vss2yaml, vspec2vss_config)
@@ -26,4 +26,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

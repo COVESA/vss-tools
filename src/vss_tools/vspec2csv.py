@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+#
 # Copyright (c) 2016 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -9,21 +9,21 @@
 # SPDX-License-Identifier: MPL-2.0
 
 #
-# Convert vspec file to FrancaIDL spec.
+# Convert vspec2csv wrapper for vspec2x
 #
 
 import sys
-from vspec.vspec2x import Vspec2X
-from vspec.vspec2vss_config import Vspec2VssConfig
-from vspec.vssexporters.vss2franca import Vss2Franca
+from vss_tools.vspec.vspec2x import Vspec2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.vssexporters.vss2csv import Vss2Csv
 
 
-def main(args):
+def main(args=sys.argv[1:]):
     vspec2vss_config = Vspec2VssConfig()
-    vss2franca = Vss2Franca(vspec2vss_config)
-    vspec2x = Vspec2X(vss2franca, vspec2vss_config)
+    vss2csv = Vss2Csv()
+    vspec2x = Vspec2X(vss2csv, vspec2vss_config)
     vspec2x.main(args)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

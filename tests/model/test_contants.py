@@ -9,8 +9,8 @@
 import pytest
 import os
 
-from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
-from vspec.model.constants import VSSUnit, VSSQuantity
+from vss_tools.vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
+from vss_tools.vspec.model.constants import VSSUnit, VSSQuantity
 
 
 @pytest.mark.parametrize("unit_file",

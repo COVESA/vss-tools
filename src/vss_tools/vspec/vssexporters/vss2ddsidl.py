@@ -17,9 +17,9 @@ import keyword
 import logging
 from typing import Optional
 
-from vspec.model.vsstree import VSSNode, VSSType
-from vspec.vss2x import Vss2X
-from vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.model.vsstree import VSSNode, VSSType
+from vss_tools.vspec.vss2x import Vss2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 c_keywords = [
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float",

@@ -20,9 +20,9 @@ from typing import Set
 from typing import Optional
 
 from anytree import PreOrderIter  # type: ignore[import]
-from vspec.model.vsstree import VSSNode
-from vspec.vss2x import Vss2X
-from vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.vss2x import Vss2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 # Add path to main py vspec  parser
 myDir = os.path.dirname(os.path.realpath(__file__))

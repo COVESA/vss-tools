@@ -14,10 +14,10 @@
 from enum import Enum
 from rdflib.namespace import RDFS, OWL, RDF, SKOS
 from rdflib import Graph, Literal, URIRef, BNode
-from vspec.model.constants import VSSTreeType
-from vspec.model.vsstree import VSSNode, VSSType, VSSDataType
+from vss_tools.vspec.model.constants import VSSTreeType
+from vss_tools.vspec.model.vsstree import VSSNode, VSSType, VSSDataType
 from typing import Dict
-import vspec
+import vss_tools.vspec as vspec
 from anytree import PreOrderIter  # type: ignore[import]
 import os
 import sys

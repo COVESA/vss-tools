@@ -17,15 +17,15 @@ from typing import Optional
 
 import pytest
 
-import vspec2binary  # noqa: F401
-import vspec2csv  # noqa: F401
-import vspec2ddsidl  # noqa: F401
-import vspec2franca  # noqa: F401
-import vspec2graphql  # noqa: F401
-import vspec2json  # noqa: F401
-import vspec2jsonschema  # noqa: F401
-import vspec2protobuf  # noqa: F401
-import vspec2yaml  # noqa: F401
+import vss_tools.vspec2binary as vspec2binary  # noqa: F401
+import vss_tools.vspec2csv as vspec2csv  # noqa: F401
+import vss_tools.vspec2ddsidl as vspec2ddsidl  # noqa: F401
+import vss_tools.vspec2franca as vspec2franca  # noqa: F401
+import vss_tools.vspec2graphql as vspec2graphql  # noqa: F401
+import vss_tools.vspec2json as vspec2json  # noqa: F401
+import vss_tools.vspec2jsonschema as vspec2jsonschema  # noqa: F401
+import vss_tools.vspec2protobuf as vspec2protobuf  # noqa: F401
+import vss_tools.vspec2yaml as vspec2yaml  # noqa: F401
 
 
 # HELPERS
@@ -226,7 +226,7 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
     ],
 )
 def test_deleted_instance(
-        caplog: pytest.LogCaptureFixture, exporter: str, out_file: str, overlay: str
+    caplog: pytest.LogCaptureFixture, exporter: str, out_file: str, overlay: str
 ):
     test_file: str = "test_files/test.vspec"
     clas = shlex.split(get_cla(test_file, out_file, overlay))
@@ -270,7 +270,8 @@ def test_deleted_instance(
                 assert node in result_file
         elif exporter == "vspec2graphql":
             assert "A.C.Instance2".replace(".", "_") not in result_file
-            remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
+            remaining_nodes = [node.replace(".", "_")
+                               for node in remaining_nodes]
             for node in remaining_nodes:
                 assert node in result_file
         else:
