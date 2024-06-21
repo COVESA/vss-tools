@@ -39,7 +39,6 @@ def test_binary(change_test_dir):
     Tests binary tools by generating binary file and using test parsers to interpret them and request
     some basic information.
     """
-    print(os.getcwd())
     test_str = "gcc -shared -o ../../binary/binarytool.so -fPIC ../../binary/binarytool.c"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
