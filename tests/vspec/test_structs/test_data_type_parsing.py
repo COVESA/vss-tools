@@ -9,8 +9,15 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import pytest
+import sys
 import os
+import filecmp
 from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+VSS_TOOLS_ROOT = (HERE / ".." / ".." / "..").absolute()
+
+os.environ["COLUMNS"] = "200"
 
 
 @pytest.fixture
@@ -21,7 +28,8 @@ def change_test_dir(request, monkeypatch):
 
 @pytest.mark.parametrize("format, signals_out, expected_signal, type_file", [
     ('json', 'signals-out.json', 'expected-signals-types.json', 'VehicleDataTypes.vspec'),
-    ('json', 'signals-out.json', 'expected-signals-types.json', 'VehicleDataTypesFlat.vspec'),
+    ('json', 'signals-out.json', 'expected-signals-types.json',
+     'VehicleDataTypesFlat.vspec'),
     ('yaml', 'signals-out.yaml', 'expected-signals-types.yaml', 'VehicleDataTypes.vspec'),
     ('csv', 'signals-out.csv', 'expected-signals-types.csv', 'VehicleDataTypes.vspec'),
     ('ddsidl', 'signals-out.idl', 'expected-signals-types.idl', 'VehicleDataTypes.vspec')])
@@ -29,7 +37,7 @@ def test_data_types_export_single_file(format, signals_out, expected_signal, typ
     """
     Test that data types provided in vspec format are converted correctly
     """
-    args = ["../../../vspec2" + format + ".py"]
+    args = [sys.executable, str(VSS_TOOLS_ROOT / f"vspec2{format}.py")]
     if format == 'json':
         args.append('--json-pretty')
     args.extend(["-vt", type_file, "-u", "../test_units.yaml",
@@ -42,17 +50,17 @@ def test_data_types_export_single_file(format, signals_out, expected_signal, typ
     assert os.WEXITSTATUS(result) == 0
 
     test_str = f"diff {signals_out} {expected_signal}"
-    result = os.system(test_str)
-    os.system("rm -f out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    assert filecmp.cmp(signals_out, expected_signal)
 
+    os.system("rm -f out.txt")
     os.system(f"rm -f {signals_out}")
 
 
 @pytest.mark.parametrize("format,signals_out, data_types_out,expected_signal,expected_data_types", [
-    ('json', 'signals-out.json', 'VehicleDataTypes.json', 'expected-signals.json', 'expected.json'),
-    ('csv',  'signals-out.csv',  'VehicleDataTypes.csv',  'expected-signals.csv',  'expected.csv'),
+    ('json', 'signals-out.json', 'VehicleDataTypes.json',
+     'expected-signals.json', 'expected.json'),
+    ('csv',  'signals-out.csv',  'VehicleDataTypes.csv',
+     'expected-signals.csv',  'expected.csv'),
     ('yaml',  'signals-out.yaml',  'VehicleDataTypes.yaml',  'expected-signals.yaml',  'expected.yaml')])
 def test_data_types_export_multi_file(format, signals_out, data_types_out,
                                       expected_signal, expected_data_types, change_test_dir):
@@ -60,7 +68,7 @@ def test_data_types_export_multi_file(format, signals_out, data_types_out,
     Test that data types provided in vspec format are converted correctly
     Note that DDSIDL does not support -ot
     """
-    args = ["../../../vspec2" + format + ".py"]
+    args = [sys.executable, str(VSS_TOOLS_ROOT / f"vspec2{format}.py")]
     if format == 'json':
         args.append('--json-pretty')
     args.extend(["-vt", "VehicleDataTypes.vspec", "-u", "../test_units.yaml", "-ot", data_types_out,
@@ -77,26 +85,22 @@ def test_data_types_export_multi_file(format, signals_out, data_types_out,
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
-    test_str = f"diff {signals_out} {expected_signal}"
-    result = os.system(test_str)
+    assert filecmp.cmp(signals_out, expected_signal)
     os.system("rm -f out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
     os.system(f"rm -f {signals_out} {data_types_out}")
 
 
 @pytest.mark.parametrize(
-        "signal_vspec_file,type_vspec_file,expected_signal_file,actual_signal_file,expected_type_files,"
-        "actual_type_files",
-        [('test.vspec', 'VehicleDataTypes.vspec', 'ExpectedSignals.proto', 'ActualSignals.proto',
-          ['VehicleDataTypes/TestBranch1/ExpectedTestBranch1.proto'],
-          ['VehicleDataTypes/TestBranch1/TestBranch1.proto']),
-         ('test2.vspec', 'VehicleDataTypes2.vspec', 'ExpectedSignals2.proto', 'ActualSignals.proto',
-          ['VehicleDataTypes/TestBranch2/ExpectedTestBranch2.proto',
-           'VehicleDataTypes/TestBranch3/ExpectedTestBranch3.proto'],
-          ['VehicleDataTypes/TestBranch2/TestBranch2.proto',
-           'VehicleDataTypes/TestBranch3/TestBranch3.proto'])])
+    "signal_vspec_file,type_vspec_file,expected_signal_file,actual_signal_file,expected_type_files,"
+    "actual_type_files",
+    [('test.vspec', 'VehicleDataTypes.vspec', 'ExpectedSignals.proto', 'ActualSignals.proto',
+      ['VehicleDataTypes/TestBranch1/ExpectedTestBranch1.proto'],
+      ['VehicleDataTypes/TestBranch1/TestBranch1.proto']),
+     ('test2.vspec', 'VehicleDataTypes2.vspec', 'ExpectedSignals2.proto', 'ActualSignals.proto',
+      ['VehicleDataTypes/TestBranch2/ExpectedTestBranch2.proto',
+       'VehicleDataTypes/TestBranch3/ExpectedTestBranch3.proto'],
+      ['VehicleDataTypes/TestBranch2/TestBranch2.proto',
+       'VehicleDataTypes/TestBranch3/TestBranch3.proto'])])
 def test_data_types_export_to_proto(signal_vspec_file, type_vspec_file, expected_signal_file,
                                     actual_signal_file, expected_type_files, actual_type_files,
                                     change_test_dir):
@@ -105,7 +109,7 @@ def test_data_types_export_to_proto(signal_vspec_file, type_vspec_file, expected
     """
 
     data_types_out = Path.cwd() / "unused.proto"
-    args = ["../../../vspec2protobuf.py",
+    args = [sys.executable, str(VSS_TOOLS_ROOT / "vspec2protobuf.py"),
             "-vt", type_vspec_file, "-u", "../test_units.yaml",
             "-ot", str(data_types_out), signal_vspec_file, actual_signal_file, "1>", "out.txt", "2>&1"]
     test_str = " ".join(args)
@@ -136,7 +140,8 @@ def test_data_types_export_to_proto(signal_vspec_file, type_vspec_file, expected
         proto_stem = Path(proto_file).stem
         proto_path = Path(os.path.dirname(proto_file))
         os.system(f"rm -f {proto_file} proto.out")
-        os.system(f"rm -f {proto_path}/{proto_stem}.pb.cc {proto_path}/{proto_stem}.pb.h")
+        os.system(
+            f"rm -f {proto_path}/{proto_stem}.pb.cc {proto_path}/{proto_stem}.pb.h")
 
 
 @pytest.mark.parametrize("types_file,error_msg", [
@@ -150,7 +155,7 @@ def test_data_types_invalid_reference_in_data_type_tree(
     """
     Test that errors are surfaced when data type name references are invalid within the data type tree
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml",
+    test_str = " ".join([sys.executable, str(VSS_TOOLS_ROOT / "vspec2json.py"), "-u", "../test_units.yaml",
                          "--json-pretty", "-vt",
                          types_file, "-ot", "VehicleDataTypes.json", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
@@ -173,7 +178,7 @@ def test_data_types_orphan_properties(
     """
     Test that errors are surfaced when a property is not defined under a struct
     """
-    test_str = " ".join(["../../../vspec2json.py",  "-u", "../test_units.yaml",
+    test_str = " ".join([sys.executable, str(VSS_TOOLS_ROOT / "vspec2json.py"),  "-u", "../test_units.yaml",
                          "--json-pretty", "-vt",
                          types_file, "-ot", "VehicleDataTypes.json", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
@@ -192,7 +197,7 @@ def test_data_types_invalid_reference_in_signal_tree(change_test_dir):
     """
     Test that errors are surfaced when data type name references are invalid in the signal tree
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml",
+    test_str = " ".join([sys.executable, str(VSS_TOOLS_ROOT / "vspec2json.py"), "-u", "../test_units.yaml",
                          "--json-pretty", "-vt",
                          "VehicleDataTypes.vspec", "-ot", "VehicleDataTypes.json", "test-invalid-datatypes.vspec",
                          "out.json", "1>", "out.txt", "2>&1"])
@@ -215,7 +220,7 @@ def test_error_when_no_user_defined_data_types_are_provided(change_test_dir):
     Test that error message is provided when user-defined types are specified
     in the signal tree but no data type tree is provided.
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml",
+    test_str = " ".join([sys.executable, str(VSS_TOOLS_ROOT / "vspec2json.py"), "-u", "../test_units.yaml",
                          "--json-pretty", "test.vspec", "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -243,7 +248,7 @@ def test_faulty_use_of_standard_attributes(
     """
     Test faulty use of datatype and unit for structs
     """
-    test_str = " ".join(["../../../vspec2json.py", "-u", "../test_units.yaml",
+    test_str = " ".join([sys.executable, str(VSS_TOOLS_ROOT / "vspec2json.py"), "-u", "../test_units.yaml",
                          "--json-pretty", "-vt", types_file, "-ot", "VehicleDataTypes.json", vspec_file,
                          "out.json", "1>", "out.txt", "2>&1"])
     result = os.system(test_str)
