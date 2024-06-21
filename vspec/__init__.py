@@ -114,7 +114,7 @@ def check_type_usage(tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[
     Check usages of datatypes within the tree.
     This methods shall be called after overlays (or additional type files) have been merged.
     """
-    logging.info("Check type usdage")
+    logging.info("Check type usage")
 
     if tree_type == VSSTreeType.DATA_TYPE_TREE:
 

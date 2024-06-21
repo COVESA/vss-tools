@@ -11,6 +11,7 @@ deprecation = ">=2.1.0"
 pytest = ">=2.7.2"
 PyYAML = ">=5.1"
 rdflib = ">=6.0.0"
+rich = ">=13.7.1"
 vss-tools = {editable = true, path = "."}
 graphql-core = "*"
 importlib-metadata = ">=7.0"

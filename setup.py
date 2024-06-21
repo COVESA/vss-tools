@@ -39,7 +39,7 @@ setup(
              'vspec2id.py'],
     python_requires='>=3.10',
     install_requires=['pyyaml>=5.1', 'anytree>=2.8.0', 'deprecation>=2.1.0', 'graphql-core',
-                      'importlib-metadata>=7.0'],
+                      'importlib-metadata>=7.0', 'rich>=13.7.1'],
     tests_require=['pytest>=2.7.2'],
     package_data={'vspec': [
         'py.typed'
