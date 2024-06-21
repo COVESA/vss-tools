@@ -38,7 +38,7 @@ def test_uuid(change_test_dir):
     # target
     exporters = ["json", "ddsidl", "csv", "yaml", "franca"]
     for exporter in exporters:
-        run_exporter(exporter, "--uuid", "uuid")
+        run_exporter(exporter, " --uuid", "uuid")
         run_exporter(exporter, "", "no_uuid")
 
 
