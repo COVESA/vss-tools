@@ -6,25 +6,23 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
+import subprocess
+from pathlib import Path
 import os
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
-
-
-def test_generator(change_test_dir):
-
-    test_str = "./example_generator.py -k \"VSS Contributor\" -u ../vspec/test_units.yaml test.vspec > out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    test_str = 'grep \"I found 2 comments with vss contributor\" out.txt > /dev/null'
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-    os.system("rm -f  out.txt")
+def test_generator():
+    cmd = [
+        "python",
+        "example_generator.py",
+        "-k",
+        "VSS Contributor",
+        "-u",
+        "../vspec/test_units.yaml",
+        "test.vspec",
+    ]
+    env = os.environ.copy()
+    env["COLUMNS"] = "120"
+    p = subprocess.run(cmd, capture_output=True, text=True, cwd=Path(__file__).resolve().parent, env=env)
+    assert p.returncode == 0
+    assert "I found 2 comments with vss contributor" in p.stdout
