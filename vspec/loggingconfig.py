@@ -13,10 +13,16 @@
 #
 
 import logging
+from rich.logging import RichHandler
 
 
 def initLogging():
     """
     Initialize logging
     """
-    logging.basicConfig(level=logging.INFO, format='%(levelname)-8s %(message)s')
+    logging.basicConfig(
+        level="INFO",
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler(rich_tracebacks=True)],
+    )
