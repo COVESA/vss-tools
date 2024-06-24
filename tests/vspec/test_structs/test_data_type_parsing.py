@@ -9,7 +9,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import pytest
-import sys
 import os
 import filecmp
 from pathlib import Path

@@ -21,9 +21,9 @@ from typing import List, Optional
 
 from anytree import (Resolver, LevelOrderIter, PreOrderIter, RenderTree)  # type: ignore[import]
 
-from .model.vsstree import VSSNode, VSSType
-from .model.exceptions import ImpossibleMergeException, IncompleteElementException
-from .model.constants import VSSTreeType, VSSUnitCollection, VSSQuantityCollection
+from vss_tools.vspec.model.vsstree import VSSNode, VSSType
+from vss_tools.vspec.model.exceptions import ImpossibleMergeException, IncompleteElementException
+from vss_tools.vspec.model.constants import VSSTreeType, VSSUnitCollection, VSSQuantityCollection
 
 nestable_types = set(["branch", "struct"])
 

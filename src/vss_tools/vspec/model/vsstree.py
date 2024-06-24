@@ -23,8 +23,8 @@ from anytree import (  # type: ignore[import]
     Resolver,
 )
 
-from .constants import VSSDataType, VSSType, VSSUnit, VSSUnitCollection
-from .exceptions import (
+from vss_tools.vspec.model.constants import VSSDataType, VSSType, VSSUnit, VSSUnitCollection
+from vss_tools.vspec.model.exceptions import (
     ImpossibleMergeException,
     IncompleteElementException,
     NameStyleValidationException,
