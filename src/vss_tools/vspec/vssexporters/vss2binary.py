@@ -130,7 +130,6 @@ class Vss2Binary(Vss2X):
         dllName = "../../../../binary/binarytool.so"
         dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
         if not os.path.isfile(dllAbsPath):
-            logging.error(dllAbsPath)
             logging.error("The required library binarytool.so is not available, exiting!")
             logging.info("You must build the library, "
                          "see https://github.com/COVESA/vss-tools/blob/master/binary/README.md!")

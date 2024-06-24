@@ -87,7 +87,7 @@ class Vspec2X():
             if self.vspec2vss_config.separate_output_type_file_supported:
                 # Note we might get some odd errors if using -ot in a tool not supporting it due to conflict with -o
                 type_group.add_argument('-ot', '--types-output-file', metavar='<types_output_file>',
-                                        help='Output file for writing data types from vss_tools.vspec file. ' +
+                                        help='Output file for writing data types from vspec file. ' +
                                         'If not specified, a single file is used where applicable. ' +
                                         'In case of JSON and YAML, the data is exported under a ' +
                                         'special key - "ComplexDataTypes"')
