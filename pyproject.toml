@@ -5,3 +5,34 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools-git-versioning]
 # Starting version is just a dummy value that never shall be used in CI
 starting_version = "0.0.0"
+
+[tool.black]
+line-length=120
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = [
+  ".venv",
+  "binary",
+  "dist",
+  "obsolete",
+]
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+select = ["E4", "E7", "E9", "F"]
+extend-select = [
+  "UP",  # pyupgrade
+]
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "double" # like Black, use double quotes for strings
+indent-style = "space" # like Black, indent with spaces, rather than tabs
+skip-magic-trailing-comma = false # like Black, respect magic trailing commas
+line-ending = "auto" # like Black, automatically detect the appropriate line ending
