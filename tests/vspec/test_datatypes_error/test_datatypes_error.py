@@ -8,45 +8,37 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from pathlib import Path
+import subprocess
 import os
-import pytest
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+def test_datatype_error(tmp_path):
+    spec = HERE / "test.vspec"
+    output = tmp_path / "out.json"
+    cmd = f"vspec2json --json-pretty -u {TEST_UNITS} {spec} {output}"
+    env = os.environ.copy()
+    env["COLUMNS"] = "200"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    assert process.returncode != 0
 
-
-def test_datatype_error(change_test_dir):
-    test_str = "vspec2json --json-pretty -u ../test_units.yaml test.vspec out.json > out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    # failure expected
-    assert os.WEXITSTATUS(result) != 0
-
-    test_str = 'grep "Following types were referenced in signals" out.txt > /dev/null'
-    test_str = 'grep "but have not been defined: uint7" out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-
-def test_datatype_branch(change_test_dir):
-    test_str = (
-        "vspec2json --json-pretty -u ../test_units.yaml "
-        "test_datatype_branch.vspec out.json > out.txt 2>&1"
+    assert (
+        "Following types were referenced in signals but have not been defined: uint7"
+        in process.stdout
     )
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    # failure expected
-    assert os.WEXITSTATUS(result) != 0
 
-    test_str = 'grep "cannot have datatype" out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+
+def test_datatype_branch(tmp_path):
+    spec = HERE / "test_datatype_branch.vspec"
+    output = tmp_path / "out.json"
+    cmd = f"vspec2json --json-pretty -u {TEST_UNITS} {spec} {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
+
+    assert (
+        "cannot have datatype"
+        in process.stdout
+    )

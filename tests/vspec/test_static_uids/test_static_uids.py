@@ -10,7 +10,6 @@
 # Convert vspec files to various other formats
 #
 
-import os
 import shlex
 from typing import Dict
 
@@ -25,35 +24,21 @@ from vss_tools.vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
 from vss_tools.vspec.model.vsstree import VSSNode
 from vss_tools.vspec.utils.idgen_utils import get_all_keys_values
 
-# HELPERS
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-def get_cla_test(test_file: str, overlay: str | None = None):
+def get_cla_test(test_file: str, tmp_path: Path, overlay: str | None = None):
+    args = f"vspec2id {test_file}"
+    output = tmp_path / "out.vspec"
     if overlay:
-        return (
-            "vspec2id "
-            + test_file
-            + " -o "
-            + overlay
-            + " ./out.vspec --validate-static-uid "
-            + "./validation_vspecs/validation.vspec "
-            + "-u ./test_vspecs/units.yaml"
-        )
-    else:
-        return (
-            "vspec2id "
-            + test_file
-            + " ./out.vspec --validate-static-uid "
-            + "./validation_vspecs/validation.vspec "
-            + "-u ./test_vspecs/units.yaml"
-        )
-
-
-def get_cla_validation(validation_file: str):
-    return (
-        "vspec2id ./test_vspecs/test.vspec ./out.vspec "
-        "--validate-static-uid " + validation_file
-    )
+        args += f" -o {overlay}"
+    validation = HERE / "validation_vspecs/validation.vspec"
+    units = HERE / "test_vspecs/units.yaml"
+    args += f" {output} --validate-static-uid {validation} -u {units}"
+    return args
 
 
 def get_test_node(
@@ -69,7 +54,8 @@ def get_test_node(
         "type": "branch",
         "$file_name$": "testfile",
     }
-    node = VSSNode(node_name, source, VSSTreeType.SIGNAL_TREE.available_types())
+    node = VSSNode(node_name, source,
+                   VSSTreeType.SIGNAL_TREE.available_types())
     node.unit = VSSUnit(unit)
     node.data_type_str = datatype.value
     node.validate_and_set_datatype()
@@ -78,24 +64,6 @@ def get_test_node(
     node.max = maximum
 
     return node
-
-
-# FIXTURES
-
-
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
-
-
-@pytest.fixture(scope="function", autouse=True)
-def delete_files(change_test_dir):
-    yield None
-    os.system("rm -f out.vspec")
-
-
-# UNIT TESTS
 
 
 @pytest.mark.parametrize(
@@ -165,25 +133,26 @@ def test_strict_mode(
 
 @pytest.mark.parametrize(
     "test_file, validation_file",
-    [("test_vspecs/test.vspec", "./validation.yaml")],
+    [("test_vspecs/test.vspec", "validation.yaml")],
 )
 def test_export_node(
     request: pytest.FixtureRequest,
     test_file: str,
     validation_file: str,
 ):
-    dir_path = os.path.dirname(request.path)
-    vspec_file = os.path.join(dir_path, test_file)
+    vspec_file = HERE / test_file
+    validation_file = HERE / validation_file
+    units = str(HERE / "test_vspecs/units.yaml")
 
-    vspec.load_units(vspec_file, [os.path.join(dir_path, "test_vspecs/units.yaml")])
+    vspec.load_units(str(vspec_file), [units])
     tree = vspec.load_tree(
-        vspec_file, include_paths=["."], tree_type=VSSTreeType.SIGNAL_TREE
+        str(vspec_file), include_paths=["."], tree_type=VSSTreeType.SIGNAL_TREE
     )
     yaml_dict: Dict[str, str] = {}
     vss2id.export_node(yaml_dict, tree, id_counter=0, strict_mode=False)
 
     result_dict: Dict[str, str]
-    with open(os.path.join(dir_path, validation_file)) as f:
+    with open(validation_file) as f:
         result_dict = yaml.load(f, Loader=yaml.FullLoader)
 
     assert result_dict.keys() == yaml_dict.keys()
@@ -199,15 +168,18 @@ def test_export_node(
 )
 def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
     tree = get_test_node("TestNode", "m", VSSDataType.UINT32, "", "", "")
-    child_node = get_test_node(children_names[0], "m", VSSDataType.UINT32, "", "", "")
-    child_node2 = get_test_node(children_names[1], "m", VSSDataType.UINT32, "", "", "")
+    child_node = get_test_node(
+        children_names[0], "m", VSSDataType.UINT32, "", "", "")
+    child_node2 = get_test_node(
+        children_names[1], "m", VSSDataType.UINT32, "", "", "")
     tree.children = [child_node, child_node2]
 
     yaml_dict: Dict[str, dict] = {}
     if children_names[0] == children_names[1]:
         # assert system exit and log
         with pytest.raises(SystemExit) as pytest_wrapped_e:
-            vss2id.export_node(yaml_dict, tree, id_counter=0, strict_mode=False)
+            vss2id.export_node(
+                yaml_dict, tree, id_counter=0, strict_mode=False)
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == -1
         assert len(caplog.records) == 1 and all(
@@ -226,25 +198,27 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
 # INTEGRATION TESTS
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_full_script(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_full_script(caplog: pytest.LogCaptureFixture, tmp_path):
+    test_file: str = str(HERE / "test_vspecs/test.vspec")
+    clas = shlex.split(get_cla_test(test_file, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 0
 
 
-@pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
     "validation_file",
     [
-        "./validation_vspecs/validation_semantic_change_1.vspec",
-        "./validation_vspecs/validation_semantic_change_2.vspec",
+        "validation_vspecs/validation_semantic_change_1.vspec",
+        "validation_vspecs/validation_semantic_change_2.vspec",
     ],
 )
-def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str):
-    clas = shlex.split(get_cla_validation(validation_file))
+def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str, tmp_path):
+    spec = HERE / "test_vspecs/test.vspec"
+    output = tmp_path / "out.vspec"
+    validation = HERE / validation_file
+    args = f"vspec2id {spec} {output} --validate-static-uid {validation}"
+    clas = shlex.split(args)
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -254,10 +228,9 @@ def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str):
         assert "SEMANTIC NAME CHANGE" in record.msg
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_vss_path(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_vss_path.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_vss_path(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_vss_path.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -267,10 +240,9 @@ def test_vss_path(caplog: pytest.LogCaptureFixture):
         assert "PATH CHANGE" in record.msg
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_unit(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_unit.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_unit(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_unit.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 2 and all(
@@ -280,10 +252,9 @@ def test_unit(caplog: pytest.LogCaptureFixture):
         assert "BREAKING CHANGE" in record.msg
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_datatype(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_datatype.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_datatype.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -293,10 +264,9 @@ def test_datatype(caplog: pytest.LogCaptureFixture):
         assert "BREAKING CHANGE" in record.msg
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_name_datatype(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_name_datatype.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_name_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_name_datatype.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 2 and all(
@@ -309,10 +279,9 @@ def test_name_datatype(caplog: pytest.LogCaptureFixture):
             assert "DELETED ATTRIBUTE" in record.msg
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_deprecation(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_deprecation.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_deprecation(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_deprecation.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -322,10 +291,9 @@ def test_deprecation(caplog: pytest.LogCaptureFixture):
         assert "DEPRECATION MSG CHANGE" in record.msg
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_description(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_description.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_description(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_description.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -335,10 +303,9 @@ def test_description(caplog: pytest.LogCaptureFixture):
         assert "DESCRIPTION MISMATCH" in record.msg
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_added_attribute(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_added_attribute.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_added_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_added_attribute.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -347,15 +314,15 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture):
     for record in caplog.records:
         assert "ADDED ATTRIBUTE" in record.msg
 
-    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    output = tmp_path / "out.vspec"
+    result = yaml.load(open(output), Loader=yaml.FullLoader)
     keys: list = [key for key, _ in get_all_keys_values(result)]
     assert "A.B.NewNode" in keys
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test_deleted_attribute.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_deleted_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test_deleted_attribute.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -364,16 +331,17 @@ def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
     for record in caplog.records:
         assert "DELETED ATTRIBUTE" in record.msg
 
-    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    output = tmp_path / "out.vspec"
+    result = yaml.load(open(output), Loader=yaml.FullLoader)
     keys: list = [key for key, _ in get_all_keys_values(result)]
     assert "A.B.Max" not in keys
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_overlay(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test.vspec"
-    overlay: str = "./test_vspecs/test_overlay.vspec"
-    clas = shlex.split(get_cla_test(test_file, overlay))
+def test_overlay(caplog: pytest.LogCaptureFixture, tmp_path):
+
+    spec = HERE / "test_vspecs/test.vspec"
+    overlay = HERE / "test_vspecs/test_overlay.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
     vspec2id.main(clas[1:])
 
     assert len(caplog.records) == 1 and all(
@@ -383,38 +351,38 @@ def test_overlay(caplog: pytest.LogCaptureFixture):
     for record in caplog.records:
         assert "ADDED ATTRIBUTE" in record.msg
 
-    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    output = tmp_path / "out.vspec"
+    result = yaml.load(open(output), Loader=yaml.FullLoader)
     keys: list = [key for key, _ in get_all_keys_values(result)]
     assert "A.B.OverlayNode" in keys
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_const_id(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test.vspec"
-    overlay: str = "./test_vspecs/test_const_id.vspec"
-    clas = shlex.split(get_cla_test(test_file, overlay))
+def test_const_id(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test.vspec"
+    overlay = HERE / "test_vspecs/test_const_id.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
     vspec2id.main(clas[1:])
 
-    result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
+    output = tmp_path / "out.vspec"
+    result = yaml.load(open(output), Loader=yaml.FullLoader)
     for key, value in get_all_keys_values(result):
         if key == "A.B.Int32":
             assert value["staticUID"] == "0x00112233"
 
 
-@pytest.mark.usefixtures("change_test_dir")
-def test_iterated_file(caplog: pytest.LogCaptureFixture):
-    test_file: str = "./test_vspecs/test.vspec"
-    clas = shlex.split(get_cla_test(test_file))
+def test_iterated_file(caplog: pytest.LogCaptureFixture, tmp_path):
+    spec = HERE / "test_vspecs/test.vspec"
+    clas = shlex.split(get_cla_test(spec, tmp_path))
     vspec2id.main(clas[1:])
 
-    with open("./out.vspec", "r") as f:
-        result = yaml.load(f, Loader=yaml.FullLoader)
+    output = tmp_path / "out.vspec"
+    result = yaml.load(open(output), Loader=yaml.FullLoader)
 
     # run again on out.vspec to check if it all hashed attributes were exported correctly
-    clas = shlex.split(get_cla_test("./out.vspec"))
+    clas = shlex.split(get_cla_test(output, tmp_path))
     vspec2id.main(clas[1:])
 
-    with open("./out.vspec", "r") as f:
-        result_iteration = yaml.load(f, Loader=yaml.FullLoader)
+    output = tmp_path / "out.vspec"
+    result_iteration = yaml.load(open(output), Loader=yaml.FullLoader)
 
     assert result == result_iteration

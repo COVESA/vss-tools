@@ -9,84 +9,72 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import pytest
-import os
+
+from pathlib import Path
+import subprocess
+import filecmp
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-# #################### Helper methods #############################
+@pytest.mark.parametrize(
+    "format, output_file, comparison_file, is_error_expected",
+    [
+        ("json", "out.json", "expected.json", False),
+        ("yaml", "out.yaml", "expected.yaml", False),
+        ("csv", "out.csv", "expected.csv", False),
+        ("protobuf", "out.proto", "expected.proto", True),
+        ("ddsidl", "out.idl", "expected.idl", True),
+        ("franca", "out.fidl", "expected.fidl", True),
+        ("graphql", "out.graphql", "expected.graphql", True),
+    ],
+)
+def test_no_expand(
+    format, output_file, comparison_file, is_error_expected: bool, tmp_path
+):
+    spec = HERE / "test.vspec"
+    output = tmp_path / output_file
+    cmd = f"vspec2{format} --no-expand"
+    if format == "json":
+        cmd += " --json-pretty"
+    cmd += f" -u {TEST_UNITS} {spec} {output}"
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
-
-
-@pytest.mark.parametrize("format, output_file, comparison_file, is_error_expected", [
-    ('json', 'out.json', 'expected.json', False),
-    ('yaml', 'out.yaml', 'expected.yaml', False),
-    ('csv', 'out.csv', 'expected.csv', False),
-    ('protobuf', 'out.proto', 'expected.proto', True),
-    ('ddsidl', 'out.idl', 'expected.idl', True),
-    ('franca', 'out.fidl', 'expected.fidl', True),
-    ('graphql', 'out.graphql', 'expected.graphql', True)])
-def test_no_expand(format, output_file, comparison_file, is_error_expected: bool, change_test_dir):
-
-    args = ["vspec2" + format, "--no-expand"]
-    if format == 'json':
-        args.append('--json-pretty')
-    args.extend(["-u", "../test_units.yaml",
-                 "test.vspec", output_file, "1>", "out.txt", "2>&1"])
-    test_str = " ".join(args)
-
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    assert os.WIFEXITED(result)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
     if is_error_expected:
-        assert os.WEXITSTATUS(result) != 0
+        assert process.returncode != 0
     else:
-        assert os.WEXITSTATUS(result) == 0
+        assert process.returncode == 0
 
     # For exporters not supporting "no-expand" an error shall be given
-    test_str = 'grep \"error: unrecognized arguments: --no-expand\" out.txt > /dev/null'
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
+    expected = HERE / comparison_file
     if is_error_expected:
-        assert os.WEXITSTATUS(result) == 0
+        assert "error: unrecognized arguments: --no-expand" in process.stderr
     else:
-        assert os.WEXITSTATUS(result) == 1
-        test_str = f"diff {output_file} {comparison_file}"
-        result = os.system(test_str)
-        os.system("rm -f out.txt")
-        assert os.WIFEXITED(result)
-        assert os.WEXITSTATUS(result) == 0
+        assert filecmp.cmp(output, expected)
 
-    os.system(f"rm -f {output_file}")
 
 # Overlay tests, just showing for JSON
-
-
-@pytest.mark.parametrize("no_expand, comparison_file", [
-    (False, 'expected_overlay_expand.json'),
-    (True, 'expected_overlay_no_expand.json')])
-def test_json_overlay(no_expand, comparison_file, change_test_dir):
+@pytest.mark.parametrize(
+    "no_expand, comparison_file",
+    [
+        (False, "expected_overlay_expand.json"),
+        (True, "expected_overlay_no_expand.json"),
+    ],
+)
+def test_json_overlay(no_expand, comparison_file, tmp_path):
     """Test with overlay and expansion (for reference/comparison)"""
-    args = ["vspec2json"]
 
+    overlay = HERE / "overlay.vspec"
+    spec = HERE / "test.vspec"
+    output = tmp_path / "out.json"
+
+    cmd = "vspec2json"
     if no_expand:
-        args.append('--no-expand')
+        cmd += " --no-expand"
+    cmd += f" --json-pretty -u {TEST_UNITS} {spec} -o {overlay} {output}"
 
-    args.extend(["--json-pretty", "-u", "../test_units.yaml",
-                 "test.vspec", "-o", "overlay.vspec", "out.json", "1>", "out.txt", "2>&1"])
-    test_str = " ".join(args)
-
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    test_str = f"diff out.json {comparison_file}"
-    result = os.system(test_str)
-    os.system("rm -f out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    os.system("rm -f out.json")
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode == 0
+    expected = HERE / comparison_file
+    assert filecmp.cmp(output, expected)

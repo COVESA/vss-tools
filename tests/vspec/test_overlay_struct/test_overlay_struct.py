@@ -9,77 +9,68 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import pytest
-import os
 
+from pathlib import Path
+import subprocess
+import filecmp
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
 # First test case on all supported exportes
-
-@pytest.mark.parametrize("format,signals_out, expected_signal", [
-    ('json', 'out.json', 'expected.json'),
-    ('yaml', 'out.yaml', 'expected.yaml'),
-    ('csv', 'out.csv', 'expected.csv'),
-    ('protobuf', 'out.proto', 'expected.proto')])
-def test_overlay_struct(format, signals_out, expected_signal, change_test_dir):
+@pytest.mark.parametrize(
+    "format,signals_out, expected_signal",
+    [
+        ("json", "out.json", "expected.json"),
+        ("yaml", "out.yaml", "expected.yaml"),
+        ("csv", "out.csv", "expected.csv"),
+        ("protobuf", "out.proto", "expected.proto"),
+    ],
+)
+def test_overlay_struct(format, signals_out, expected_signal, tmp_path):
     """
     Test that data types provided in vspec format are converted correctly
     """
-    args = ["vspec2" + format]
-    if format == 'json':
-        args.append('--json-pretty')
-    args.extend(["-vt", "struct1.vspec", "-vt", "struct2.vspec", "-u", "../test_units.yaml",
-                 "test.vspec", "-o", "overlay.vspec", signals_out, "1>", "out.txt", "2>&1"])
-    test_str = " ".join(args)
+    spec = HERE / "test.vspec"
+    struct1 = HERE / "struct1.vspec"
+    struct2 = HERE / "struct2.vspec"
+    overlay = HERE / "overlay.vspec"
+    output = tmp_path / signals_out
 
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    cmd = f"vspec2{format}"
+    if format == "json":
+        cmd += " --json-pretty"
+    cmd += f" -vt {struct1} -vt {struct2} -u {TEST_UNITS} -o {overlay} {spec} {output}"
 
-    test_str = f"diff {signals_out} {expected_signal}"
-    result = os.system(test_str)
-    os.system("rm -f out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    process = subprocess.run(cmd.split(), cwd=tmp_path)
+    assert process.returncode == 0
+    expected = HERE / expected_signal
+    assert filecmp.cmp(output, expected)
 
-    os.system(f"rm -f {signals_out}")
-
-    if format == 'protobuf':
-        test_str = "diff Types/Types.proto expected_types.proto"
-        result = os.system(test_str)
-        os.system("rm -f out.txt")
-        assert os.WIFEXITED(result)
-        assert os.WEXITSTATUS(result) == 0
-        os.system("rm -rf Types")
+    if format == "protobuf":
+        types_proto = tmp_path / "Types" / "Types.proto"
+        expected = HERE / "expected_types.proto"
+        assert filecmp.cmp(types_proto, expected)
 
 
-@pytest.mark.parametrize("format,signals_out, expected_signal", [
-    ('json', 'out.json', 'expected_struct_using_struct.json')])
-def test_overlay_struct_using_struct(format, signals_out, expected_signal, change_test_dir):
+@pytest.mark.parametrize(
+    "format,signals_out, expected_signal",
+    [("json", "out.json", "expected_struct_using_struct.json")],
+)
+def test_overlay_struct_using_struct(format, signals_out, expected_signal, tmp_path):
     """
     Test that data types provided in vspec format are converted correctly
     """
-    args = ["vspec2" + format]
-    if format == 'json':
-        args.append('--json-pretty')
-    args.extend(["-vt", "struct1.vspec", "-vt", "struct2_using_struct1.vspec", "-u", "../test_units.yaml",
-                 "test.vspec", "-o", "overlay.vspec", signals_out, "1>", "out.txt", "2>&1"])
-    test_str = " ".join(args)
 
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    struct1 = HERE / "struct1.vspec"
+    struct2 = HERE / "struct2_using_struct1.vspec"
+    overlay = HERE / "overlay.vspec"
+    spec = HERE / "test.vspec"
+    output = tmp_path / signals_out
+    cmd = f"vspec2{format} --json-pretty -vt {struct1} -vt {struct2} -u {TEST_UNITS} {spec} -o {overlay} {output}"
+    process = subprocess.run(cmd.split())
+    assert process.returncode == 0
 
-    test_str = f"diff {signals_out} {expected_signal}"
-    result = os.system(test_str)
-    os.system("rm -f out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    os.system(f"rm -f {signals_out}")
+    expected = HERE / expected_signal
+    assert filecmp.cmp(output, expected)

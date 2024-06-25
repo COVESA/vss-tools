@@ -12,68 +12,49 @@ import pytest
 import os
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+from pathlib import Path
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-def test_error_when_data_types_file_is_missing(change_test_dir):
-    # test that program fails due to parser error
-    cmdline = 'vspec2json  -u ../test_units.yaml -ot output_types_file.json test.vspec output_file.json'
-    test_str = cmdline + " 1> out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) != 0
-
-    # test that the expected error is outputted
-    test_str = 'grep \"error: An output file for data types was provided. Please also provide the input ' + \
-               'vspec file for data types\" out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+def test_error_when_data_types_file_is_missing(tmp_path):
+    otypes = HERE / "output_types_file.json"
+    spec = HERE / "test.vspec"
+    output = tmp_path / "output.json"
+    cmd = f"vspec2json -u {TEST_UNITS} -ot {otypes} {spec} {output}"
+    env = os.environ.copy()
+    env["COLUMNS"] = "200"
+    process = subprocess.run(
+        cmd.split(), capture_output=True, text=True, env=env)
+    assert process.returncode != 0
+    print(process.stdout)
+    assert (
+        "error: An output file for data types was provided. Please also provide the input vspec file for data types"
+        in process.stderr
+    )
 
 
 @pytest.mark.parametrize("format", ["binary", "franca", "graphql"])
-def test_error_with_non_compatible_formats(format, change_test_dir):
-    # test that program fails due to parser error
-    cmdline = ('vspec2' + format + ' -u ../test_units.yaml -vt VehicleDataTypes.vspec '
-               '-ot output_types_file.json'
-               'test.vspec output_file.json')
-    test_str = cmdline + " 1> out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) != 0
-
-    # test that the expected error is outputted
-    test_str = 'grep \"error: unrecognized arguments: -vt\" ' + \
-        'out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt output_types_file.json output_file.json")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+def test_error_with_non_compatible_formats(format, tmp_path):
+    otypes = HERE / "output_types_file.json"
+    spec = HERE / "test.vspec"
+    output = tmp_path / "output.json"
+    types = HERE / "VehicleDataTypes.vspec"
+    cmd = f"vspec2{format} -u {TEST_UNITS} -vt {types} -ot {otypes} {spec} {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
+    assert "error: unrecognized arguments: -vt" in process.stderr
 
 
 @pytest.mark.parametrize("format", ["ddsidl"])
-def test_error_with_ot(format, change_test_dir):
-    # test that program fails due to parser error
-    cmdline = ('vspec2' + format + ' -u ../test_units.yaml -vt VehicleDataTypes.vspec '
-               '-ot output_types_file.json '
-               'test.vspec output_file.json')
-    test_str = cmdline + " 1> out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) != 0
-
-    # test that the expected error is outputed
-    # At the moment we get an odd error as "-ot" is interpreted as "-o t"
-    test_str = 'grep \"error: unrecognized arguments\" ' + \
-        'out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt output_types_file.json output_file.json")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+def test_error_with_ot(format, tmp_path):
+    otypes = HERE / "output_types_file.json"
+    spec = HERE / "test.vspec"
+    output = tmp_path / "output.json"
+    types = HERE / "VehicleDataTypes.vspec"
+    cmd = f"vspec2{format} -u {TEST_UNITS} -vt {types} -ot {otypes} {spec} {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
+    assert "error: unrecognized arguments: " in process.stderr
