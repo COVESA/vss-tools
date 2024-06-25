@@ -8,29 +8,23 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
+from pathlib import Path
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
-
-
-def test_error(change_test_dir):
+def test_error(tmp_path):
     """
-    Verify that you cannot have multiple type trees, ie. both TypesA and TypesB, there must be a single root
+    Verify that you cannot have multiple type trees,
+    ie. both TypesA and TypesB, there must be a single root
     """
-    test_str = "vspec2csv -vt struct1.vspec -vt struct2.vspec -u ../test_units.yaml " \
-               "test.vspec out.csv 1> out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    # failure expected
-    assert os.WEXITSTATUS(result) != 0
-    test_str = 'grep \"unknown root node\" out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.csv out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    output = tmp_path / "out.csv"
+    vt1 = HERE / "struct1.vspec"
+    vt2 = HERE / "struct2.vspec"
+    spec = HERE / "test.vspec"
+    cmd = f"vspec2csv -vt {vt1} -vt {vt2} -u {TEST_UNITS} {spec} {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
+    assert "unknown root node" in process.stderr

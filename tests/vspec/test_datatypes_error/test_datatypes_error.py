@@ -8,48 +8,37 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import os
-import subprocess
 from pathlib import Path
+import subprocess
+import os
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
 def test_datatype_error(tmp_path):
-    cmd = (
-        f"vspec2json --json-pretty -u ../test_units.yaml test.vspec ${tmp_path / 'out.json'}"
-    )
+    spec = HERE / "test.vspec"
+    output = tmp_path / "out.json"
+    cmd = f"vspec2json --json-pretty -u {TEST_UNITS} {spec} {output}"
     env = os.environ.copy()
-    env["COLUMNS"] = "120"
-    p = subprocess.run(
-        cmd.split(),
-        capture_output=True,
-        text=True,
-        cwd=Path(__file__).resolve().parent,
-        env=env,
-    )
-    assert p.returncode != 0
+    env["COLUMNS"] = "200"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    assert process.returncode != 0
 
     assert (
-        "Following types were referenced in signals but have not been defined"
-        in p.stdout)
+        "Following types were referenced in signals but have not been defined: uint7"
+        in process.stdout
+    )
 
 
 def test_datatype_branch(tmp_path):
-    cmd = (
-        "vspec2json --json-pretty -u ../test_units.yaml "
-        f"test_datatype_branch.vspec ${tmp_path / 'out.json'}"
-    )
-    env = os.environ.copy()
-    env["COLUMNS"] = "120"
-    p = subprocess.run(
-        cmd.split(),
-        capture_output=True,
-        text=True,
-        cwd=Path(__file__).resolve().parent,
-        env=env,
-    )
-    assert p.returncode != 0
+    spec = HERE / "test_datatype_branch.vspec"
+    output = tmp_path / "out.json"
+    cmd = f"vspec2json --json-pretty -u {TEST_UNITS} {spec} {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
 
     assert (
         "cannot have datatype"
-        in p.stdout
+        in process.stdout
     )
