@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -10,14 +8,8 @@
 
 import pytest
 
-from vspec.model.constants import VSSTreeType
-from vspec.model.vsstree import VSSNode
-
-
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+from vss_tools.vspec.model.constants import VSSTreeType
+from vss_tools.vspec.model.vsstree import VSSNode
 
 
 @pytest.mark.parametrize("type_name, is_signal_tree, is_default_supported", [
@@ -29,7 +21,7 @@ def change_test_dir(request, monkeypatch):
     ("struct", False, False),
     ("property", False, True)
     ])
-def test_default(type_name: str, is_signal_tree: bool, is_default_supported: bool, change_test_dir):
+def test_default(type_name: str, is_signal_tree: bool, is_default_supported: bool):
     """
     Verify that tooling complains if "default" is used where it should not be used
     """

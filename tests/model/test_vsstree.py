@@ -10,9 +10,9 @@ import unittest
 import os
 import pytest
 
-from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
-from vspec.model.vsstree import VSSNode
-from vspec.model.exceptions import NameStyleValidationException
+from vss_tools.vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.exceptions import NameStyleValidationException
 
 
 class TestVSSNode(unittest.TestCase):
