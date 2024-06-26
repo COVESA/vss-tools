@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -23,8 +21,7 @@ def test_expanded_overlay(tmp_path):
     overlay2 = HERE / "overlay_2.vspec"
     output = tmp_path / "out.json"
     cmd = f"vspec2json -e my_id --json-pretty -u {TEST_UNITS} {spec} -o {overlay1} -o {overlay2} {output}"
-    process = subprocess.run(cmd.split())
-    assert process.returncode == 0
+    subprocess.run(cmd.split(), check=True)
 
     expected = HERE / "expected.json"
     assert filecmp.cmp(output, expected)

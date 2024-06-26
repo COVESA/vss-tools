@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -67,9 +65,7 @@ def test_data_types_export_single_file(
     if format == "json":
         cmd += " --json-pretty"
     cmd += f" -vt {type_file} -u {TEST_UNITS} {vspec} {output}"
-    process = subprocess.run(cmd.split())
-    assert process.returncode == 0
-
+    subprocess.run(cmd.split(), check=True)
     expected_output = HERE / expected_signal
     assert filecmp.cmp(output, expected_output)
 
@@ -121,9 +117,7 @@ def test_data_types_export_multi_file(
     if format == "json":
         cmd += " --json-pretty"
     cmd += f" -vt {type_file} -u {TEST_UNITS} -ot {types_output} {vspec} {output}"
-    process = subprocess.run(cmd.split())
-    assert process.returncode == 0
-
+    subprocess.run(cmd.split(), check=True)
     expected_signal = HERE / expected_signal
     expected_data_types = HERE / expected_data_types
     assert filecmp.cmp(output, expected_signal)
@@ -183,8 +177,7 @@ def test_data_types_export_to_proto(
         f" {signal_vspec_file} {actual_signal_file}"
     )
 
-    process = subprocess.run(cmd.split(), cwd=tmp_path)
-    assert process.returncode == 0
+    subprocess.run(cmd.split(), cwd=tmp_path, check=True)
 
     expected_proto_files = expected_type_files + [expected_signal_file]
     actual_proto_files = actual_type_files + [actual_signal_file]

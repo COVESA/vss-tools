@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -31,8 +29,7 @@ def run_unit(
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
-    assert process.returncode == 0
+        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env, check=True)
     assert filecmp.cmp(out, HERE / expected_file)
 
     if grep_string and grep_present:

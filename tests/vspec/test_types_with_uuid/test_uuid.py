@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2022 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -20,9 +18,7 @@ def run_exporter(exporter, argument, compare_suffix, tmp_path):
     vspec = HERE / "test.vspec"
     out = tmp_path / f"out.{exporter}"
     cmd = f"vspec2{exporter}{argument} -u {TEST_UNITS} {vspec} {out}"
-    process = subprocess.run(cmd.split())
-    assert process.returncode == 0
-
+    subprocess.run(cmd.split(), check=True)
     expected = HERE / f"expected_{compare_suffix}.{exporter}"
     assert filecmp.cmp(out, expected)
 

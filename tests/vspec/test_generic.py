@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2022 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -39,8 +37,7 @@ def run_exporter(directory, exporter, tmp_path):
     output = tmp_path / f"out.{exporter}"
     expected = directory / f"expected.{exporter}"
     cmd = f"vspec2{exporter} -u {TEST_UNITS} {vspec} {output}"
-    process = subprocess.run(cmd.split())
-    assert process.returncode == 0
+    subprocess.run(cmd.split(), check=True)
     assert filecmp.cmp(output, expected)
 
 
