@@ -20,10 +20,12 @@ importlib-metadata = "^7.0"
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
 pytest = "*"
+pytest-cov = "*"
 types-setuptools = "*"
 types-PyYAML = "*"
 flake8 = "^6.0.0"
 pre-commit = "*"
+
 
 [tool.poetry.scripts]
 vspec2binary = "vss_tools.vspec2binary:main"
