@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2022 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -21,8 +19,7 @@ def test_include(tmp_path):
     output = tmp_path / "out.json"
     expected = HERE / "expected.json"
     cmd = f"vspec2json -u {TEST_UNITS} --json-pretty {spec} {output}"
-    process = subprocess.run(cmd.split())
-    assert process.returncode == 0
+    subprocess.run(cmd.split(), check=True)
     filecmp.cmp(output, expected)
 
 

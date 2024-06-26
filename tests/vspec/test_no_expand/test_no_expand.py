@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -74,7 +72,6 @@ def test_json_overlay(no_expand, comparison_file, tmp_path):
         cmd += " --no-expand"
     cmd += f" --json-pretty -u {TEST_UNITS} {spec} -o {overlay} {output}"
 
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
-    assert process.returncode == 0
+    subprocess.run(cmd.split(), check=True, capture_output=True, text=True)
     expected = HERE / comparison_file
     assert filecmp.cmp(output, expected)

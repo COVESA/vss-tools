@@ -7,13 +7,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import subprocess
+import sys
 from pathlib import Path
 import os
 
 
 def test_generator():
     cmd = [
-        "python",
+        sys.executable,
         "example_generator.py",
         "-k",
         "VSS Contributor",
@@ -23,6 +24,5 @@ def test_generator():
     ]
     env = os.environ.copy()
     env["COLUMNS"] = "120"
-    p = subprocess.run(cmd, capture_output=True, text=True, cwd=Path(__file__).resolve().parent, env=env)
-    assert p.returncode == 0
+    p = subprocess.run(cmd, check=True, capture_output=True, text=True, cwd=Path(__file__).resolve().parent, env=env)
     assert "I found 2 comments with vss contributor" in p.stdout

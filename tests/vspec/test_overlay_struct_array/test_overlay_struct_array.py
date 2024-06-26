@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -41,8 +39,7 @@ def test_overlay_struct_array(format, signals_out, expected_signal, tmp_path):
     if format == "json":
         cmd += " --json-pretty"
     cmd += f" -vt {struct} -u {TEST_UNITS} {spec} -o {overlay} {output}"
-    process = subprocess.run(cmd.split(), cwd=tmp_path)
-    assert process.returncode == 0
+    subprocess.run(cmd.split(), cwd=tmp_path, check=True)
 
     expected = HERE / expected_signal
     assert filecmp.cmp(output, expected)

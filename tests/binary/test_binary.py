@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -7,61 +6,47 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
+from pathlib import Path
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "vspec" / "test_units.yaml"
+BIN_DIR = HERE / ".." / ".." / "binary"
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+def check_expected_for_tool(tool_path, signal_name: str, grep_str: str, test_binary):
+    stdin = f"m\n{signal_name}\n1\nq"
+    cmd = f"{tool_path} {test_binary}"
+    process = subprocess.run(
+        cmd.split(), input=stdin, check=True, capture_output=True, text=True
+    )
+    print(process.stdout)
+    assert grep_str in process.stdout
 
 
-def check_expected_for_tool(signal_name: str, grep_str: str, tool_path: str):
-
-    test_str = "printf '%s\n' 'm' " + signal_name + "  '1' 'q' | " + tool_path + " test.binary > out.txt"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-    test_str = "grep '" + grep_str + "' out.txt > /dev/null"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-
-def check_expected(signal_name: str, grep_str: str):
-    check_expected_for_tool(signal_name, grep_str, "./ctestparser")
-    check_expected_for_tool(signal_name, grep_str, "../../binary/go_parser/gotestparser")
-
-
-def test_binary(change_test_dir):
+def test_binary(tmp_path):
     """
     Tests binary tools by generating binary file and using test parsers to interpret them and request
     some basic information.
     """
-    test_str = "gcc -shared -o ../../binary/binarytool.so -fPIC ../../binary/binarytool.c"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
 
-    test_str = "vspec2binary -u ../vspec/test_units.yaml test.vspec test.binary"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    test_binary = tmp_path / "test.binary"
+    ctestparser = tmp_path / "ctestparser"
+    gotestparser = tmp_path / "gotestparser"
+    cmd = (
+        f"gcc -shared -o {tmp_path / 'binarytool.so'} -fPIC {BIN_DIR / 'binarytool.c'}"
+    )
+    subprocess.run(cmd.split(), check=True)
+    cmd = f"vspec2binary -u {TEST_UNITS} {HERE / 'test.vspec'} {test_binary}"
+    subprocess.run(cmd.split(), check=True)
+    cmd = f"cc {BIN_DIR / 'c_parser/testparser.c'} {BIN_DIR / 'c_parser/cparserlib.c'} -o {ctestparser}"
+    subprocess.run(cmd.split(), check=True)
+    cmd = f"go build -o {gotestparser} testparser.go"
+    subprocess.run(cmd.split(), check=True, cwd=BIN_DIR / "go_parser")
 
-    test_str = "cc ../../binary/c_parser/testparser.c ../../binary/c_parser/cparserlib.c -o ctestparser"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    # Needs to be built from where the go parser is
-    result = os.system("cd ../../binary/go_parser; go build -o gotestparser testparser.go > out.txt 2>&1")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-    os.system("cd -")
-
-    check_expected('A.String', 'Node type=SENSOR')
-    check_expected('A.Int', 'Node type=ACTUATOR')
-
-    os.system("rm -f test.binary ctestparser out.txt")
-    os.system("rm -f ../../binary/go_parser/gotestparser  ../../binary/go_parser/out.txt")
+    parsers = [ctestparser, gotestparser]
+    for parser in parsers:
+        check_expected_for_tool(
+            parser, "A.String", "Node type=SENSOR", test_binary)
+        check_expected_for_tool(
+            parser, "A.Int", "Node type=ACTUATOR", test_binary)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2024 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -33,9 +31,7 @@ def test_not_strict(vspec_file: str, tmp_path):
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env)
-    assert process.returncode == 0
-    print(process.stdout)
+        cmd.split(), capture_output=True, text=True, env=env, check=True)
     assert "You asked for strict checking. Terminating" not in process.stdout
 
 
@@ -47,8 +43,7 @@ def test_strict_ok(vspec_file: str, tmp_path):
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env)
-    assert process.returncode == 0
+        cmd.split(), capture_output=True, text=True, env=env, check=True)
     assert "You asked for strict checking. Terminating" not in process.stdout
 
 

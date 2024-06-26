@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2022 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -26,10 +24,7 @@ def run_overlay(overlay_prefix, tmp_path):
     cmd = (
         f"vspec2json --json-pretty -u {TEST_UNITS} -e dbc {spec} -o {overlay} {output}"
     )
-    process = subprocess.run(cmd.split())
-
-    assert process.returncode == 0
-
+    subprocess.run(cmd.split(), check=True)
     expected = HERE / f"expected_{overlay_prefix}.json"
     assert filecmp.cmp(output, expected)
 
