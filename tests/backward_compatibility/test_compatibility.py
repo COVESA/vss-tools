@@ -54,7 +54,7 @@ def test_compatibility(tag, change_test_dir):
     os.system("git clone --depth 1 --branch " + tag +
               " https://github.com/COVESA/vehicle_signal_specification")
 
-    result = os.system("../../vspec2json.py --json-pretty "
+    result = os.system("vspec2json --json-pretty "
                        "vehicle_signal_specification/spec/VehicleSignalSpecification.vspec "
                        "out.json 1>out.txt 2>&1")
     os.system("cat out.txt")

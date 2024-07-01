@@ -19,7 +19,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def run_exporter(exporter, argument):
-    test_str = "../../../vspec2" + exporter + ".py " + argument + " test.vspec out." + exporter + " > out.txt"
+    test_str = "vspec2" + exporter + argument + " test.vspec out." + exporter + " > out.txt"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
@@ -49,4 +49,4 @@ def test_allowed(change_test_dir):
     # Exception is "binary", as it is assumed output may vary depending on target
     exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
     for exporter in exporters:
-        run_exporter(exporter, "-u ../test_units.yaml")
+        run_exporter(exporter, " -u ../test_units.yaml")

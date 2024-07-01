@@ -22,7 +22,7 @@ vspecpath=os.path.realpath(__file__)
 # Script is currently in contrib/ so VSS root is two steps up.
 # Maybe there is a more robust way of doing this...
 sys.path.append(os.path.dirname(vspecpath) + "/../..")
-import vspec
+import vss_tools.vspec as vspec
 
 def usage():
 	print("Usage:", sys.argv[0], "[-I include_dir] ... [-i prefix:id_file:start_id] vspec_file json_file")

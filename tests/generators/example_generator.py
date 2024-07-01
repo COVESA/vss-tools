@@ -9,12 +9,12 @@
 
 import sys
 import logging
-from vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.vsstree import VSSNode
 import argparse
 from typing import Optional
-from vspec.vss2x import Vss2X
-from vspec.vspec2vss_config import Vspec2VssConfig
-from vspec.vspec2x import Vspec2X
+from vss_tools.vspec.vss2x import Vss2X
+from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
+from vss_tools.vspec.vspec2x import Vspec2X
 
 
 class ExampleGenerator(Vss2X):

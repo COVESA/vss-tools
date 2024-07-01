@@ -1,7 +1,42 @@
-[build-system]
-requires = ["setuptools", "setuptools-git-versioning", "wheel"]
-build-backend = "setuptools.build_meta"
+[tool.poetry]
+name = "vss-tools"
+homepage="https://github.com/COVESA/vss-tools"
+description='COVESA Vehicle Signal Specification tooling.'
+authors = ["COVESA VSS <covesa-dev@covesa.global>"]
+version = "4.2.0"
+license = "Mozilla Public License 2.0"
+readme = ["README.md", "README-PYPI.md"]
 
-[tool.setuptools-git-versioning]
-# Starting version is just a dummy value that never shall be used in CI
-starting_version = "0.0.0"
+[tool.poetry.dependencies]
+python = "^3.10"
+rich = "^13.7.1"
+pyyaml = "^6.0.1"
+anytree = "^2.8.0"
+deprecation = "^2.1.0"
+graphql-core = "*"
+rdflib = "^6.0.0"
+importlib-metadata = "^7.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "*"
+pytest = "*"
+types-setuptools = "*"
+types-PyYAML = "*"
+flake8 = "^6.0.0"
+pre-commit = "*"
+
+[tool.poetry.scripts]
+vspec2binary = "vss_tools.vspec2binary:main"
+vspec2csv = "vss_tools.vspec2csv:main"
+vspec2franca = "vss_tools.vspec2franca:main"
+vspec2json = "vss_tools.vspec2json:main"
+vspec2jsonschema = "vss_tools.vspec2jsonschema:main"
+vspec2ddsidl = "vss_tools.vspec2ddsidl:main"
+vspec2yaml = "vss_tools.vspec2yaml:main"
+vspec2protobuf = "vss_tools.vspec2protobuf:main"
+vspec2graphql = "vss_tools.vspec2graphql:main"
+vspec2id = "vss_tools.vspec2id:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -15,14 +15,15 @@ import shlex
 from typing import Dict
 
 import pytest
-import vspec
-import vspec.vssexporters.vss2id as vss2id
-import vspec2id
+import vss_tools.vspec as vspec
+
+import vss_tools.vspec.vssexporters.vss2id as vss2id
+import vss_tools.vspec2id as vspec2id
 import yaml
 
-from vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
-from vspec.model.vsstree import VSSNode
-from vspec.utils.idgen_utils import get_all_keys_values
+from vss_tools.vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.utils.idgen_utils import get_all_keys_values
 
 # HELPERS
 
@@ -30,7 +31,7 @@ from vspec.utils.idgen_utils import get_all_keys_values
 def get_cla_test(test_file: str, overlay: str | None = None):
     if overlay:
         return (
-            "../../../vspec2id.py "
+            "vspec2id "
             + test_file
             + " -o "
             + overlay
@@ -40,7 +41,7 @@ def get_cla_test(test_file: str, overlay: str | None = None):
         )
     else:
         return (
-            "../../../vspec2id.py "
+            "vspec2id "
             + test_file
             + " ./out.vspec --validate-static-uid "
             + "./validation_vspecs/validation.vspec "
@@ -50,7 +51,7 @@ def get_cla_test(test_file: str, overlay: str | None = None):
 
 def get_cla_validation(validation_file: str):
     return (
-        "../../../vspec2id.py ./test_vspecs/test.vspec ./out.vspec "
+        "vspec2id ./test_vspecs/test.vspec ./out.vspec "
         "--validate-static-uid " + validation_file
     )
 

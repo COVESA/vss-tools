@@ -40,7 +40,7 @@ def change_test_dir(request, monkeypatch):
 
 def run_exporter(directory, exporter):
     os.chdir(directory.name)
-    test_str = "../../../vspec2" + exporter + ".py -u ../test_units.yaml test.vspec out." + exporter + \
+    test_str = "vspec2" + exporter + " -u ../test_units.yaml test.vspec out." + exporter + \
                " > out.txt"
     result = os.system(test_str)
     os.chdir("..")

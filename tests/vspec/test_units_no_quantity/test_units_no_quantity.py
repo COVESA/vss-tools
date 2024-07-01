@@ -23,7 +23,7 @@ def change_test_dir(request, monkeypatch):
 
 def run_unit(vspec_file, unit_argument, expected_file, quantity_argument="",
              grep_present: bool = True, grep_string: Optional[str] = None):
-    test_str = "../../../vspec2json.py --json-pretty " + \
+    test_str = "vspec2json --json-pretty " + \
         vspec_file + " " + unit_argument + " " + quantity_argument + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

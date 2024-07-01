@@ -5,7 +5,7 @@ import os
 import sys
 myDir= os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(myDir, "../.."))
-from vspec import ChildResolverError
+from vss_tools.vspec import ChildResolverError
 from anytree import Resolver
 # Copyright (c) 2021 GENIVI Alliance
 #
@@ -54,4 +54,3 @@ class VSpecHelper:
             print(item,"ERROR: not found in VSpec. Terminating.")
             sys.exit(1)
         return result
-
