@@ -2,7 +2,7 @@ name: Standard Build Check
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
     types:
       - opened
@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.10.6"  # keep in sync with vss-tools/Pipfile!
-  CI: 1  # shall any script needs to know if it's running in the CI
+  PYTHON_VERSION: "3.10.6" # keep in sync with vss-tools/Pipfile!
+  CI: 1 # shall any script needs to know if it's running in the CI
 
 jobs:
   buildtest:
@@ -31,25 +31,21 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pipenv
-      - name: Install pipenv
+          cache: pip
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.8.3"
+      - name: Poetry install
+        run: poetry install
+      - name: Mypy
+        run: poetry run mypy src
+      - name: flake8
         run: |
-          python -m pip --quiet --no-input install --upgrade pip
-          python -m pip --quiet --no-input install --upgrade pipenv wheel
-      - name: Install dependencies with pipenv
-        run: |
-          pipenv install --deploy --dev
-      - name: Run mypy, fail on errors.
-        run: |
-          pipenv install mypy types-setuptools types-PyYAML
-          pipenv run mypy *.py vspec tests contrib
-      - name: Run flake8, errors not accepted!
-        run: |
-          pipenv install flake8
-          pipenv run flake8 *.py vspec tests contrib
+          poetry run flake8 src tests contrib
       - name: Run tests
         run: |
-          pipenv run pytest
+          poetry run pytest
       - name: Build binary library
         run: |
           cd binary
@@ -66,21 +62,29 @@ jobs:
     steps:
       - name: Checkout vss-tools
         uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.8.3"
       - name: Test Pypi packaging
         run: |
-          # Separate build as we want a clean environment to make sure all dependencies are present
-          python -m pip --quiet --no-input install --upgrade pip
-          pip install -e .
+          poetry build
       - name: Test that tools can be started
         run: |
+          pip install dist/*.whl
+
           # Verify that it works from any directory
           mkdir /tmp/pypi_vss_test
           cd /tmp/pypi_vss_test
           # Just verify that we can start the tools
-          vspec2csv.py --help
-          vspec2json.py --help
-          vspec2yaml.py --help
-          vspec2franca.py --help
-          vspec2ddsidl.py --help
-          vspec2protobuf.py --help
-          vspec2graphql.py --help
+          vspec2csv --help
+          vspec2json --help
+          vspec2yaml --help
+          vspec2franca --help
+          vspec2ddsidl --help
+          vspec2protobuf --help
+          vspec2graphql --help

@@ -19,7 +19,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def run_exporter(exporter, argument, compare_suffix):
-    test_str = "../../../vspec2" + exporter + ".py " + argument + \
+    test_str = "vspec2" + exporter + argument + \
         " -u ../test_units.yaml test.vspec out." + exporter + " 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -38,12 +38,12 @@ def test_uuid(change_test_dir):
     # target
     exporters = ["json", "ddsidl", "csv", "yaml", "franca"]
     for exporter in exporters:
-        run_exporter(exporter, "--uuid", "uuid")
+        run_exporter(exporter, " --uuid", "uuid")
         run_exporter(exporter, "", "no_uuid")
 
 
 def run_error_test(tool, argument, arg_error_expected: bool):
-    test_str = "../../../" + tool + " " + argument + " -u ../test_units.yaml test.vspec out.json 1> out.txt 2>&1"
+    test_str = tool + " " + argument + " -u ../test_units.yaml test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     if arg_error_expected:
@@ -65,13 +65,13 @@ def test_obsolete_arg(change_test_dir):
     """
     Check that obsolete argument --no-uuid results in error
     """
-    run_error_test("vspec2json.py", "", False)
-    run_error_test("vspec2json.py", "--uuid", False)
-    run_error_test("vspec2json.py", "--no-uuid", True)
+    run_error_test("vspec2json", "", False)
+    run_error_test("vspec2json", "--uuid", False)
+    run_error_test("vspec2json", "--no-uuid", True)
 
 
 def test_uuid_unsupported(change_test_dir):
     """
     Test that we get an error if using --uuid for tools not supporting it
     """
-    run_error_test("vspec2graphql.py", "--uuid", True)
+    run_error_test("vspec2graphql", "--uuid", True)
