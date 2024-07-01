@@ -30,7 +30,7 @@ def change_test_dir(request, monkeypatch):
     ('graphql', 'out.graphql', 'expected.graphql', True)])
 def test_no_expand(format, output_file, comparison_file, is_error_expected: bool, change_test_dir):
 
-    args = ["../../../vspec2" + format + ".py", "--no-expand"]
+    args = ["vspec2" + format, "--no-expand"]
     if format == 'json':
         args.append('--json-pretty')
     args.extend(["-u", "../test_units.yaml",
@@ -69,7 +69,7 @@ def test_no_expand(format, output_file, comparison_file, is_error_expected: bool
     (True, 'expected_overlay_no_expand.json')])
 def test_json_overlay(no_expand, comparison_file, change_test_dir):
     """Test with overlay and expansion (for reference/comparison)"""
-    args = ["../../../vspec2json.py"]
+    args = ["vspec2json"]
 
     if no_expand:
         args.append('--no-expand')

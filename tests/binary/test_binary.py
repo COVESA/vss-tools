@@ -44,7 +44,7 @@ def test_binary(change_test_dir):
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0
 
-    test_str = "../../vspec2binary.py -u ../vspec/test_units.yaml test.vspec test.binary"
+    test_str = "vspec2binary -u ../vspec/test_units.yaml test.vspec test.binary"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0

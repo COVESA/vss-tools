@@ -12,7 +12,7 @@
 
 import sys
 import os
-import vspec
+import vss_tools.vspec as vspec
 import getopt
 import hashlib
 import json

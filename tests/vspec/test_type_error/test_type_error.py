@@ -26,7 +26,7 @@ def change_test_dir(request, monkeypatch):
     ("correct.vspec", "-vt no_type_property.vspec -ot ot.json")
     ])
 def test_description_error(vspec_file: str, type_str: str, change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml " + type_str + " " + \
+    test_str = "vspec2json --json-pretty -u ../test_units.yaml " + type_str + " " + \
                vspec_file + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -46,7 +46,7 @@ def test_description_error(vspec_file: str, type_str: str, change_test_dir):
     ("sensor_wrong_case.vspec")
     ])
 def type_case_sensitive(vspec_file: str, change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty " + \
+    test_str = "vspec2json --json-pretty " + \
                vspec_file + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -65,7 +65,7 @@ def type_case_sensitive(vspec_file: str, change_test_dir):
     ("branch_in_signal.vspec"),
     ])
 def test_scope_error(vspec_file: str,  change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml " + \
+    test_str = "vspec2json --json-pretty -u ../test_units.yaml " + \
                vspec_file + " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

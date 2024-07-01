@@ -21,7 +21,7 @@ jobs:
 
     - name: Get changed files
       run: |
-        echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tr '\n' ',')" >> $GITHUB_ENV
+        echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -v '^obsolete' | tr '\n' ',')" >> $GITHUB_ENV
 
     - uses: ./.github/actions/verify-headers
       with:

@@ -26,7 +26,7 @@ def change_test_dir(request, monkeypatch):
     ("correct.vspec", "-vt no_description_type_property.vspec -ot ot.json")
     ])
 def test_description_error(vspec_file: str, type_str: str, change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml " + type_str + " " + vspec_file + \
+    test_str = "vspec2json --json-pretty -u ../test_units.yaml " + type_str + " " + vspec_file + \
                " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

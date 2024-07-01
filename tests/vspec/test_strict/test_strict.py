@@ -25,7 +25,7 @@ def change_test_dir(request, monkeypatch):
     "faulty_name_boolean.vspec"
     ])
 def test_not_strict(vspec_file: str, change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml " + vspec_file + \
+    test_str = "vspec2json --json-pretty -u ../test_units.yaml " + vspec_file + \
                " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -44,7 +44,7 @@ def test_not_strict(vspec_file: str, change_test_dir):
     "correct_boolean.vspec"
     ])
 def test_strict_ok(vspec_file: str, change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty -s -u ../test_units.yaml " + vspec_file + \
+    test_str = "vspec2json --json-pretty -s -u ../test_units.yaml " + vspec_file + \
                " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -63,7 +63,7 @@ def test_strict_ok(vspec_file: str, change_test_dir):
     "faulty_name_boolean.vspec"
     ])
 def test_strict_error(vspec_file: str, change_test_dir):
-    test_str = "../../../vspec2json.py --json-pretty -s -u ../test_units.yaml " + vspec_file + \
+    test_str = "vspec2json --json-pretty -s -u ../test_units.yaml " + vspec_file + \
                " out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

@@ -15,7 +15,7 @@ from pathlib import Path
 
 def test_datatype_error(tmp_path):
     cmd = (
-        f"../../../vspec2json.py --json-pretty -u ../test_units.yaml test.vspec ${tmp_path / 'out.json'}"
+        f"vspec2json --json-pretty -u ../test_units.yaml test.vspec ${tmp_path / 'out.json'}"
     )
     env = os.environ.copy()
     env["COLUMNS"] = "120"
@@ -35,7 +35,7 @@ def test_datatype_error(tmp_path):
 
 def test_datatype_branch(tmp_path):
     cmd = (
-        "../../../vspec2json.py --json-pretty -u ../test_units.yaml "
+        "vspec2json --json-pretty -u ../test_units.yaml "
         f"test_datatype_branch.vspec ${tmp_path / 'out.json'}"
     )
     env = os.environ.copy()

@@ -22,7 +22,7 @@ def change_test_dir(request, monkeypatch):
 
 
 def run_overlay(overlay_prefix):
-    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml -e dbc test.vspec -o overlay_" + \
+    test_str = "vspec2json --json-pretty -u ../test_units.yaml -e dbc test.vspec -o overlay_" + \
         overlay_prefix + ".vspec out.json > out.txt"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -53,7 +53,7 @@ def test_no_type(change_test_dir):
 
 def test_overlay_error(change_test_dir):
 
-    test_str = "../../../vspec2json.py --json-pretty -u ../test_units.yaml -o overlay_error.vspec " + \
+    test_str = "vspec2json --json-pretty -u ../test_units.yaml -o overlay_error.vspec " + \
                "test.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
@@ -69,7 +69,7 @@ def test_overlay_error(change_test_dir):
 
 
 def test_overlay_branch_error(change_test_dir):
-    test_str = "../../../vspec2json.py -e dbc --json-pretty -u ../test_units.yaml test.vspec " + \
+    test_str = "vspec2json -e dbc --json-pretty -u ../test_units.yaml test.vspec " + \
                "-o overlay_implicit_branch_no_description.vspec out.json 1> out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)

@@ -10,8 +10,8 @@
 
 import pytest
 
-from vspec.model.constants import VSSTreeType
-from vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.constants import VSSTreeType
+from vss_tools.vspec.model.vsstree import VSSNode
 
 
 @pytest.fixture
