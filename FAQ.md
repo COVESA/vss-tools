@@ -3,7 +3,7 @@
 ## How to include my own units?
 
 VSS standard catalog uses the units defined in [this file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
-They are also described in the [VSS documentation](https://github.com/COVESA/vehicle_signal_specification/blob/master/docs-gen/content/rule_set/data_entry/data_unit_types.md).
+They are also described in the [VSS documentation](https://github.com/COVESA/vehicle_signal_specification/blob/master/docs-gen/content/rule_set/data_entry/data_units.md).
 
 It is possible to replace the default units by the `-u` parameter, see [vspec2x documentation](docs/vspec2x.md).
 
