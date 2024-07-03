@@ -58,9 +58,9 @@ def export_node(json_dict, node, config, print_uuid):
         json_dict[node.name]["type"] = type_map[node.data_type_str]
 
     # many optional attributes are initialized to "" in vsstree.py
-    if node.min != "":
+    if node.min is not None:
         json_dict[node.name]["minimum"] = node.min
-    if node.max != "":
+    if node.max is not None:
         json_dict[node.name]["maximum"] = node.max
     if node.allowed != "":
         json_dict[node.name]["enum"] = node.allowed

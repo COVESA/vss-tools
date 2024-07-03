@@ -30,9 +30,9 @@ def export_node(json_dict, node, config, print_uuid):
     json_dict[node.name]["type"] = str(node.type.value)
 
     # many optional attributes are initilized to "" in vsstree.py
-    if node.min != "":
+    if node.min is not None:
         json_dict[node.name]["min"] = node.min
-    if node.max != "":
+    if node.max is not None:
         json_dict[node.name]["max"] = node.max
     if node.allowed != "":
         json_dict[node.name]["allowed"] = node.allowed

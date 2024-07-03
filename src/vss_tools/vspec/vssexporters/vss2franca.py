@@ -65,9 +65,9 @@ def print_franca_content(file, tree, uuid):
                 output += f",\n\tuuid: \"{tree_node.uuid}\""
             if tree_node.has_unit():
                 output += f",\n\tunit: \"{tree_node.get_unit()}\""
-            if tree_node.min:
+            if tree_node.min is not None:
                 output += f",\n\tmin: {tree_node.min}"
-            if tree_node.max:
+            if tree_node.max is not None:
                 output += f",\n\tmax: {tree_node.max}"
             if tree_node.allowed:
                 output += f",\n\tallowed: {tree_node.allowed}"
