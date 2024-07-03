@@ -26,7 +26,7 @@ from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool):
     arg_list = [entry_type, "Type", "DataType", "Deprecated", "Unit",
-                "Min", "Max", "Desc", "Comment", "Allowed", "Default"]
+                "Min", "Max", "Desc", "Comment", "Allowed", "Default", "staticUID"]
     if uuid:
         arg_list.append("Id")
     if include_instance_column:
@@ -54,7 +54,7 @@ def print_csv_content(file, tree: VSSNode, uuid, include_instance_column: bool):
         unit_str = tree_node.get_unit()
         arg_list = [tree_node.qualified_name('.'), tree_node.type.value, data_type_str, tree_node.deprecation,
                     unit_str, tree_node.min, tree_node.max, tree_node.description, tree_node.comment,
-                    tree_node.allowed, tree_node.default]
+                    tree_node.allowed, tree_node.default, tree_node.staticUID]
         if uuid:
             arg_list.append(tree_node.uuid)
         if include_instance_column and tree_node.instances is not None:
