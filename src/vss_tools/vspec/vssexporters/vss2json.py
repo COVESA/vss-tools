@@ -13,9 +13,9 @@
 from vss_tools.vspec.model.vsstree import VSSNode
 import argparse
 import json
-import logging
 from typing import Dict, Any
 from typing import Optional
+from vss_tools import log
 from vss_tools.vspec.vss2x import Vss2X
 from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
@@ -91,13 +91,13 @@ class Vss2Json(Vss2X):
 
     def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
-        logging.info("Generating JSON output...")
+        log.info("Generating JSON output...")
         indent = None
         if config.json_pretty:
-            logging.info("Serializing pretty JSON...")
+            log.info("Serializing pretty JSON...")
             indent = 2
         else:
-            logging.info("Serializing compact JSON...")
+            log.info("Serializing compact JSON...")
 
         signals_json_dict: Dict[str, Any] = {}
         export_node(signals_json_dict, signal_root, config, vspec2vss_config.generate_uuid)
@@ -106,7 +106,7 @@ class Vss2Json(Vss2X):
             data_types_json_dict: Dict[str, Any] = {}
             export_node(data_types_json_dict, data_type_root, config, vspec2vss_config.generate_uuid)
             if config.types_output_file is None:
-                logging.info("Adding custom data types to signal dictionary")
+                log.info("Adding custom data types to signal dictionary")
                 signals_json_dict["ComplexDataTypes"] = data_types_json_dict
             else:
                 with open(config.types_output_file, 'w') as f:

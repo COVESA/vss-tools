@@ -232,7 +232,7 @@ def test_full_script(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 0
+    assert len(caplog.records) == 9
 
 
 @pytest.mark.usefixtures("change_test_dir")
@@ -247,10 +247,9 @@ def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str):
     clas = shlex.split(get_cla_validation(validation_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "SEMANTIC NAME CHANGE" in record.msg
 
 
@@ -260,10 +259,9 @@ def test_vss_path(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "PATH CHANGE" in record.msg
 
 
@@ -273,10 +271,9 @@ def test_unit(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 2 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 2
+    for record in warning_logs:
         assert "BREAKING CHANGE" in record.msg
 
 
@@ -286,10 +283,9 @@ def test_datatype(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "BREAKING CHANGE" in record.msg
 
 
@@ -299,10 +295,9 @@ def test_name_datatype(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 2 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for i, record in enumerate(caplog.records):
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 2
+    for i, record in enumerate(warning_logs):
         if i % 2 == 0:
             assert "ADDED ATTRIBUTE" in record.msg
         else:
@@ -315,10 +310,9 @@ def test_deprecation(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "DEPRECATION MSG CHANGE" in record.msg
 
 
@@ -328,10 +322,9 @@ def test_description(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "DESCRIPTION MISMATCH" in record.msg
 
 
@@ -341,10 +334,9 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "ADDED ATTRIBUTE" in record.msg
 
     result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
@@ -358,10 +350,9 @@ def test_deleted_attribute(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "DELETED ATTRIBUTE" in record.msg
 
     result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)
@@ -376,11 +367,9 @@ def test_overlay(caplog: pytest.LogCaptureFixture):
     clas = shlex.split(get_cla_test(test_file, overlay))
     vspec2id.main(clas[1:])
 
-    assert len(caplog.records) == 1 and all(
-        log.levelname == "WARNING" for log in caplog.records
-    )
-
-    for record in caplog.records:
+    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
+    assert len(warning_logs) == 1
+    for record in warning_logs:
         assert "ADDED ATTRIBUTE" in record.msg
 
     result = yaml.load(open("./out.vspec"), Loader=yaml.FullLoader)

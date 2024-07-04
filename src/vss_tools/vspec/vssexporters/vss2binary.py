@@ -11,10 +11,10 @@
 # Convert vspec tree to binary format
 
 import argparse
-import logging
 import ctypes
 import os.path
 from typing import Optional
+from vss_tools import log
 from vss_tools.vspec.model.vsstree import VSSNode, VSSType
 from vss_tools.vspec.vss2x import Vss2X
 from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
@@ -130,9 +130,9 @@ class Vss2Binary(Vss2X):
         dllName = "../../../../binary/binarytool.so"
         dllAbsPath = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + dllName
         if not os.path.isfile(dllAbsPath):
-            logging.error("The required library binarytool.so is not available, exiting!")
-            logging.info("You must build the library, "
-                         "see https://github.com/COVESA/vss-tools/blob/master/binary/README.md!")
+            log.error("The required library binarytool.so is not available, exiting!")
+            log.info("You must build the library, "
+                     "see https://github.com/COVESA/vss-tools/blob/master/binary/README.md!")
             return
         _cbinary = ctypes.CDLL(dllAbsPath)
 
@@ -141,7 +141,7 @@ class Vss2Binary(Vss2X):
                                                ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
                                                ctypes.c_int)
 
-        logging.info("Generating binary output...")
+        log.info("Generating binary output...")
         out_file = config.output_file
         export_node(root, vspec2vss_config.generate_uuid, out_file)
-        logging.info("Binary output generated in " + out_file)
+        log.info("Binary output generated in " + out_file)

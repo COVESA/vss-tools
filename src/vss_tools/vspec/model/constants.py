@@ -13,7 +13,7 @@
 #
 # noinspection PyPackageRequirements
 from __future__ import annotations
-import logging
+from vss_tools import log
 import re
 import sys
 from collections import abc
@@ -201,14 +201,14 @@ class VSSUnitCollection:
                     # Old syntax
                     quantity = v["domain"]
                 else:
-                    logging.error("No quantity (domain) found for unit %s", k)
+                    log.error("No quantity (domain) found for unit %s", k)
                     sys.exit(-1)
 
                 if (VSSQuantityCollection.nbr_quantities() > 0) and (
                     VSSQuantityCollection.get_quantity(quantity) is None
                 ):
                     # Only give info on first occurance and only if quantities exist at all
-                    logging.info(
+                    log.info(
                         "Quantity %s used by unit %s has not been defined", quantity, k
                     )
                     VSSQuantityCollection.add_quantity(quantity)
@@ -225,14 +225,14 @@ class VSSUnitCollection:
                         try:
                             VSSDataType.from_str(datatype)
                         except KeyError:
-                            logging.error(
+                            log.error(
                                 "Unknown datatype %s in unit definition", datatype
                             )
                             sys.exit(-1)
 
                 unit_node = VSSUnit(k, unit, definition, quantity, allowed_datatypes)
                 if k in cls.units:
-                    logging.warning("Redefinition of unit %s", k)
+                    log.warning("Redefinition of unit %s", k)
                 cls.units[k] = unit_node
         return added_configs
 
@@ -261,7 +261,7 @@ class VSSQuantityCollection:
                 if isinstance(v, abc.Mapping) and "definition" in v:
                     definition = v["definition"]
                 else:
-                    logging.error("No definition found for quantity %s", k)
+                    log.error("No definition found for quantity %s", k)
                     sys.exit(-1)
                 remark = None
                 if "remark" in v:
@@ -272,7 +272,7 @@ class VSSQuantityCollection:
 
                 quantity_node = VSSQuantity(k, definition, remark, comment)
                 if k in cls.quantities:
-                    logging.warning("Redefinition of quantity %s", k)
+                    log.warning("Redefinition of quantity %s", k)
                 cls.quantities[k] = quantity_node
         return added_quantities
 

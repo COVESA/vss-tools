@@ -14,7 +14,7 @@
 
 import argparse
 import keyword
-import logging
+from vss_tools import log
 from typing import Optional
 
 from vss_tools.vspec.model.vsstree import VSSNode, VSSType
@@ -265,7 +265,7 @@ def export_idl(file, root, generate_uuids=True, generate_all_idl_features=False)
     """
     export_node(root, generate_uuids, generate_all_idl_features)
     file.write('\n'.join(idlFileBuffer))
-    logging.info("IDL file generated at location : " + file.name)
+    log.info("IDL file generated at location : " + file.name)
 
 
 class Vss2DdsIdl(Vss2X):
@@ -281,7 +281,7 @@ class Vss2DdsIdl(Vss2X):
 
     def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
-        logging.info("Generating DDS-IDL output...")
+        log.info("Generating DDS-IDL output...")
 
         if data_type_root is not None:
             exporter = StructExporter()
