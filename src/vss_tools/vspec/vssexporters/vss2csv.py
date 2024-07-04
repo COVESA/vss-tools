@@ -24,13 +24,15 @@ from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 # Write the header line
 
 
-def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool):
+def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool, export_static_uid: bool):
     arg_list = [entry_type, "Type", "DataType", "Deprecated", "Unit",
-                "Min", "Max", "Desc", "Comment", "Allowed", "Default", "staticUID"]
+                "Min", "Max", "Desc", "Comment", "Allowed", "Default"]
     if uuid:
         arg_list.append("Id")
     if include_instance_column:
         arg_list.append("Instances")
+    if export_static_uid:
+        arg_list.append("staticUID")
     file.write(format_csv_line(arg_list))
 
 # Format a data or header line according to the CSV standard (IETF RFC 4180)
@@ -47,18 +49,20 @@ def format_csv_line(csv_fields):
 # Write the data lines
 
 
-def print_csv_content(file, tree: VSSNode, uuid, include_instance_column: bool):
+def print_csv_content(file, tree: VSSNode, uuid, include_instance_column: bool, export_static_uid: bool):
     tree_node: VSSNode
     for tree_node in PreOrderIter(tree):
         data_type_str = tree_node.get_datatype()
         unit_str = tree_node.get_unit()
         arg_list = [tree_node.qualified_name('.'), tree_node.type.value, data_type_str, tree_node.deprecation,
                     unit_str, tree_node.min, tree_node.max, tree_node.description, tree_node.comment,
-                    tree_node.allowed, tree_node.default, tree_node.staticUID]
+                    tree_node.allowed, tree_node.default]
         if uuid:
             arg_list.append(tree_node.uuid)
         if include_instance_column and tree_node.instances is not None:
             arg_list.append(tree_node.instances)
+        if export_static_uid:
+            arg_list.append(tree_node.staticUID)
         file.write(format_csv_line(arg_list))
 
 
@@ -71,14 +75,28 @@ class Vss2Csv(Vss2X):
         # generic entry should be written when both data types and signals are being written to the same file
         generic_entry = data_type_root is not None and config.types_output_file is None
         include_instance_column = not vspec2vss_config.expand_model
+        export_static_uid: bool = False
+        if signal_root.staticUID is not None:
+            export_static_uid = True
+
         with open(config.output_file, 'w') as f:
             signal_entry_type = "Node" if generic_entry else "Signal"
-            print_csv_header(f, vspec2vss_config.generate_uuid, signal_entry_type, include_instance_column)
-            print_csv_content(f, signal_root, vspec2vss_config.generate_uuid, include_instance_column)
+            print_csv_header(
+                f, vspec2vss_config.generate_uuid, signal_entry_type, include_instance_column, export_static_uid
+            )
+            print_csv_content(
+                f, signal_root, vspec2vss_config.generate_uuid, include_instance_column, export_static_uid
+            )
             if data_type_root is not None and generic_entry is True:
-                print_csv_content(f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column)
+                print_csv_content(
+                    f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column, export_static_uid
+                )
 
         if data_type_root is not None and generic_entry is False:
             with open(config.types_output_file, 'w') as f:
-                print_csv_header(f, vspec2vss_config.generate_uuid, "Node", include_instance_column)
-                print_csv_content(f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column)
+                print_csv_header(
+                    f, vspec2vss_config.generate_uuid, "Node", include_instance_column, export_static_uid
+                )
+                print_csv_content(
+                    f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column, export_static_uid
+                )
