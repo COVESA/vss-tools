@@ -24,10 +24,10 @@ _cbinary = None
 
 
 def createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit, allowed,
-                      defaultAllowed, validate, children):
+                      defaultAllowed, staticUID, validate, children):
     global _cbinary
     _cbinary.createBinaryCnode(fname, nodename, nodetype, uuid, description, nodedatatype, nodemin, nodemax, unit,
-                               allowed, defaultAllowed, validate, children)
+                               allowed, defaultAllowed, staticUID, validate, children)
 
 
 def allowedString(allowedList):
@@ -71,6 +71,7 @@ def export_node(node, generate_uuid, out_file):
     nodeallowed = ""
     nodedefault = ""
     nodeuuid = ""
+    nodestaticuid = ""
     nodevalidate = ""  # exported to binary
 
     if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
@@ -105,6 +106,10 @@ def export_node(node, generate_uuid, out_file):
         nodeuuid = node.uuid
     b_nodeuuid = nodeuuid.encode('utf-8')
 
+    if node.staticUID:
+        nodestaticuid = str(node.staticUID)
+    b_nodestaticuid = nodestaticuid.encode('utf-8')
+
     if "validate" in node.extended_attributes:
         nodevalidate = node.extended_attributes["validate"]
     b_nodevalidate = nodevalidate.encode('utf-8')
@@ -112,7 +117,7 @@ def export_node(node, generate_uuid, out_file):
     b_fname = out_file.encode('utf-8')
 
     createBinaryCnode(b_fname, b_nodename, b_nodetype, b_nodeuuid, b_nodedescription, b_nodedatatype, b_nodemin,
-                      b_nodemax, b_nodeunit, b_nodeallowed, b_nodedefault, b_nodevalidate, children)
+                      b_nodemax, b_nodeunit, b_nodeallowed, b_nodedefault, b_nodestaticuid, b_nodevalidate, children)
 
     for child in node.children:
         export_node(child, generate_uuid, out_file)
@@ -139,7 +144,7 @@ class Vss2Binary(Vss2X):
         _cbinary.createBinaryCnode.argtypes = (ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
                                                ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
                                                ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p,
-                                               ctypes.c_int)
+                                               ctypes.c_char_p, ctypes.c_int)
 
         log.info("Generating binary output...")
         out_file = config.output_file
