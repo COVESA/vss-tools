@@ -8,48 +8,63 @@ It is partially configurable which arguments that shall be available for each ge
 so all arguments described in this documents are not available for all generators.
 In addition to this generator-specific arguments may be supported
 
-You can get a description of supported commandline arguments by running `<toolname> --help`, e.g. `vss2json.py --help`.
-In this document `vspec2json.py` is generally used as example, but the same syntax is typically available also for other tools.
+You can get a description of supported commandline arguments by running `<toolname> --help`, e.g. `vss2json --help`.
+In this document `vspec2json` is generally used as example, but the same syntax is typically available also for other tools.
 
 The supported arguments might look like this
 
-```
-$ vspec2json.py --help
-usage: vspec2json.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--uuid] [--no-expand]
-                     [-o overlays] [-q quantity_file] [-u unit_file] [-vt vspec_types_file]
-                     [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty]
-                     <vspec_file> <output_file>
+```bash
+vspec2json --help
+usage: vspec2json [-h] [--log-level {INFO,DEBUG,WARNING,ERROR,CRITICAL}] [--log-file LOG_FILE] [--version] [-I dir]
+                  [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--uuid]
+                  [--no-expand] [-o overlays] [-q quantity_file] [-u unit_file] [-vt vspec_types_file]
+                  [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty]
+                  <vspec_file> <output_file
 ```
 
-An example command line to convert the VSS standard catalog into a JSON file is
 
-```
-$ vspec2json.py -I ../spec -u ../vehicle_signal_specification/spec/units.yaml ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec vss.json
-INFO     Known extended attributes:
-INFO     Added 29 quantities from /home/erik/vehicle_signal_specification/spec/quantities.yaml
-INFO     Added 61 units from ../vehicle_signal_specification/spec/units.yaml
-INFO     Loading vspec from ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec...
-INFO     Calling exporter...
-INFO     Generating JSON output...
-INFO     Serializing compact JSON...
-INFO     All done.
+An example command line to convert the VSS standard catalog into a JSON file (from vss root):
 
+```bash
+vspec2json -I spec -u spec/units.yaml spec/VehicleSignalSpecification.vspec vss.json
+[08:52:00] INFO     VSS-tools version 4.2.0                                                                     vspec2x.py:110
+           INFO     Added 29 quantities from                                                                   __init__.py:895
+                    /Users/MisterX/workspace/vehicle_signal_specification/spec/quantities.yaml
+           INFO     Added 62 units from spec/units.yaml                                                     __init__.py:930
+           INFO     Loading vspec from spec/VehicleSignalSpecification.vspec...                              vspec2x.py:158
+[08:52:01] INFO     Check type usage                                                                           __init__.py:117
+           INFO     Calling exporter...                                                                         vspec2x.py:179
+           INFO     Generating JSON output...                                                                   vss2json.py:94
+           INFO     Serializing compact JSON...                                                                vss2json.py:100
+           INFO     All done.                                                                                   vspec2x.py:18
 ```
 
 This assumes you checked out the [COVESA Vehicle Signal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools as a submodule.
 
-The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories. The `-u` parameter specifies the unit file(s) to use. The `-q` parameter specifies quantity file(s) to use.
+The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories.
+The `-u` parameter specifies the unit file(s) to use. The `-q` parameter specifies quantity file(s) to use.
 
-The first positional argument - `../spec/VehicleSignalSpecification.vspec` in the example  - gives the (root) `.vspec` file to be converted. The second positional argument  - `vss.json` in the example - is the output file.
+The first positional argument - `spec/VehicleSignalSpecification.vspec` in the example  - gives the (root) `.vspec` file
+to be converted. The second positional argument  - `vss.json` in the example - is the output file.
 
-It is the file `vspec2json.py` that specified which generator to use, i.e. which output to generate.
+It is the file `vspec2json` that specified which generator to use, i.e. which output to generate.
 
 ## General parameters
+
+### --log-level
+Controls the verbosity of the output the tool generates. The default is "INFO" which
+will print things interesting for most users. If you want to hide those you can pass
+`--log-level WARNING` which will hide debug and info prints and will print warnings and errors.
+
+### --log-file
+Also writes log messages into the given file. Note that the format used for writing into a file is slightly different.
 
 ### --abort-on-unknown-attribute
 Terminates parsing when an unknown attribute is encountered, that is an attribute that is not defined in the [VSS standard catalogue](https://covesa.github.io/vehicle_signal_specification/rule_set/), and not whitelisted using the extended attribute parameter `-e` (see below).
 
-*Note*: Here an *attribute* refers to VSS signal metadata such as "datatype", "min", "max", ... and not to the VSS signal type attribute
+> [!NOTE]
+> Here an *attribute* refers to VSS signal metadata such as "datatype", "min", "max",
+> ... and not to the VSS signal type attribute
 
 ###  --abort-on-name-style
 Terminates parsing, when the name of a signal does not follow [VSS Naming Conventions](https://covesa.github.io/vehicle_signal_specification/rule_set/basics/#naming-conventions) for the VSS standard catalog.
@@ -63,7 +78,9 @@ of the node and the UUID of the namespace `vehicle_signal_specification`.
 
 This setting may not apply to all exporters, some exporters will never output uuids.
 
-*NOTE: The UUID feature is deprecated and will be removed in VSS-tools 6.0. If you need identifiers consider using [vspec2id](vspec2id.md)*
+> [!WARNING]
+> The UUID feature is deprecated and will be removed in VSS-tools 6.0.
+> If you need identifiers consider using [vspec2id](vspec2id.md)
 
 ### --no-expand
 
@@ -77,7 +94,8 @@ COVESA supports a number of pre-defined types, see [VSS documentation](https://c
 In addition to this COVESA is introducing a concept to support user-defined types.
 This is currently limited to specifying struct-types. For more information on syntax see VSS documentation.
 
-*Note: Struct support is not yet supported by all exporters, currently supported by JSON; CSV, Yaml and Protobuf exporters!*
+> [!WARNING]
+> Struct support is not yet supported by all exporters, currently supported by JSON; CSV, Yaml and Protobuf exporters!
 
 To use user-defined types the types must be put in a separate file and given to the tool with the `-vt` argument.
 When a signal is defined the tooling will check if the `datatype` specified is either a predefined type or
@@ -93,7 +111,7 @@ Below is an example using user-defined types for JSON generation.
 Please see [test cases](https://github.com/COVESA/vss-tools/tree/master/tests/vspec/test_structs) for more details.
 
 ```bash
-python vspec2json.py --json-pretty -vt VehicleDataTypes.vspec -ot VehicleDataTypes.json test.vspec out.json
+vspec2json --json-pretty -vt VehicleDataTypes.vspec -ot VehicleDataTypes.json test.vspec out.json
 ```
 
 Current status for exporters:
@@ -193,7 +211,7 @@ It is possible to specify your own unit file(s) by the `-u <file>` parameter.
 `-u` can be used multiple times to specify additional files like in the example below:
 
 ```bash
-python ./vss-tools/vspec2csv.py -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml ./spec/VehicleSignalSpecification.vspec output.csv
+vspec2csv -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml ./spec/VehicleSignalSpecification.vspec output.csv
 ```
 
 When deciding which units to use the tooling use the following logic:
@@ -260,8 +278,8 @@ signal and not expand it further. If using an overlay to redefine a specific sig
 
 It is possible to use `-o` multiple times, e.g.
 
-```
-python vspec2yaml.py ../spec/VehicleSignalSpecification.vspec -o o1.vspec -o o2.vspec -oae o3.vspec -oae o4.vspec result.yml
+```bash
+vspec2yaml ../spec/VehicleSignalSpecification.vspec -o o1.vspec -o o2.vspec -oae o3.vspec -oae o4.vspec result.yml
 ```
 
 You can also use overlays to inject custom metadata not used in the standard VSS catalog, for example if your custom VSS model includes `source` and `quality` metadata for sensors.
@@ -281,11 +299,11 @@ Vehicle.Speed:
 
 This will give a warning about unknown attributes, or even terminate the parsing when `-s`, `--strict`  or `--abort-on-unknown-attribute` is used.
 
-```
-% python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec --strict -o overlay.vspec test.json
+```bash
+vspec2json -I spec spec/VehicleSignalSpecification.vspec --strict -o overlay.vspec test.json
 Output to json format
 Known extended attributes:
-Loading vspec from ../spec/VehicleSignalSpecification.vspec...
+Loading vspec from spec/VehicleSignalSpecification.vspec...
 Applying VSS overlay from overlay.vspec...
 Warning: Attribute(s) quality, source in element Speed not a core or known extended attribute.
 You asked for strict checking. Terminating.
@@ -294,12 +312,14 @@ You asked for strict checking. Terminating.
 You can whitelist extended metadata attributes using the `-e` parameter with a comma separated list of attributes:
 
 ```
-python vspec2json.py -I ../spec ../spec/VehicleSignalSpecification.vspec -e quality,source -o overlay.vspec test.json
+vspec2json -I spec spec/VehicleSignalSpecification.vspec -e quality,source -o overlay.vspec test.json
 ```
 
 In this case the expectation is, that the generated output will contain the whitelisted extended metadata attributes, if the exporter supports them.
 
-__Note: Not all exporters (need to) support (all) extended metadata attributes!__ Currently, the `yaml` and `json` exporters support arbitrary metadata.
+> [!WARNING]
+> Not all exporters (need to) support (all) extended metadata attributes!
+> Currently, the `yaml` and `json` exporters support arbitrary metadata.
 
 ## JSON exporter notes
 

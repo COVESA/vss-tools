@@ -5,7 +5,7 @@ The vspec2proto.py script generates [Protocol Buffer message definitions](https:
 ## Example
 
 ```bash
-./vspec2protobuf.py outputIds_v2.vspec indentity.proto  -q ../vehicle_signal_specification/spec/quantities.yaml -u ../vehicle_signal_specification/spec/units.yaml -e staticUID --static-uid --add-optional
+vspec2protobuf outputIds_v2.vspec indentity.proto -q spec/quantities.yaml -u spec/units.yaml -e staticUID --static-uid --add-optional
 ```
 
 This example assumes that you checked out the COVESA VSS repository next to the vss-tools repository.
@@ -17,14 +17,13 @@ In addition, to the general arguments of each exporter, the vspec2proto exporter
 ```bash
 --static-uid          Expect staticUID attribute in the vspec input and use it as field number.
 --add-optional        Set each field to optional
-
 ```
 
 ## Field Numbers and Backwards Compatibility
 
 Part of the serialization with protocol buffers is the replacement of the field identifier with a field number. It is possible to set the used field number in the protobuf file. For instance, the field 'Speed' in the message 'Vehicle' could get the identifier 5:
 
-```bash
+```proto
 message Vehicle {
   ...
   float Speed = 5
@@ -46,7 +45,7 @@ The vspec2proto generator supports two approaches for setting the field numbers 
 
 By default, the generator numbers the fields from a single branch, which it represents as a message in protobuf, starting with 1. As an example, for the  `Vehicle` node we would get a message like this:
 
-```bash
+```proto
 message Vehicle {
   VehicleVersionVSS VersionVSS = 1;
   VehicleVehicleIdentification VehicleIdentification = 2;
@@ -60,7 +59,8 @@ message Vehicle {
 
 We could create a newer version of the vspec-file with an additional signal like `MyNewSignal`. This addition may happen locally through a custom overlay or upstream in a new minor version of VSS. Either way, we would expect backward compatibility of the model with the same major version of the VSS model, even if the decoding side does not know about the updates. However, the resulting protobuf could be something like:
 
-```bash
+```proto
+message Vehicle {
 VehicleVersionVSS VersionVSS = 1;
   ...
   VehicleLowVoltageBattery LowVoltageBattery = 4;
@@ -68,6 +68,7 @@ VehicleVersionVSS VersionVSS = 1;
   float MyNewSignal = 6;
   float TraveledDistance = 7;
   ...
+}
 ```
 
 Since the proto generator did not know the field numbers which it assigned to the fields in previous runs, it sorted `MyNewSignal` together with the old signals. As a result, the field numbers for the fields following the new signal have changed.
@@ -78,7 +79,7 @@ Thus, when using this protobuf file, the generator may introduce breaking change
 
 One solution to overcome breaking changes in the serialization caused by non-breaking changes in the VSS model is to define the numeric identifiers within the VSS model. This way, the proto generator is able to reuse these identifiers as field numbers and does not have to come up with its own numbers. However, such identifiers are not part of the upstream VSS model yet.
 
-But there is the option to generate static uids with the [`vspec2id.py`](./vspec2id.md).
+But there is the option to generate static uids with the [`vspec2id`](./vspec2id.md).
 By adding the flag `--static-uid` you can instruct the proto generator to expect static uids in the input file and use them as field numbers.
 
 This comes with the following drawbacks:

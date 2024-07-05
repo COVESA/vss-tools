@@ -9,7 +9,7 @@ It is possible to replace the default units by the `-u` parameter, see [vspec2x 
 
 The syntax of the file with units shall follow this pattern:
 
-```
+```yaml
 puncheon:
   definition: Volume measure in puncheons (1 puncheon = 318 liters)
   unit: Puncheon

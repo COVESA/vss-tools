@@ -1,6 +1,6 @@
 # vspec2id - vspec static UID generator and validator
 
-The `vspec2id.py` script is used to generate and validate static UIDs for all
+The `vspec2id` tool is used to generate and validate static UIDs for all
 nodes in the tree. These static UIDs serve as unique identifiers for
 transmitting data between nodes. They are designed to replace long strings like
 `Vehicle.Body.Lights.DirectionIndicator.Right.IsSignaling` with compact 4-byte
@@ -8,27 +8,27 @@ identifiers.
 
 ## General usage
 
-```bash
-usage: ./vspec2id.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid] [--no-expand] [-o overlays] [-u unit_file]
-                   [-q quantity_file] [-vt vspec_types_file] [-ot <types_output_file>] [--yaml-all-extended-attributes] [-v version] [--all-idl-features]
-                   [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export] [--strict-mode]
-                   <vspec_file> <output_file>
+```
+usage: vspec2id [-h] [--log-level {INFO,DEBUG,WARNING,ERROR,CRITICAL}] [--log-file LOG_FILE] [--version] [-I dir]
+                [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--uuid] [--no-expand]
+                [-o overlays] [-q quantity_file] [-u unit_file] [-vt vspec_types_file] [-ot <types_output_file>]
+                [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export] [--strict-mode]
+                <vspec_file> <output_file>
 
 Convert vspec to other formats.
 
 positional arguments:
   <vspec_file>          The vehicle specification file to convert.
   <output_file>         The file to write output to.
-
 ...
 
-IDGEN arguments:
+Exporter specific arguments:
 
   --validate-static-uid VALIDATE_STATIC_UID
                         Path to validation file.
   --only-validate-no-export
-                        For pytests and pipelines you can skip the export of the <output_file>
-  --strict-mode         Strict mode means that the generation of static UIDs is case-sensitive.
+                        For pytests and pipelines you can skip the export of the vspec file.
+  --strict-mode         Strict mode means that the generation of static UIDs is case-sensitive
 ```
 
 ## Example
@@ -40,10 +40,10 @@ only use the static UID generator by running the command below. Please note that
 if you want to use any overlays, now is the time to do so:
 
 ```bash
-cd path/to/your/vss-tools
-./vspec2id.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v1.vspec
+cd path/to/your/vss
+vspec2id spec/VehicleSignalSpecification.vspec output_id_v1.vspec
 # or if you are using an overlay e.g. called overlay.vspec
-./vspec2id.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v1.vspec -o overlay.vspec
+vspec2id spec/VehicleSignalSpecification.vspec output_id_v1.vspec -o overlay.vspec
 ```
 
 Great, you generated your first vspec including static IDs that will also be
@@ -62,8 +62,8 @@ the vehicle specification you will have to specify the path to the units.yaml
 using `-u`.
 
 ```bash
-cd path/to/your/vss-tools
-./vspec2yaml.py output_id_v1.vspec vehicle_specification_with_uids.yaml -e staticUID -u ../vehicle_signal_specification/spec/units.yaml
+cd path/to/your/vss
+vspec2yaml output_id_v1.vspec vehicle_specification_with_uids.yaml -e staticUID -u spec/units.yaml
 ```
 
 ### Using constant UIDs for specific attributes
@@ -99,7 +99,7 @@ Let's say the snippet above is a file called `const_id_overlay.vspec`, you could
 run the vspec2id.py like this:
 
 ```bash
-./vspec2id.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec const_test.vspec -o const_overlay.vspec
+vspec2id spec/VehicleSignalSpecification.vspec const_test.vspec -o const_overlay.vspec
 ```
 
 which will give you the following `INFO` msg and write the defined constant ID
@@ -126,7 +126,7 @@ changes in the vehicle signal specification.
 
 The validation step compares your current changes of the vehicle signal
 specification to a previously generated file, here we named it
-`../output_id_v1.vspec`. There are two types of changes `BREAKING CHANGES` and
+`output_id_v1.vspec`. There are two types of changes `BREAKING CHANGES` and
 `NON-BREAKING CHANGES`. A `BREAKING CHANGE` will generate a new hash for a node.
 A `NON-BREAKING CHANGE` will throw a warning, but the static ID will remain the
 same. A `BREAKING CHANGE` is triggered when you change name/path, unit, type,
@@ -189,7 +189,7 @@ Now you should know about all possible changes. To run the validation step,
 please do:
 
 ```bash
-./vspec2id.py ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec ../output_id_v2.vspec --validate-static-uid ../output_id_v1.vspec
+vspec2id spec/VehicleSignalSpecification.vspec output_id_v2.vspec --validate-static-uid output_id_v1.vspec
 ```
 
 Depending on what you changed in the vehicle signal specification the
@@ -223,7 +223,6 @@ If you want to run the tests for the vspec2id implementation, please do
 
 ```bash
 cd path/to/vss-tools
-export PYTHONPATH=${PWD}
 pytest tests/vspec/test_static_uids
 ```
 

@@ -125,3 +125,11 @@ As the tool [vspec2id](docs/vspec2id.md) has been added the VSS-project has agre
 the legacy uuid functionality.
 
 * The parameter `--uuid` is now removed.
+
+### Tools installed as binaries without `.py` extension
+
+The project has been switched to poetry and all tools are available in your PATH once vss-tools is installed via pip.
+
+### Logging arguments
+
+General args have been extended with logging arguments `--log-level` and `--log-file`.

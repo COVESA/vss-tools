@@ -140,9 +140,8 @@ Continuous Integration requires that no Mypy errors are reported.
 
 To run manually:
 
-```
-pip install mypy types-setuptools types-PyYAML
-mypy *.py vspec tests contrib
+```bash
+mypy src tests contrib
 ```
 
 Suppressed error categories include:
@@ -166,14 +165,12 @@ The project use the following deviations compared to default settings:
 
 To enable the hook to check when creating a commit:
 
-```
-pip install pre-commit
+```bash
 pre-commit install
 ```
 
 To run manually:
 
-```
-pip install flake8
-flake8 *.py vspec tests contrib
+```bash
+flake8 src tests contrib
 ```
