@@ -109,20 +109,29 @@ def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQ
                 raise VSpecError("", "", "Incorrect format of graphql field specification")
     if node.has_unit():
         field_dict["unit"] = field(node, "Unit of ")
+    if node.staticUID:
+        field_dict["staticUID"] = field(
+            node, "", overwrite_description="Static UID (4-byte hex identifier) of the node."
+        )
     return field_dict
 
 
 def branch_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
     # we only consider nodes that either have children or are leave with a datatype
-    valid = (c for c in node.children if len(c.children) or hasattr(c, "datatype"))
+    valid = (c for c in node.children if len(c.children) or hasattr(c, "datatype") or hasattr(c, "staticUID"))
     return {camel_back(c.name): field(c, type=to_gql_type(c, additional_leaf_fields)) for c in valid}
 
 
-def field(node: VSSNode, description_prefix="", type=GraphQLString) -> GraphQLField:
+def field(node: VSSNode, description_prefix="", type=GraphQLString, overwrite_description: str = "") -> GraphQLField:
+    description: str = (
+        f"{description_prefix}{node.description}"
+        if overwrite_description == ""
+        else f"{description_prefix}{overwrite_description}"
+    )
     return GraphQLField(
         type,
         deprecation_reason=node.deprecation or None,
-        description=f"{description_prefix}{node.description}",
+        description=description,
     )
 
 
