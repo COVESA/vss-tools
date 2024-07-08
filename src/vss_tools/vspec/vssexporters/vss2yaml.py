@@ -64,6 +64,9 @@ def export_node(yaml_dict, node, config, print_uuid):
     if print_uuid:
         yaml_dict[node_path]["uuid"] = node.uuid
 
+    if node.staticUID:
+        yaml_dict[node_path]["staticUID"] = node.staticUID
+
     for k, v in node.extended_attributes.items():
         if not config.yaml_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
             continue
