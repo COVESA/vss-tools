@@ -41,7 +41,12 @@ func getTypeName(nodeType def.NodeTypes_t) string {
 }
 
 func showNodeData(currentNode *def.Node_t, currentChild int) {
-        fmt.Printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d,\ndescription = %s\n", parser.VSSgetName(currentNode), getTypeName(parser.VSSgetType(currentNode)), parser.VSSgetUUID(currentNode), parser.VSSgetValidation(currentNode), parser.VSSgetNumOfChildren(currentNode), parser.VSSgetDescr(currentNode))
+        fmt.Printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d", parser.VSSgetName(currentNode), getTypeName(parser.VSSgetType(currentNode)), parser.VSSgetUUID(currentNode), parser.VSSgetValidation(currentNode), parser.VSSgetNumOfChildren(currentNode))
+        if (parser.VSSgetStaticUID(currentNode) != "") {
+            fmt.Printf(", staticUID = %s,\ndescription = %s\n", parser.VSSgetStaticUID(currentNode), parser.VSSgetDescr(currentNode))
+        } else {
+            fmt.Printf("\ndescription = %s\n", parser.VSSgetDescr(currentNode))
+        }
         if (parser.VSSgetNumOfChildren(currentNode) > 0) {
             fmt.Printf("Node child[%d]=%s\n", currentChild, parser.VSSgetName(parser.VSSgetChild(currentNode, currentChild)))
         }
