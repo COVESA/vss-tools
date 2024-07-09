@@ -13,8 +13,8 @@ def get_node_identifier_bytes(
     node_type: str,
     unit: str,
     allowed: str,
-    minimum: str,
-    maximum: str,
+    minimum: int | float | None,
+    maximum: int | float | None,
     strict_mode: bool,
 ) -> bytes:
     """Get a node identifier as bytes. Used as an input for hashing
@@ -36,8 +36,8 @@ def get_node_identifier_bytes(
         f"datatype: {data_type}, "
         f"type: {node_type}"
         f"allowed: {allowed}"
-        f"min: {minimum}"
-        f"max: {maximum}"
+        f"min: {minimum if minimum is not None else ''}"
+        f"max: {maximum if maximum is not None else ''}"
     ).encode()
 
     if strict_mode:
@@ -71,8 +71,8 @@ def fnv1_32_wrapper(name: str, source: dict, strict_mode: bool):
     """
     # Verify and assign values from source dictionary using source.get
     allowed: str = source.get("allowed", "")
-    minimum: str = source.get("min", "")
-    maximum: str = source.get("max", "")
+    minimum: int | float | None = source.get("min")
+    maximum: int | float | None = source.get("max")
     datatype: str = source.get("datatype", "")
     vsstype: str = source.get("type", "")
     unit: str = source.get("unit", "")

@@ -39,6 +39,8 @@ def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bo
 def format_csv_line(csv_fields):
     formatted_csv_line = ""
     for csv_field in csv_fields:
+        if csv_field is None:
+            csv_field = ""
         formatted_csv_line = formatted_csv_line + '"' + str(csv_field).replace('"', '""') + '",'
     return formatted_csv_line[:-1] + '\n'
 

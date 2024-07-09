@@ -78,11 +78,11 @@ def export_node(node, generate_uuid, out_file):
     b_nodedatatype = nodedatatype.encode('utf-8')
 
     # many optional attributes are initilized to "" in vsstree.py
-    if node.min != "":
+    if node.min is not None:
         nodemin = str(node.min)
     b_nodemin = nodemin.encode('utf-8')
 
-    if node.max != "":
+    if node.max is not None:
         nodemax = str(node.max)
     b_nodemax = nodemax.encode('utf-8')
 

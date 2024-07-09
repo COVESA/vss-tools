@@ -152,9 +152,9 @@ def export_node(node, generate_uuid, generate_all_idl_features):
         except AttributeError:
             pass
 
-        if node.min != "":
+        if node.min is not None:
             min = str(node.min)
-        if node.max != "":
+        if node.max is not None:
             max = str(node.max)
         if node.default != "":
             defaultValue = node.default

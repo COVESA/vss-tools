@@ -35,9 +35,9 @@ def export_node(yaml_dict, node, config, print_uuid):
         yaml_dict[node_path]["datatype"] = node.get_datatype()
 
     # many optional attributes are initilized to "" in vsstree.py
-    if node.min != "":
+    if node.min is not None:
         yaml_dict[node_path]["min"] = node.min
-    if node.max != "":
+    if node.max is not None:
         yaml_dict[node_path]["max"] = node.max
     if node.allowed != "":
         yaml_dict[node_path]["allowed"] = node.allowed
