@@ -101,6 +101,10 @@ def export_node(node, generate_uuid, generate_all_idl_features):
     if node.type == VSSType.BRANCH:
         idlFileBuffer.append("module " + getAllowedName(node.name))
         idlFileBuffer.append("{")
+        if "staticUID" in node.extended_attributes:
+            idlFileBuffer.append(
+                ("" if generate_all_idl_features else "//") + "const string staticUID=\"" + node.extended_attributes["staticUID"] + "\";"
+            )
         for child in node.children:
             export_node(child, generate_uuid, generate_all_idl_features)
         idlFileBuffer.append("};")
@@ -190,11 +194,15 @@ def export_node(node, generate_uuid, generate_all_idl_features):
         if unit is not None:
             idlFileBuffer.append(("" if generate_all_idl_features else "//") + "const string unit=\"" + unit + "\";")
 
-        idlFileBuffer.append(("" if generate_all_idl_features else "//") + "const string type =\"" +
+        idlFileBuffer.append(("" if generate_all_idl_features else "//") + "const string type=\"" +
                              str(node.type.value) + "\";")
 
         idlFileBuffer.append(("" if generate_all_idl_features else "//") + "const string description=\"" +
                              node.description + "\";")
+        if "staticUID" in node.extended_attributes:
+            idlFileBuffer.append(
+                ("" if generate_all_idl_features else "//") + "const string staticUID=\"" + node.extended_attributes["staticUID"] + "\";"
+            )
         idlFileBuffer.append("};")
 
 
