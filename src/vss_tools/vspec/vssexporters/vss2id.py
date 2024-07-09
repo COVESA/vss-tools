@@ -166,7 +166,7 @@ class Vss2Id(Vss2X):
         @param signal_root: root of the signal tree
         @param print_uuid: Not used here but needed by main script
         """
-        log.info("Generating YAML output...")
+        log.info("Generating vspec output including static UIDs...")
 
         id_counter: int = 0
         signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
