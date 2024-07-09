@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -8,45 +6,33 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
+from pathlib import Path
+import subprocess
+import filecmp
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+def run_exporter(exporter, argument, tmp_path):
+    spec = HERE / "test.vspec"
+    output = tmp_path / f"out.{exporter}"
+    cmd = f"vspec2{exporter}{argument} {spec} {output}"
 
-
-def run_exporter(exporter, argument):
-    test_str = "vspec2" + exporter + argument + " test.vspec out." + exporter + " > out.txt"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-    test_str = "diff out." + exporter + " expected." + exporter
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    process = subprocess.run(cmd.split(), check=True, capture_output=True, text=True)
+    expected = HERE / f"expected.{exporter}"
+    assert filecmp.cmp(output, expected)
 
     # Check if warning given
     # ddsidl can not handle float and integer
     # Some other tools ignore "allowed" all together
     if exporter in ["ddsidl"]:
-        expected_grep_result = 0
-    else:
-        expected_grep_result = 1
-
-    test_str = 'grep \"can only handle allowed values for string type\" out.txt > /dev/null'
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == expected_grep_result
-    os.system("rm -f out." + exporter + " out.txt")
+        assert "can only handle allowed values for string type" in process.stdout
 
 
-def test_allowed(change_test_dir):
-
+def test_allowed(tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
     exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
     for exporter in exporters:
-        run_exporter(exporter, " -u ../test_units.yaml")
+        run_exporter(exporter, f" -u {TEST_UNITS}", tmp_path)

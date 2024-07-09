@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -8,27 +6,18 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
+from pathlib import Path
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
-
-
-def test_struct_as_root(change_test_dir):
-    test_str = "vspec2csv -vt struct1.vspec" + \
-               " -u ../test_units.yaml test.vspec out.csv > out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    # failure expected
-    assert os.WEXITSTATUS(result) != 0
-
-    test_str = 'grep \"Root node Struct1 is not of branch type\" out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+def test_struct_as_root(tmp_path):
+    struct = HERE / "struct1.vspec"
+    spec = HERE / "test.vspec"
+    output = tmp_path / "out.csv"
+    cmd = f"vspec2csv -vt {struct} -u {TEST_UNITS} {spec} {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
+    assert "Root node Struct1 is not of branch type" in process.stdout

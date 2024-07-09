@@ -11,12 +11,12 @@
 #
 
 
-import os
 import shlex
 from typing import Optional
 
 import pytest
 
+from pathlib import Path
 import vss_tools.vspec2binary as vspec2binary  # noqa: F401
 import vss_tools.vspec2csv as vspec2csv  # noqa: F401
 import vss_tools.vspec2ddsidl as vspec2ddsidl  # noqa: F401
@@ -27,39 +27,18 @@ import vss_tools.vspec2jsonschema as vspec2jsonschema  # noqa: F401
 import vss_tools.vspec2protobuf as vspec2protobuf  # noqa: F401
 import vss_tools.vspec2yaml as vspec2yaml  # noqa: F401
 
-
-# HELPERS
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
 def get_cla(test_file: str, out_file: str, overlay: Optional[str]):
+    args = f"-u {TEST_UNITS}"
     if overlay:
-        return test_file + " " + out_file + " -o " + overlay + " -u ../test_units.yaml"
-    else:
-        return test_file + " " + out_file + " -u ../test_units.yaml"
+        args += f" -o {overlay}"
+    args += f" {test_file} {out_file}"
+    return args
 
 
-# FIXTURES
-
-
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
-
-
-# Please note that tests will possibly fail if the out.* files are not deleted.
-#  They will also remain if a test fails which makes it easier to understand why
-#  it failed. Please remove all out.* before you run the tests again.
-@pytest.fixture(scope="function", autouse=True)
-def delete_files(change_test_dir):
-    yield None
-    os.system("rm -f out.*")
-
-
-# INTEGRATION TESTS
-
-
-@pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
     "exporter, out_file",
     [
@@ -81,20 +60,20 @@ def delete_files(change_test_dir):
         "test_files/test_del_node_overlay.vspec",
     ],
 )
-def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str]):
-    test_file: str
+def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str], tmp_path):
+    spec: Path
     if overlay:
-        test_file = "test_files/test.vspec"
+        spec = HERE / "test_files/test.vspec"
     else:
-        test_file = "test_files/test_deleted_node.vspec"
+        spec = HERE / "test_files/test_deleted_node.vspec"
 
-    clas = shlex.split(
-        get_cla(test_file, out_file, overlay)
-    )  # get command line arguments without the executable
-
+    output = tmp_path / out_file
+    ov = None
+    if overlay:
+        ov = str(HERE / overlay)
+    clas = shlex.split(get_cla(spec, str(output), ov))
     eval(f"{exporter}.main({clas})")
-    with open(out_file) as f:
-        result = f.read()
+    result = output.read_text()
 
     remaining_nodes = [
         "A.Float",
@@ -134,7 +113,6 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str]):
             assert node in result
 
 
-@pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
     "exporter, out_file",
     [
@@ -156,18 +134,21 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str]):
         "test_files/test_del_branch_overlay.vspec",
     ],
 )
-def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
-    test_file: str
+def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tmp_path):
+    spec: Path
     if overlay:
-        test_file = "test_files/test.vspec"
+        spec = HERE / "test_files/test.vspec"
     else:
-        test_file = "test_files/test_deleted_branch.vspec"
-    clas = shlex.split(get_cla(test_file, out_file, overlay))
+        spec = HERE / "test_files/test_deleted_branch.vspec"
+
+    output = tmp_path / out_file
+    ov = None
+    if overlay:
+        ov = str(HERE / overlay)
+    clas = shlex.split(get_cla(spec, str(output), ov))
 
     eval(f"{exporter}.main({clas})")
-    result_file: str
-    with open(out_file) as f:
-        result_file = f.read()
+    result_file = output.read_text()
 
     remaining_nodes = [
         "A.Float",
@@ -203,7 +184,6 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
             assert node in result_file
 
 
-@pytest.mark.usefixtures("change_test_dir")
 @pytest.mark.parametrize(
     "exporter, out_file",
     [
@@ -226,10 +206,15 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str]):
     ],
 )
 def test_deleted_instance(
-    caplog: pytest.LogCaptureFixture, exporter: str, out_file: str, overlay: str
+    caplog: pytest.LogCaptureFixture,
+    exporter: str,
+    out_file: str,
+    overlay: str,
+    tmp_path,
 ):
-    test_file: str = "test_files/test.vspec"
-    clas = shlex.split(get_cla(test_file, out_file, overlay))
+    spec = HERE / "test_files/test.vspec"
+    output = tmp_path / out_file
+    clas = shlex.split(get_cla(spec, str(output), str(HERE / overlay)))
 
     if "wrong" in overlay:
         with pytest.raises(SystemExit) as exporter_result:
@@ -238,9 +223,7 @@ def test_deleted_instance(
         assert exporter_result.value.code == -1
     else:
         eval(f"{exporter}.main({clas})")
-        result_file: str
-        with open(out_file) as f:
-            result_file = f.read()
+        result_file = output.read_text()
 
         remaining_nodes = [
             "A.Float",

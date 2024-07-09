@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2022 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -8,49 +6,30 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
+from pathlib import Path
+import subprocess
+import filecmp
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+def test_include(tmp_path):
+    spec = HERE / "test.vspec"
+    output = tmp_path / "out.json"
+    expected = HERE / "expected.json"
+    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty {spec} {output}"
+    subprocess.run(cmd.split(), check=True)
+    filecmp.cmp(output, expected)
 
 
-def test_include(change_test_dir):
-    test_str = "vspec2json -u ../test_units.yaml --json-pretty test.vspec out.json" + \
-               " 1> out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+def test_error(tmp_path):
+    spec = HERE / "test_error.vspec"
+    output = tmp_path / "out.json"
+    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty {spec} {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
 
-    # No real need to test more than one exporter
-    result = os.system("diff out.json expected.json")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    os.system("rm -f out.json out.txt")
-
-
-def test_error(change_test_dir):
-    test_str = "vspec2json -u ../test_units.yaml --json-pretty test_error.vspec out.json " + \
-               "1> out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    # failure expected
-    assert os.WEXITSTATUS(result) != 0
-
-    # Test on faulty include
-    test_str = 'grep \"WARNING  No branch matching\" out.txt > /dev/null'
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    # Test on missing include, is fatal error
-    test_str = 'grep \"Exception: Invalid VSS model\" out.txt > /dev/null'
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    os.system("rm -f out.json out.txt")
+    print(process.stdout)
+    assert "WARNING  No branch matching" in process.stdout
+    assert "Exception: Invalid VSS model" in process.stderr

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -9,33 +7,34 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import pytest
-import os
+from pathlib import Path
+import subprocess
+
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+@pytest.mark.parametrize(
+    "vspec_file, type_file, type_out_file",
+    [
+        ("no_description_branch.vspec", None, None),
+        ("no_description_signal.vspec", None, None),
+        ("correct.vspec", "no_description_type_branch.vspec", "ot.json"),
+        ("correct.vspec", "no_description_type_struct.vspec", "ot.json"),
+        ("correct.vspec", "no_description_type_property.vspec", "ot.json"),
+    ],
+)
+def test_description_error(
+    vspec_file: str, type_file: str, type_out_file: str, tmp_path
+):
+    output = tmp_path / "out.json"
+    cmd = f"vspec2json --json-pretty -u {TEST_UNITS}"
+    if type_file:
+        cmd += f" -vt {HERE / type_file}"
+    if type_out_file:
+        cmd += f" -ot {tmp_path / type_out_file}"
+    cmd += f" {HERE / vspec_file} {output}"
 
-
-@pytest.mark.parametrize("vspec_file, type_str", [
-    ("no_description_branch.vspec", ""),
-    ("no_description_signal.vspec", ""),
-    ("correct.vspec", "-vt no_description_type_branch.vspec -ot ot.json"),
-    ("correct.vspec", "-vt no_description_type_struct.vspec -ot ot.json"),
-    ("correct.vspec", "-vt no_description_type_property.vspec -ot ot.json")
-    ])
-def test_description_error(vspec_file: str, type_str: str, change_test_dir):
-    test_str = "vspec2json --json-pretty -u ../test_units.yaml " + type_str + " " + vspec_file + \
-               " out.json > out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    # failure expected
-    assert os.WEXITSTATUS(result) != 0
-
-    test_str = 'grep \"Invalid VSS element\" out.txt > /dev/null'
-    result = os.system(test_str)
-    os.system("cat out.txt")
-    os.system("rm -f out.json out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
+    assert "Invalid VSS element" in process.stdout

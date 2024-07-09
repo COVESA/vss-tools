@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2024 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -9,19 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import pytest
-import os
-
-
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
-
-
-@pytest.fixture(scope="function", autouse=True)
-def delete_files(change_test_dir):
-    yield None
-    os.system("rm -rf out.json out.txt vehicle_signal_specification")
+import subprocess
 
 # Test all VSS versions we support
 #
@@ -46,17 +32,18 @@ def delete_files(change_test_dir):
                           'v4.0',
                           'v4.1',
                           'v4.2'])
-def test_compatibility(tag, change_test_dir):
+def test_compatibility(tag, tmp_path):
     """
     Test that we still can analyze wanted versions without error
     """
+    url = "https://github.com/COVESA/vehicle_signal_specification"
+    vss_dir = tmp_path / "vss"
+    clone_cmd = f"git clone --depth 1 --branch {tag} {url} {vss_dir}"
 
-    os.system("git clone --depth 1 --branch " + tag +
-              " https://github.com/COVESA/vehicle_signal_specification")
+    subprocess.run(clone_cmd.split(), check=True)
 
-    result = os.system("vspec2json --json-pretty "
-                       "vehicle_signal_specification/spec/VehicleSignalSpecification.vspec "
-                       "out.json 1>out.txt 2>&1")
-    os.system("cat out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    vspec = vss_dir / "spec" / "VehicleSignalSpecification.vspec"
+    output = tmp_path / "out.json"
+
+    cmd = f"vspec2json --json-pretty {vspec} {output}"
+    subprocess.run(cmd.split(), check=True)

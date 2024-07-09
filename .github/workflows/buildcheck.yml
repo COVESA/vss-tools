@@ -43,13 +43,13 @@ jobs:
       - name: flake8
         run: |
           poetry run flake8 src tests contrib
-      - name: Run tests
-        run: |
-          poetry run pytest
-      - name: Build binary library
+      - name: Build binary library (Needed for pytest)
         run: |
           cd binary
           make
+      - name: Run tests
+        run: |
+          poetry run pytest --cov=vss_tools --cov-report=term-missing --cov-fail-under=90
       - name: Test Binary Go Parser
         run: |
           cd binary/go_parser
