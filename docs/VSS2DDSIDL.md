@@ -78,15 +78,15 @@ IDL files can be supplied as input to one of the DDS implementation (e.g: Cycloe
 ### Installation of CycloneDDS
 
 
-```Shell
-$ git clone https://github.com/eclipse-cyclonedds/cyclonedds.git
-$ pip3 install cyclonedds conan
-$ cd cyclonedds/ \
-      && mkdir build \
-      && cd build \
-      && conan install .. --build missing \
-      && cmake .. \
-      && cmake --build . --target install
+```bash
+git clone https://github.com/eclipse-cyclonedds/cyclonedds.git
+pip3 install cyclonedds conan
+cd cyclonedds
+mkdir build
+cd build
+conan install .. --build missing
+cmake ..
+cmake --build . --target install
 ```
 
 **Usage of CycloneDDS to take IDL file as input and generate Python file with types**

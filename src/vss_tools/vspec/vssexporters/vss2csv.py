@@ -12,7 +12,7 @@
 
 
 import argparse
-import logging
+from vss_tools import log
 from vss_tools.vspec.model.vsstree import VSSNode
 from anytree import PreOrderIter  # type: ignore[import]
 from typing import AnyStr
@@ -66,7 +66,7 @@ class Vss2Csv(Vss2X):
 
     def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
-        logging.info("Generating CSV output...")
+        log.info("Generating CSV output...")
 
         # generic entry should be written when both data types and signals are being written to the same file
         generic_entry = data_type_root is not None and config.types_output_file is None

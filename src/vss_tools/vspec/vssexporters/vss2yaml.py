@@ -16,9 +16,9 @@
 import argparse
 from vss_tools.vspec.model.vsstree import VSSNode
 import yaml
-import logging
 from typing import Dict, Any
 from typing import Optional
+from vss_tools import log
 from vss_tools.vspec.vss2x import Vss2X
 from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
@@ -105,7 +105,7 @@ class Vss2Yaml(Vss2X):
     def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
 
-        logging.info("Generating YAML output...")
+        log.info("Generating YAML output...")
 
         signals_yaml_dict: Dict[str, Any] = {}
         export_node(signals_yaml_dict, signal_root, config, vspec2vss_config.generate_uuid)
@@ -114,7 +114,7 @@ class Vss2Yaml(Vss2X):
             data_types_yaml_dict: Dict[str, Any] = {}
             export_node(data_types_yaml_dict, data_type_root, config, vspec2vss_config.generate_uuid)
             if config.types_output_file is None:
-                logging.info("Adding custom data types to signal dictionary")
+                log.info("Adding custom data types to signal dictionary")
                 signals_yaml_dict["ComplexDataTypes"] = data_types_yaml_dict
             else:
                 export_yaml(config.types_output_file, data_types_yaml_dict)

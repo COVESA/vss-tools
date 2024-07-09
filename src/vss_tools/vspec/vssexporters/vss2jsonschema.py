@@ -12,7 +12,7 @@
 
 import argparse
 import json
-import logging
+from vss_tools import log
 from typing import Dict, Any
 from typing import Optional
 from vss_tools.vspec.model.vsstree import VSSNode
@@ -128,10 +128,10 @@ class Vss2JsonSchema(Vss2X):
     def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
         """Export function for generating JSON schema file."""
-        logging.info("Generating JSON schema...")
+        log.info("Generating JSON schema...")
         indent = None
         if config.jsonschema_pretty:
-            logging.info("Serializing pretty JSON schema...")
+            log.info("Serializing pretty JSON schema...")
             indent = 2
 
         signals_json_schema: Dict[str, Any] = {}

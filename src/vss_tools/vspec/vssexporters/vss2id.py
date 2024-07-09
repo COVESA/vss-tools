@@ -11,13 +11,13 @@
 # Generate IDs of 4bytes size, 3 bytes incremental value + 1 byte for layer id.
 
 import argparse
-import logging
 import os
 import sys
 from typing import Dict, Tuple, Optional
 
 import yaml
 
+from vss_tools import log
 from vss_tools.vspec import load_tree
 from vss_tools.vspec.model.constants import VSSTreeType
 from vss_tools.vspec.model.vsstree import VSSNode
@@ -76,7 +76,7 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
         node_id, id_counter = generate_split_id(node, id_counter, strict_mode)
         node_id = f"0x{node_id}"
     else:
-        logging.info(
+        log.info(
             f"Using const ID for {node.qualified_name()}. If you didn't mean "
             "to do that you can remove it in your vspec / overlay."
         )
@@ -89,7 +89,7 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
     for key, value in get_all_keys_values(yaml_dict):
         if not isinstance(value, dict) and key == "staticUID":
             if node_id == value:
-                logging.fatal(
+                log.fatal(
                     f"There is a small chance that the result of FNV-1 "
                     f"hashes are the same in this case the hash of node "
                     f"'{node.qualified_name()}' is the same as another hash."
@@ -166,7 +166,7 @@ class Vss2Id(Vss2X):
         @param signal_root: root of the signal tree
         @param print_uuid: Not used here but needed by main script
         """
-        logging.info("Generating YAML output...")
+        log.info("Generating YAML output...")
 
         id_counter: int = 0
         signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
@@ -175,7 +175,7 @@ class Vss2Id(Vss2X):
         )
 
         if config.validate_static_uid:
-            logging.info(
+            log.info(
                 f"Now validating nodes, static UIDs, types, units and description with "
                 f"file '{config.validate_static_uid}'"
             )

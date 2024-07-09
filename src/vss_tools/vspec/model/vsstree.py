@@ -9,11 +9,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import copy
-import logging
 import re
 import sys
 from typing import Any, List, Optional, Set
 from anytree import PreOrderIter  # type: ignore[import]
+from vss_tools import log
 
 
 from anytree import (  # type: ignore[import]
@@ -116,7 +116,7 @@ class VSSNode(Node):
                 if vss_element.has_datatype():
                     return vss_element.datatype
 
-        logging.warning("No old datatype found for %s", search_name)
+        log.warning("No old datatype found for %s", search_name)
         return None
 
     @classmethod
@@ -130,7 +130,7 @@ class VSSNode(Node):
             if vss_element.qualified_name() == search_name:
                 return vss_element.type
 
-        logging.warning("No old type found for %s", search_name)
+        log.warning("No old type found for %s", search_name)
         return None
 
     def __deepcopy__(self, memo):
@@ -177,7 +177,7 @@ class VSSNode(Node):
         self.unpack_source_dict()
 
         if self.is_property() and not self.parent.is_struct():
-            logging.error(
+            log.error(
                 f"Orphan property detected. {self.name} is not defined under a struct"
             )
             sys.exit(-1)
@@ -187,11 +187,11 @@ class VSSNode(Node):
         except NameStyleValidationException as e:
             info_string = str(e)
             if break_on_name_style_violation:
-                logging.warning(info_string)
-                logging.error("You asked for strict checking. Terminating.")
+                log.warning(info_string)
+                log.error("You asked for strict checking. Terminating.")
                 sys.exit(-1)
             else:
-                logging.info(info_string)
+                log.info(info_string)
 
     def unpack_source_dict(self):
         self.extended_attributes = self.source_dict.copy()
@@ -214,7 +214,7 @@ class VSSNode(Node):
         # Is this an include element?
         if "type" in self.source_dict:
             if self.source_dict["type"] not in self.available_types:
-                logging.error(
+                log.error(
                     f'Type not allowed: {self.source_dict["type"]}. Allowed types are {self.available_types}'
                 )
                 sys.exit(-1)
@@ -222,7 +222,7 @@ class VSSNode(Node):
         else:
             ref_type = VSSNode.get_reference_type(self)
             if ref_type is None:
-                logging.error("No type specified for %s", self.qualified_name())
+                log.error("No type specified for %s", self.qualified_name())
                 sys.exit(-1)
             self.type = ref_type
             self.source_dict["type"] = ref_type.value
@@ -236,7 +236,7 @@ class VSSNode(Node):
         if self.has_unit():
 
             if not (self.is_signal() or self.is_property()):
-                logging.error(
+                log.error(
                     "Item %s cannot have unit, only allowed for signal and property!",
                     self.name,
                 )
@@ -245,7 +245,7 @@ class VSSNode(Node):
             unit = self.source_dict["unit"]
             self.unit = VSSUnitCollection.get_unit(unit)
             if self.unit is None:
-                logging.error(
+                log.error(
                     f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating."
                 )
                 sys.exit(-1)
@@ -265,7 +265,7 @@ class VSSNode(Node):
                 self.data_type_str = self.source_dict["datatype"]
                 self.validate_and_set_datatype()
             else:
-                logging.error(
+                log.error(
                     "Item %s cannot have datatype, only allowed for signal and property!",
                     self.name,
                 )
@@ -281,13 +281,13 @@ class VSSNode(Node):
         if self.has_unit():
 
             if not self.has_datatype():
-                logging.error(
+                log.error(
                     "Unit specified for item not using standard datatype: %s", self.name
                 )
                 sys.exit(-1)
 
         if self.has_instances() and not self.is_branch():
-            logging.error(
+            log.error(
                 f"Only branches can be instantiated. {self.qualified_name()} is of type {self.type}"
             )
             sys.exit(-1)
@@ -521,7 +521,7 @@ class VSSNode(Node):
                         and "numeric" in self.unit.allowed_datatypes
                     )
                 ):
-                    logging.error(
+                    log.error(
                         "Datatype %s not allowed for unit %s",
                         self.data_type_str,
                         self.unit.id,
@@ -531,7 +531,7 @@ class VSSNode(Node):
             if self.type == VSSType.PROPERTY:
                 # Fully Qualified name as data type name
                 if DEFAULT_SEPARATOR in self.data_type_str:
-                    logging.info(
+                    log.info(
                         (
                             f"Qualified datatype name {self.data_type_str} provided in node {self.qualified_name()}. ",
                             "Semantic checks will be performed after the entire tree is rendered. SKIPPING NOW...",
@@ -544,7 +544,7 @@ class VSSNode(Node):
                         undecorated_datatype_str
                     )
                     if struct_fqn is None:
-                        logging.error(
+                        log.error(
                             f"Data type not found. Data Type: {undecorated_datatype_str}"
                         )
                         sys.exit(-1)
@@ -558,7 +558,7 @@ class VSSNode(Node):
                 # This is a signal possibly referencing a user-defined type.
                 # Just assign the string value for now. Validation will be
                 # performed after the entire tree is rendered.
-                logging.debug(
+                log.debug(
                     f"Possible struct-type encountered - {self.data_type_str} in node {self.name}. "
                 )
             else:
@@ -604,11 +604,11 @@ class VSSNode(Node):
 
         # Type presence should have been tested earlier, but is tested here again for completeness
         if "type" not in self.source_dict.keys():
-            logging.error("Invalid VSS element %s, must have type", self.name)
+            log.error("Invalid VSS element %s, must have type", self.name)
             sys.exit(-1)
 
         if "description" not in self.source_dict.keys():
-            logging.error("Invalid VSS element %s, must have description", self.name)
+            log.error("Invalid VSS element %s, must have description", self.name)
             sys.exit(-1)
 
         unknown = []
@@ -621,7 +621,7 @@ class VSSNode(Node):
 
         unknown_found = False
         if len(unknown) > 0:
-            logging.warning(
+            log.warning(
                 f"Attribute(s) {', '.join(map(str, unknown))} in element {self.name} not a core "
                 "or known extended attribute."
             )
@@ -634,7 +634,7 @@ class VSSNode(Node):
                 "sensor",
                 "actuator",
             }:
-                logging.warning(
+                log.warning(
                     "Invalid VSS element %s, %s cannot use default",
                     self.name,
                     self.source_dict["type"],
@@ -642,7 +642,7 @@ class VSSNode(Node):
                 unknown_found = True
 
         if unknown_found and abort_on_unknown_attribute:
-            logging.error("You asked for strict checking. Terminating.")
+            log.error("You asked for strict checking. Terminating.")
             sys.exit(-1)
 
     @staticmethod

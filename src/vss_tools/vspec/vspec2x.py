@@ -14,13 +14,14 @@
 
 from vss_tools.vspec.model.vsstree import VSSNode
 from vss_tools.vspec.model.constants import VSSTreeType
-from vss_tools.vspec.loggingconfig import initLogging
+from vss_tools import log
 from vss_tools.vspec.vss2x import Vss2X
 from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 import argparse
 import logging
 import sys
 import vss_tools.vspec as vspec
+from pathlib import Path
 
 import importlib_metadata
 
@@ -43,9 +44,11 @@ class Vspec2X():
         self.vspec2vss_config = vspec2vss_config
 
     def main(self, arguments):
-        initLogging()
         parser = argparse.ArgumentParser(description="Convert vspec to other formats.")
 
+        parser.add_argument("--log-level", choices=["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"],
+                            help="Sets the log level", default="INFO")
+        parser.add_argument("--log-file", type=Path, help="Writes logs into the given file")
         parser.add_argument('--version', action='version', version=VERSION)
         parser.add_argument('-I', '--include-dir', action='append', metavar='dir', type=str, default=[],
                             help='Add include directory to search for included vspec files.')
@@ -97,7 +100,14 @@ class Vspec2X():
 
         args = parser.parse_args(arguments)
 
-        logging.info("VSS-tools version %s", VERSION)
+        log.setLevel(args.log_level)
+        if args.log_file:
+            args.log_file.parent.mkdir(exist_ok=True, parents=True)
+            file_handler = logging.FileHandler(args.log_file, mode="w")
+            file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
+            log.addHandler(file_handler)
+
+        log.info("VSS-tools version %s", VERSION)
 
         include_dirs = ["."]
         include_dirs.extend(args.include_dir)
@@ -113,7 +123,7 @@ class Vspec2X():
         if self.vspec2vss_config.extended_attributes_supported and (len(args.extended_attributes) > 0):
             known_extended_attributes_list = args.extended_attributes.split(",")
             vspec.model.vsstree.VSSNode.whitelisted_extended_attributes = known_extended_attributes_list
-            logging.info(f"Known extended attributes: {', '.join(known_extended_attributes_list)}")
+            log.info(f"Known extended attributes: {', '.join(known_extended_attributes_list)}")
         else:
             known_extended_attributes_list = list()
 
@@ -122,9 +132,9 @@ class Vspec2X():
         # Follow up to https://github.com/COVESA/vehicle_signal_specification/pull/721
         # Deprecate --uuid
         if self.vspec2vss_config.generate_uuid:
-            logging.warning("The argument --uuid is deprecated and the uuid feature is planned "
-                            "to be removed in VSS-tools 6.0")
-            logging.info("If you need static identifiers consider using the vspec2id tool")
+            log.warning("The argument --uuid is deprecated and the uuid feature is planned"
+                        "to be removed in VSS-tools 6.0")
+            log.info("If you need static identifiers consider using the vspec2id tool")
 
         self.vspec2vss_config.expand_model = (self.vspec2vss_config.expand_model and not
                                               (self.vspec2vss_config.no_expand_option_supported and args.no_expand))
@@ -145,7 +155,7 @@ class Vspec2X():
                 vspec.verify_mandatory_attributes(data_type_tree, abort_on_unknown_attribute)
 
         try:
-            logging.info(f"Loading vspec from {args.vspec_file}...")
+            log.info(f"Loading vspec from {args.vspec_file}...")
             tree = vspec.load_tree(
                 args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE,
                 break_on_name_style_violation=abort_on_namestyle,
@@ -154,7 +164,7 @@ class Vspec2X():
             VSSNode.set_reference_tree(tree)
 
             for overlay in args.overlays:
-                logging.info(f"Applying VSS overlay from {overlay}...")
+                log.info(f"Applying VSS overlay from {overlay}...")
                 othertree = vspec.load_tree(overlay, include_dirs, VSSTreeType.SIGNAL_TREE,
                                             break_on_name_style_violation=abort_on_namestyle, expand_inst=False,
                                             data_type_tree=data_type_tree)
@@ -166,12 +176,12 @@ class Vspec2X():
 
             vspec.clean_metadata(tree)
             vspec.verify_mandatory_attributes(tree, abort_on_unknown_attribute)
-            logging.info("Calling exporter...")
+            log.info("Calling exporter...")
 
             self.generator.generate(args, tree, self.vspec2vss_config, data_type_tree)
-            logging.info("All done.")
+            log.info("All done.")
         except vspec.VSpecError as e:
-            logging.error(f"Error: {e}")
+            log.error(f"Error: {e}")
             sys.exit(255)
 
     def processDataTypeTree(self, parser: argparse.ArgumentParser, args, include_dirs,
@@ -182,11 +192,11 @@ class Vspec2X():
         """
         if self.vspec2vss_config.separate_output_type_file_supported and \
            args.types_output_file is None:
-            logging.info("Sensors and custom data types will be consolidated into one file.")
+            log.info("Sensors and custom data types will be consolidated into one file.")
 
         first_tree = True
         for type_file in args.vspec_types_file:
-            logging.info(f"Loading and processing struct/data type tree from {type_file}")
+            log.info(f"Loading and processing struct/data type tree from {type_file}")
             new_tree = vspec.load_tree(type_file, include_dirs, VSSTreeType.DATA_TYPE_TREE,
                                        break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
             if first_tree:

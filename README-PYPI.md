@@ -24,7 +24,7 @@ If you just want the latest version this should be sufficient:
 pip install vss-tools
 ```
 
-When installed tools like `vspec2json.py` shall be available on your path.
+When installed tools like `vspec2json` shall be available on your path.
 
 For more information see the [VSS-Tools wiki](https://github.com/COVESA/vss-tools/wiki/PyPI-packing)
 

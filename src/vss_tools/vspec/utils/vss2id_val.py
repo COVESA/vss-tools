@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import argparse
-import logging
+from vss_tools import log
 import sys
 from typing import Optional
 
@@ -35,7 +35,7 @@ def validate_static_uids(
             assert v["description"] == validation_node.description
 
         except AssertionError:
-            logging.warning(
+            log.warning(
                 "[Validation] "
                 f"DESCRIPTION MISMATCH: The description of {k} has changed from "
                 f"\n\t   Validation: '{validation_node.description}' to \n\t   Current "
@@ -61,7 +61,7 @@ def validate_static_uids(
                         old_static_uid
                         == validation_node.extended_attributes["staticUID"]
                     ):
-                        logging.warning(
+                        log.warning(
                             f"[Validation] SEMANTIC NAME CHANGE or PATH CHANGE for '{k}', "
                             f"it used to be '{validation_node.qualified_name()}'."
                         )
@@ -76,7 +76,7 @@ def validate_static_uids(
             and validation_tree_nodes[match_tuple[1]].deprecation
         ):
             if v["deprecation"] != validation_tree_nodes[match_tuple[1]].deprecation:
-                logging.warning(
+                log.warning(
                     f"[Validation] DEPRECATION MSG CHANGE: Deprecation message "
                     f"for '{k}' was "
                     f"'{validation_tree_nodes[match_tuple[1]].deprecation}' "
@@ -119,14 +119,14 @@ def validate_static_uids(
                             break
 
                     if key_found:
-                        logging.warning(
+                        log.warning(
                             f"[Validation] BREAKING CHANGE: "
                             f"There was a breaking change for '{key}' which "
                             f"means its name, unit, datatype, type, enum or "
                             f"min/max has changed."
                         )
                     else:
-                        logging.warning(
+                        log.warning(
                             f"[Validation] ADDED ATTRIBUTE: "
                             f"The node '{key}' was added since the last validation."
                         )
@@ -140,7 +140,7 @@ def validate_static_uids(
                 validation_tree_nodes.pop(matched_uids[0][1])
 
             else:
-                logging.error(
+                log.error(
                     "[Validation] Multiple matches do not make sense "
                     "for the way we load the data. Please check your "
                     "input vspec!"
@@ -148,7 +148,7 @@ def validate_static_uids(
                 sys.exit(-1)
 
         for node in validation_tree_nodes:
-            logging.warning(
+            log.warning(
                 "[Validation] DELETED ATTRIBUTE: "
                 f"'{node.qualified_name()}' was not matched so it must have "
                 f"been deleted."

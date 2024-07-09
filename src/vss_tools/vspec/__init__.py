@@ -15,12 +15,12 @@ import os
 import uuid
 import sys
 import collections
-import logging
 from copy import deepcopy
 from typing import List, Optional
 
 from anytree import (Resolver, LevelOrderIter, PreOrderIter, RenderTree)  # type: ignore[import]
 
+from vss_tools import log
 from vss_tools.vspec.model.vsstree import VSSNode, VSSType
 from vss_tools.vspec.model.exceptions import ImpossibleMergeException, IncompleteElementException
 from vss_tools.vspec.model.constants import VSSTreeType, VSSUnitCollection, VSSQuantityCollection
@@ -92,7 +92,7 @@ def load_tree(
         expand_inst=True,
         data_type_tree: Optional[VSSNode] = None):
     if expand_inst and tree_type == VSSTreeType.DATA_TYPE_TREE:
-        logging.error("Instance expansion is not supported for VSS type tree.")
+        log.error("Instance expansion is not supported for VSS type tree.")
         sys.exit(-1)
 
     flat_model = load_flat_model(file_name, "", include_paths, tree_type)
@@ -114,7 +114,7 @@ def check_type_usage(tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[
     Check usages of datatypes within the tree.
     This methods shall be called after overlays (or additional type files) have been merged.
     """
-    logging.info("Check type usage")
+    log.info("Check type usage")
 
     if tree_type == VSSTreeType.DATA_TYPE_TREE:
 
@@ -294,7 +294,7 @@ def verify_mandatory_attributes(node, abort_on_unknown_attribute: bool):
     """
     if isinstance(node, VSSNode):
         if node.delete:
-            logging.info(
+            log.info(
                 f"Node {node.qualified_name()} will be deleted. Please note, that if {node.qualified_name()} "
                 f"is a branch all subsequent nodes will also be deleted irrespective of their 'delete' value."
             )
@@ -344,7 +344,7 @@ def expand_includes(flat_model, prefix, include_paths, tree_type: VSSTreeType):
                 if not prefix_found:
                     # Printing line number does not make sense, as we work on a
                     # modified tree
-                    logging.warning(
+                    log.warning(
                         f"No branch matching prefix {include_prefix} for #include in {elem['$file_name$']}")
 
             # Append include prefix to our current prefix.
@@ -673,7 +673,7 @@ def find_branch_or_struct(elem, name_list, index, autocreate=True):
 
     if name_list[index] not in children:
         if autocreate and elem['type'] != "struct":
-            logging.info(f"Autocreating implicit branch {name_list[index]}")
+            log.info(f"Autocreating implicit branch {name_list[index]}")
 
             # If we are above Vehicle (e.g. vehicle not defined), we are
             # missing a name
@@ -775,7 +775,7 @@ def render_tree(
         break_on_name_style_violation=False) -> VSSNode:
     if len(tree_dict) != 1:
         for item in tree_dict.keys():
-            logging.info(f"Found root node {item}")
+            log.info(f"Found root node {item}")
         raise Exception(
             f"Invalid VSS model, must have single root node, found {len(tree_dict)}")
 
@@ -789,7 +789,7 @@ def render_tree(
         break_on_name_style_violation=break_on_name_style_violation)
 
     if tree_root.type is not VSSType.BRANCH:
-        logging.error("Root node %s is not of branch type", tree_root.qualified_name())
+        log.error("Root node %s is not of branch type", tree_root.qualified_name())
         sys.exit(-1)
 
     if "children" in root_element.keys():
@@ -812,10 +812,10 @@ def render_subtree(
     if parent.type not in [VSSType.BRANCH, VSSType.STRUCT]:
         give_err = False
         for element_name in subtree:
-            logging.warning("Node %s defined in wrong scope", element_name)
+            log.warning("Node %s defined in wrong scope", element_name)
             give_err = True
         if give_err:
-            logging.error("VSS Node %s cannot have children", parent.qualified_name())
+            log.error("VSS Node %s cannot have children", parent.qualified_name())
             sys.exit(-1)
     for element_name in subtree:
         current_element = subtree[element_name]
@@ -828,8 +828,8 @@ def render_subtree(
                 parent=parent,
                 break_on_name_style_violation=break_on_name_style_violation)
         except IncompleteElementException as e:
-            logging.error(f"Invalid VSS: {e}")
-            logging.error("Terminating.")
+            log.error(f"Invalid VSS: {e}")
+            log.error("Terminating.")
             sys.exit(-1)
         if "children" in current_element.keys():
             child_nodes = current_element["children"]
@@ -859,7 +859,7 @@ def merge_elem(base, overlay_element):
             other_node.merge(overlay_element)
 
         except ImpossibleMergeException as e:
-            logging.error(f"Merging impossible: {e}")
+            log.error(f"Merging impossible: {e}")
             sys.exit(-1)
 
 
@@ -892,18 +892,18 @@ def load_quantities(vspec_file: str, quantity_files: List[str]):
         default_vss_quantity_file = vspec_dir + os.path.sep + 'quantities.yaml'
         if os.path.exists(default_vss_quantity_file):
             total_nbr_quantities = VSSQuantityCollection.load_config_file(default_vss_quantity_file)
-            logging.info(f"Added {total_nbr_quantities} quantities from {default_vss_quantity_file}")
+            log.info(f"Added {total_nbr_quantities} quantities from {default_vss_quantity_file}")
     else:
         for quantity_file in quantity_files:
             nbr_quantities = VSSQuantityCollection.load_config_file(quantity_file)
             if (nbr_quantities == 0):
-                logging.warning(f"Warning: No quantities found in {quantity_file}")
+                log.warning(f"Warning: No quantities found in {quantity_file}")
             else:
-                logging.info(f"Added {nbr_quantities} quantities from {quantity_file}")
+                log.info(f"Added {nbr_quantities} quantities from {quantity_file}")
                 total_nbr_quantities += nbr_quantities
 
     if (total_nbr_quantities == 0):
-        logging.info("No quantities defined!")
+        log.info("No quantities defined!")
 
 
 def load_units(vspec_file: str, unit_files: List[str]):
@@ -920,18 +920,18 @@ def load_units(vspec_file: str, unit_files: List[str]):
         default_vss_unit_file = vspec_dir + os.path.sep + 'units.yaml'
         if os.path.exists(default_vss_unit_file):
             total_nbr_units = VSSUnitCollection.load_config_file(default_vss_unit_file)
-            logging.info(f"Added {total_nbr_units} units from {default_vss_unit_file}")
+            log.info(f"Added {total_nbr_units} units from {default_vss_unit_file}")
     else:
         for unit_file in unit_files:
             nbr_units = VSSUnitCollection.load_config_file(unit_file)
             if (nbr_units == 0):
-                logging.warning(f"Warning: No units found in {unit_file}")
+                log.warning(f"Warning: No units found in {unit_file}")
             else:
-                logging.info(f"Added {nbr_units} units from {unit_file}")
+                log.info(f"Added {nbr_units} units from {unit_file}")
                 total_nbr_units += nbr_units
 
     if (total_nbr_units == 0):
-        logging.error("No units defined! Terminating!")
+        log.error("No units defined! Terminating!")
         sys.exit(-1)
 
 
@@ -946,7 +946,7 @@ def check_data_type_references(tree: VSSNode):
                 tree, lambda n: n.qualified_name(), lambda n: n.is_struct())], errors)
     if len(errors) > 0:
         error_str = ",".join(errors)
-        logging.error(
+        log.error(
             f"{len(errors)} data type reference errors detected. Errors: {error_str}")
         sys.exit(-1)
 
@@ -956,12 +956,12 @@ def check_data_type_references_recursive(
     """
     Check that the data type names referenced by tree nodes exist in the tree.
     """
-    logging.info("jkdfjk %s", node.qualified_name())
+    log.info("jkdfjk %s", node.qualified_name())
     if node.is_property() or node.is_signal():
-        logging.info("Node is %s", node.qualified_name())
+        log.info("Node is %s", node.qualified_name())
         if node.children:
             # Exit directly if node defined in faulty scope
-            logging.error("Node %s is not defined in a branch", node.qualified_name())
+            log.error("Node %s is not defined in a branch", node.qualified_name())
             sys.exit(-1)
         if node.datatype is None:
             undecorated_data_type = node.data_type_str.replace('[]', '')
@@ -1002,7 +1002,7 @@ def check_data_type_references_across_trees(
 
     if len(nonexistant_types) > 0:
         error_str = ", ".join(nonexistant_types)
-        logging.error(
+        log.error(
             f"Following types were referenced in signals but have not been defined: {error_str}")
         sys.exit(-1)
 

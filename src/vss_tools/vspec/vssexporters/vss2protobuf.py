@@ -12,7 +12,6 @@
 #
 
 import argparse
-import logging
 import os
 import sys
 from pathlib import Path
@@ -20,6 +19,7 @@ from typing import Set
 from typing import Optional
 
 from anytree import PreOrderIter  # type: ignore[import]
+from vss_tools import log
 from vss_tools.vspec.model.vsstree import VSSNode
 from vss_tools.vspec.vss2x import Vss2X
 from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
@@ -47,7 +47,7 @@ class ProtoExporter(object):
 
     def setup_file(self, fp: Path, package_name: str):
         with open(fp, 'w') as proto_file:
-            logging.info(f"Initializing {fp}, package {package_name}")
+            log.info(f"Initializing {fp}, package {package_name}")
             proto_file.write("syntax = \"proto3\";\n\n")
             # set up the proto's package
             proto_file.write(f"package {package_name};\n\n")
@@ -102,7 +102,7 @@ class ProtoExporter(object):
                 proto_file.write(f"message {type_qn[-1]} {{" + "\n")
                 print_message_body(tree_node.children, proto_file, static_uid, add_optional)
                 proto_file.write("}\n\n")
-                logging.info(f"Wrote {type_qn[-1]} to {fp}")
+                log.info(f"Wrote {type_qn[-1]} to {fp}")
 
 
 def traverse_signal_tree(tree: VSSNode, proto_file, static_uid, add_optional):
@@ -147,18 +147,18 @@ def print_message_body(nodes, proto_file, static_uid, add_optional):
                 data_type = "optional " + data_type
         if static_uid:
             if 'staticUID' not in node.extended_attributes:
-                logging.fatal((f"Aborting because {node.qualified_name('.')} does not have the staticUID attribute. "
-                               f"When using the option --static-uid each node must have the attribute staticUID."))
+                log.fatal((f"Aborting because {node.qualified_name('.')} does not have the staticUID attribute. "
+                           f"When using the option --static-uid each node must have the attribute staticUID."))
                 sys.exit(-1)
             fieldNumber = int(int(node.extended_attributes['staticUID'], 0) / 8)
             if (fieldNumber < 20000 and fieldNumber >= 19000):
-                logging.fatal('''Aborting because field number {fieldNumber} for signal {node.name} is in
+                log.fatal('''Aborting because field number {fieldNumber} for signal {node.name} is in
                 reservered range between 19000 and 20000. Consider changing the signal to alter the staticUID.''')
                 sys.exit(-1)
             if fieldNumber in usedKeys:
-                logging.fatal((f"Aborting, due to collision for fieldNumber {fieldNumber}. "
-                               f"It is used by {node.qualified_name('.')} and {usedKeys[fieldNumber]}. "
-                               "Consider changing the signals to alter the staticUID."))
+                log.fatal((f"Aborting, due to collision for fieldNumber {fieldNumber}. "
+                           f"It is used by {node.qualified_name('.')} and {usedKeys[fieldNumber]}. "
+                           "Consider changing the signals to alter the staticUID."))
                 proto_file.truncate(0)
                 sys.exit(-1)
             else:
@@ -182,14 +182,14 @@ class Vss2Protobuf(Vss2X):
 
     def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
                  data_type_root: Optional[VSSNode] = None) -> None:
-        logging.info("Generating protobuf output...")
+        log.info("Generating protobuf output...")
         if data_type_root is not None:
             if config.types_output_file is not None:
                 fp = Path(config.types_output_file)
                 exporter_path = Path(os.path.dirname(fp))
             else:
                 exporter_path = Path(Path.cwd())
-            logging.debug(f"Will use {exporter_path} for type exports")
+            log.debug(f"Will use {exporter_path} for type exports")
             exporter = ProtoExporter(exporter_path)
             exporter.traverse_data_type_tree(data_type_root, config.static_uid, config.add_optional)
 

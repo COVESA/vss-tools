@@ -4,7 +4,8 @@ This exporter allows to automatically generate a graphql schema that can represe
 The resulting schema does only allow querying information. Mutations are not supported.
 
 The resulting schema will look something like this:
-```
+
+```graphql
 type Query {
   vehicle(
     """VIN of the vehicle that you want to request data for."""
@@ -31,7 +32,7 @@ type Vehicle_VehicleIdentification {
 ```
 
 Leaves look like this:
-```
+```graphql
 """Vehicle brand or manufacturer"""
 type Vehicle_VehicleIdentification_Brand {
   """Value: Vehicle brand or manufacturer"""
@@ -42,7 +43,7 @@ type Vehicle_VehicleIdentification_Brand {
 }
 ```
 
-Every leaf has a timestamp. This is supposed to contain the date of the last modification of the value. 
+Every leaf has a timestamp. This is supposed to contain the date of the last modification of the value.
 Queries can then filter data that has been recorded after a given timestamp.
 
 ### Additional leaf parameters
@@ -51,13 +52,13 @@ As for `timestamp` in some scenarios it makes sense to add certain metadata like
 served signal or additional privacy information. Therefore the tool has an additional calling parameter
 `--gqlfield <name> <description>`, which takes the name and description of the additional field, like:
 
-```
+```bash
 --gqlfield "source" "Source System"
 ```
 
 Resulting in the following leaf in the schema:
 
-```
+```graphql
 """Vehicle brand or manufacturer"""
 type Vehicle_VehicleIdentification_Brand {
   """Value: Vehicle brand or manufacturer."""
