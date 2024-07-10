@@ -11,19 +11,20 @@
 # Convert vspec tree to franca
 
 
-import argparse
-from typing import Optional
-from vss_tools.vspec.model.vsstree import VSSNode
-from anytree import PreOrderIter  # type: ignore[import]
-from vss_tools.vspec.vss2x import Vss2X
-from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
+from pathlib import Path
 
+import rich_click as click
+from anytree import PreOrderIter  # type: ignore[import]
+
+import vss_tools.vspec.cli_options as clo
+from vss_tools.vspec import load_trees
 
 # Write the header line
 
 
 def print_franca_header(file, version="unknown"):
-    file.write(f"""
+    file.write(
+        f"""
 // Copyright (C) 2022, COVESA
 //
 // This program is licensed under the terms and conditions of the
@@ -44,7 +45,8 @@ struct SignalSpec {{
 }}
 
 const SignalSpec[] signal_spec = [
-""")
+"""
+    )
 
 
 # Write the data lines
@@ -57,14 +59,14 @@ def print_franca_content(file, tree, uuid):
             else:
                 output += "{"
             output += f"\tname: \"{tree_node.qualified_name('.')}\""
-            output += f",\n\ttype: \"{tree_node.type.value}\""
-            output += f",\n\tdescription: \"{tree_node.description}\""
+            output += f',\n\ttype: "{tree_node.type.value}"'
+            output += f',\n\tdescription: "{tree_node.description}"'
             if tree_node.has_datatype():
-                output += f",\n\tdatatype: \"{tree_node.get_datatype()}\""
+                output += f',\n\tdatatype: "{tree_node.get_datatype()}"'
             if uuid:
-                output += f",\n\tuuid: \"{tree_node.uuid}\""
+                output += f',\n\tuuid: "{tree_node.uuid}"'
             if tree_node.has_unit():
-                output += f",\n\tunit: \"{tree_node.get_unit()}\""
+                output += f',\n\tunit: "{tree_node.get_unit()}"'
             if tree_node.min is not None:
                 output += f",\n\tmin: {tree_node.min}"
             if tree_node.max is not None:
@@ -76,23 +78,46 @@ def print_franca_content(file, tree, uuid):
     file.write(f"{output}")
 
 
-class Vss2Franca(Vss2X):
-
-    def __init__(self, vspec2vss_config: Vspec2VssConfig):
-        vspec2vss_config.no_expand_option_supported = False
-        vspec2vss_config.type_tree_supported = False
-
-    def add_arguments(self, parser: argparse.ArgumentParser):
-        # Renamed from -v to --franca-vss-version to avoid conflict when using
-        # -vt (Otherwise -vt would be interpreted as "-v t")
-        parser.add_argument('--franca-vss-version', metavar='franca_vss_version',
-                            help=" Add version information to franca file.")
-
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-        print("Generating Franca output...")
-        outfile = open(config.output_file, 'w')
-        print_franca_header(outfile, config.franca_vss_version)
-        print_franca_content(outfile, signal_root, vspec2vss_config.generate_uuid)
-        outfile.write("\n]")
-        outfile.close()
+@click.command()
+@clo.vspec_opt
+@clo.output_required_opt
+@clo.include_dirs_opt
+@clo.extended_attributes_opt
+@clo.strict_opt
+@clo.aborts_opt
+@clo.uuid_opt
+@clo.overlays_opt
+@clo.quantities_opt
+@clo.units_opt
+@click.option("--franca-vss-version", help="Adds franca version info.")
+def cli(
+    vspec: Path,
+    output: Path,
+    include_dirs: tuple[Path],
+    extended_attributes: str,
+    strict: bool,
+    aborts: tuple[str],
+    uuid: bool,
+    overlays: tuple[Path],
+    quantities: tuple[Path],
+    units: tuple[Path],
+    franca_vss_version: str,
+):
+    """
+    Export as Franca.
+    """
+    tree, _ = load_trees(
+        vspec,
+        include_dirs,
+        extended_attributes,
+        quantities,
+        units,
+        overlays,
+        [],
+        aborts,
+        strict,
+    )
+    with open(output, "w") as f:
+        print_franca_header(f, franca_vss_version)
+        print_franca_content(f, tree, uuid)
+        f.write("\n]")

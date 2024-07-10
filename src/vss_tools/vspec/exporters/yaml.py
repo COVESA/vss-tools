@@ -13,18 +13,17 @@
 #
 
 
-import argparse
-from vss_tools.vspec.model.vsstree import VSSNode
+from pathlib import Path
+
+import rich_click as click
 import yaml
-from typing import Dict, Any
-from typing import Optional
-from vss_tools import log
-from vss_tools.vspec.vss2x import Vss2X
-from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
+
+import vss_tools.vspec.cli_options as clo
+from vss_tools.vspec import load_trees
+from vss_tools.vspec.model.vsstree import VSSNode
 
 
-def export_node(yaml_dict, node, config, print_uuid):
-
+def export_node(yaml_dict, node, extend_all_attributes, print_uuid, expand):
     node_path = node.qualified_name()
 
     yaml_dict[node_path] = {}
@@ -65,22 +64,34 @@ def export_node(yaml_dict, node, config, print_uuid):
         yaml_dict[node_path]["uuid"] = node.uuid
 
     for k, v in node.extended_attributes.items():
-        if not config.yaml_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
+        if (
+            not extend_all_attributes
+            and k not in VSSNode.whitelisted_extended_attributes
+        ):
             continue
         yaml_dict[node_path][k] = v
 
     # Include instance information if we run tool in "no-expand" mode
-    if config.no_expand and node.instances is not None:
+    if not expand and node.instances is not None:
         yaml_dict[node_path]["instances"] = node.instances
 
     for child in node.children:
-        export_node(yaml_dict, child, config, print_uuid)
+        export_node(yaml_dict, child, extend_all_attributes, print_uuid, expand)
 
 
 def export_yaml(file_name, content_dict):
-    with open(file_name, 'w') as f:
-        yaml.dump(content_dict, f, default_flow_style=False, Dumper=NoAliasDumper,
-                  sort_keys=True, width=1024, indent=2, encoding='utf-8', allow_unicode=True)
+    with open(file_name, "w") as f:
+        yaml.dump(
+            content_dict,
+            f,
+            default_flow_style=False,
+            Dumper=NoAliasDumper,
+            sort_keys=True,
+            width=1024,
+            indent=2,
+            encoding="utf-8",
+            allow_unicode=True,
+        )
 
 
 # create dumper to remove aliases from output and to add nice new line after each object for a better readability
@@ -94,29 +105,60 @@ class NoAliasDumper(yaml.SafeDumper):
             super().write_line_break()
 
 
-class Vss2Yaml(Vss2X):
+@click.command()
+@clo.vspec_opt
+@clo.output_required_opt
+@clo.include_dirs_opt
+@clo.extended_attributes_opt
+@clo.strict_opt
+@clo.aborts_opt
+@clo.uuid_opt
+@clo.expand_opt
+@clo.overlays_opt
+@clo.quantities_opt
+@clo.units_opt
+@clo.types_opt
+@clo.types_output_opt
+@clo.extend_all_attributes_opt
+def cli(
+    vspec: Path,
+    output: Path,
+    include_dirs: tuple[Path],
+    extended_attributes: str,
+    strict: bool,
+    aborts: tuple[str],
+    uuid: bool,
+    expand: bool,
+    overlays: tuple[Path],
+    quantities: tuple[Path],
+    units: tuple[Path],
+    types: tuple[Path],
+    types_output: Path,
+    extend_all_attributes: bool,
+):
+    """
+    Export as YAML.
+    """
+    tree, datatype_tree = load_trees(
+        vspec,
+        include_dirs,
+        extended_attributes,
+        quantities,
+        units,
+        overlays,
+        types,
+        aborts,
+        strict,
+    )
+    data = {}
+    export_node(data, tree, extend_all_attributes, uuid, expand)
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument('--yaml-all-extended-attributes', action='store_true',
-                            help=("Generate all extended attributes found in the model "
-                                  "(default is generating only those given by the "
-                                  "-e/--extended-attributes parameter)."))
+    if datatype_tree:
+        types_data = {}
+        export_node(types_data, datatype_tree, extend_all_attributes, uuid, expand)
+        if types_output:
+            export_yaml(types_output, types_data)
+        else:
+            data["ComplexDataTypes"] = types_data
 
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-
-        log.info("Generating YAML output...")
-
-        signals_yaml_dict: Dict[str, Any] = {}
-        export_node(signals_yaml_dict, signal_root, config, vspec2vss_config.generate_uuid)
-
-        if data_type_root is not None:
-            data_types_yaml_dict: Dict[str, Any] = {}
-            export_node(data_types_yaml_dict, data_type_root, config, vspec2vss_config.generate_uuid)
-            if config.types_output_file is None:
-                log.info("Adding custom data types to signal dictionary")
-                signals_yaml_dict["ComplexDataTypes"] = data_types_yaml_dict
-            else:
-                export_yaml(config.types_output_file, data_types_yaml_dict)
-
-        export_yaml(config.output_file, signals_yaml_dict)
+    export_yaml(output, data)

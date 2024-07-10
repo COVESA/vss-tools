@@ -16,13 +16,13 @@ from typing import Dict
 import pytest
 import vss_tools.vspec as vspec
 
-import vss_tools.vspec.vssexporters.vss2id as vss2id
+import vss_tools.vspec.exporters.vss2id as vss2id
 import vss_tools.vspec2id as vspec2id
 import yaml
 
 from vss_tools.vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
 from vss_tools.vspec.model.vsstree import VSSNode
-from vss_tools.vspec.utils.idgen_utils import get_all_keys_values
+from vss_tools.vspec.exporters.idgen_utils import get_all_keys_values
 
 from pathlib import Path
 

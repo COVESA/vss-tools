@@ -8,29 +8,29 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import argparse
+from pathlib import Path
+from typing import Dict
+
+import rich_click as click
+from graphql import (
+    GraphQLArgument,
+    GraphQLBoolean,
+    GraphQLField,
+    GraphQLFloat,
+    GraphQLInt,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLObjectType,
+    GraphQLSchema,
+    GraphQLString,
+    print_schema,
+)
+
+import vss_tools.vspec.cli_options as clo
+from vss_tools.vspec import VSpecError, load_trees
+from vss_tools.vspec.model.constants import VSSDataType
 from vss_tools.vspec.model.vsstree import VSSNode
 from vss_tools.vspec.utils.stringstyle import camel_back
-from vss_tools.vspec.model.constants import VSSDataType
-from vss_tools.vspec import VSpecError
-from typing import Dict
-from typing import Optional
-from vss_tools.vspec.vss2x import Vss2X
-from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
-
-from graphql import (
-    GraphQLSchema,
-    GraphQLObjectType,
-    GraphQLField,
-    GraphQLArgument,
-    GraphQLNonNull,
-    GraphQLString,
-    GraphQLList,
-    print_schema,
-    GraphQLInt,
-    GraphQLFloat,
-    GraphQLBoolean,
-)
 
 GRAPHQL_TYPE_MAPPING = {
     VSSDataType.INT8: GraphQLInt,
@@ -78,7 +78,11 @@ def get_schema_from_tree(root_node: VSSNode, additional_leaf_fields: list) -> st
 
     root_query = GraphQLObjectType(
         "Query",
-        lambda: {"vehicle": GraphQLField(to_gql_type(root_node, additional_leaf_fields), args)},
+        lambda: {
+            "vehicle": GraphQLField(
+                to_gql_type(root_node, additional_leaf_fields), args
+            )
+        },
     )
     return print_schema(GraphQLSchema(root_query))
 
@@ -99,23 +103,34 @@ def to_gql_type(node: VSSNode, additional_leaf_fields: list) -> GraphQLObjectTyp
 def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
     field_dict = {}
     if node.datatype is not None:
-        field_dict["value"] = field(node, "Value: ", GRAPHQL_TYPE_MAPPING[node.datatype])
+        field_dict["value"] = field(
+            node, "Value: ", GRAPHQL_TYPE_MAPPING[node.datatype]
+        )
     field_dict["timestamp"] = field(node, "Timestamp: ")
     if additional_leaf_fields:
         for additional_field in additional_leaf_fields:
             if len(additional_field) == 2:
-                field_dict[additional_field[0]] = field(node, f" {str(additional_field[1])}: ")
+                field_dict[additional_field[0]] = field(
+                    node, f" {str(additional_field[1])}: "
+                )
             else:
-                raise VSpecError("", "", "Incorrect format of graphql field specification")
+                raise VSpecError(
+                    "", "", "Incorrect format of graphql field specification"
+                )
     if node.has_unit():
         field_dict["unit"] = field(node, "Unit of ")
     return field_dict
 
 
-def branch_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
+def branch_fields(
+    node: VSSNode, additional_leaf_fields: list
+) -> Dict[str, GraphQLField]:
     # we only consider nodes that either have children or are leave with a datatype
     valid = (c for c in node.children if len(c.children) or hasattr(c, "datatype"))
-    return {camel_back(c.name): field(c, type=to_gql_type(c, additional_leaf_fields)) for c in valid}
+    return {
+        camel_back(c.name): field(c, type=to_gql_type(c, additional_leaf_fields))
+        for c in valid
+    }
 
 
 def field(node: VSSNode, description_prefix="", type=GraphQLString) -> GraphQLField:
@@ -126,22 +141,54 @@ def field(node: VSSNode, description_prefix="", type=GraphQLString) -> GraphQLFi
     )
 
 
-class Vss2Graphql(Vss2X):
-
-    def __init__(self, vspec2vss_config: Vspec2VssConfig):
-        vspec2vss_config.no_expand_option_supported = False
-        vspec2vss_config.type_tree_supported = False
-        vspec2vss_config.uuid_supported = False
-
-    def add_arguments(self, parser: argparse.ArgumentParser):
-        parser.add_argument('--gqlfield', action='append', nargs=2,
-                            help=" Add additional fields to the nodes in the graphql schema. "
-                                 "use: <field_name> <description>")
-
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-        print("Generating graphql output...")
-        outfile = open(config.output_file, 'w')
-        outfile.write(get_schema_from_tree(signal_root, config.gqlfield))
-        outfile.write("\n")
-        outfile.close()
+@click.command()
+@clo.vspec_opt
+@clo.output_required_opt
+@clo.include_dirs_opt
+@clo.extended_attributes_opt
+@clo.strict_opt
+@clo.aborts_opt
+@clo.overlays_opt
+@clo.quantities_opt
+@clo.units_opt
+@click.option(
+    "--gql-field",
+    "-g",
+    multiple=True,
+    help="""
+        Add additional fields to the nodes in the graphql schema.
+        Usage: '<field_name>,<description>'",
+    """,
+)
+def cli(
+    vspec: Path,
+    output: Path,
+    include_dirs: tuple[Path],
+    extended_attributes: str,
+    strict: bool,
+    aborts: tuple[str],
+    overlays: tuple[Path],
+    quantities: tuple[Path],
+    units: tuple[Path],
+    gql_field: list[str],
+):
+    """
+    Export as GraphQL.
+    """
+    tree, _ = load_trees(
+        vspec,
+        include_dirs,
+        extended_attributes,
+        quantities,
+        units,
+        overlays,
+        [],
+        aborts,
+        strict,
+    )
+    fields = []
+    for f in gql_field:
+        fields.append(f.split(","))
+    with open(output, "w") as f:
+        f.write(get_schema_from_tree(tree, fields))
+        f.write("\n")

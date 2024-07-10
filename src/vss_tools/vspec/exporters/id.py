@@ -10,25 +10,23 @@
 #
 # Generate IDs of 4bytes size, 3 bytes incremental value + 1 byte for layer id.
 
-import argparse
-import os
 import sys
-from typing import Dict, Tuple, Optional
+from pathlib import Path
+from typing import Tuple
 
+import rich_click as click
 import yaml
 
 from vss_tools import log
-from vss_tools.vspec import load_tree
-from vss_tools.vspec.model.constants import VSSTreeType
+from vss_tools.vspec import load_trees
 from vss_tools.vspec.model.vsstree import VSSNode
-from vss_tools.vspec.utils import vss2id_val
-from vss_tools.vspec.utils.idgen_utils import (
+from vss_tools.vspec.exporters.idgen_utils import (
     fnv1_32_hash,
     get_all_keys_values,
     get_node_identifier_bytes,
 )
-from vss_tools.vspec.vss2x import Vss2X
-from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
+import vss_tools.vspec.cli_options as clo
+from vss_tools.vspec.exporters.id_val import validate_static_uids
 
 
 def generate_split_id(
@@ -128,67 +126,75 @@ def export_node(yaml_dict, node, id_counter, strict_mode: bool) -> Tuple[int, in
     return id_counter, id_counter
 
 
-class Vss2Id(Vss2X):
+@click.command()
+@clo.vspec_opt
+@clo.output_required_opt
+@clo.include_dirs_opt
+@clo.extended_attributes_opt
+@clo.strict_opt
+@clo.aborts_opt
+@clo.uuid_opt
+@clo.expand_opt
+@clo.overlays_opt
+@clo.quantities_opt
+@clo.units_opt
+@clo.types_opt
+@clo.types_output_opt
+@click.option(
+    "--validate-static-uid",
+    type=click.Path(dir_okay=False, readable=True, exists=True),
+    help="Validation file.",
+)
+@click.option("--validate-only", is_flag=True, help="Only validating. Not exporting.")
+@click.option(
+    "--case-sensitive",
+    is_flag=True,
+    help="Whether the generation of static UIDs is case-sensitive",
+)
+def cli(
+    vspec: Path,
+    output: Path,
+    include_dirs: tuple[Path],
+    extended_attributes: str,
+    strict: bool,
+    aborts: tuple[str],
+    uuid: bool,
+    expand: bool,
+    overlays: tuple[Path],
+    quantities: tuple[Path],
+    units: tuple[Path],
+    types: tuple[Path],
+    types_output: Path,
+    validate_static_uid: Path,
+    validate_only: bool,
+    case_sensitive: bool,
+):
+    """
+    Export as IDs.
+    """
+    tree, datatype_tree = load_trees(
+        vspec,
+        include_dirs,
+        extended_attributes,
+        quantities,
+        units,
+        overlays,
+        types,
+        aborts,
+        strict,
+    )
+    id_counter: int = 0
+    data = {}
+    id_counter, _ = export_node(data, tree, id_counter, strict)
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        """Adds command line arguments to a pre-existing argument parser
-
-        @param parser: the pre-existing argument parser
-        """
-        parser.add_argument(
-            "--validate-static-uid",
-            type=str,
-            default="",
-            help="Path to validation file.",
+    if validate_static_uid:
+        log.info(
+            f"Now validating nodes, static UIDs, types, units and description with "
+            f"file '{validate_static_uid}'"
         )
-        parser.add_argument(
-            "--only-validate-no-export",
-            action="store_true",
-            default=False,
-            help="For pytests and pipelines you can skip the export of the vspec file.",
-        )
-        parser.add_argument(
-            "--strict-mode",
-            action="store_true",
-            help="Strict mode means that the generation of static UIDs is case-sensitive.",
-        )
+        validation_tree, _ = load_trees(validate_static_uid, include_dirs)
+        validate_static_uids(data, validation_tree, strict)
 
-    def generate(
-        self,
-        config: argparse.Namespace,
-        signal_root: VSSNode,
-        vspec2vss_config: Vspec2VssConfig,
-        data_type_root: Optional[VSSNode] = None,
-    ) -> None:
-        """Main export function used to generate the output id vspec.
-
-        @param config: Command line arguments it was run with
-        @param signal_root: root of the signal tree
-        @param print_uuid: Not used here but needed by main script
-        """
-        log.info("Generating YAML output...")
-
-        id_counter: int = 0
-        signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
-        id_counter, _ = export_node(
-            signals_yaml_dict, signal_root, id_counter, config.strict_mode
-        )
-
-        if config.validate_static_uid:
-            log.info(
-                f"Now validating nodes, static UIDs, types, units and description with "
-                f"file '{config.validate_static_uid}'"
-            )
-            if os.path.isabs(config.validate_static_uid):
-                other_path = config.validate_static_uid
-            else:
-                other_path = os.path.join(os.getcwd(), config.validate_static_uid)
-
-            validation_tree = load_tree(
-                other_path, ["."], tree_type=VSSTreeType.SIGNAL_TREE
-            )
-            vss2id_val.validate_static_uids(signals_yaml_dict, validation_tree, config)
-
-        if not config.only_validate_no_export:
-            with open(config.output_file, "w") as f:
-                yaml.dump(signals_yaml_dict, f)
+    if not validate_only:
+        with open(output, "w") as f:
+            yaml.dump(tree, f)

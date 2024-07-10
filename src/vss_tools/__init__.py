@@ -7,6 +7,9 @@
 # SPDX-License-Identifier: MPL-2.0
 import logging
 from rich.logging import RichHandler
+from importlib import metadata
+
+__version__ = metadata.version("vss-tools")
 
 logging.basicConfig(
     level="INFO",

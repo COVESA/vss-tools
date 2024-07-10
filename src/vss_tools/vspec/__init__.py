@@ -17,13 +17,21 @@ import sys
 import collections
 from copy import deepcopy
 from typing import List, Optional
+from pathlib import Path
 
-from anytree import (Resolver, LevelOrderIter, PreOrderIter, RenderTree)  # type: ignore[import]
+from anytree import Resolver, LevelOrderIter, PreOrderIter, RenderTree  # type: ignore[import]
 
 from vss_tools import log
 from vss_tools.vspec.model.vsstree import VSSNode, VSSType
-from vss_tools.vspec.model.exceptions import ImpossibleMergeException, IncompleteElementException
-from vss_tools.vspec.model.constants import VSSTreeType, VSSUnitCollection, VSSQuantityCollection
+from vss_tools.vspec.model.exceptions import (
+    ImpossibleMergeException,
+    IncompleteElementException,
+)
+from vss_tools.vspec.model.constants import (
+    VSSTreeType,
+    VSSUnitCollection,
+    VSSQuantityCollection,
+)
 
 nestable_types = set(["branch", "struct"])
 
@@ -39,13 +47,100 @@ class VSpecError(Exception):
         return "{}: {}: {}".format(self.file_name, self.line_nr, self.message)
 
 
+def load_and_merge_trees(
+    base: Optional[VSSTreeType],
+    tree_files: list[Path],
+    include_dirs: list[Path],
+    aborts: list[str],
+    strict: bool,
+    tree_type: VSSTreeType,
+    data_type_tree: Optional[VSSNode] = None,
+) -> Optional[VSSNode]:
+    tree = base
+    for file in tree_files:
+        t = load_tree(
+            file,
+            include_dirs,
+            tree_type,
+            break_on_name_style_violation=strict or "name-style" in aborts,
+            expand_inst=False,
+            data_type_tree=data_type_tree,
+        )
+        if tree:
+            merge_tree(tree, t)
+        else:
+            tree = t
+    if tree:
+        check_type_usage(tree, tree_type, data_type_tree)
+        verify_mandatory_attributes(
+            tree, strict or "unknown-attribute" in aborts
+        )
+    return tree
+
+
+def load_trees(
+    vspec: Path,
+    include_dirs: list[Path] = [],
+    extended_attributes: list[str] = [],
+    quantities: list[Path] = [],
+    units: list[Path] = [],
+    overlays: list[Path] = [],
+    types: list[Path] = [],
+    aborts: list[str] = [],
+    strict: bool = False,
+    expand: bool = True,
+) -> tuple[VSSNode, Optional[VSSNode]]:
+    include_dirs = [vspec.parent] + list(include_dirs)
+    log.debug(f"Include Dirs: {include_dirs}")
+    if extended_attributes:
+        VSSNode.whitelisted_extended_attributes = extended_attributes.split(",")
+        log.debug(f"Extended attributes: {VSSNode.whitelisted_extended_attributes}")
+    if not quantities:
+        quantities = [vspec.parent / "quantities.yaml"]
+    load_quantities(vspec, quantities)
+    if not units:
+        units = [vspec.parent / "units.yaml"]
+    load_units(vspec, units)
+
+    data_type_tree = load_and_merge_trees(
+        None, types, include_dirs, aborts, strict, VSSTreeType.DATA_TYPE_TREE
+    )
+
+    tree = load_tree(
+        vspec,
+        include_dirs,
+        VSSTreeType.SIGNAL_TREE,
+        break_on_name_style_violation=strict or "name-style" in aborts,
+        expand_inst=False,
+        data_type_tree=data_type_tree,
+    )
+
+    VSSNode.set_reference_tree(tree)
+
+    tree = load_and_merge_trees(
+        tree,
+        overlays,
+        include_dirs,
+        aborts,
+        strict,
+        VSSTreeType.SIGNAL_TREE,
+        data_type_tree,
+    )
+
+    if expand:
+        expand_tree_instances(tree)
+    clean_metadata(tree)
+
+    return tree, data_type_tree
+
+
 # Try to open a file name that can reside
 # in any directory listed in incude_paths.
 # If successful, read context and return file
 #
 def search_and_read(file_name, include_paths):
     # If absolute path, then ignore include paths
-    if file_name[0] == '/':
+    if file_name[0] == "/":
         with open(file_name, "r") as fp:
             text = fp.read()
             fp.close()
@@ -74,42 +169,48 @@ def convert_yaml_to_list(raw_yaml):
     # the object order is not preserved in the created
     # dictionary
     raw_yaml = collections.OrderedDict(
-        sorted(raw_yaml.items(), key=lambda x: x[1]['$line$']))
+        sorted(raw_yaml.items(), key=lambda x: x[1]["$line$"])
+    )
     lst = []
     for elem in raw_yaml:
         if isinstance(raw_yaml[elem], dict):
-            raw_yaml[elem]['$name$'] = elem
+            raw_yaml[elem]["$name$"] = elem
             lst.append(raw_yaml[elem])
 
     return lst
 
 
 def load_tree(
-        file_name,
-        include_paths,
-        tree_type: VSSTreeType,
-        break_on_name_style_violation=False,
-        expand_inst=True,
-        data_type_tree: Optional[VSSNode] = None):
+    file_name,
+    include_paths,
+    tree_type: VSSTreeType,
+    break_on_name_style_violation=False,
+    expand_inst=True,
+    data_type_tree: Optional[VSSNode] = None,
+):
+    log.info(f"Loading vspec tree from: {file_name.resolve()}")
     if expand_inst and tree_type == VSSTreeType.DATA_TYPE_TREE:
         log.error("Instance expansion is not supported for VSS type tree.")
         sys.exit(-1)
 
-    flat_model = load_flat_model(file_name, "", include_paths, tree_type)
+    flat_model = load_flat_model(str(file_name), "", include_paths, tree_type)
     absolute_path_flat_model = create_absolute_paths(flat_model)
-    deep_model = create_nested_model(absolute_path_flat_model, file_name)
+    deep_model = create_nested_model(absolute_path_flat_model, str(file_name))
     cleanup_deep_model(deep_model)
     dict_tree = deep_model["children"]
     tree = render_tree(
         dict_tree,
         tree_type,
-        break_on_name_style_violation=break_on_name_style_violation)
+        break_on_name_style_violation=break_on_name_style_violation,
+    )
     if expand_inst:
         expand_tree_instances(tree)
     return tree
 
 
-def check_type_usage(tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[VSSNode] = None):
+def check_type_usage(
+    tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[VSSNode] = None
+):
     """
     Check usages of datatypes within the tree.
     This methods shall be called after overlays (or additional type files) have been merged.
@@ -117,7 +218,6 @@ def check_type_usage(tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[
     log.info("Check type usage")
 
     if tree_type == VSSTreeType.DATA_TYPE_TREE:
-
         check_data_type_references(tree)
 
     elif tree_type == VSSTreeType.SIGNAL_TREE:
@@ -137,8 +237,8 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
         except yaml.parser.ParserError as e:
             raise VSpecError(file_name, line + 1, e)
 
-        if node.value == '$include$':
-            node.value = f'$include${load_flat_model.include_index}'
+        if node.value == "$include$":
+            node.value = f"$include${load_flat_model.include_index}"
             load_flat_model.include_index = load_flat_model.include_index + 1
 
         # Avoid having root-level line numbers as non-dictionary entries
@@ -152,7 +252,8 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
 
     def yaml_construct_mapping(node, deep=True):
         mapping = yaml.constructor.Constructor.construct_mapping(
-            loader, node, deep=deep)
+            loader, node, deep=deep
+        )
 
         # Replace
         # { 'Vehicle.Speed': { 'datatype': 'boolean', 'type': 'sensor' }}
@@ -160,18 +261,18 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
         # { '$name$': 'Vehicle.Speed', 'datatype': 'boolean', 'type': 'sensor' }
 
         for key, val in list(mapping.items()):
-            if key[0] == '$':
+            if key[0] == "$":
                 continue
 
             if val is None:
-                mapping['$name$'] = key
+                mapping["$name$"] = key
                 del mapping[key]
                 break
 
         # Add line number and file name to element.
         if node.__line__ is not None:
-            mapping['$line$'] = node.__line__
-            mapping['$file_name$'] = node.__file_name__
+            mapping["$line$"] = node.__line__
+            mapping["$file_name$"] = node.__file_name__
 
         return mapping
 
@@ -213,8 +314,7 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
     # Recursively expand all include files.
     if directory not in include_paths:
         include_paths = [directory] + include_paths
-    expanded_includes = expand_includes(
-        raw_yaml, prefix, include_paths, tree_type)
+    expanded_includes = expand_includes(raw_yaml, prefix, include_paths, tree_type)
 
     flat_model = cleanup_flat_entries(expanded_includes, tree_type)
 
@@ -232,8 +332,11 @@ def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
         # That is intended for overlay use-cases
 
         if "allowed" in elem and not isinstance(elem["allowed"], list):
-            raise VSpecError(elem["$file_name$"], elem["$line$"],
-                             "Allowed values are not represented as array.")
+            raise VSpecError(
+                elem["$file_name$"],
+                elem["$line$"],
+                "Allowed values are not represented as array.",
+            )
 
     return flat_model
 
@@ -246,7 +349,6 @@ def cleanup_flat_entries(flat_model, tree_type: VSSTreeType):
 # That needs to be removed in a second step, just before exporting.
 #
 def cleanup_deep_model(deep_model):
-
     if "$line$" in deep_model:
         del deep_model["$line$"]
 
@@ -254,7 +356,7 @@ def cleanup_deep_model(deep_model):
         del deep_model["$prefix$"]
 
     if "$name$" in deep_model:
-        del deep_model['$name$']
+        del deep_model["$name$"]
 
     # children as of today exists only for branches and structs
     if "children" in deep_model:
@@ -264,6 +366,7 @@ def cleanup_deep_model(deep_model):
 
     return None
 
+
 #
 # Meta data on extended attributes needs to be cleaned as part of the second cleaning step.
 # as it is not included in first step.
@@ -271,7 +374,6 @@ def cleanup_deep_model(deep_model):
 
 
 def clean_metadata(node):
-
     if isinstance(node, VSSNode):
         clean_metadata(node.extended_attributes)
         for child in node.children:
@@ -314,7 +416,8 @@ def check_yaml_usage(flat_model, file_name):
             raise VSpecError(
                 file_name,
                 0,
-                "Element {} is not a list entry. (Did you forget a ':'?)".format(elem))
+                "Element {} is not a list entry. (Did you forget a ':'?)".format(elem),
+            )
 
     # FIXME:
     # Add more usage checks, such as absence of nested models.
@@ -332,7 +435,7 @@ def expand_includes(flat_model, prefix, include_paths, tree_type: VSSTreeType):
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
         # Is this an include element?
-        if elem['$name$'][0:9] == "$include$":
+        if elem["$name$"][0:9] == "$include$":
             include_prefix = elem.get("prefix", "")
 
             if include_prefix != "":
@@ -357,7 +460,8 @@ def expand_includes(flat_model, prefix, include_paths, tree_type: VSSTreeType):
 
             # Recursively load included file
             inc_elem = load_flat_model(
-                elem["file"], include_prefix, include_paths, tree_type)
+                elem["file"], include_prefix, include_paths, tree_type
+            )
 
             # Add the loaded elements at the end of the new spec model
             new_flat_model.extend(inc_elem)
@@ -374,17 +478,19 @@ def expand_tree_instances(tree: VSSNode):
     tree_node: VSSNode
 
     def rollout_list(instance_entry):
-        '''
+        """
         Converts "Prefix[1,n] to [Prefix1, Prefix2, ..., Prefixn]"
-        '''
+        """
         prefix = ""
         if "[" in instance_entry:  # if so unroll
             unrolled_items = []
-            prefix = instance_entry[:instance_entry.find("[")]
-            start = instance_entry[instance_entry.find(
-                "[") + 1:instance_entry.find(",")]
-            end = instance_entry[instance_entry.find(
-                ",") + 1:instance_entry.find("]")]
+            prefix = instance_entry[: instance_entry.find("[")]
+            start = instance_entry[
+                instance_entry.find("[") + 1: instance_entry.find(",")
+            ]
+            end = instance_entry[
+                instance_entry.find(",") + 1: instance_entry.find("]")
+            ]
             for i in range(int(start), int(end) + 1):
                 unrolled_items.append(f"{prefix}{i}")
         else:  # if not, add
@@ -392,9 +498,9 @@ def expand_tree_instances(tree: VSSNode):
         return unrolled_items, prefix
 
     def is_instance_branch(node, unrolled_instances, prefix):
-        '''
+        """
         Check if node is a branch that has the same name as an instance for parent node
-        '''
+        """
         for instance in unrolled_instances:
             if isinstance(instance, list):
                 # This means the element of the instances is a list, e.g. it was
@@ -426,14 +532,16 @@ def expand_tree_instances(tree: VSSNode):
         instantiated_branch = VSSNode(
             branch_name,
             # autopep8: off
-            {"type": "branch",
-             "description": parent.description,
-             "comment": parent.comment,
-             "$file_name$": "Generated"
-             },
+            {
+                "type": "branch",
+                "description": parent.description,
+                "comment": parent.comment,
+                "$file_name$": "Generated",
+            },
             # autopep8: on
             VSSTreeType.SIGNAL_TREE.available_types(),
-            parent)
+            parent,
+        )
         if old_node is not None:
             # If it exist we take the new one as default (to give e.g. default descriptions and comments)
             # Then merge anything from the old (expanded) instance above, to get e.g. updated comment
@@ -512,8 +620,7 @@ def expand_tree_instances(tree: VSSNode):
 
             # it is not a list, e.g. instance in vspec is just Sensor[1,10]
             else:
-                unrolled_items, array_prefix = rollout_list(
-                    tree_node.instances)
+                unrolled_items, array_prefix = rollout_list(tree_node.instances)
                 unrolled_instances.append(unrolled_items)
 
             # When a node has instances we need to decide what to do with the children
@@ -562,7 +669,8 @@ def expand_tree_instances(tree: VSSNode):
 
                     for element in instance:
                         instantiated_branch = create_instantiated_branch(
-                            element, tree_node, nodes_to_expand)
+                            element, tree_node, nodes_to_expand
+                        )
 
                         if len(unrolled_instances) > 1:
                             # We need to expand more (see above). PreOrderIter
@@ -576,8 +684,7 @@ def expand_tree_instances(tree: VSSNode):
                     # (as opposed to a list of lists), e.g. ['Left', 'Right'], so we
                     # just add them all in parallel as childs of the current
                     # loop
-                    create_instantiated_branch(
-                        instance, tree_node, nodes_to_expand)
+                    create_instantiated_branch(instance, tree_node, nodes_to_expand)
 
     # As instance expansions moves signals in the tree, we need to recreate
     # UUIDs
@@ -599,14 +706,14 @@ def create_absolute_paths(flat_model):
         #
         # $prefix$='body.door.front.left' name='lock' ->
         # [ 'body', 'door', 'front', 'left', 'lock' ]
-        name = elem['$name$']
+        name = elem["$name$"]
 
         if elem["$prefix$"] == "":
             new_name = name
         else:
             new_name = "{}.{}".format(elem["$prefix$"], name)
 
-        elem['$name$'] = new_name
+        elem["$name$"] = new_name
         del elem["$prefix$"]
 
     return flat_model
@@ -618,12 +725,13 @@ def create_absolute_paths(flat_model):
 # becomes a branch.
 #
 
+
 def create_nested_model(flat_model, file_name):
     deep_model = {
         "children": {},
         "type": "branch",
         "$file_name$": file_name,
-        "$line$": 0
+        "$line$": 0,
     }
 
     # Traverse the flat list of the parsed specification
@@ -634,7 +742,7 @@ def create_nested_model(flat_model, file_name):
         # Create a list of path components to the given element
         #  name='body.door.front.left.lock' ->
         # [ 'body', 'door', 'front', 'left', 'lock' ]
-        name_list = elem['$name$'].split(".")
+        name_list = elem["$name$"].split(".")
 
         # Extract name
         name = name_list[-1]
@@ -649,8 +757,7 @@ def create_nested_model(flat_model, file_name):
             # never update the type
             elem.pop("type", None)
             # concatenate file names
-            fname = "{}:{}".format(
-                old_elem["$file_name$"], elem["$file_name$"])
+            fname = "{}:{}".format(old_elem["$file_name$"], elem["$file_name$"])
             old_elem.update(elem)
             old_elem["$file_name$"] = fname
         else:
@@ -666,7 +773,6 @@ def find_branch_or_struct(elem, name_list, index, autocreate=True):
     # Have we reached the end of the name list
     # TODO: Add test that verifies that we get an error later instead
     if len(name_list) == index:
-
         return elem
 
     children = elem["children"]
@@ -678,29 +784,33 @@ def find_branch_or_struct(elem, name_list, index, autocreate=True):
             # If we are above Vehicle (e.g. vehicle not defined), we are
             # missing a name
             if "$name$" not in elem:
-                elem['$name$'] = ""
+                elem["$name$"] = ""
             # autopep8: off
-            newelem = {'type': elem['type'],
-                       'children': {},
-                       '$line$': '0',
-                       '$file_name$':
-                       '<generated>',
-                       '$name$': f"{elem['$name$']}.{name_list[index]}"}
+            newelem = {
+                "type": elem["type"],
+                "children": {},
+                "$line$": "0",
+                "$file_name$": "<generated>",
+                "$name$": f"{elem['$name$']}.{name_list[index]}",
+            }
             # autopep8: on
             children[name_list[index]] = newelem
             # Search again
             find_branch_or_struct(elem, name_list, index, autocreate)
         else:
             raise VSpecError(
-                elem.get(
-                    "$file_name$", "??"), elem.get(
-                    "$line$", "??"), "Missing branch: {} in {}.".format(
-                    name_list[index], list_to_path(name_list)))
+                elem.get("$file_name$", "??"),
+                elem.get("$line$", "??"),
+                "Missing branch: {} in {}.".format(
+                    name_list[index], list_to_path(name_list)
+                ),
+            )
 
     # Traverse all children, looking for the
     # Move on to next element in prefix.
     return find_branch_or_struct(
-        children[name_list[index]], name_list, index + 1, autocreate)
+        children[name_list[index]], name_list, index + 1, autocreate
+    )
 
 
 def list_to_path(name_list):
@@ -727,10 +837,9 @@ def list_to_path(name_list):
 # the given file.
 #
 def yamilify_includes(text, is_list):
-
     # Logic below expects a new line after "#include", to support vspec files where there
     # is no newline at end we add a newline here
-    text += '\n'
+    text += "\n"
 
     while True:
         st_index = text.find("\n#include")
@@ -741,7 +850,7 @@ def yamilify_includes(text, is_list):
         if end_index == -1:
             return text
 
-        include_arg = text[st_index + 10:end_index].split()
+        include_arg = text[st_index + 10: end_index].split()
         if len(include_arg) == 2:
             [include_file, include_prefix] = include_arg
         else:
@@ -764,20 +873,21 @@ $include$:
 {}"""
 
         text = fmt_str.format(
-            text[:st_index], include_file, include_prefix, text[end_index:])
+            text[:st_index], include_file, include_prefix, text[end_index:]
+        )
 
     return text
 
 
 def render_tree(
-        tree_dict,
-        tree_type: VSSTreeType,
-        break_on_name_style_violation=False) -> VSSNode:
+    tree_dict, tree_type: VSSTreeType, break_on_name_style_violation=False
+) -> VSSNode:
     if len(tree_dict) != 1:
         for item in tree_dict.keys():
             log.info(f"Found root node {item}")
         raise Exception(
-            f"Invalid VSS model, must have single root node, found {len(tree_dict)}")
+            f"Invalid VSS model, must have single root node, found {len(tree_dict)}"
+        )
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
@@ -786,7 +896,8 @@ def render_tree(
         root_element_name,
         root_element,
         tree_type.available_types(),
-        break_on_name_style_violation=break_on_name_style_violation)
+        break_on_name_style_violation=break_on_name_style_violation,
+    )
 
     if tree_root.type is not VSSType.BRANCH:
         log.error("Root node %s is not of branch type", tree_root.qualified_name())
@@ -798,17 +909,16 @@ def render_tree(
             child_nodes,
             tree_type,
             tree_root,
-            break_on_name_style_violation=break_on_name_style_violation)
+            break_on_name_style_violation=break_on_name_style_violation,
+        )
 
     create_tree_uuids(tree_root)
     return tree_root
 
 
 def render_subtree(
-        subtree,
-        tree_type: VSSTreeType,
-        parent,
-        break_on_name_style_violation=False):
+    subtree, tree_type: VSSTreeType, parent, break_on_name_style_violation=False
+):
     if parent.type not in [VSSType.BRANCH, VSSType.STRUCT]:
         give_err = False
         for element_name in subtree:
@@ -826,7 +936,8 @@ def render_subtree(
                 current_element,
                 tree_type.available_types(),
                 parent=parent,
-                break_on_name_style_violation=break_on_name_style_violation)
+                break_on_name_style_violation=break_on_name_style_violation,
+            )
         except IncompleteElementException as e:
             log.error(f"Invalid VSS: {e}")
             log.error("Terminating.")
@@ -837,7 +948,8 @@ def render_subtree(
                 child_nodes,
                 tree_type,
                 new_element,
-                break_on_name_style_violation=break_on_name_style_violation)
+                break_on_name_style_violation=break_on_name_style_violation,
+            )
 
 
 def merge_elem(base, overlay_element):
@@ -874,8 +986,7 @@ def create_tree_uuids(root: VSSNode):
     namespace_uuid = uuid.uuid5(uuid.NAMESPACE_OID, VSS_NAMESPACE)
     vss_element: VSSNode
     for vss_element in PreOrderIter(root):
-        vss_element.uuid = uuid.uuid5(
-            namespace_uuid, vss_element.qualified_name()).hex
+        vss_element.uuid = uuid.uuid5(namespace_uuid, vss_element.qualified_name()).hex
 
 
 def load_quantities(vspec_file: str, quantity_files: List[str]):
@@ -889,7 +1000,7 @@ def load_quantities(vspec_file: str, quantity_files: List[str]):
     if not quantity_files:
         # Search for a file quantities.yaml in same directory as vspec file
         vspec_dir = os.path.dirname(os.path.realpath(vspec_file))
-        default_vss_quantity_file = vspec_dir + os.path.sep + 'quantities.yaml'
+        default_vss_quantity_file = vspec_dir + os.path.sep + "quantities.yaml"
         if os.path.exists(default_vss_quantity_file):
             total_nbr_quantities = VSSQuantityCollection.load_config_file(default_vss_quantity_file)
             log.info(f"Added {total_nbr_quantities} quantities from {default_vss_quantity_file}")
@@ -917,7 +1028,7 @@ def load_units(vspec_file: str, unit_files: List[str]):
     if not unit_files:
         # Search for a file units.yaml in same directory as vspec file
         vspec_dir = os.path.dirname(os.path.realpath(vspec_file))
-        default_vss_unit_file = vspec_dir + os.path.sep + 'units.yaml'
+        default_vss_unit_file = vspec_dir + os.path.sep + "units.yaml"
         if os.path.exists(default_vss_unit_file):
             total_nbr_units = VSSUnitCollection.load_config_file(default_vss_unit_file)
             log.info(f"Added {total_nbr_units} units from {default_vss_unit_file}")
@@ -941,9 +1052,15 @@ def check_data_type_references(tree: VSSNode):
     """
     errors: List[str] = []
     check_data_type_references_recursive(
-        tree, [
-            str(attr) for attr in VSSNode.get_tree_attrs(
-                tree, lambda n: n.qualified_name(), lambda n: n.is_struct())], errors)
+        tree,
+        [
+            str(attr)
+            for attr in VSSNode.get_tree_attrs(
+                tree, lambda n: n.qualified_name(), lambda n: n.is_struct()
+            )
+        ],
+        errors,
+    )
     if len(errors) > 0:
         error_str = ",".join(errors)
         log.error(
@@ -952,7 +1069,8 @@ def check_data_type_references(tree: VSSNode):
 
 
 def check_data_type_references_recursive(
-        node: VSSNode, data_type_qualified_names: List[str], errors: List[str]):
+    node: VSSNode, data_type_qualified_names: List[str], errors: List[str]
+):
     """
     Check that the data type names referenced by tree nodes exist in the tree.
     """
@@ -964,28 +1082,32 @@ def check_data_type_references_recursive(
             log.error("Node %s is not defined in a branch", node.qualified_name())
             sys.exit(-1)
         if node.datatype is None:
-            undecorated_data_type = node.data_type_str.replace('[]', '')
+            undecorated_data_type = node.data_type_str.replace("[]", "")
             if undecorated_data_type not in data_type_qualified_names:
                 errors.append(
                     f"Data Type reference invalid. Node Name: {node.name}. "
                     f"Node Qualified Name: {node.qualified_name()}. "
-                    f"Data Type: {undecorated_data_type}")
+                    f"Data Type: {undecorated_data_type}"
+                )
 
             separator = "."
             # is the property circularly refereing to the struct in which it is defined?
-            member_of = separator.join(node.qualified_name(separator).split(separator)[:-1])
+            member_of = separator.join(
+                node.qualified_name(separator).split(separator)[:-1]
+            )
             if member_of == undecorated_data_type:
                 errors.append(
                     "Circular reference detected in data type. "
-                    f"Data Type: {member_of}. Property: {node.name}")
+                    f"Data Type: {member_of}. Property: {node.name}"
+                )
 
     for n in node.children:
-        check_data_type_references_recursive(
-            n, data_type_qualified_names, errors)
+        check_data_type_references_recursive(n, data_type_qualified_names, errors)
 
 
 def check_data_type_references_across_trees(
-        signal_root: VSSNode, data_type_root: Optional[VSSNode]):
+    signal_root: VSSNode, data_type_root: Optional[VSSNode]
+):
     """
     Check that the data type names referenced by nodes in the signal tree are present in the data types tree.
     """
@@ -993,12 +1115,15 @@ def check_data_type_references_across_trees(
     for _, _, node in RenderTree(signal_root):
         # signals with user-defined data types
         if node.is_signal() and node.datatype is None:
-            if data_type_root is None or (not node.does_attribute_exist(
+            if data_type_root is None or (
+                not node.does_attribute_exist(
                     data_type_root,
                     lambda n: n.base_data_type_str(),
                     lambda n: n.qualified_name(),
-                    lambda n: n.is_struct())):
-                nonexistant_types.append(f'{node.data_type_str}')
+                    lambda n: n.is_struct(),
+                )
+            ):
+                nonexistant_types.append(f"{node.data_type_str}")
 
     if len(nonexistant_types) > 0:
         error_str = ", ".join(nonexistant_types)

@@ -225,9 +225,7 @@ class VSSUnitCollection:
                         try:
                             VSSDataType.from_str(datatype)
                         except KeyError:
-                            log.error(
-                                "Unknown datatype %s in unit definition", datatype
-                            )
+                            log.error()
                             sys.exit(-1)
 
                 unit_node = VSSUnit(k, unit, definition, quantity, allowed_datatypes)
