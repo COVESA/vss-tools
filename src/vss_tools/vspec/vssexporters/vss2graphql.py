@@ -59,6 +59,17 @@ GRAPHQL_TYPE_MAPPING = {
     VSSDataType.STRING_ARRAY: GraphQLList(GraphQLString),
 }
 
+GRAPHQL_PY_MAPPING = {
+    int: GraphQLInt,
+    list[int]: GraphQLList(GraphQLInt),
+    float: GraphQLFloat,
+    list[float]: GraphQLList(GraphQLFloat),
+    bool: GraphQLBoolean,
+    list[bool]: GraphQLList(GraphQLBoolean),
+    str: GraphQLString,
+    list[str]: GraphQLList(GraphQLString),
+}
+
 
 def get_schema_from_tree(root_node: VSSNode, additional_leaf_fields: list) -> str:
     """Takes a VSSNode and additional fields for the leafs. Returns a graphql schema as string."""
@@ -109,16 +120,21 @@ def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQ
                 raise VSpecError("", "", "Incorrect format of graphql field specification")
     if node.has_unit():
         field_dict["unit"] = field(node, "Unit of ")
-    if node.staticUID:
-        field_dict["staticUID"] = field(
-            node, "", overwrite_description="Static UID (4-byte hex identifier) of the node."
+
+    for key, value in node.extended_attributes.items():
+        field_dict[key] = field(
+            node,
+            "Extended attribute: ",
+            type=GRAPHQL_PY_MAPPING[type(value)],
+            overwrite_description=key
         )
+
     return field_dict
 
 
 def branch_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
-    # we only consider nodes that either have children or are leave with a datatype
-    valid = (c for c in node.children if len(c.children) or hasattr(c, "datatype") or hasattr(c, "staticUID"))
+    # we only consider nodes that either have children or are leaf with a datatype
+    valid = (c for c in node.children if len(c.children) or hasattr(c, "datatype"))
     return {camel_back(c.name): field(c, type=to_gql_type(c, additional_leaf_fields)) for c in valid}
 
 
