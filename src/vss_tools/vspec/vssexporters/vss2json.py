@@ -58,9 +58,6 @@ def export_node(json_dict, node, config, print_uuid):
     if print_uuid:
         json_dict[node.name]["uuid"] = node.uuid
 
-    if node.staticUID:
-        json_dict[node.name]["staticUID"] = node.staticUID
-
     for k, v in node.extended_attributes.items():
         if not config.json_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
             continue
