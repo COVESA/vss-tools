@@ -179,11 +179,15 @@ hashing function in previous case `A.B.OlderName` will be used.
 To summarize these are the `BREAKING CHANGES` that affect the hash and
 `NON-BREAKING CHANGES` that throw warnings only:
 
-| BREAKING CHANGES | | NON-BREAKING CHANGES |
-|-----------------------|-----|----------------------| | Qualified name | |
-Added attribute | | Data type | | Deprecation | | Type (i.e. node type) | |
-Deleted Attribute | | Unit | | Change description | | Enum values (allowed) | |
-Qualified name (fka) | | Minimum | | | | Maximum | | |
+| BREAKING CHANGES      |     | NON-BREAKING CHANGES |
+|-----------------------|-----|----------------------|
+| Qualified name        |     | Added attribute      |
+| Data type             |     | Deprecation          |
+| Type (i.e. node type) |     | Deleted Attribute    |
+| Unit                  |     | Change description   |
+| Enum values (allowed) |     | Qualified name (fka) |
+| Minimum               |     |                      |
+| Maximum               |     |                      |
 
 Now you should know about all possible changes. To run the validation step,
 please do:
