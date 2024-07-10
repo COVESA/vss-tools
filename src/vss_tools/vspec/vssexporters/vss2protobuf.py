@@ -150,7 +150,7 @@ def print_message_body(nodes, proto_file, static_uid, add_optional):
                 log.fatal((f"Aborting because {node.qualified_name('.')} does not have the staticUID attribute. "
                            f"When using the option --static-uid each node must have the attribute staticUID."))
                 sys.exit(-1)
-            fieldNumber = int(int(node.staticUID, 0) / 8)
+            fieldNumber = int(int(node.extended_attributes['staticUID'], 0) / 8)
             if (fieldNumber < 20000 and fieldNumber >= 19000):
                 log.fatal('''Aborting because field number {fieldNumber} for signal {node.name} is in
                 reservered range between 19000 and 20000. Consider changing the signal to alter the staticUID.''')

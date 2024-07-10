@@ -103,7 +103,7 @@ def validate_static_uids(
         for key, value in signals_dict.items():
             matched_uids = []
             for id_validation_tree, other_node in enumerate(validation_tree_nodes):
-                if value["staticUID"] == other_node.staticUID:
+                if value["staticUID"] == other_node.extended_attributes["staticUID"]:
                     if key != other_node.qualified_name():
                         _ = check_semantics(key, value, config.strict_mode)
                     matched_uids.append((key, id_validation_tree))
