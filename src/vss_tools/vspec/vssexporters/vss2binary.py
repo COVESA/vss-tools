@@ -106,8 +106,8 @@ def export_node(node, generate_uuid, out_file):
         nodeuuid = node.uuid
     b_nodeuuid = nodeuuid.encode('utf-8')
 
-    if node.staticUID:
-        nodestaticuid = str(node.staticUID)
+    if "staticUID" in node.extended_attributes:
+        nodestaticuid = str(node.extended_attributes["staticUID"])
     b_nodestaticuid = nodestaticuid.encode('utf-8')
 
     if "validate" in node.extended_attributes:
