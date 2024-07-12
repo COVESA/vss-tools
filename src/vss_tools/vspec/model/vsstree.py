@@ -246,7 +246,7 @@ class VSSNode(Node):
             self.unit = VSSUnitCollection.get_unit(unit)
             if self.unit is None:
                 log.error(
-                    f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating."
+                    f"Unknown unit '{unit}' for signal '{self.qualified_name()}'. Terminating."
                 )
                 sys.exit(-1)
 

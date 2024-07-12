@@ -22,7 +22,7 @@ def run_overlay(overlay_prefix, tmp_path):
     overlay = HERE / overlay_name
     output = tmp_path / "out.json"
     cmd = (
-        f"vspec2json --json-pretty -u {TEST_UNITS} -e dbc {spec} -o {overlay} {output}"
+        f"vspec export json --pretty -u {TEST_UNITS} -e dbc --vspec {spec} -l {overlay} --output {output}"
     )
     subprocess.run(cmd.split(), check=True)
     expected = HERE / f"expected_{overlay_prefix}.json"
@@ -49,7 +49,7 @@ def test_overlay_error(tmp_path):
     overlay = HERE / "overlay_error.vspec"
     output = tmp_path / "out.json"
     spec = HERE / "test.vspec"
-    cmd = f"vspec2json --json-pretty -u {TEST_UNITS} -o {overlay} {spec} {output}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} -l {overlay} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "300"
     process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
@@ -61,7 +61,7 @@ def test_overlay_branch_error(tmp_path):
     overlay = HERE / "overlay_implicit_branch_no_description.vspec"
     output = tmp_path / "out.json"
     spec = HERE / "test.vspec"
-    cmd = f"vspec2json --json-pretty -u {TEST_UNITS} -o {overlay} {spec} {output}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} -l {overlay} --vspec {spec} --output {output}"
 
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0

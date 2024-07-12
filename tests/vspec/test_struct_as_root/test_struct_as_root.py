@@ -17,7 +17,7 @@ def test_struct_as_root(tmp_path):
     struct = HERE / "struct1.vspec"
     spec = HERE / "test.vspec"
     output = tmp_path / "out.csv"
-    cmd = f"vspec2csv -vt {struct} -u {TEST_UNITS} {spec} {output}"
+    cmd = f"vspec export csv --types {struct} -u {TEST_UNITS} --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert "Root node Struct1 is not of branch type" in process.stdout

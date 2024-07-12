@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
 import os
 
 
@@ -21,38 +20,13 @@ def test_error_when_data_types_file_is_missing(tmp_path):
     otypes = HERE / "output_types_file.json"
     spec = HERE / "test.vspec"
     output = tmp_path / "output.json"
-    cmd = f"vspec2json -u {TEST_UNITS} -ot {otypes} {spec} {output}"
+    cmd = f"vspec export json -u {TEST_UNITS} --types-output {otypes} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
         cmd.split(), capture_output=True, text=True, env=env)
     assert process.returncode != 0
-    print(process.stdout)
     assert (
-        "error: An output file for data types was provided. Please also provide the input vspec file for data types"
+        "raise ArgumentException"
         in process.stderr
     )
-
-
-@pytest.mark.parametrize("format", ["binary", "franca", "graphql"])
-def test_error_with_non_compatible_formats(format, tmp_path):
-    otypes = HERE / "output_types_file.json"
-    spec = HERE / "test.vspec"
-    output = tmp_path / "output.json"
-    types = HERE / "VehicleDataTypes.vspec"
-    cmd = f"vspec2{format} -u {TEST_UNITS} -vt {types} -ot {otypes} {spec} {output}"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
-    assert process.returncode != 0
-    assert "error: unrecognized arguments: -vt" in process.stderr
-
-
-@pytest.mark.parametrize("format", ["ddsidl"])
-def test_error_with_ot(format, tmp_path):
-    otypes = HERE / "output_types_file.json"
-    spec = HERE / "test.vspec"
-    output = tmp_path / "output.json"
-    types = HERE / "VehicleDataTypes.vspec"
-    cmd = f"vspec2{format} -u {TEST_UNITS} -vt {types} -ot {otypes} {spec} {output}"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
-    assert process.returncode != 0
-    assert "error: unrecognized arguments: " in process.stderr

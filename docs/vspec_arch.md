@@ -1,4 +1,4 @@
-# vspec2x Design Decisions, Architecture and Limitations
+# vspec Design Decisions, Architecture and Limitations
 
 ## Overlays
 
@@ -16,7 +16,7 @@ This will result in that e.g. `Vehicle.Cabin.Door` is expanded to the following 
 * `Vehicle.Cabin.Door.Row2.Left`
 * `Vehicle.Cabin.Door.Row2.Right`
 
-For some exporters expansion can be suppressed by using the `--no_expand` option.
+For some exporters expansion can be suppressed by using the `--no-expand` option.
 Then instance information will be represented by other means in the resulting output.
 
 ## Deletion / Node removal
@@ -128,6 +128,20 @@ The merge algorithm tries to be smart, so that if you use `Row*` it assume it is
 instance declaration of type `Row[m,n]`,
 even if the the value of `Row*` is outside the range. It will however in that case not inherit values from the base
 branch.
+
+## CLI Design
+
+The command line interface is designed with [click](https://click.palletsprojects.com/).
+We are making use of subcommands and evaluating them lazy.
+That means that we can define the cli interface of subcommands in their own files.
+The main cli entrypoint for `vspec` is defined in [vspec.py](../src/vss_tools/vspec/vspec.py).
+There you can also see all the subcommands referenced.
+When building a new exporter tool, this is the place that needs to be adapted as well
+as creating a new file similar to the other exporters in [vssexporters](../src/vss_tools/vspec/vssexporters).
+
+It is also possible to build a complete different script entrypoint and not hook into the current interface.
+All cli options can be imported and used via [cli_options.py](../src/vss_tools/vspec/cli_options.py).
+Only a few are left out which are defined on the toplevel command just as `--log-level`, `--log-file` and `--version`.
 
 ## Linters and Static Code Checkers
 

@@ -1,18 +1,16 @@
-# vspec2proto - vspec Protocol Buffer generator
+# Protobuf - vspec Protocol Buffer generator
 
-The vspec2proto.py script generates [Protocol Buffer message definitions](https://protobuf.dev) for all nodes in the tree. You can use these proto definitions to serialize the data of a VSS tree, e.g., as part of a gRPC API.
+The `protobuf` exporter generates [Protocol Buffer message definitions](https://protobuf.dev) for all nodes in the tree. You can use these proto definitions to serialize the data of a VSS tree, e.g., as part of a gRPC API.
 
 ## Example
 
 ```bash
-vspec2protobuf outputIds_v2.vspec indentity.proto -q spec/quantities.yaml -u spec/units.yaml -e staticUID --static-uid --add-optional
+vspec export protobuf --vspec outputIds_v2.vspec -o indentity.proto -q spec/quantities.yaml -u spec/units.yaml -e staticUID --static-uid --add-optional
 ```
 
 This example assumes that you checked out the COVESA VSS repository next to the vss-tools repository.
 
 ## Exporter specific arguments
-
-In addition, to the general arguments of each exporter, the vspec2proto exporter supports the following arguments:
 
 ```bash
 --static-uid          Expect staticUID attribute in the vspec input and use it as field number.
@@ -79,7 +77,7 @@ Thus, when using this protobuf file, the generator may introduce breaking change
 
 One solution to overcome breaking changes in the serialization caused by non-breaking changes in the VSS model is to define the numeric identifiers within the VSS model. This way, the proto generator is able to reuse these identifiers as field numbers and does not have to come up with its own numbers. However, such identifiers are not part of the upstream VSS model yet.
 
-But there is the option to generate static uids with the [`vspec2id`](./vspec2id.md).
+But there is the option to generate static uids with the `id` exporter.
 By adding the flag `--static-uid` you can instruct the proto generator to expect static uids in the input file and use them as field numbers.
 
 This comes with the following drawbacks:

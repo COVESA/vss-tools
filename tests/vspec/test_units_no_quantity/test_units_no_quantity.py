@@ -25,7 +25,7 @@ def run_unit(
     grep_string: Optional[str] = None,
 ):
     out = tmp_path / "out.json"
-    cmd = f"vspec2json --json-pretty {vspec_file} {unit_argument} {quantity_argument} {out}"
+    cmd = f"vspec export json --pretty --vspec {vspec_file} {unit_argument} {quantity_argument} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(

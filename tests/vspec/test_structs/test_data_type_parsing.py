@@ -61,10 +61,10 @@ def test_data_types_export_single_file(
     type_file = HERE / type_file
     vspec = HERE / "test.vspec"
     output = tmp_path / signals_out
-    cmd = f"vspec2{format}"
+    cmd = f"vspec export {format}"
     if format == "json":
-        cmd += " --json-pretty"
-    cmd += f" -vt {type_file} -u {TEST_UNITS} {vspec} {output}"
+        cmd += " --pretty"
+    cmd += f" --types {type_file} -u {TEST_UNITS} --vspec {vspec} --output {output}"
     subprocess.run(cmd.split(), check=True)
     expected_output = HERE / expected_signal
     assert filecmp.cmp(output, expected_output)
@@ -113,10 +113,10 @@ def test_data_types_export_multi_file(
     vspec = HERE / "test.vspec"
     output = tmp_path / signals_out
     types_output = tmp_path / data_types_out
-    cmd = f"vspec2{format}"
+    cmd = f"vspec export {format}"
     if format == "json":
-        cmd += " --json-pretty"
-    cmd += f" -vt {type_file} -u {TEST_UNITS} -ot {types_output} {vspec} {output}"
+        cmd += " --pretty"
+    cmd += f" --types {type_file} -u {TEST_UNITS} --types-output {types_output} --vspec {vspec} --output {output}"
     subprocess.run(cmd.split(), check=True)
     expected_signal = HERE / expected_signal
     expected_data_types = HERE / expected_data_types
@@ -170,11 +170,11 @@ def test_data_types_export_to_proto(
     expected_type_files = [HERE / f for f in expected_type_files]
     actual_signal_file = tmp_path / actual_signal_file
     actual_type_files = [tmp_path / f for f in actual_type_files]
-    data_types_out = tmp_path / "unused.proto"
+    data_types_out = tmp_path
 
     cmd = (
-        f"vspec2protobuf -vt {type_vspec_file} -u {TEST_UNITS} -ot {data_types_out}"
-        f" {signal_vspec_file} {actual_signal_file}"
+        f"vspec export protobuf --types {type_vspec_file} -u {TEST_UNITS} --types-out-dir {data_types_out}"
+        f" --vspec {signal_vspec_file} --output {actual_signal_file}"
     )
 
     subprocess.run(cmd.split(), cwd=tmp_path, check=True)
@@ -218,7 +218,8 @@ def test_data_types_invalid_reference_in_data_type_tree(
     output_types = tmp_path / "VehicleDataTypes.vspec"
     vspec = HERE / "test.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty -vt {types_file} -ot {output_types} {vspec} {output}"
+    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {output_types} --vspec {vspec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert error_msg in process.stdout
@@ -242,7 +243,8 @@ def test_data_types_orphan_properties(types_file, error_msg, tmp_path):
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
 
-    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty -vt {types_file} -ot {types_out} {vspec} {out}"
+    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -260,7 +262,8 @@ def test_data_types_invalid_reference_in_signal_tree(tmp_path):
     vspec = HERE / "test-invalid-datatypes.vspec"
     out = tmp_path / "out.json"
 
-    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty -vt {types_file} -ot {types_out} {vspec} {out}"
+    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -281,7 +284,7 @@ def test_error_when_no_user_defined_data_types_are_provided(tmp_path):
     """
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
-    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty {vspec} {out}"
+    cmd = f"vspec export json -u {TEST_UNITS} --pretty --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -320,7 +323,8 @@ def test_faulty_use_of_standard_attributes(vspec_file, types_file, error_msg, tm
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
 
-    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty -vt {types_file} -ot {types_out} {vspec_file} {out}"
+    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {types_out} --vspec {vspec_file} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(

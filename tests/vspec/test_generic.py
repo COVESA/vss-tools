@@ -36,7 +36,7 @@ def run_exporter(directory, exporter, tmp_path):
     vspec = directory / "test.vspec"
     output = tmp_path / f"out.{exporter}"
     expected = directory / f"expected.{exporter}"
-    cmd = f"vspec2{exporter} -u {TEST_UNITS} {vspec} {output}"
+    cmd = f"vspec export {exporter} -u {TEST_UNITS} --vspec {vspec} --output {output}"
     subprocess.run(cmd.split(), check=True)
     assert filecmp.cmp(output, expected)
 

@@ -18,7 +18,7 @@ def test_include(tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / "out.json"
     expected = HERE / "expected.json"
-    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty {spec} {output}"
+    cmd = f"vspec export json -u {TEST_UNITS} --pretty --vspec {spec} --output {output}"
     subprocess.run(cmd.split(), check=True)
     filecmp.cmp(output, expected)
 
@@ -26,7 +26,7 @@ def test_include(tmp_path):
 def test_error(tmp_path):
     spec = HERE / "test_error.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2json -u {TEST_UNITS} --json-pretty {spec} {output}"
+    cmd = f"vspec export json -u {TEST_UNITS} --pretty --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
 

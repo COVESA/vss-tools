@@ -28,13 +28,14 @@ def test_description_error(
     vspec_file: str, type_file: str, type_out_file: str, tmp_path
 ):
     output = tmp_path / "out.json"
-    cmd = f"vspec2json --json-pretty -u {TEST_UNITS}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
     if type_file:
-        cmd += f" -vt {HERE / type_file}"
+        cmd += f" --types {HERE / type_file}"
     if type_out_file:
-        cmd += f" -ot {tmp_path / type_out_file}"
-    cmd += f" {HERE / vspec_file} {output}"
+        cmd += f" --types-output {tmp_path / type_out_file}"
+    cmd += f" --vspec {HERE / vspec_file} --output {output}"
 
+    print(cmd)
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert "Invalid VSS element" in process.stdout
