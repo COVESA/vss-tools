@@ -1,38 +1,40 @@
-#!/usr/bin/env python3
-
-# Copyright (c) 2023 Contributors to COVESA
-#
-# This program and the accompanying materials are made available under the
-# terms of the Mozilla Public License 2.0 which is available at
-# https://www.mozilla.org/en-US/MPL/2.0/
-#
-# SPDX-License-Identifier: MPL-2.0
-
-from abc import ABC, abstractmethod
-import argparse
-from typing import Optional
-from vss_tools.vspec.model.vsstree import VSSNode
-from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
+import logging
+import rich_click as click
+from vss_tools.vspec.lazy_group import LazyGroup
+import vss_tools.vspec.cli_options as clo
+from vss_tools import log
+from pathlib import Path
 
 
-class Vss2X(ABC):
-    """
-    Abstract class for something that takes a VSS model as input
-    (signal tree plus optionally a type tree)
-    and does "something". For now it is assumed that output is either files
-    or text output.
-    The generator may use both command line config as well as specific configs used for
-    creating the VSS model to control the generation.
-    """
+@click.group(
+    cls=LazyGroup,
+    lazy_subcommands={
+        "binary": "vss_tools.vspec.vssexporters.vss2binary:cli",
+        "csv": "vss_tools.vspec.vssexporters.vss2csv:cli",
+        "ddsidl": "vss_tools.vspec.vssexporters.vss2ddsidl:cli",
+        "franca": "vss_tools.vspec.vssexporters.vss2franca:cli",
+        "graphql": "vss_tools.vspec.vssexporters.vss2graphql:cli",
+        "id": "vss_tools.vspec.vssexporters.vss2id:cli",
+        "json": "vss_tools.vspec.vssexporters.vss2json:cli",
+        "jsonschema": "vss_tools.vspec.vssexporters.vss2jsonschema:cli",
+        "protobuf": "vss_tools.vspec.vssexporters.vss2protobuf:cli",
+        "yaml": "vss_tools.vspec.vssexporters.vss2yaml:cli",
+    },
+    context_settings={"auto_envvar_prefix": "vss_tools"},
+    invoke_without_command=True,
+)
+@clo.log_level_opt
+@clo.log_file_opt
+@click.pass_context
+def cli(ctx: click.Context, log_level: str, log_file: Path):
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+        exit(1)
+    if log_file:
+        file_handler = logging.FileHandler(log_file, mode="w")
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
+        )
+        log.addHandler(file_handler)
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.description = "This generator does not support any additional arguments."
-
-    @abstractmethod
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-        """
-        Previously called export, but changing to a more generic name.
-        Must be defined by the tool.
-        """
-        pass
+    log.setLevel(log_level)

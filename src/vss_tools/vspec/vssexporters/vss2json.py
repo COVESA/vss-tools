@@ -11,17 +11,18 @@
 # Convert vspec tree to JSON
 
 from vss_tools.vspec.model.vsstree import VSSNode
-import argparse
 import json
+import rich_click as click
+import vss_tools.vspec.cli_options as clo
+from vss_tools.vspec.vssexporters.utils import get_trees
+from pathlib import Path
 from typing import Dict, Any
-from typing import Optional
 from vss_tools import log
-from vss_tools.vspec.vss2x import Vss2X
-from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 
-def export_node(json_dict, node, config, print_uuid):
-
+def export_node(
+    json_dict, node, print_uuid, all_extended_attributes: bool, expand: bool
+):
     json_dict[node.name] = {}
 
     if node.is_signal() or node.is_property():
@@ -59,12 +60,15 @@ def export_node(json_dict, node, config, print_uuid):
         json_dict[node.name]["uuid"] = node.uuid
 
     for k, v in node.extended_attributes.items():
-        if not config.json_all_extended_attributes and k not in VSSNode.whitelisted_extended_attributes:
+        if (
+            not all_extended_attributes
+            and k not in VSSNode.whitelisted_extended_attributes
+        ):
             continue
         json_dict[node.name][k] = v
 
     # Include instance information if we run tool in "no-expand" mode
-    if config.no_expand and node.instances is not None:
+    if not expand and node.instances is not None:
         json_dict[node.name]["instances"] = node.instances
 
     # Might be better to not generate child dict, if there are no children
@@ -76,41 +80,87 @@ def export_node(json_dict, node, config, print_uuid):
         json_dict[node.name]["children"] = {}
 
     for child in node.children:
-        export_node(json_dict[node.name]["children"],
-                    child, config, print_uuid)
+        export_node(
+            json_dict[node.name]["children"],
+            child,
+            print_uuid,
+            all_extended_attributes,
+            expand,
+        )
 
 
-class Vss2Json(Vss2X):
+@click.command()
+@clo.vspec_opt
+@clo.output_required_opt
+@clo.include_dirs_opt
+@clo.extended_attributes_opt
+@clo.strict_opt
+@clo.aborts_opt
+@clo.uuid_opt
+@clo.expand_opt
+@clo.overlays_opt
+@clo.quantities_opt
+@clo.units_opt
+@clo.types_opt
+@clo.types_output_opt
+@clo.extend_all_attributes_opt
+@clo.pretty_print_opt
+def cli(
+    vspec: Path,
+    output: Path,
+    include_dirs: tuple[Path],
+    extended_attributes: str,
+    strict: bool,
+    aborts: tuple[str],
+    uuid: bool,
+    expand: bool,
+    overlays: tuple[Path],
+    quantities: tuple[Path],
+    units: tuple[Path],
+    types: tuple[Path],
+    types_output: Path,
+    extend_all_attributes: bool,
+    pretty: bool,
+):
+    """
+    Export as JSON.
+    """
+    tree, datatype_tree = get_trees(
+        include_dirs,
+        aborts,
+        strict,
+        extended_attributes,
+        uuid,
+        quantities,
+        vspec,
+        units,
+        types,
+        types_output,
+        overlays,
+        expand,
+    )
+    log.info("Generating JSON output...")
+    indent = None
+    if pretty:
+        log.info("Serializing pretty JSON...")
+        indent = 2
+    else:
+        log.info("Serializing compact JSON...")
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument('--json-all-extended-attributes', action='store_true',
-                            help="Generate all extended attributes found in the model "
-                                 "(default is generating only those given by the -e/--extended-attributes parameter).")
-        parser.add_argument('--json-pretty', action='store_true',
-                            help=" Pretty print JSON output.")
+    signals_json_dict: Dict[str, Any] = {}
+    export_node(signals_json_dict, tree, uuid, extend_all_attributes, expand)
 
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-        log.info("Generating JSON output...")
-        indent = None
-        if config.json_pretty:
-            log.info("Serializing pretty JSON...")
-            indent = 2
+    if datatype_tree:
+        data_types_json_dict: Dict[str, Any] = {}
+        export_node(
+            data_types_json_dict, datatype_tree, uuid, extend_all_attributes, expand
+        )
+        if types_output:
+            log.info("Adding custom data types to signal dictionary")
+            signals_json_dict["ComplexDataTypes"] = data_types_json_dict
         else:
-            log.info("Serializing compact JSON...")
+            with open(types_output, "w") as f:
+                json.dump(data_types_json_dict, f, indent=indent, sort_keys=True)
 
-        signals_json_dict: Dict[str, Any] = {}
-        export_node(signals_json_dict, signal_root, config, vspec2vss_config.generate_uuid)
-
-        if data_type_root is not None:
-            data_types_json_dict: Dict[str, Any] = {}
-            export_node(data_types_json_dict, data_type_root, config, vspec2vss_config.generate_uuid)
-            if config.types_output_file is None:
-                log.info("Adding custom data types to signal dictionary")
-                signals_json_dict["ComplexDataTypes"] = data_types_json_dict
-            else:
-                with open(config.types_output_file, 'w') as f:
-                    json.dump(data_types_json_dict, f, indent=indent, sort_keys=True)
-
-        with open(config.output_file, 'w') as f:
-            json.dump(signals_json_dict, f, indent=indent, sort_keys=True)
+    with open(output, "w") as f:
+        json.dump(signals_json_dict, f, indent=indent, sort_keys=True)

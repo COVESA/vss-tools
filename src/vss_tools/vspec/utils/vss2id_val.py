@@ -17,14 +17,12 @@ from vss_tools.vspec.model.vsstree import VSSNode
 from vss_tools.vspec.utils.idgen_utils import fnv1_32_wrapper
 
 
-def validate_static_uids(
-    signals_dict: dict, validation_tree: VSSNode, config: argparse.Namespace
-):
+def validate_static_uids(signals_dict: dict, validation_tree: VSSNode, strict: bool):
     """Check if static UIDs have changed or if new ones need to be added
 
     @param signals_dict: to be exported dict of all signals containing static UID
     @param validation_tree: tree loaded from validation file
-    @param config: the command line arguments the script was run with
+    @param strict
     @return: None
     """
 
@@ -105,11 +103,11 @@ def validate_static_uids(
             for id_validation_tree, other_node in enumerate(validation_tree_nodes):
                 if value["staticUID"] == other_node.extended_attributes["staticUID"]:
                     if key != other_node.qualified_name():
-                        _ = check_semantics(key, value, config.strict_mode)
+                        _ = check_semantics(key, value, strict)
                     matched_uids.append((key, id_validation_tree))
             # if not matched via UID check semantics or path change
             if len(matched_uids) == 0:
-                semantic_match = check_semantics(key, value, config.strict_mode)
+                semantic_match = check_semantics(key, value, strict)
                 if semantic_match is None:
                     key_found: bool = False
                     for i, node in enumerate(validation_tree_nodes):
