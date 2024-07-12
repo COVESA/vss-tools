@@ -11,7 +11,6 @@
 # Convert vspec tree to binary format
 
 import ctypes
-import os.path
 from pathlib import Path
 from vss_tools import log
 import vss_tools.vspec.cli_options as clo

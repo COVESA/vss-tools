@@ -218,7 +218,8 @@ def test_data_types_invalid_reference_in_data_type_tree(
     output_types = tmp_path / "VehicleDataTypes.vspec"
     vspec = HERE / "test.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file} --types-output {output_types} --vspec {vspec} --output {output}"
+    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {output_types} --vspec {vspec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert error_msg in process.stdout
@@ -242,7 +243,8 @@ def test_data_types_orphan_properties(types_file, error_msg, tmp_path):
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
 
-    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file} --types-output {types_out} --vspec {vspec} --output {out}"
+    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -260,7 +262,8 @@ def test_data_types_invalid_reference_in_signal_tree(tmp_path):
     vspec = HERE / "test-invalid-datatypes.vspec"
     out = tmp_path / "out.json"
 
-    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file} --types-output {types_out} --vspec {vspec} --output {out}"
+    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -320,7 +323,8 @@ def test_faulty_use_of_standard_attributes(vspec_file, types_file, error_msg, tm
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
 
-    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file} --types-output {types_out} --vspec {vspec_file} --output {out}"
+    cmd = f"vspec2x json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd += f" --types-output {types_out} --vspec {vspec_file} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(

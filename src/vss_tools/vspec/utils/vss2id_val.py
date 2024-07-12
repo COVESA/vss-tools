@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import argparse
 from vss_tools import log
 import sys
 from typing import Optional

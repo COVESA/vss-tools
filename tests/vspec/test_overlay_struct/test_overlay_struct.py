@@ -65,7 +65,8 @@ def test_overlay_struct_using_struct(format, signals_out, expected_signal, tmp_p
     overlay = HERE / "overlay.vspec"
     spec = HERE / "test.vspec"
     output = tmp_path / signals_out
-    cmd = f"vspec2x {format} --pretty --types {struct1} --types {struct2} -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
+    cmd = f"vspec2x {format} --pretty --types {struct1} --types {struct2}"
+    cmd += f" -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
     subprocess.run(cmd.split(), check=True)
     expected = HERE / expected_signal
     assert filecmp.cmp(output, expected)
