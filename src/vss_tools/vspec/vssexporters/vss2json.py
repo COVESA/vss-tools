@@ -155,7 +155,7 @@ def cli(
         export_node(
             data_types_json_dict, datatype_tree, uuid, extend_all_attributes, expand
         )
-        if types_output:
+        if not types_output:
             log.info("Adding custom data types to signal dictionary")
             signals_json_dict["ComplexDataTypes"] = data_types_json_dict
         else:

@@ -36,10 +36,10 @@ def test_overlay_struct(format, signals_out, expected_signal, tmp_path):
     overlay = HERE / "overlay.vspec"
     output = tmp_path / signals_out
 
-    cmd = f"vspec2{format}"
+    cmd = f"vspec2x {format}"
     if format == "json":
-        cmd += " --json-pretty"
-    cmd += f" -vt {struct1} -vt {struct2} -u {TEST_UNITS} -o {overlay} {spec} {output}"
+        cmd += " --pretty"
+    cmd += f" --types {struct1} --types {struct2} -u {TEST_UNITS} -l {overlay} --vspec {spec} --output {output}"
 
     subprocess.run(cmd.split(), cwd=tmp_path, check=True)
     expected = HERE / expected_signal
@@ -65,7 +65,7 @@ def test_overlay_struct_using_struct(format, signals_out, expected_signal, tmp_p
     overlay = HERE / "overlay.vspec"
     spec = HERE / "test.vspec"
     output = tmp_path / signals_out
-    cmd = f"vspec2{format} --json-pretty -vt {struct1} -vt {struct2} -u {TEST_UNITS} {spec} -o {overlay} {output}"
+    cmd = f"vspec2x {format} --pretty --types {struct1} --types {struct2} -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
     subprocess.run(cmd.split(), check=True)
     expected = HERE / expected_signal
     assert filecmp.cmp(output, expected)

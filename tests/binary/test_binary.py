@@ -33,11 +33,12 @@ def test_binary(tmp_path):
     test_binary = tmp_path / "test.binary"
     ctestparser = tmp_path / "ctestparser"
     gotestparser = tmp_path / "gotestparser"
+    bintool_lib = tmp_path / "binarytool.so"
     cmd = (
-        f"gcc -shared -o {tmp_path / 'binarytool.so'} -fPIC {BIN_DIR / 'binarytool.c'}"
+        f"gcc -shared -o {bintool_lib} -fPIC {BIN_DIR / 'binarytool.c'}"
     )
     subprocess.run(cmd.split(), check=True)
-    cmd = f"vspec2binary -u {TEST_UNITS} {HERE / 'test.vspec'} {test_binary}"
+    cmd = f"vspec2x binary -b {bintool_lib} -u {TEST_UNITS} -s {HERE / 'test.vspec'} -o {test_binary}"
     subprocess.run(cmd.split(), check=True)
     cmd = f"cc {BIN_DIR / 'c_parser/testparser.c'} {BIN_DIR / 'c_parser/cparserlib.c'} -o {ctestparser}"
     subprocess.run(cmd.split(), check=True)

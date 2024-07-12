@@ -135,7 +135,7 @@ def cli(
     )
     log.info("Generating CSV output...")
 
-    generic_entry = datatype_tree and types_output
+    generic_entry = datatype_tree and not types_output
     include_instance_column = not expand
     with open(output, "w") as f:
         signal_entry_type = "Node" if generic_entry else "Signal"

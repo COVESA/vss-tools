@@ -31,14 +31,14 @@ def test_description_error(
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
 
-    cmd = f"vspec2json --json-pretty -u {TEST_UNITS}"
+    cmd = f"vspec2x json --pretty -u {TEST_UNITS}"
     if types_file:
-        cmd += f" -vt {HERE / types_file}"
+        cmd += f" --types {HERE / types_file}"
     if types_out_file:
-        cmd += f" -ot {tmp_path / types_out_file}"
+        cmd += f" --types-output {tmp_path / types_out_file}"
     if overlay_file:
-        cmd += f" -o {HERE / overlay_file}"
-    cmd += f" {vspec_file} {out}"
+        cmd += f" -l {HERE / overlay_file}"
+    cmd += f" --vspec {vspec_file} --output {out}"
 
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
@@ -51,7 +51,7 @@ def test_description_error(
 def type_case_sensitive(vspec_file: str, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
-    cmd = f"vspec2json --json-pretty {vspec_file} {out}"
+    cmd = f"vspec2x json --pretty --vspec {vspec_file} --output {out}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert "Unknown type" in process.stdout
@@ -66,7 +66,7 @@ def type_case_sensitive(vspec_file: str, tmp_path):
 def test_scope_error(vspec_file: str, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
-    cmd = f"vspec2json --json-pretty -u {TEST_UNITS} {vspec_file} {out}"
+    cmd = f"vspec2x json --pretty -u {TEST_UNITS} --vspec {vspec_file} --output {out}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert "VSS Node A.UInt8 cannot have children" in process.stdout

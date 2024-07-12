@@ -65,18 +65,17 @@ def get_trees(
 
     # process data type tree
     data_type_tree = None
-    if types:
-        if types_output:
-            if types_output and not types:
-                raise ArgumentException(
-                    "An output file for data types was provided. Please also provide "
-                    "the input vspec file for data types"
-                )
-        if types:
-            data_type_tree = processDataTypeTree(
-                types_output, types, includes, abort_on_namestyle
+    if types_output:
+        if types_output and not types:
+            raise ArgumentException(
+                "An output file for data types was provided. Please also provide "
+                "the input vspec file for data types"
             )
-            verify_mandatory_attributes(data_type_tree, abort_on_unknown_attribute)
+    if types:
+        data_type_tree = processDataTypeTree(
+            types_output, types, includes, abort_on_namestyle
+        )
+        verify_mandatory_attributes(data_type_tree, abort_on_unknown_attribute)
 
     try:
         log.info(f"Loading vspec from {vspec}...")
@@ -133,7 +132,7 @@ def processDataTypeTree(
     for type_file in types:
         log.info(f"Loading and processing struct/data type tree from {type_file}")
         new_tree = load_tree(
-            type_file,
+            str(type_file),
             include_dir,
             VSSTreeType.DATA_TYPE_TREE,
             break_on_name_style_violation=abort_on_namestyle,

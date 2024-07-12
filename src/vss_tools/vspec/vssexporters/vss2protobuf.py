@@ -249,4 +249,5 @@ def cli(
         exporter.traverse_data_type_tree(datatype_tree, static_uid, add_optional)
 
     with open(output, "w") as f:
+        log.info(f"Writing to: {output}")
         traverse_signal_tree(tree, f, static_uid, add_optional)

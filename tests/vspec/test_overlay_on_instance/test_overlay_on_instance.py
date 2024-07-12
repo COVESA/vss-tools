@@ -20,7 +20,7 @@ def test_expanded_overlay(tmp_path):
     overlay1 = HERE / "overlay_1.vspec"
     overlay2 = HERE / "overlay_2.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2json -e my_id --json-pretty -u {TEST_UNITS} {spec} -o {overlay1} -o {overlay2} {output}"
+    cmd = f"vspec2x json -e my_id --pretty -u {TEST_UNITS} --vspec {spec} -l {overlay1} -l {overlay2} --output {output}"
     subprocess.run(cmd.split(), check=True)
 
     expected = HERE / "expected.json"
@@ -37,7 +37,7 @@ def test_expanded_overlay_no_type_datatype(tmp_path):
     spec = HERE / "test.vspec"
     overlay = HERE / "overlay_no_type_datatype.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2json -e my_id --json-pretty -u {TEST_UNITS} {spec} -o {overlay} {output}"
+    cmd = f"vspec2x json -e my_id --pretty -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert "No type specified for A.B.Row1.Left.C" in process.stdout

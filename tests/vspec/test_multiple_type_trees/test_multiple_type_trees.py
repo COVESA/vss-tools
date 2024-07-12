@@ -22,7 +22,7 @@ def test_error(tmp_path):
     vt1 = HERE / "struct1.vspec"
     vt2 = HERE / "struct2.vspec"
     spec = HERE / "test.vspec"
-    cmd = f"vspec2csv -vt {vt1} -vt {vt2} -u {TEST_UNITS} {spec} {output}"
+    cmd = f"vspec2x csv --types {vt1} --types {vt2} -u {TEST_UNITS} --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert "unknown root node" in process.stderr

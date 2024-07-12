@@ -16,7 +16,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 def test_error(tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2json -u {TEST_UNITS} {spec} {output}"
+    cmd = f"vspec2x json -u {TEST_UNITS} --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
     assert "Type not allowed: bosch" in process.stdout

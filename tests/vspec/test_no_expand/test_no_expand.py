@@ -33,10 +33,10 @@ def test_no_expand(
 ):
     spec = HERE / "test.vspec"
     output = tmp_path / output_file
-    cmd = f"vspec2{format} --no-expand"
+    cmd = f"vspec2x {format} --no-expand"
     if format == "json":
-        cmd += " --json-pretty"
-    cmd += f" -u {TEST_UNITS} {spec} {output}"
+        cmd += " --pretty"
+    cmd += f" -u {TEST_UNITS} --vspec {spec} --output {output}"
 
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     if is_error_expected:
@@ -47,7 +47,7 @@ def test_no_expand(
     # For exporters not supporting "no-expand" an error shall be given
     expected = HERE / comparison_file
     if is_error_expected:
-        assert "error: unrecognized arguments: --no-expand" in process.stderr
+        assert "No such option: --no-expand" in process.stderr
     else:
         assert filecmp.cmp(output, expected)
 
@@ -67,10 +67,10 @@ def test_json_overlay(no_expand, comparison_file, tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / "out.json"
 
-    cmd = "vspec2json"
+    cmd = "vspec2x json"
     if no_expand:
         cmd += " --no-expand"
-    cmd += f" --json-pretty -u {TEST_UNITS} {spec} -o {overlay} {output}"
+    cmd += f" --pretty -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
 
     subprocess.run(cmd.split(), check=True, capture_output=True, text=True)
     expected = HERE / comparison_file
