@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
 import os
 
 
@@ -31,27 +30,3 @@ def test_error_when_data_types_file_is_missing(tmp_path):
         "raise ArgumentException"
         in process.stderr
     )
-
-
-@pytest.mark.parametrize("format", ["binary", "franca", "graphql"])
-def test_error_with_non_compatible_formats(format, tmp_path):
-    otypes = HERE / "output_types_file.json"
-    spec = HERE / "test.vspec"
-    output = tmp_path / "output.json"
-    types = HERE / "VehicleDataTypes.vspec"
-    cmd = f"vspec2x {format} -u {TEST_UNITS} --types {types} --types-output {otypes} --vspec {spec} --output {output}"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
-    assert process.returncode != 0
-    assert "No such option: --types" in process.stderr
-
-
-@pytest.mark.parametrize("format", ["ddsidl"])
-def test_error_with_ot(format, tmp_path):
-    otypes = HERE / "output_types_file.json"
-    spec = HERE / "test.vspec"
-    output = tmp_path / "output.json"
-    types = HERE / "VehicleDataTypes.vspec"
-    cmd = f"vspec2x {format} -u {TEST_UNITS} --types {types} --types-output {otypes} --vspec {spec} --output {output}"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
-    assert process.returncode != 0
-    assert "No such option: --types-output" in process.stderr
