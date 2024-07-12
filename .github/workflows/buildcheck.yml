@@ -81,10 +81,10 @@ jobs:
           mkdir /tmp/pypi_vss_test
           cd /tmp/pypi_vss_test
           # Just verify that we can start the tools
-          vspec2csv --help
-          vspec2json --help
-          vspec2yaml --help
-          vspec2franca --help
-          vspec2ddsidl --help
-          vspec2protobuf --help
-          vspec2graphql --help
+          vspec2x csv --help
+          vspec2x json --help
+          vspec2x yaml --help
+          vspec2x franca --help
+          vspec2x ddsidl --help
+          vspec2x protobuf --help
+          vspec2x graphql --help
