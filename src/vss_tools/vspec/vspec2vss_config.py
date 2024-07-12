@@ -16,7 +16,7 @@ class Vspec2VssConfig:
     Then vspec2x will use those settings to control which command line arguments
     that will be accepted or considered, and based on those some of the settings in this
     file may be overridden.
-    The config instance is later passed to the vss2x instance, so that it can consider
+    The config instance is later passed to the vspec2x instance, so that it can consider
     the settings as well.
     """
 

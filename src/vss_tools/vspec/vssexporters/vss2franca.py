@@ -71,7 +71,7 @@ def print_franca_content(file, tree, uuid):
                 output += f",\n\tallowed: {tree_node.allowed}"
 
             output += "\n}"
-    file.write(f"{output}")
+    file.write(output)
 
 
 @click.command()
