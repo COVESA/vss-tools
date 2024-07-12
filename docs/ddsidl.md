@@ -1,4 +1,4 @@
-VSS2DDSIDL converter is used to export VSS file data to DDS IDL file _(4.2 version)_
+VSS2DDSIDL exporter is used to export VSS file data to DDS IDL file _(4.2 version)_
 
 ## Acronyms used:
 - DDS : Data Distribution Service
@@ -16,7 +16,8 @@ VSS2DDSIDL converter is used to export VSS file data to DDS IDL file _(4.2 versi
 - allowed
 
 ### Special handling
-Below elements are considered only if the switch ***--all-idl-features*** is supplied as a command line argument
+
+Below elements are considered only if the switch `--all-idl-features` is supplied as a command line argument
 - type
 - min, max
 - unit

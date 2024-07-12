@@ -1,55 +1,61 @@
-# Vspec2x-based generators
+# Vspec Exporters
 
-[vspec2x](../vspec/vspec2x.py) is a generator framework that offers functionality to parse one or more vspec files and
-transform that to an internal VSS model, which can be used as input for generators.
+`vspec2x` is a tool to export a given vss model into another format.
 
-Vspec2x-based generators have a number of common arguments.
-It is partially configurable which arguments that shall be available for each generator,
-so all arguments described in this documents are not available for all generators.
-In addition to this generator-specific arguments may be supported
-
-You can get a description of supported commandline arguments by running `<toolname> --help`, e.g. `vss2json --help`.
-In this document `vspec2json` is generally used as example, but the same syntax is typically available also for other tools.
-
-The supported arguments might look like this
+For the most up do date usage information, please call the tool help via:
 
 ```bash
-vspec2json --help
-usage: vspec2json [-h] [--log-level {INFO,DEBUG,WARNING,ERROR,CRITICAL}] [--log-file LOG_FILE] [--version] [-I dir]
-                  [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--uuid]
-                  [--no-expand] [-o overlays] [-q quantity_file] [-u unit_file] [-vt vspec_types_file]
-                  [-ot <types_output_file>] [--json-all-extended-attributes] [--json-pretty]
-                  <vspec_file> <output_file
+vspec2x --help
+
+ Usage: vspec2x [OPTIONS] COMMAND [ARGS]...
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --log-level    [DEBUG|INFO|WARNING|ERROR|CRITICAL]  Log level. [default: INFO]                         │
+│ --log-file     FILE                                 Log file.                                          │
+│ --help                                              Show this message and exit.                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────╮
+│ binary                            Export to Binary.                                                    │
+│ csv                               Export as CSV.                                                       │
+│ ddsidl                            Export as DDSIDL.                                                    │
+│ franca                            Export as Franca.                                                    │
+│ graphql                           Export as GraphQL.                                                   │
+│ id                                Export as IDs.                                                       │
+│ json                              Export as JSON.                                                      │
+│ jsonschema                        Export as a jsonschema.                                              │
+│ protobuf                          Export as protobuf.                                                  │
+│ yaml                              Export as YAML.                                                      │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+As you can see there are some general arguments independent of the exporter.
+They have to be passed before calling the subcommand for instance:
+
+```bash
+vspec2x --log-level DEBUG json ....
 ```
 
 
-An example command line to convert the VSS standard catalog into a JSON file (from vss root):
+A complete example call with the `json` exporter and its output could look like this:
 
 ```bash
-vspec2json -I spec -u spec/units.yaml spec/VehicleSignalSpecification.vspec vss.json
-[08:52:00] INFO     VSS-tools version 4.2.0                                                                     vspec2x.py:110
-           INFO     Added 29 quantities from                                                                   __init__.py:895
-                    /Users/MisterX/workspace/vehicle_signal_specification/spec/quantities.yaml
-           INFO     Added 62 units from spec/units.yaml                                                     __init__.py:930
-           INFO     Loading vspec from spec/VehicleSignalSpecification.vspec...                              vspec2x.py:158
-[08:52:01] INFO     Check type usage                                                                           __init__.py:117
-           INFO     Calling exporter...                                                                         vspec2x.py:179
-           INFO     Generating JSON output...                                                                   vss2json.py:94
-           INFO     Serializing compact JSON...                                                                vss2json.py:100
-           INFO     All done.                                                                                   vspec2x.py:18
+vspec2x json --vspec spec/VehicleSignalSpecification.vspec --output vss.json
+[16:40:03] INFO     Added 29 quantities from                                               __init__.py:895
+                    /Users/Foo/workspace/vehicle_signal_specification/spec/quantities.
+                    yaml
+           INFO     Added 62 units from                                                    __init__.py:923
+                    /Users/Bar/workspace/vehicle_signal_specification/spec/units.yaml
+           INFO     Loading vspec from spec/VehicleSignalSpecification.vspec...                utils.py:81
+[16:40:04] INFO     Check type usage                                                       __init__.py:117
+           INFO     Generating JSON output...                                              vss2json.py:142
+           INFO     Serializing compact JSON...                                            vss2json.py:148
+
 ```
 
-This assumes you checked out the [COVESA Vehicle Signal Specification](https://github.com/covesa/vehicle_signal_specification) which contains vss-tools as a submodule.
+## Argument Explanations
 
-The `-I` parameter adds a directory to search for includes referenced in you `.vspec` files. `-I` can be used multiple times to specify more include directories.
-The `-u` parameter specifies the unit file(s) to use. The `-q` parameter specifies quantity file(s) to use.
-
-The first positional argument - `spec/VehicleSignalSpecification.vspec` in the example  - gives the (root) `.vspec` file
-to be converted. The second positional argument  - `vss.json` in the example - is the output file.
-
-It is the file `vspec2json` that specified which generator to use, i.e. which output to generate.
-
-## General parameters
+Here is a list of more in depth Explanations of the arguments.
+Please note that not all arguments are available for all exporters.
+That is either a technical limitation of the exported format or has just not implemented yet.
 
 ### --log-level
 Controls the verbosity of the output the tool generates. The default is "INFO" which
@@ -59,30 +65,30 @@ will print things interesting for most users. If you want to hide those you can 
 ### --log-file
 Also writes log messages into the given file. Note that the format used for writing into a file is slightly different.
 
-### --abort-on-unknown-attribute
+### --aborts unknown-attribute
 Terminates parsing when an unknown attribute is encountered, that is an attribute that is not defined in the [VSS standard catalogue](https://covesa.github.io/vehicle_signal_specification/rule_set/), and not whitelisted using the extended attribute parameter `-e` (see below).
 
 > [!NOTE]
 > Here an *attribute* refers to VSS signal metadata such as "datatype", "min", "max",
 > ... and not to the VSS signal type attribute
 
-###  --abort-on-name-style
+### --aborts name-style
 Terminates parsing, when the name of a signal does not follow [VSS Naming Conventions](https://covesa.github.io/vehicle_signal_specification/rule_set/basics/#naming-conventions) for the VSS standard catalog.
 
-### --strict
-Equivalent to setting `--abort-on-unknown-attribute` and `--abort-on-name-style`
+### --strict/--no-strict
+Enables `--aborts unknown-attribute` and `--aborts name-style`
 
-### --uuid
+### --uuid/--no-uuid
 Request the exporter to output UUIDs. The UUID generated is an RFC 4122 Version 5 UUID created from the qualified name
 of the node and the UUID of the namespace `vehicle_signal_specification`.
 
-This setting may not apply to all exporters, some exporters will never output uuids.
+Note that not all exporters support that arugment
 
 > [!WARNING]
 > The UUID feature is deprecated and will be removed in VSS-tools 6.0.
 > If you need identifiers consider using [vspec2id](vspec2id.md)
 
-### --no-expand
+### --expand/--no-expand
 
 By default all tools expand instance information so that instance information like "Row1" become a branch just like
 any other branch. If this argument is used and the exporter supports it no expansion will take place.
@@ -97,21 +103,21 @@ This is currently limited to specifying struct-types. For more information on sy
 > [!WARNING]
 > Struct support is not yet supported by all exporters, currently supported by JSON; CSV, Yaml and Protobuf exporters!
 
-To use user-defined types the types must be put in a separate file and given to the tool with the `-vt` argument.
+To use user-defined types the types must be put in a separate file and given to the tool with the `--types/-t` argument.
 When a signal is defined the tooling will check if the `datatype` specified is either a predefined type or
 a user-defined type. If no matching type is found an error will be given.
-It is possible to use `-vt <file>` multiple times. Any additional files after the first one is then treated similar
+It is possible to use `--types/-t <file>` multiple times. Any additional files after the first one is then treated similar
 to overlay files, i.e. they are merged into previous file and it is if needed possible to redefine already defined types.
 
 Depending on exporter, type definitions may either be transformed to a separate file with structure similar to the
 "normal" output file, or integrated into the "normal" output file. If type output is given to a separate file then
-the name of that file can be specified by the `-ot`argument.
+the name of that file can be specified by the `--types-output` argument.
 
 Below is an example using user-defined types for JSON generation.
 Please see [test cases](https://github.com/COVESA/vss-tools/tree/master/tests/vspec/test_structs) for more details.
 
 ```bash
-vspec2json --json-pretty -vt VehicleDataTypes.vspec -ot VehicleDataTypes.json test.vspec out.json
+vspec2x json --pretty --types VehicleDataTypes.vspec --types-output VehicleDataTypes.json --vspec test.vspec --output out.json
 ```
 
 Current status for exporters:
@@ -207,17 +213,17 @@ The tooling verifies that only pre-defined units are used, like `kPa`and `percen
 
 COVESA maintains a [unit file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml) for the standard VSS catalog.
 
-It is possible to specify your own unit file(s) by the `-u <file>` parameter.
-`-u` can be used multiple times to specify additional files like in the example below:
+It is possible to specify your own unit file(s) by the `--units/-u <file>` parameter.
+`--units/-u` can be used multiple times to specify additional files like in the example below:
 
 ```bash
-vspec2csv -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml ./spec/VehicleSignalSpecification.vspec output.csv
+vspec2x csv -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml --vspec ./spec/VehicleSignalSpecification.vspec --output output.csv
 ```
 
 When deciding which units to use the tooling use the following logic:
 
-* If `-u <file>` is used then the specified unit files will be used. Default units will not be considered.
-* If `-u` is not used the tool will check for a unit file in the same directory as the root `*.vspec` file.
+* If `--units/-u <file>` is used then the specified unit files will be used. Default units will not be considered.
+* If `--units/-u` is not used the tool will check for a unit file in the same directory as the root `*.vspec` file.
 
 See the [FAQ](../FAQ.md) for more information on how to define own units.
 
@@ -228,8 +234,8 @@ COVESA maintains a [quantity file](https://github.com/COVESA/vehicle_signal_spec
 
 When deciding which quantities to use the tooling use the following logic:
 
-* If `-q <file>` is used then the specified quantity files will be used. Default quantities will not be considered.
-* If `-q` is not used the tool will check for a file called `quantities.yaml` in the same directory as the root `*.vspec` file.
+* If `--quantities/-q <file>` is used then the specified quantity files will be used. Default quantities will not be considered.
+* If `--quantities/-q <file>` is not used the tool will check for a file called `quantities.yaml` in the same directory as the root `*.vspec` file.
 
 As of today use of quantity files is optional, and tooling will only give a warning if a unit use a quantity not specified in a quantity file.
 
@@ -239,7 +245,7 @@ The generator framework allows composition of several overlays on top of a base 
 Overlays are in general injected before the VSS tree is expanded. Expansion is the process where branches with instances are transformed into multiple branches.
 An example is the `Vehicle.Cabin.Door` branch which during expansion get transformed into `Vehicle.Cabin.Door.Row1.Left`, `Vehicle.Cabin.Door.Row1.Right`, `Vehicle.Cabin.Door.Row2.Left`and `Vehicle.Cabin.Door.Row2.Right`.
 
-If you in an overlay for example wants to add a new signal to all door instances but only wants to specify the new signal once, then you could create an overlay like below and inject it using the `-o` or `--overlay` parameter.
+If you in an overlay for example wants to add a new signal to all door instances but only wants to specify the new signal once, then you could create an overlay like below and inject it using the `-l` or `--overlay` parameter.
 
 ```
 Vehicle.Cabin.Door.NewSignal:
@@ -276,10 +282,10 @@ signal and not expand it further. If using an overlay to redefine a specific sig
 *of expanded and unexpanded paths. For the example above `Vehicle.Cabin.Door.Row1.Left.NewSignal` will be expanded*
 *but all other signals in `Vehicle.Cabin.Door` will remain unexpanded!*
 
-It is possible to use `-o` multiple times, e.g.
+It is possible to use `-l` multiple times, e.g.
 
 ```bash
-vspec2yaml ../spec/VehicleSignalSpecification.vspec -o o1.vspec -o o2.vspec -oae o3.vspec -oae o4.vspec result.yml
+vspec2x yaml --vspec ../spec/VehicleSignalSpecification.vspec -l o1.vspec -l o2.vspec -l o3.vspec -l o4.vspec --output result.yml
 ```
 
 You can also use overlays to inject custom metadata not used in the standard VSS catalog, for example if your custom VSS model includes `source` and `quality` metadata for sensors.
@@ -297,10 +303,10 @@ Vehicle.Speed:
     source: "ecu0xAA"
 ```
 
-This will give a warning about unknown attributes, or even terminate the parsing when `-s`, `--strict`  or `--abort-on-unknown-attribute` is used.
+This will give a warning about unknown attributes, or even terminate the parsing when `--strict`  or `--aborts unknown-attribute` is used.
 
 ```bash
-vspec2json -I spec spec/VehicleSignalSpecification.vspec --strict -o overlay.vspec test.json
+vspec2x json -I spec --vspec spec/VehicleSignalSpecification.vspec --strict -l overlay.vspec --output test.json
 Output to json format
 Known extended attributes:
 Loading vspec from spec/VehicleSignalSpecification.vspec...
@@ -309,10 +315,10 @@ Warning: Attribute(s) quality, source in element Speed not a core or known exten
 You asked for strict checking. Terminating.
 ```
 
-You can whitelist extended metadata attributes using the `-e` parameter with a comma separated list of attributes:
+You can whitelist extended metadata attributes using the `-e` parameter:
 
-```
-vspec2json -I spec spec/VehicleSignalSpecification.vspec -e quality,source -o overlay.vspec test.json
+```bash
+vspec2x json -I spec spec/VehicleSignalSpecification.vspec -e quality -e source -l overlay.vspec --output test.json
 ```
 
 In this case the expectation is, that the generated output will contain the whitelisted extended metadata attributes, if the exporter supports them.
@@ -323,15 +329,15 @@ In this case the expectation is, that the generated output will contain the whit
 
 ## JSON exporter notes
 
-### --json-all-extended-attributes
+### --extended-all-attributes
 Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter.
 
-### --json-pretty
+### --pretty
 If the parameter is set it will pretty-print the JSON output, otherwise you will get a minimized version
 
 ## JSONSCHEMA exporter notes
 
-### --jsonschema-all-extended-attributes
+### --extended-all-attributes
 Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter. This will also add unconverted VSS standard attributes into the schema using the following attributes
 
 | VSS attribute | in schema     |
@@ -345,7 +351,7 @@ Lets the exporter generate _all_ extended metadata attributes found in the model
 
 Not that strict JSON schema validators might not accept jsonschemas with such extra, non-standard entries.
 
-### --jsonschema-disallow-additional-properties
+### --no-additional-properties
 Do not allow properties not defined in VSS tree, when elements are validated against the schema, what this basically does is setting
 
 ```json
@@ -353,15 +359,15 @@ Do not allow properties not defined in VSS tree, when elements are validated aga
 ```
 for all defined objects. See: https://json-schema.org/draft/2020-12/json-schema-core#additionalProperties
 
-###  --jsonschema-require-all-properties
+###  --require-all-properties
 Require all elements defined in VSS tree for a valid object, i.e. this populates the `required` list with all children. See: https://json-schema.org/draft/2020-12/json-schema-validation#name-required
 
-### --jsonschema-pretty
+### --pretty
 If the paramter is set it will pretty-print the JSON output, otherwise you will get a minimized version
 
 ## YAML exporter notes
 
-### --yaml-all-extended-attributes
+### --extended-all-attributes
 Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter.
 
 ## DDS-IDL exporter notes
@@ -375,19 +381,13 @@ Will also generate non-payload const attributes such as unit/datatype. Default i
 
 ## GRAPHQL exporter notes
 
-### --gqlfield GQLFIELD GQLFIELD
-Add additional fields to the nodes in the graphql schema. use: <field_name> <description>
+### --gql-fields name,description
+Add additional fields to the nodes in the graphql schema. use: <field_name>,<description>.
+Can be used more than once.
 
 
 ## Writing your own generator
 
-This is done by creating a subclass of `class Vss2X`, see [vss2x.py](../vspec/vss2x.py).
-You need at least to implement the abstract method `generate`.
-In addition you may want to customize which generic arguments that shall be used and add
-generator specific arguments, if needed.
+Just have a look at current implementations of exporters.
+Start by copy pasting the `def cli()`. Think about parameters the exporter supports.
 
-
-A generic implementation example is available as a [test case](../tests/generators).
-
-
-Please see [vspec2x architecture document](vspec2x_arch.md).

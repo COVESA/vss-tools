@@ -67,7 +67,7 @@ In VSS-Tools 4.0 structs are supported in the following exporters:
 
 Other exporters do not support structs.
 
-It is possible to use specify muliple type files with `-vt`, and to use types in combination with overlays.
+It is possible to use specify muliple type files with `--types`, and to use types in combination with overlays.
 For more information see [vspec2x documentation](docs/vspec2x.md)
 
 ### Change in UUID handling.
@@ -111,7 +111,7 @@ if units refer to a quantity that has not been defined an information message wi
 
 ### Change in UUID handling.
 
-As the tool [vspec2id](docs/vspec2id.md) has been added the VSS-project has agreed that there no longer is a need to support
+As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
 the legacy uuid functionality.
 
 * The parameter `--no-uuid` is now removed, and an error is given if `--no-uuid` is used.
@@ -121,7 +121,7 @@ the legacy uuid functionality.
 
 ### Change in UUID handling.
 
-As the tool [vspec2id](docs/vspec2id.md) has been added the VSS-project has agreed that there no longer is a need to support
+As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
 the legacy uuid functionality.
 
 * The parameter `--uuid` is now removed.

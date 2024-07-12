@@ -1,6 +1,6 @@
-# vspec2id - vspec static UID generator and validator
+# ID - vspec static UID generator and validator
 
-The `vspec2id` tool is used to generate and validate static UIDs for all
+The `id` exporter is used to generate and validate static UIDs for all
 nodes in the tree. These static UIDs serve as unique identifiers for
 transmitting data between nodes. They are designed to replace long strings like
 `Vehicle.Body.Lights.DirectionIndicator.Right.IsSignaling` with compact 4-byte
@@ -8,27 +8,42 @@ identifiers.
 
 ## General usage
 
-```
-usage: vspec2id [-h] [--log-level {INFO,DEBUG,WARNING,ERROR,CRITICAL}] [--log-file LOG_FILE] [--version] [-I dir]
-                [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--uuid] [--no-expand]
-                [-o overlays] [-q quantity_file] [-u unit_file] [-vt vspec_types_file] [-ot <types_output_file>]
-                [--validate-static-uid VALIDATE_STATIC_UID] [--only-validate-no-export] [--strict-mode]
-                <vspec_file> <output_file>
+```bash
+ Usage: vspec2x id [OPTIONS]
 
-Convert vspec to other formats.
+ Export as IDs.
 
-positional arguments:
-  <vspec_file>          The vehicle specification file to convert.
-  <output_file>         The file to write output to.
-...
-
-Exporter specific arguments:
-
-  --validate-static-uid VALIDATE_STATIC_UID
-                        Path to validation file.
-  --only-validate-no-export
-                        For pytests and pipelines you can skip the export of the vspec file.
-  --strict-mode         Strict mode means that the generation of static UIDs is case-sensitive
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ *  --vspec                -s  FILE                            The vspec file. [required]                   │
+│ *  --output               -o  FILE                            Output file. [required]                      │
+│    --include-dirs         -I  DIRECTORY                       Add include directory to search for included │
+│                                                               vspec files.                                 │
+│    --extended-attributes  -e  TEXT                            Whitelisted extended attributes, comma       │
+│                                                               separated.                                   │
+│    --strict/--no-strict                                       Whether to enable strict. Enables all        │
+│                                                               '--abort/-a' values.                         │
+│                                                               [default: no-strict]                         │
+│    --aborts               -a  [unknown-attribute|name-style]  Abort on selected option. The '--strict'     │
+│                                                               option enables all of them.                  │
+│    --uuid/--no-uuid                                           Whether to add UUIDs. [default: no-uuid]     │
+│    --expand/--no-expand                                       Whether to expand the tree.                  │
+│                                                               [default: expand]                            │
+│    --overlays             -l  FILE                            Overlay files to apply on top of the vspec.  │
+│    --quantities           -q  FILE                            Quantity files. [default:                    │
+│                                                               VSPEC/quantities.yaml]                       │
+│    --units                -u  FILE                            Unit files. [default: VSPEC/units.yaml]      │
+│    --types                -t  FILE                            Data types files.                            │
+│    --types-output             FILE                            Output file for writing data types from      │
+│                                                               vspec file. If not specified, a single file  │
+│                                                               is used where applicable. In case of JSON    │
+│                                                               and YAML, the data is exported under a       │
+│                                                               special key: "ComplexDataTypes",             │
+│    --validate-static-uid      FILE                            Validation file.                             │
+│    --validate-only                                            Only validating. Not exporting.              │
+│    --case-sensitive                                           Whether the generation of static UIDs is     │
+│                                                               case-sensitive                               │
+│    --help                                                     Show this message and exit.                  │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ## Example
@@ -41,9 +56,9 @@ if you want to use any overlays, now is the time to do so:
 
 ```bash
 cd path/to/your/vss
-vspec2id spec/VehicleSignalSpecification.vspec output_id_v1.vspec
+vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v1.vspec
 # or if you are using an overlay e.g. called overlay.vspec
-vspec2id spec/VehicleSignalSpecification.vspec output_id_v1.vspec -o overlay.vspec
+vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v1.vspec -l overlay.vspec
 ```
 
 Great, you generated your first vspec including static IDs that will also be
@@ -51,19 +66,19 @@ used as your validation file as soon as you update your vehicle signal
 specification or your overlay.
 
 If needed you can make the static UID generation case-sensitive using the
-command line argument `--strict-mode`. It will default to false.
+command line argument `--strict`. It will default to false.
 
 ### Generate e.g. yaml file with static UIDs
 
 Now if you just want to generate a new e.g. yaml file including your static
 UIDs, please use the corresponding exporter (here we will use
-`./vspec2yaml.py`). Please note that if you are outside of the spec folder in
+`yaml`). Please note that if you are outside of the spec folder in
 the vehicle specification you will have to specify the path to the units.yaml
 using `-u`.
 
 ```bash
 cd path/to/your/vss
-vspec2yaml output_id_v1.vspec vehicle_specification_with_uids.yaml -e staticUID -u spec/units.yaml
+vspec2x yaml --vspec output_id_v1.vspec --output vehicle_specification_with_uids.yaml -e staticUID -u spec/units.yaml
 ```
 
 ### Using constant UIDs for specific attributes
@@ -99,7 +114,7 @@ Let's say the snippet above is a file called `const_id_overlay.vspec`, you could
 run the vspec2id.py like this:
 
 ```bash
-vspec2id spec/VehicleSignalSpecification.vspec const_test.vspec -o const_overlay.vspec
+vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output const_test.vspec -l const_overlay.vspec
 ```
 
 which will give you the following `INFO` msg and write the defined constant ID
@@ -193,7 +208,7 @@ Now you should know about all possible changes. To run the validation step,
 please do:
 
 ```bash
-vspec2id spec/VehicleSignalSpecification.vspec output_id_v2.vspec --validate-static-uid output_id_v1.vspec
+vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v2.vspec --validate-static-uid output_id_v1.vspec
 ```
 
 Depending on what you changed in the vehicle signal specification the
