@@ -27,13 +27,13 @@ def get_trees(
     quantities: tuple[Path],
     vspec: Path,
     units: tuple[Path],
-    types: tuple[Path],
-    types_output: Path,
+    types: tuple[Path, ...],
+    types_output: Path | None,
     overlays: tuple[Path],
     expand: bool,
 ) -> tuple[VSSNode, VSSNode | None]:
-    include_dirs = list(include_dirs)
-    include_dirs.extend([Path.cwd(), vspec.parent])
+    includes = list(include_dirs)
+    includes.extend([Path.cwd(), vspec.parent])
 
     abort_on_unknown_attribute = False
     abort_on_namestyle = False
@@ -44,9 +44,7 @@ def get_trees(
         abort_on_namestyle = True
 
     if extended_attributes:
-        vspec.model.vsstree.VSSNode.whitelisted_extended_attributes = list(
-            extended_attributes
-        )
+        VSSNode.whitelisted_extended_attributes = list(extended_attributes)
         log.info(f"Known extended attributes: {', '.join(extended_attributes)}")
     else:
         extended_attributes = list()
@@ -60,8 +58,10 @@ def get_trees(
         )
         log.info("If you need static identifiers consider using the vspec2id tool")
 
-    load_quantities(vspec, quantities)
-    load_units(vspec, units)
+    qs = [str(q) for q in quantities]
+    load_quantities(str(vspec), qs)
+    us = [str(u) for u in units]
+    load_units(str(vspec), us)
 
     # process data type tree
     data_type_tree = None
@@ -74,7 +74,7 @@ def get_trees(
                 )
         if types:
             data_type_tree = processDataTypeTree(
-                types_output, types, include_dirs, abort_on_namestyle
+                types_output, types, includes, abort_on_namestyle
             )
             verify_mandatory_attributes(data_type_tree, abort_on_unknown_attribute)
 
@@ -82,7 +82,7 @@ def get_trees(
         log.info(f"Loading vspec from {vspec}...")
         tree = load_tree(
             str(vspec),
-            include_dirs,
+            includes,
             VSSTreeType.SIGNAL_TREE,
             break_on_name_style_violation=abort_on_namestyle,
             expand_inst=False,
@@ -95,7 +95,7 @@ def get_trees(
             log.info(f"Applying VSS overlay from {overlay}...")
             othertree = load_tree(
                 str(overlay),
-                include_dirs,
+                includes,
                 VSSTreeType.SIGNAL_TREE,
                 break_on_name_style_violation=abort_on_namestyle,
                 expand_inst=False,
@@ -117,9 +117,9 @@ def get_trees(
 
 
 def processDataTypeTree(
-    types_output: Path,
-    types: tuple[Path],
-    include_dir: tuple[Path],
+    types_output: Path | None,
+    types: tuple[Path, ...],
+    include_dir: list[Path],
     abort_on_namestyle: bool,
 ) -> VSSNode:
     """

@@ -447,7 +447,7 @@ def cli(
     vspec: Path,
     output: Path,
     include_dirs: tuple[Path],
-    extended_attributes: str,
+    extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
     uuid: bool,

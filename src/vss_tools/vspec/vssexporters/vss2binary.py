@@ -195,7 +195,7 @@ def cli(
     Export to Binary.
     """
     global _cbinary
-    _cbinary = ctypes.CDLL(bintool_dll)
+    _cbinary = ctypes.CDLL(str(bintool_dll))
 
     _cbinary.createBinaryCnode.argtypes = (
         ctypes.c_char_p,

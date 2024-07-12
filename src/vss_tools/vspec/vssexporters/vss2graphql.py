@@ -164,7 +164,7 @@ def cli(
     vspec: Path,
     output: Path,
     include_dirs: tuple[Path],
-    extended_attributes: str,
+    extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
     overlays: tuple[Path],
@@ -191,9 +191,9 @@ def cli(
     )
     log.info("Generating graphql output...")
     outfile = open(output, "w")
-    gql_fields = []
+    gqlfields: list[list[str]] = []
     for field in gql_fields:
-        gql_fields.append([field.split(",")])
-    outfile.write(get_schema_from_tree(tree, gql_fields))
+        gqlfields.append(field.split(","))
+    outfile.write(get_schema_from_tree(tree, gqlfields))
     outfile.write("\n")
     outfile.close()
