@@ -38,7 +38,7 @@ extended_attributes_opt = option(
     "--extended-attributes",
     "-e",
     multiple=True,
-    help="Whitelisted extended attributes, comma separated.",
+    help="Whitelisted extended attributes",
 )
 
 strict_opt = option(
@@ -59,7 +59,7 @@ aborts_opt = option(
 uuid_opt = option("--uuid/--no-uuid", help="Whether to add UUIDs.", show_default=True, default=False)
 
 expand_opt = option(
-    "--expand/--no-expand", default=True, show_default=True, help="Whether to expand the tree."
+    "--expand/--no-expand", default=True, show_default=True, help="Whether to expand 'instances'."
 )
 
 overlays_opt = option(
