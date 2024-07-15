@@ -4,7 +4,9 @@
 [![License](https://img.shields.io/badge/License-MPL%202.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
 [![Build Status](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml/badge.svg)](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml?query=branch%3Amaster)
 
-The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification). VSS Tools is developed in parallel with VSS, please visit the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification) for information on how to contribute. If any questions arise, please check out the [FAQ](FAQ.md) for more information.
+The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification).
+VSS Tools is developed in parallel with VSS, please visit the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification) for information on how to contribute.
+If any questions arise, please check out the [FAQ](FAQ.md) for more information.
 
 ## Available Tools
 
@@ -31,21 +33,17 @@ vspec2x json --help
 # ...
 ```
 
+Please check [here](./docs/vspec2x.md) for generic infos about exporters and their arguments
+as well as [here](./docs/vspec2x_arch.md) for design decision, architecture and limitations.
 
-## Tool Architecture
-
-All current tools are based on common Python functionality in the `vspec` folder to read, parse and expand a Vehicle Signal Specification files (*.vspec files).
-As an example, if the standard [VSS root file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/VehicleSignalSpecification.vspec) is
-given as input then the Python tooling will read all included files, do a validation of the content, expand any instances used and create an in-memory
-representation which then can be used by specialized tools to generate the wanted output.
 
 ## Compatibility with VSS
 
 The [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification) includes vss-tools as a submodule.
 The vss-tools version linked by the VSS repository is the preferred vss-tools version to use for that particular version of the VSS repository.
 It is not guaranteed that newer or older versions of vss-tools can successfully handle that particular version of the VSS repository.
-The table below gives an overview of basic version support for `vspec2x json`,
-other exporters may have stricter requirements.
+The table below gives an overview of basic version support for e.g. `vspec2x json`.
+Other exporters may have stricter requirements.
 
 VSS-tools version | Supported VSS versions | Comments
 -----------------|------------------------|----------------
@@ -109,7 +107,8 @@ protoc --version  # Ensure compiler version is 3+
 ```
 
 ## Pre-commit set up
-This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks. pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
+This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks.
+pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
 
 ## Building and installing with Pip
 

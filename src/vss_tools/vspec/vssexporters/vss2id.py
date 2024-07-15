@@ -192,7 +192,7 @@ def cli(
 
     id_counter: int = 0
     signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
-    id_counter, _ = export_node(signals_yaml_dict, tree, id_counter, strict)
+    id_counter, _ = export_node(signals_yaml_dict, tree, id_counter, case_sensitive)
 
     if validate_static_uid:
         log.info(
