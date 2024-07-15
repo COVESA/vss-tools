@@ -28,7 +28,7 @@ def test_description_error(
     vspec_file: str, type_file: str, type_out_file: str, tmp_path
 ):
     output = tmp_path / "out.json"
-    cmd = f"vspec2x json --pretty -u {TEST_UNITS}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
     if type_file:
         cmd += f" --types {HERE / type_file}"
     if type_out_file:

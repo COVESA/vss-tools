@@ -20,7 +20,7 @@ def test_error_when_data_types_file_is_missing(tmp_path):
     otypes = HERE / "output_types_file.json"
     spec = HERE / "test.vspec"
     output = tmp_path / "output.json"
-    cmd = f"vspec2x json -u {TEST_UNITS} --types-output {otypes} --vspec {spec} --output {output}"
+    cmd = f"vspec export json -u {TEST_UNITS} --types-output {otypes} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(

@@ -32,7 +32,7 @@ def run_unit(
     out = tmp_path / "out.json"
     unit_argument = " ".join([f"-u {HERE / unit}" for unit in units])
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
-    cmd = f"vspec2x json --pretty --vspec {spec} {unit_argument} {quantity_argument} --output {out}"
+    cmd = f"vspec export json --pretty --vspec {spec} {unit_argument} {quantity_argument} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -57,7 +57,7 @@ def run_unit_error(
     out = tmp_path / "out.json"
     unit_argument = " ".join([f"-u {HERE / unit}" for unit in units])
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
-    cmd = f"vspec2x json --pretty --vspec {vspec_file} {unit_argument} {quantity_argument} --output {out}"
+    cmd = f"vspec export json --pretty --vspec {vspec_file} {unit_argument} {quantity_argument} --output {out}"
     process = subprocess.run(
         cmd.split(), capture_output=True, text=True, cwd=HERE)
     assert process.returncode != 0

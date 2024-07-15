@@ -17,7 +17,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 def test_datatype_error(tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2x json --pretty -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
@@ -32,7 +32,7 @@ def test_datatype_error(tmp_path):
 def test_datatype_branch(tmp_path):
     spec = HERE / "test_datatype_branch.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec2x json --pretty -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
 

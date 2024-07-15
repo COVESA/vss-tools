@@ -1,4 +1,4 @@
-# vspec2x Design Decisions, Architecture and Limitations
+# vspec Design Decisions, Architecture and Limitations
 
 ## Overlays
 

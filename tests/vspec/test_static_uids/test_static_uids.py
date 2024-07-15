@@ -200,7 +200,7 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
 
 def test_full_script(caplog: pytest.LogCaptureFixture, tmp_path):
     test_file: str = str(HERE / "test_vspecs/test.vspec")
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(test_file, tmp_path))
     cmd += clas
     process = subprocess.run(cmd)
@@ -218,14 +218,14 @@ def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str, tmp_pa
     spec = HERE / "test_vspecs/test.vspec"
     output = tmp_path / "out.vspec"
     validation = HERE / validation_file
-    args = f"vspec2x id --vspec {spec} --output {output} --validate-static-uid {validation}"
+    args = f"vspec export id --vspec {spec} --output {output} --validate-static-uid {validation}"
     process = subprocess.run(args.split(), capture_output=True, text=True)
     assert "SEMANTIC NAME CHANGE" in process.stdout
 
 
 def test_vss_path(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_vss_path.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     env = os.environ.copy()
@@ -236,7 +236,7 @@ def test_vss_path(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_unit(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_unit.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -245,7 +245,7 @@ def test_unit(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_datatype.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -254,7 +254,7 @@ def test_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_name_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_name_datatype.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -264,7 +264,7 @@ def test_name_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_deprecation(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_deprecation.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -273,7 +273,7 @@ def test_deprecation(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_description(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_description.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -282,7 +282,7 @@ def test_description(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_added_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_added_attribute.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -296,7 +296,7 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_deleted_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_deleted_attribute.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -312,7 +312,7 @@ def test_overlay(caplog: pytest.LogCaptureFixture, tmp_path):
 
     spec = HERE / "test_vspecs/test.vspec"
     overlay = HERE / "test_vspecs/test_overlay.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
@@ -328,7 +328,7 @@ def test_const_id(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test.vspec"
     overlay = HERE / "test_vspecs/test_const_id.vspec"
 
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
     cmd += clas
     subprocess.run(cmd, capture_output=True, text=True)
@@ -342,7 +342,7 @@ def test_const_id(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_iterated_file(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test.vspec"
-    cmd = "vspec2x id".split()
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
     subprocess.run(cmd, capture_output=True, text=True)

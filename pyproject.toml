@@ -30,7 +30,7 @@ pre-commit = "*"
 
 
 [tool.poetry.scripts]
-vspec2x = "vss_tools.vspec.vspec2x:cli"
+vspec = "vss_tools.vspec.vspec:cli"
 
 [build-system]
 requires = ["poetry-core"]

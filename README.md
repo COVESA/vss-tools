@@ -28,13 +28,14 @@ Examples on tool usage can be found in the [VSS Makefile](https://github.com/COV
 General CLI help should be used for up to date info of how to use the tools.
 
 ```bash
-vspec2x --help
-vspec2x json --help
+vspec --help # Help about global flags
+vspec export --help # Shows help for the export functionality
+vspec export json --help # Shows help for the json exporter
 # ...
 ```
 
-Please check [here](./docs/vspec2x.md) for generic infos about exporters and their arguments
-as well as [here](./docs/vspec2x_arch.md) for design decision, architecture and limitations.
+Please check [here](./docs/vspec.md) for generic infos about exporters and their arguments
+as well as [here](./docs/vspec_arch.md) for design decision, architecture and limitations.
 
 
 ## Compatibility with VSS
@@ -42,7 +43,7 @@ as well as [here](./docs/vspec2x_arch.md) for design decision, architecture and 
 The [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification) includes vss-tools as a submodule.
 The vss-tools version linked by the VSS repository is the preferred vss-tools version to use for that particular version of the VSS repository.
 It is not guaranteed that newer or older versions of vss-tools can successfully handle that particular version of the VSS repository.
-The table below gives an overview of basic version support for e.g. `vspec2x json`.
+The table below gives an overview of basic version support for e.g. `vspec export json`.
 Other exporters may have stricter requirements.
 
 VSS-tools version | Supported VSS versions | Comments

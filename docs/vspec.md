@@ -1,16 +1,14 @@
 # Vspec Exporters
 
-`vspec2x` is a tool to export a given vss model into another format.
+`vspec export` is a tool to export a given vss model into another format.
 
 For the most up do date usage information, please call the tool help via:
 
 ```bash
-vspec2x --help
+vspec export --help
 
- Usage: vspec2x [OPTIONS] COMMAND [ARGS]...
+ Usage: vspec export [OPTIONS] COMMAND [ARGS]...
 ╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --log-level    [DEBUG|INFO|WARNING|ERROR|CRITICAL]  Log level. [default: INFO]                         │
-│ --log-file     FILE                                 Log file.                                          │
 │ --help                                              Show this message and exit.                        │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -27,18 +25,11 @@ vspec2x --help
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-As you can see there are some general arguments independent of the exporter.
-They have to be passed before calling the subcommand for instance:
-
-```bash
-vspec2x --log-level DEBUG json ....
-```
-
 
 A complete example call with the `json` exporter and its output could look like this:
 
 ```bash
-vspec2x json --vspec spec/VehicleSignalSpecification.vspec --output vss.json
+vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.json
 [16:40:03] INFO     Added 29 quantities from                                               __init__.py:895
                     /Users/Foo/workspace/vehicle_signal_specification/spec/quantities.
                     yaml
@@ -117,7 +108,7 @@ Below is an example using user-defined types for JSON generation.
 Please see [test cases](https://github.com/COVESA/vss-tools/tree/master/tests/vspec/test_structs) for more details.
 
 ```bash
-vspec2x json --pretty --types VehicleDataTypes.vspec --types-output VehicleDataTypes.json --vspec test.vspec --output out.json
+vspec export json --pretty --types VehicleDataTypes.vspec --types-output VehicleDataTypes.json --vspec test.vspec --output out.json
 ```
 
 Current status for exporters:
@@ -217,7 +208,7 @@ It is possible to specify your own unit file(s) by the `--units/-u <file>` param
 `--units/-u` can be used multiple times to specify additional files like in the example below:
 
 ```bash
-vspec2x csv -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml --vspec ./spec/VehicleSignalSpecification.vspec --output output.csv
+vspec export csv -I ./spec -u vss-tools/vspec/config.yaml -u vss-tools/vspec/extra.yaml --vspec ./spec/VehicleSignalSpecification.vspec --output output.csv
 ```
 
 When deciding which units to use the tooling use the following logic:
@@ -285,7 +276,7 @@ signal and not expand it further. If using an overlay to redefine a specific sig
 It is possible to use `-l` multiple times, e.g.
 
 ```bash
-vspec2x yaml --vspec ../spec/VehicleSignalSpecification.vspec -l o1.vspec -l o2.vspec -l o3.vspec -l o4.vspec --output result.yml
+vspec export yaml --vspec ../spec/VehicleSignalSpecification.vspec -l o1.vspec -l o2.vspec -l o3.vspec -l o4.vspec --output result.yml
 ```
 
 You can also use overlays to inject custom metadata not used in the standard VSS catalog, for example if your custom VSS model includes `source` and `quality` metadata for sensors.
@@ -306,7 +297,7 @@ Vehicle.Speed:
 This will give a warning about unknown attributes, or even terminate the parsing when `--strict`  or `--aborts unknown-attribute` is used.
 
 ```bash
-vspec2x json -I spec --vspec spec/VehicleSignalSpecification.vspec --strict -l overlay.vspec --output test.json
+vspec export json -I spec --vspec spec/VehicleSignalSpecification.vspec --strict -l overlay.vspec --output test.json
 Output to json format
 Known extended attributes:
 Loading vspec from spec/VehicleSignalSpecification.vspec...
@@ -318,7 +309,7 @@ You asked for strict checking. Terminating.
 You can whitelist extended metadata attributes using the `-e` parameter:
 
 ```bash
-vspec2x json -I spec spec/VehicleSignalSpecification.vspec -e quality -e source -l overlay.vspec --output test.json
+vspec export json -I spec spec/VehicleSignalSpecification.vspec -e quality -e source -l overlay.vspec --output test.json
 ```
 
 In this case the expectation is, that the generated output will contain the whitelisted extended metadata attributes, if the exporter supports them.

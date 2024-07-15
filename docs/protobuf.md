@@ -5,7 +5,7 @@ The `protobuf` exporter generates [Protocol Buffer message definitions](https://
 ## Example
 
 ```bash
-vspec2x protobuf --vspec outputIds_v2.vspec -o indentity.proto -q spec/quantities.yaml -u spec/units.yaml -e staticUID --static-uid --add-optional
+vspec export protobuf --vspec outputIds_v2.vspec -o indentity.proto -q spec/quantities.yaml -u spec/units.yaml -e staticUID --static-uid --add-optional
 ```
 
 This example assumes that you checked out the COVESA VSS repository next to the vss-tools repository.

@@ -27,7 +27,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 def test_not_strict(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
-    cmd = f"vspec2x json --pretty -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -39,7 +39,7 @@ def test_not_strict(vspec_file: str, tmp_path):
 def test_strict_ok(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
-    cmd = f"vspec2x json --pretty --strict -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(
@@ -53,7 +53,7 @@ def test_strict_ok(vspec_file: str, tmp_path):
 def test_strict_error(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
-    cmd = f"vspec2x json --pretty --strict -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
     process = subprocess.run(

@@ -31,7 +31,7 @@ def test_json_overlay(no_expand, comparison_file, tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / "out.json"
 
-    cmd = "vspec2x json"
+    cmd = "vspec export json"
     if no_expand:
         cmd += " --no-expand"
     cmd += f" --pretty -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"

@@ -9,7 +9,7 @@ identifiers.
 ## General usage
 
 ```bash
- Usage: vspec2x id [OPTIONS]
+ Usage: vspec export id [OPTIONS]
 
  Export as IDs.
 
@@ -56,9 +56,9 @@ if you want to use any overlays, now is the time to do so:
 
 ```bash
 cd path/to/your/vss
-vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v1.vspec
+vspec export id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v1.vspec
 # or if you are using an overlay e.g. called overlay.vspec
-vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v1.vspec -l overlay.vspec
+vspec export id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v1.vspec -l overlay.vspec
 ```
 
 Great, you generated your first vspec including static IDs that will also be
@@ -78,7 +78,7 @@ using `-u`.
 
 ```bash
 cd path/to/your/vss
-vspec2x yaml --vspec output_id_v1.vspec --output vehicle_specification_with_uids.yaml -e staticUID -u spec/units.yaml
+vspec export yaml --vspec output_id_v1.vspec --output vehicle_specification_with_uids.yaml -e staticUID -u spec/units.yaml
 ```
 
 ### Using constant UIDs for specific attributes
@@ -114,7 +114,7 @@ Let's say the snippet above is a file called `const_id_overlay.vspec`, you could
 run the vspec2id.py like this:
 
 ```bash
-vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output const_test.vspec -l const_overlay.vspec
+vspec export id --vspec spec/VehicleSignalSpecification.vspec --output const_test.vspec -l const_overlay.vspec
 ```
 
 which will give you the following `INFO` msg and write the defined constant ID
@@ -208,7 +208,7 @@ Now you should know about all possible changes. To run the validation step,
 please do:
 
 ```bash
-vspec2x id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v2.vspec --validate-static-uid output_id_v1.vspec
+vspec export id --vspec spec/VehicleSignalSpecification.vspec --output output_id_v2.vspec --validate-static-uid output_id_v1.vspec
 ```
 
 Depending on what you changed in the vehicle signal specification the

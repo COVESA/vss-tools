@@ -45,5 +45,5 @@ def test_compatibility(tag, tmp_path):
     vspec = vss_dir / "spec" / "VehicleSignalSpecification.vspec"
     output = tmp_path / "out.json"
 
-    cmd = f"vspec2x json --pretty --vspec {vspec} --output {output}"
+    cmd = f"vspec export json --pretty --vspec {vspec} --output {output}"
     subprocess.run(cmd.split(), check=True)

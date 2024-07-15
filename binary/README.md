@@ -15,13 +15,13 @@ make all
 ```
 
 To **run the binary tool without using the make file**, the binary tool library must first be built in the
-binary directory, then the binary exporter of `vspec2x` is executed in the root directory:
+binary directory, then the binary exporter of `vspec exporter` is executed in the root directory:
 
 ```bash
 cd binary
 gcc -shared -o binarytool.so -fPIC binarytool.c
 cd <vss-root>
-vspec2x binary -u spec/units.yaml --vspec spec/VehicleSignalSpecification.vspec -o vss.binary
+vspec export binary -u spec/units.yaml --vspec spec/VehicleSignalSpecification.vspec -o vss.binary
 ```
 
 where vss_rel_<current version>.binary is the tre file in binary format.
@@ -38,7 +38,7 @@ using the extended attributes flag `-e`:
 
 ```bash
 cd ..  # continue from the previous example
-vspec2x binary -e validate -u ./spec/units.yaml --vspec ./spec/VehicleSignalSpecification.vspec -o vss.binary
+vspec export binary -e validate -u ./spec/units.yaml --vspec ./spec/VehicleSignalSpecification.vspec -o vss.binary
 ```
 
 

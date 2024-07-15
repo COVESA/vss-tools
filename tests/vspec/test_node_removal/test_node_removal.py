@@ -32,15 +32,15 @@ def get_cla(test_file: str, out_file: str, overlay: Optional[str]):
 @pytest.mark.parametrize(
     "exporter, out_file",
     [
-        ("vspec2x binary", "out.bin"),
-        ("vspec2x csv", "out.csv"),
-        ("vspec2x ddsidl", "out.idl"),
-        ("vspec2x franca", "out.fidl"),
-        ("vspec2x graphql", "out.graphql"),
-        ("vspec2x json", "out.json"),
-        ("vspec2x jsonschema", "out.jsonschema"),
-        ("vspec2x protobuf", "out.pb"),
-        ("vspec2x yaml", "out.yaml"),
+        ("vspec export binary", "out.bin"),
+        ("vspec export csv", "out.csv"),
+        ("vspec export ddsidl", "out.idl"),
+        ("vspec export franca", "out.fidl"),
+        ("vspec export graphql", "out.graphql"),
+        ("vspec export json", "out.json"),
+        ("vspec export jsonschema", "out.jsonschema"),
+        ("vspec export protobuf", "out.pb"),
+        ("vspec export yaml", "out.yaml"),
     ],
 )
 @pytest.mark.parametrize(
@@ -85,17 +85,17 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str], tmp_
         "A.C.Instance2.Test",
     ]
     if exporter in [
-        "vspec2x binary",
-        "vspec2x ddsidl",
-        "vspec2x json",
-        "vspec2x jsonschema",
-        "vspec2x protobuf",
+        "vspec export binary",
+        "vspec export ddsidl",
+        "vspec export json",
+        "vspec export jsonschema",
+        "vspec export protobuf",
     ]:
         assert "A.B.Int32".split(".")[-1] not in result
         remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
         for node in remaining_nodes:
             assert node in result
-    if exporter == "vspec2x graphql":
+    if exporter == "vspec export graphql":
         assert "A.B.Int32".replace(".", "_") not in result
         remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
         for node in remaining_nodes:
@@ -109,15 +109,15 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str], tmp_
 @pytest.mark.parametrize(
     "exporter, out_file",
     [
-        ("vspec2x binary", "out.bin"),
-        ("vspec2x csv", "out.csv"),
-        ("vspec2x ddsidl", "out.idl"),
-        ("vspec2x franca", "out.fidl"),
-        ("vspec2x graphql", "out.graphql"),
-        ("vspec2x json", "out.json"),
-        ("vspec2x jsonschema", "out.jsonschema"),
-        ("vspec2x protobuf", "out.pb"),
-        ("vspec2x yaml", "out.yaml"),
+        ("vspec export binary", "out.bin"),
+        ("vspec export csv", "out.csv"),
+        ("vspec export ddsidl", "out.idl"),
+        ("vspec export franca", "out.fidl"),
+        ("vspec export graphql", "out.graphql"),
+        ("vspec export json", "out.json"),
+        ("vspec export jsonschema", "out.jsonschema"),
+        ("vspec export protobuf", "out.pb"),
+        ("vspec export yaml", "out.yaml"),
     ],
 )
 @pytest.mark.parametrize(
@@ -158,17 +158,17 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tm
     ]
 
     if exporter in [
-        "vspec2x binary",
-        "vspec2x ddsidl",
-        "vspec2x json",
-        "vspec2x jsonschema",
-        "vspec2x protobuf",
+        "vspec export binary",
+        "vspec export ddsidl",
+        "vspec export json",
+        "vspec export jsonschema",
+        "vspec export protobuf",
     ]:
         assert "A.B".split(".")[-1] not in result_file
         remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
         for node in remaining_nodes:
             assert node in result_file
-    elif exporter == "vspec2x graphql":
+    elif exporter == "vspec export graphql":
         assert "A.B".replace(".", "_") not in result_file
         remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
         for node in remaining_nodes:
@@ -182,15 +182,15 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tm
 @pytest.mark.parametrize(
     "exporter, out_file",
     [
-        ("vspec2x binary", "out.bin"),
-        ("vspec2x csv", "out.csv"),
-        ("vspec2x ddsidl", "out.idl"),
-        ("vspec2x franca", "out.fidl"),
-        ("vspec2x graphql", "out.graphql"),
-        ("vspec2x json", "out.json"),
-        ("vspec2x jsonschema", "out.jsonschema"),
-        ("vspec2x protobuf", "out.pb"),
-        ("vspec2x yaml", "out.yaml"),
+        ("vspec export binary", "out.bin"),
+        ("vspec export csv", "out.csv"),
+        ("vspec export ddsidl", "out.idl"),
+        ("vspec export franca", "out.fidl"),
+        ("vspec export graphql", "out.graphql"),
+        ("vspec export json", "out.json"),
+        ("vspec export jsonschema", "out.jsonschema"),
+        ("vspec export protobuf", "out.pb"),
+        ("vspec export yaml", "out.yaml"),
     ],
 )
 @pytest.mark.parametrize(
@@ -237,17 +237,17 @@ def test_deleted_instance(
         ]
 
         if exporter in [
-            "vspec2x binary",
-            "vspec2x ddsidl",
-            "vspec2x json",
-            "vspec2x jsonschema",
-            "vspec2x protobuf",
+            "vspec export binary",
+            "vspec export ddsidl",
+            "vspec export json",
+            "vspec export jsonschema",
+            "vspec export protobuf",
         ]:
             assert "A.C.Instance2".split(".")[-1] not in result_file
             remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
             for node in remaining_nodes:
                 assert node in result_file
-        elif exporter == "vspec2x graphql":
+        elif exporter == "vspec export graphql":
             assert "A.C.Instance2".replace(".", "_") not in result_file
             remaining_nodes = [node.replace(".", "_")
                                for node in remaining_nodes]

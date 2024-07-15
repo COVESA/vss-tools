@@ -15,7 +15,7 @@ It includes changes that are included in released version, but also changes plan
 ### Overlay Support
 
 Overlays introduced to allow customization of VSS. See [documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/overlay/).
-See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec2x.md) on how to include overlays when transforming VSS.
+See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md) on how to include overlays when transforming VSS.
 
 ## VSS-Tools 3.1 (Latest Release)
 
@@ -25,7 +25,7 @@ See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/do
 
 Support for defining signals with struct type added.
 For VSS 3.1 as experimental feature only supported by JSON exporter.
-For more information see [vspec2x documentation](docs/vspec2x.md)
+For more information see [vspec documentation](docs/vspec.md)
 
 ### Change in UUID handling.
 
@@ -47,7 +47,7 @@ The background is that they have been broken for a long period and no one has vo
 
 ### Support for specifying unit files
 
-Add new parameter `-u` has been introduced, see [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec2x.md#handling-of-units).
+Add new parameter `-u` has been introduced, see [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md#handling-of-units).
 Use of default unit file deprecated.
 At the same time a unit file has been added to [VSS](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml),
 allowing VSS tooling to control their own units rather than relying on units in VSS-tools.
@@ -68,7 +68,7 @@ In VSS-Tools 4.0 structs are supported in the following exporters:
 Other exporters do not support structs.
 
 It is possible to use specify muliple type files with `--types`, and to use types in combination with overlays.
-For more information see [vspec2x documentation](docs/vspec2x.md)
+For more information see [vspec documentation](docs/vspec.md)
 
 ### Change in UUID handling.
 

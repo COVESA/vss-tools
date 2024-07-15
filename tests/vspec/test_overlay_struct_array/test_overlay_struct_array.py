@@ -35,7 +35,7 @@ def test_overlay_struct_array(format, signals_out, expected_signal, tmp_path):
     spec = HERE / "test.vspec"
     overlay = HERE / "overlay.vspec"
     output = tmp_path / signals_out
-    cmd = f"vspec2x {format}"
+    cmd = f"vspec export {format}"
     if format == "json":
         cmd += " --pretty"
     cmd += f" --types {struct} -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"

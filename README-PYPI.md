@@ -24,7 +24,7 @@ If you just want the latest version this should be sufficient:
 pip install vss-tools
 ```
 
-When installed the cli tool `vspec2x` should be available in your `PATH`.
+When installed the cli tool `vspec` should be available in your `PATH`.
 
 For more information see the [VSS-Tools wiki](https://github.com/COVESA/vss-tools/wiki/PyPI-packing)
 
