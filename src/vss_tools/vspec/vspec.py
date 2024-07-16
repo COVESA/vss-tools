@@ -17,6 +17,7 @@ from pathlib import Path
 @click.group(context_settings={"auto_envvar_prefix": "vss_tools"}, invoke_without_command=True)
 @clo.log_level_opt
 @clo.log_file_opt
+@click.version_option()
 @click.pass_context
 def cli(ctx: click.Context, log_level: str, log_file: Path):
     if ctx.invoked_subcommand is None:
