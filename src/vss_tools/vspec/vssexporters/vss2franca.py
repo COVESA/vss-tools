@@ -72,6 +72,9 @@ def print_franca_content(file, tree, uuid):
             if tree_node.allowed:
                 output += f",\n\tallowed: {tree_node.allowed}"
 
+            for key, value in tree_node.extended_attributes.items():
+                output += f",\n\t{key}: \"{value}\""
+
             output += "\n}"
     file.write(f"{output}")
 

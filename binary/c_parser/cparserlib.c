@@ -425,6 +425,13 @@ void populateNode(node_t* thisNode) {
 		thisNode->defaultAllowed[thisNode->defaultLen] = '\0';
 	}
 
+	ret = fread(&(thisNode->staticUIDLen), sizeof(uint8_t), 1, treeFp);
+	if (thisNode->staticUIDLen > 0) {
+		thisNode->staticUID = (char*) malloc(sizeof(char)*(thisNode->staticUIDLen+1));
+		ret = fread(thisNode->staticUID, sizeof(char)*thisNode->staticUIDLen, 1, treeFp);
+		thisNode->staticUID[thisNode->staticUIDLen] = '\0';
+	}
+
 	uint8_t validateLen;
 	ret = fread(&validateLen, sizeof(uint8_t), 1, treeFp);
 	if (validateLen > 0) {
@@ -438,7 +445,7 @@ void populateNode(node_t* thisNode) {
 
 	ret = fread(&(thisNode->children), sizeof(uint8_t), 1, treeFp);
 
-//	printf("populateNode: %s\n", thisNode->name);
+	// printf("populateNode: %s\n", thisNode->name);
 }
 
 int calculatAllowedStrLen(uint8_t alloweds, allowed_t* allowedDef) {
@@ -468,6 +475,9 @@ void writeNode(struct node_t* node) {
 
 	fwrite(&(node->uuidLen), sizeof(uint8_t), 1, treeFp);
 	fwrite(node->uuid, sizeof(char)*node->uuidLen, 1, treeFp);
+
+	fwrite(&(node->staticUIDLen), sizeof(uint8_t), 1, treeFp);
+	fwrite(node->staticUID, sizeof(char)*node->staticUIDLen, 1, treeFp);
 
 	fwrite(&(node->descrLen), sizeof(uint16_t), 1, treeFp);
 	fwrite(node->description, sizeof(char)*node->descrLen, 1, treeFp);
@@ -752,4 +762,8 @@ char* VSSgetUnit(long nodeHandle) {
 	if (type != BRANCH && type != STRUCT)
 		return ((node_t*)((intptr_t)nodeHandle))->unit;
 	return NULL;
+}
+
+char* VSSgetStaticUID(long nodeHandle) {
+	return ((node_t*)((intptr_t)nodeHandle))->staticUID;
 }

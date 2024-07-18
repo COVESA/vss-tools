@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from pathlib import Path
+import pytest
 import subprocess
 import filecmp
 
@@ -30,9 +31,8 @@ def run_exporter(exporter, argument, tmp_path):
         assert "can only handle allowed values for string type" in process.stdout
 
 
-def test_allowed(tmp_path):
+@pytest.mark.parametrize("exporter", ["json", "ddsidl", "csv", "yaml", "franca", "graphql"])
+def test_allowed(tmp_path, exporter: str):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
-    for exporter in exporters:
-        run_exporter(exporter, f" -u {TEST_UNITS}", tmp_path)
+    run_exporter(exporter, f" -u {TEST_UNITS}", tmp_path)

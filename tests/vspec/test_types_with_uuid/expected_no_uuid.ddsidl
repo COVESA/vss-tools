@@ -4,21 +4,21 @@ struct Sensor
 {
 float value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A sensor.";
 };
 struct _Attribute
 {
 float value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An attribute.";
 };
 struct Actuator
 {
 float value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An actuator.";
 };
 };

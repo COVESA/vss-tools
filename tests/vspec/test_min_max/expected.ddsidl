@@ -3,85 +3,85 @@ module A
 struct IntNoMinMax
 {
 octet value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="No Min Max.";
 };
 struct IntOnlyMax
 {
 octet value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Only Max.";
 };
 struct IntOnlyMin
 {
 octet value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Only Min.";
 };
 struct IntMinMax
 {
 octet value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Min & Max.";
 };
 struct IntMaxZero
 {
 octet value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Max Zero.";
 };
 struct IntMinZero
 {
 octet value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Min Zero.";
 };
 struct FloatNoMinMax
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="No Min Max.";
 };
 struct FloatOnlyMax
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Only Max.";
 };
 struct FloatOnlyMin
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Only Min.";
 };
 struct FloatMinMax
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Min & Max.";
 };
 struct FloatMaxZero
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Max Zero.";
 };
 struct FloatMinZero
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Min Zero.";
 };
 struct FloatMaxZeroInt
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Max Zero.";
 };
 struct FloatMinZeroInt
 {
 float value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="Min Zero.";
 };
 };

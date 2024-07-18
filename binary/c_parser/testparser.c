@@ -43,7 +43,13 @@ char* getTypeName(nodeTypes_t type) {
 }
 
 void showNodeData(long currentNode, int currentChild) {
-        printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d,\ndescription = %s\n", VSSgetName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), VSSgetValidation(currentNode), VSSgetNumOfChildren(currentNode), VSSgetDescr(currentNode));
+        printf("\nNode: name = %s, type = %s, uuid = %s, validate = %d, children = %d", VSSgetName(currentNode), getTypeName(VSSgetType(currentNode)), VSSgetUUID(currentNode), VSSgetValidation(currentNode), VSSgetNumOfChildren(currentNode));
+        char* staticUID = VSSgetStaticUID(currentNode);
+        if (staticUID != NULL) {
+            printf(", staticUID = %s,\ndescription = %s\n", staticUID, VSSgetDescr(currentNode));
+        } else {
+            printf("\ndescription = %s\n", VSSgetDescr(currentNode));
+        }
         if (VSSgetNumOfChildren(currentNode) > 0)
             printf("Node child[%d]=%s\n", currentChild, VSSgetName(VSSgetChild(currentNode, currentChild)));
 //        for (int i = 0 ; i < VSSgetNumOfAllowedElements(currentNode) ; i++)

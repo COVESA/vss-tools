@@ -24,13 +24,17 @@ from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 # Write the header line
 
 
-def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool):
+def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool, extended_arrtributes: dict = {}):
     arg_list = [entry_type, "Type", "DataType", "Deprecated", "Unit",
                 "Min", "Max", "Desc", "Comment", "Allowed", "Default"]
     if uuid:
         arg_list.append("Id")
     if include_instance_column:
         arg_list.append("Instances")
+
+    for key in extended_arrtributes.keys():
+        arg_list.append(key)
+
     file.write(format_csv_line(arg_list))
 
 # Format a data or header line according to the CSV standard (IETF RFC 4180)
@@ -59,6 +63,10 @@ def print_csv_content(file, tree: VSSNode, uuid, include_instance_column: bool):
             arg_list.append(tree_node.uuid)
         if include_instance_column and tree_node.instances is not None:
             arg_list.append(tree_node.instances)
+
+        for _, val in tree_node.extended_attributes.items():
+            arg_list.append(val)
+
         file.write(format_csv_line(arg_list))
 
 
@@ -71,14 +79,25 @@ class Vss2Csv(Vss2X):
         # generic entry should be written when both data types and signals are being written to the same file
         generic_entry = data_type_root is not None and config.types_output_file is None
         include_instance_column = not vspec2vss_config.expand_model
+
         with open(config.output_file, 'w') as f:
             signal_entry_type = "Node" if generic_entry else "Signal"
-            print_csv_header(f, vspec2vss_config.generate_uuid, signal_entry_type, include_instance_column)
+            print_csv_header(
+                f,
+                vspec2vss_config.generate_uuid,
+                signal_entry_type,
+                include_instance_column,
+                signal_root.extended_attributes
+            )
             print_csv_content(f, signal_root, vspec2vss_config.generate_uuid, include_instance_column)
             if data_type_root is not None and generic_entry is True:
                 print_csv_content(f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column)
 
         if data_type_root is not None and generic_entry is False:
             with open(config.types_output_file, 'w') as f:
-                print_csv_header(f, vspec2vss_config.generate_uuid, "Node", include_instance_column)
-                print_csv_content(f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column)
+                print_csv_header(
+                    f, vspec2vss_config.generate_uuid, "Node", include_instance_column, signal_root.extended_attributes
+                )
+                print_csv_content(
+                    f, data_type_root, vspec2vss_config.generate_uuid, include_instance_column
+                )

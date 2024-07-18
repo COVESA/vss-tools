@@ -35,6 +35,8 @@ typedef struct node_t {
     allowed_t *allowedDef;
     uint8_t defaultLen;
     char* defaultAllowed;
+    uint8_t staticUIDLen;
+    char* staticUID;
     uint8_t validate;
     uint8_t children;
     struct node_t* parent;
@@ -72,5 +74,6 @@ char* VSSgetDescr(long nodeHandle);
 int VSSgetNumOfAllowedElements(long nodeHandle);
 char* VSSgetAllowedElement(long nodeHandle, int index);
 char* VSSgetUnit(long nodeHandle);
+char* VSSgetStaticUID(long nodeHandle);
 uint8_t getMaxValidation(uint8_t newValidation, uint8_t currentMaxValidation);
 uint8_t translateToMatrixIndex(uint8_t index);

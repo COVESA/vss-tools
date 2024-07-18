@@ -38,6 +38,7 @@ type Node_t struct {
     Allowed uint8
     AllowedDef []string
     DefaultAllowed string
+    StaticUID string
     Validate uint8
     Children uint8
     Parent *Node_t
