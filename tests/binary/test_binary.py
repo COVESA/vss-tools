@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from pathlib import Path
+import pytest
 import subprocess
 
 HERE = Path(__file__).resolve().parent
@@ -24,29 +25,37 @@ def check_expected_for_tool(tool_path, signal_name: str, grep_str: str, test_bin
     assert grep_str in process.stdout
 
 
-def test_binary(tmp_path):
+@pytest.mark.parametrize("parser", ["ctestparser", "gotestparser"])
+@pytest.mark.parametrize("test_id", [False, True])
+def test_binary(tmp_path, parser: str, test_id: bool):
     """
     Tests binary tools by generating binary file and using test parsers to interpret them and request
     some basic information.
     """
 
     test_binary = tmp_path / "test.binary"
-    ctestparser = tmp_path / "ctestparser"
-    gotestparser = tmp_path / "gotestparser"
+    testparser = tmp_path / parser
+
     cmd = (
         f"gcc -shared -o {tmp_path / 'binarytool.so'} -fPIC {BIN_DIR / 'binarytool.c'}"
     )
     subprocess.run(cmd.split(), check=True)
-    cmd = f"vspec2binary -u {TEST_UNITS} {HERE / 'test.vspec'} {test_binary}"
-    subprocess.run(cmd.split(), check=True)
-    cmd = f"cc {BIN_DIR / 'c_parser/testparser.c'} {BIN_DIR / 'c_parser/cparserlib.c'} -o {ctestparser}"
-    subprocess.run(cmd.split(), check=True)
-    cmd = f"go build -o {gotestparser} testparser.go"
-    subprocess.run(cmd.split(), check=True, cwd=BIN_DIR / "go_parser")
 
-    parsers = [ctestparser, gotestparser]
-    for parser in parsers:
-        check_expected_for_tool(
-            parser, "A.String", "Node type=SENSOR", test_binary)
-        check_expected_for_tool(
-            parser, "A.Int", "Node type=ACTUATOR", test_binary)
+    if test_id:
+        cmd = f"vspec2id -u {TEST_UNITS} {HERE / 'test.vspec'} {tmp_path / 'test_id.vspec'}"
+        subprocess.run(cmd.split(), check=True)
+        cmd = f"vspec2binary -u {TEST_UNITS} {tmp_path / 'test_id.vspec'} {test_binary}"
+        subprocess.run(cmd.split(), check=True)
+    else:
+        cmd = f"vspec2binary -u {TEST_UNITS} {HERE / 'test.vspec'} {test_binary}"
+        subprocess.run(cmd.split(), check=True)
+
+    if parser == "ctestparser":
+        cmd = f"cc {BIN_DIR / 'c_parser/testparser.c'} {BIN_DIR / 'c_parser/cparserlib.c'} -o {testparser}"
+        subprocess.run(cmd.split(), check=True)
+    elif parser == "gotestparser":
+        cmd = f"go build -o {testparser} testparser.go"
+        subprocess.run(cmd.split(), check=True, cwd=BIN_DIR / "go_parser")
+
+    check_expected_for_tool(testparser, "A.String", "Node type=SENSOR", test_binary)
+    check_expected_for_tool(testparser, "A.Int", "Node type=ACTUATOR", test_binary)
