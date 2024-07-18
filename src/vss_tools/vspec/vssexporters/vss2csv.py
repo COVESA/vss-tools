@@ -24,7 +24,7 @@ from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 # Write the header line
 
 
-def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool, extended_arrtributes: list = []):
+def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool, extended_arrtributes: dict = {}):
     arg_list = [entry_type, "Type", "DataType", "Deprecated", "Unit",
                 "Min", "Max", "Desc", "Comment", "Allowed", "Default"]
     if uuid:
