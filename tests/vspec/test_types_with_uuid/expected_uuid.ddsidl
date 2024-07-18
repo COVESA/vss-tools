@@ -5,7 +5,7 @@ struct Sensor
 string uuid;
 float value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A sensor.";
 };
 struct _Attribute
@@ -13,7 +13,7 @@ struct _Attribute
 string uuid;
 float value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An attribute.";
 };
 struct Actuator
@@ -21,7 +21,7 @@ struct Actuator
 string uuid;
 float value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An actuator.";
 };
 };

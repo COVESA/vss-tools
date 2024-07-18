@@ -10,7 +10,7 @@ struct C
 {
 octet value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="This description will also exist multiple times.";
 };
 };
@@ -21,7 +21,7 @@ struct C
 {
 octet value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="This description will also exist multiple times.";
 };
 };
@@ -36,7 +36,7 @@ struct C
 {
 octet value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="This description will also exist multiple times.";
 };
 };
@@ -47,7 +47,7 @@ struct C
 {
 octet value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="This description will also exist multiple times.";
 };
 };

@@ -4,83 +4,83 @@ struct _UInt8
 {
 octet value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A uint8.";
 };
 struct _Int8
 {
 octet value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An int8.";
 };
 struct _UInt16
 {
 unsigned short value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A uint16.";
 };
 struct _Int16
 {
 short value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An int16.";
 };
 struct _UInt32
 {
 unsigned short value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A uint32.";
 };
 struct _Int32
 {
 long value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An int32";
 };
 struct _UInt64
 {
 unsigned long long value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A uint64.";
 };
 struct _Int64
 {
 long long value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="An int64";
 };
 struct IsBoolean
 {
 boolean value;
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A boolean";
 };
 struct _Float
 {
 float value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A float.";
 };
 struct _Double
 {
 double value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A double.";
 };
 struct _String
 {
 string value;
 //const string unit="km";
-//const string type ="sensor";
+//const string type="sensor";
 //const string description="A string.";
 };
 };
