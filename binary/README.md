@@ -21,10 +21,10 @@ binary directory, then the binary exporter of `vspec exporter` is executed in th
 cd binary
 gcc -shared -o binarytool.so -fPIC binarytool.c
 cd <vss-root>
-vspec export binary -u spec/units.yaml --vspec spec/VehicleSignalSpecification.vspec -o vss.binary
+vspec export binary -u spec/units.yaml --vspec spec/VehicleSignalSpecification.vspec -o vss.binary -b binary/binarytool.so
 ```
 
-where vss_rel_<current version>.binary is the tre file in binary format.
+where `vss.binary` is the tree file in binary format.
 
 Current version is found at https://github.com/COVESA/vehicle_signal_specification/blob/master/VERSION.
 
@@ -38,7 +38,7 @@ using the extended attributes flag `-e`:
 
 ```bash
 cd ..  # continue from the previous example
-vspec export binary -e validate -u ./spec/units.yaml --vspec ./spec/VehicleSignalSpecification.vspec -o vss.binary
+vspec export binary -e validate -u ./spec/units.yaml --vspec ./spec/VehicleSignalSpecification.vspec -o vss.binary -b binary/binarytool.so
 ```
 
 
