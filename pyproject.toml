@@ -27,6 +27,7 @@ types-setuptools = "*"
 types-PyYAML = "*"
 flake8 = "^6.0.0"
 pre-commit = "*"
+cyclonedds = "*"
 
 
 [tool.poetry.scripts]

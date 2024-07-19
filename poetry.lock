@@ -118,6 +118,42 @@ tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.1
 toml = ["tomli"]
 
 [[package]]
+name = "cyclonedds"
+version = "0.10.5"
+description = "Eclipse Cyclone DDS Python binding"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "cyclonedds-0.10.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:03644e406d0c1cac45887b378d35054a0033c48f2e29d9aab3bfc1ee6c4b9aa6"},
+    {file = "cyclonedds-0.10.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4a0d9fa8747827dc9bd678d73ed6f12b0ab9853b2cb7ebadbf3d8d89625f0e34"},
+    {file = "cyclonedds-0.10.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:861d2ffd9513126d6a62ad9f842e85122518a7db1fb0a11d6e4fa86e3cacf61c"},
+    {file = "cyclonedds-0.10.5-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:8276b2bc347540e3ca892adf976421dbce4c6d2672934a32409db121a1431b86"},
+    {file = "cyclonedds-0.10.5-cp310-cp310-win_amd64.whl", hash = "sha256:103a681e9490229f12c151a125e00c4db8fdb344c8e12e35ee515cd9d5d1ecd7"},
+    {file = "cyclonedds-0.10.5-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:73fb02d49071fe657d85149e77e26f0aff03c67b5ef09bb5330bb957dba50f5c"},
+    {file = "cyclonedds-0.10.5-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0149a7dc28d5bdd8b279060be656b0fe43282bc2e3909151d82a5b59b03c602e"},
+    {file = "cyclonedds-0.10.5-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:dc33a49ccd3cb65377729aad4fada39965450408a1bb3dbba7ec42d44366b916"},
+    {file = "cyclonedds-0.10.5-cp37-cp37m-win_amd64.whl", hash = "sha256:7519bd86ec21e0c0edfd87e8c0080c849e9ad2a3201ac47df3de0ab561df116e"},
+    {file = "cyclonedds-0.10.5-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:e991e66d47be1272af268d662157d982c0e355825c20bd4b611a880a2a2b617d"},
+    {file = "cyclonedds-0.10.5-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:e44371c8217e31273a3eaebf7f38898500e45d555b906c1de7dd91b9031f449c"},
+    {file = "cyclonedds-0.10.5-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d4492388f63d2d4dc6f26994c6ba716e75e01f577d033a40c077aac2796c86e8"},
+    {file = "cyclonedds-0.10.5-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:3a2e87429b3b2fd06a10e76a91e8ab0721b6e4181ae455fa509cc74598437602"},
+    {file = "cyclonedds-0.10.5-cp38-cp38-win_amd64.whl", hash = "sha256:eb9d329c455ba66ca415c890f28c2f2c467e13661f9ddb9e11cd2018d3533e2c"},
+    {file = "cyclonedds-0.10.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:e491724e91c0129a980aa898aff6438a3ebbabc45e814da948aa6d98c248dc90"},
+    {file = "cyclonedds-0.10.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:f46b444f15dc9791ee784b2d815dbf78c88b72fc16c0f94d4ce9aa25572b66fc"},
+    {file = "cyclonedds-0.10.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:87e9d31ae7f4b1f64d7e3cef93e2b094e457c42d4541235d997afc5f2049e925"},
+    {file = "cyclonedds-0.10.5-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:5cdbfa0f51bf78981bc13a1b45043c0aeb836f0ae24e9731b5f20f80ecc28ec9"},
+    {file = "cyclonedds-0.10.5-cp39-cp39-win_amd64.whl", hash = "sha256:6dc5ccd2c3b2fbb45375c4a50e0fc8c9334fe72c5f2ba6237a5fd411303617f6"},
+    {file = "cyclonedds-0.10.5.tar.gz", hash = "sha256:63fc4d6fdb2fd35181c40f4e90757149f2def5f570ef19fb71edc4f568755f8a"},
+]
+
+[package.dependencies]
+rich-click = "*"
+
+[package.extras]
+dev = ["flake8", "flake8-bugbear", "pytest (>=6.2)", "pytest-cov", "pytest-mock", "twine"]
+docs = ["Sphinx (>=4.0.0)", "sphinx-rtd-theme (>=0.5.2)"]
+
+[[package]]
 name = "deprecation"
 version = "2.1.0"
 description = "A library to handle automated deprecations"
@@ -734,4 +770,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f9580af0cae6fef1f2d7e0406beb4fa36821c6fd1c6a67691e297b8b689d6d7c"
+content-hash = "07a2578d092b68206200d1b6373a3a248868cb7ac8a91720e23868bd49668520"
