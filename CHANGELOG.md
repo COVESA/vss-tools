@@ -90,6 +90,11 @@ From now on, if new units are needed for the VSS catalog they shall be added to 
 
 ## Implemented changes, to be released as part of VSS-Tools 5.0
 
+### Major restructure of repository structure and CLI
+
+The vss-tools repository content structure and CLI has changed significantly
+For more information see [vspec documentation](docs/vspec.md)
+
 ### Struct support in vspec2ddsidl
 
 The vspec2ddsidl tool now supports structs
