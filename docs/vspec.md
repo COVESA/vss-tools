@@ -85,6 +85,10 @@ By default all tools expand instance information so that instance information li
 any other branch. If this argument is used and the exporter supports it no expansion will take place.
 Instead instance information will be kept as additional information for the branch.
 
+### -e, --extended-attributes
+
+See section on [overlays](vspec2x.md#handling-of-overlays-and-extensions) below
+
 ## Handling of Data Types
 
 COVESA supports a number of pre-defined types, see [VSS documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/data_entry/data_types/).
@@ -306,11 +310,16 @@ Warning: Attribute(s) quality, source in element Speed not a core or known exten
 You asked for strict checking. Terminating.
 ```
 
-You can whitelist extended metadata attributes using the `-e` parameter:
+You can whitelist extended metadata attributes using the `-e` / `--extended-attributes` argument.
 
 ```bash
-vspec export json -I spec spec/VehicleSignalSpecification.vspec -e quality -e source -l overlay.vspec --output test.json
+vspec export json -I spec -s spec/VehicleSignalSpecification.vspec -e quality -e source -l overlay.vspec -o test.json
+vspec export json -I spec --vspec spec/VehicleSignalSpecification.vspec --extended-attributes quality --extended-attributes source --overlays overlay.vspec --output test.json
 ```
+
+> [!NOTE]
+> A comma separated list of attributes can no longer be used to specify extended attributes!
+> Instead of using for example `-e a1,a2` you must use `-e a1 -e a2`!
 
 In this case the expectation is, that the generated output will contain the whitelisted extended metadata attributes, if the exporter supports them.
 

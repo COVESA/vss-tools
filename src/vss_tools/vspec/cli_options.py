@@ -10,6 +10,16 @@ import rich_click as click
 from rich_click import option
 from pathlib import Path
 
+
+def no_colon_type(value):
+    """
+    Give error if comma is used in the argument
+    """
+    if "," in value:
+        raise click.BadParameter("Comma (',') not allowed")
+    return value
+
+
 log_level_opt = click.option(
     "--log-level",
     type=click.Choice(
@@ -39,6 +49,7 @@ extended_attributes_opt = option(
     "-e",
     multiple=True,
     help="Whitelisted extended attributes",
+    type=no_colon_type,
 )
 
 strict_opt = option(
