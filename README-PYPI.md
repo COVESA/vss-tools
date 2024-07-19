@@ -6,15 +6,8 @@
 
 VSS-Tools is a collection of tools developed by [COVESA](https://www.covesa.global/) to validate and transform
 signal catalogs defined by the COVESA Vehicle Signal Specification (VSS) syntax. The PyPI packaging of VSS-tools
-provide tools for converting VSS source files (*.vspec) to:
+provide tools for converting VSS source files (*.vspec) to different formats.
 
-* CSV
-* DDS IDL
-* JSON
-* Yaml
-* Franca IDL
-* Protobuf
-* GraphQL
 
 ## Installing vss-tools
 
