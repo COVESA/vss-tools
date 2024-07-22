@@ -35,7 +35,7 @@ def run_unit(
     cmd = f"vspec export json --pretty --vspec {spec} {unit_argument} {quantity_argument} --output {out}"
     env = os.environ.copy()
     # Long line needed as file name printed in some error messages
-    env["COLUMNS"] = "300"
+    env["COLUMNS"] = "200"
     process = subprocess.run(
         cmd.split(), capture_output=True, text=True, cwd=HERE, env=env
     )
@@ -59,8 +59,11 @@ def run_unit_error(
     unit_argument = " ".join([f"-u {HERE / unit}" for unit in units])
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
     cmd = f"vspec export json --pretty --vspec {vspec_file} {unit_argument} {quantity_argument} --output {out}"
+    env = os.environ.copy()
+    # Long line needed as file name printed in some error messages
+    env["COLUMNS"] = "300"
     process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, cwd=HERE)
+        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
     assert process.returncode != 0
     if grep_error:
         assert grep_error in process.stdout or grep_error in process.stderr
