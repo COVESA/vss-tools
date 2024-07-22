@@ -4,7 +4,9 @@
 [![License](https://img.shields.io/badge/License-MPL%202.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
 [![Build Status](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml/badge.svg)](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml?query=branch%3Amaster)
 
-The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification). VSS Tools is developed in parallel with VSS, please visit the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification) for information on how to contribute. If any questions arise, please check out the [FAQ](FAQ.md) for more information.
+The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification).
+VSS Tools is developed in parallel with VSS, please visit the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification) for information on how to contribute.
+If any questions arise, please check out the [FAQ](FAQ.md) for more information.
 
 ## Available Tools
 
@@ -23,30 +25,26 @@ Tools in the Obsolete Tools category may be deleted after 12 months.
 
 Examples on tool usage can be found in the [VSS Makefile](https://github.com/COVESA/vehicle_signal_specification/blob/master/Makefile) and in tool-specific documentation, if existing.
 
- Tool | Description | Tool Category         | Documentation                                                                                                         |
-| ------------------ | ----------- |-----------------------|-----------------------------------------------------------------------------------------------------------------------|
-[vspec2csv](./src/vss_tools/vspec2csv.py) | Generating CSV output | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2ddsidl](./src/vss_tools/vspec2ddsidl.py) | Generating DDS-IDL output | Community Supported   | [VSS2DDSIDL Documentation](docs/VSS2DDSIDL.md). For general parameters check [vspec2x documentation](docs/vspec2x.md) |
-[vspec2json](./src/vss_tools/vspec2json.py) |  Generating JSON output | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2yaml](./src/vss_tools/vspec2yaml.py) | Generating flattened YAML output | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2binary](./src/vss_tools/vspec2binary.py) | The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below), and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go | Community Supported   | [vspec2binary Documentation](binary/README.md). For general parameters check [vspec2x documentation](docs/vspec2x.md) |
-[vspec2franca](./src/vss_tools/vspec2franca.py) | Parses and expands a VSS and generates a Franca IDL specification | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2c](./src/vss_tools/obsolete/vspec2c.py) | The vspec2c tooling allows a vehicle signal specification to be translated from its source YAML file to native C code that has the entire specification encoded in it. | Obsolete (2022-11-01) | [Documentation](obsolete/vspec2c/README.md)                                                                           |
-[vspec2ocf](./src/vss_tools/obsolete/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Obsolete (2022-11-01) | -                                                                                                                     |
-[vspec2protobuf](./src/vss_tools/vspec2protobuf.py) | Parses and expands a VSS tree and generates a Protobuf message definition | Contrib               | [Documentation](docs/vspec2proto.md)                                                                                                                     |
-[vspec2ttl](./src/vss_tools/contrib/vspec2ttl/vspec2ttl.py) | Parses and expands a VSS and generates a TTL specification | Contrib               | -                                                                                                                     |
-[vspec2graphql](./src/vss_tools/vspec2graphql.py) | Parses and expands a VSS and generates a GraphQL specification | Community Supported   | [Documentation](docs/VSS2GRAPHQL.md)                                                                                  |
-[vspec2id](./src/vss_tools/vspec2id.py) | Generates and validates static UIDs for a VSS | WIP                   | [vspec2id Documentation](./docs/vspec2id.md)                                                                          |
+General CLI help should be used for up to date info of how to use the tools.
 
-## Tool Architecture
+```bash
+vspec --help # Help about global flags
+vspec export --help # Shows help for the export functionality
+vspec export json --help # Shows help for the json exporter
+# ...
+```
 
-All current tools are based on common Python functionality in the `vspec` folder to read, parse and expand a Vehicle Signal Specification files(*.vspec files). As an example, if the standard [VSS root file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/VehicleSignalSpecification.vspec) is given as input then the Python tooling will read all included files, do a validation of the content, expand any instances used and create an in-memory representation which then can be used by specialized tools to generate the wanted output.
+Please check [here](./docs/vspec.md) for generic infos about exporters and their arguments
+as well as [here](./docs/vspec_arch.md) for design decision, architecture and limitations.
+
 
 ## Compatibility with VSS
 
 The [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification) includes vss-tools as a submodule.
-The vss-tools version linked by the VSS repository is the preferred vss-tools version to use for that particular version of the VSS repository. It is not guaranteed that newer or older versions of vss-tools can successfully handle that particular version of the VSS repository. The table below gives an overview of basic version support for`vspec2json.py`,
-other exporters may have stricter requirements.
+The vss-tools version linked by the VSS repository is the preferred vss-tools version to use for that particular version of the VSS repository.
+It is not guaranteed that newer or older versions of vss-tools can successfully handle that particular version of the VSS repository.
+The table below gives an overview of basic version support for e.g. `vspec export json`.
+Other exporters may have stricter requirements.
 
 VSS-tools version | Supported VSS versions | Comments
 -----------------|------------------------|----------------
@@ -110,7 +108,8 @@ protoc --version  # Ensure compiler version is 3+
 ```
 
 ## Pre-commit set up
-This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks. pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
+This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks.
+pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
 
 ## Building and installing with Pip
 

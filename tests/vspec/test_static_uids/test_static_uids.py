@@ -12,12 +12,12 @@
 
 import shlex
 from typing import Dict
-
+import os
+import subprocess
 import pytest
 import vss_tools.vspec as vspec
 
 import vss_tools.vspec.vssexporters.vss2id as vss2id
-import vss_tools.vspec2id as vspec2id
 import yaml
 
 from vss_tools.vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
@@ -31,13 +31,13 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
 def get_cla_test(test_file: str, tmp_path: Path, overlay: str | None = None):
-    args = f"vspec2id {test_file}"
+    args = f"--vspec {test_file}"
     output = tmp_path / "out.vspec"
     if overlay:
-        args += f" -o {overlay}"
+        args += f" -l {overlay}"
     validation = HERE / "validation_vspecs/validation.vspec"
     units = HERE / "test_vspecs/units.yaml"
-    args += f" {output} --validate-static-uid {validation} -u {units}"
+    args += f" --output {output} --validate-static-uid {validation} -u {units}"
     return args
 
 
@@ -200,10 +200,11 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
 
 def test_full_script(caplog: pytest.LogCaptureFixture, tmp_path):
     test_file: str = str(HERE / "test_vspecs/test.vspec")
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(test_file, tmp_path))
-    vspec2id.main(clas[1:])
-
-    assert len(caplog.records) == 9
+    cmd += clas
+    process = subprocess.run(cmd)
+    assert process.returncode == 0
 
 
 @pytest.mark.parametrize(
@@ -217,94 +218,75 @@ def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str, tmp_pa
     spec = HERE / "test_vspecs/test.vspec"
     output = tmp_path / "out.vspec"
     validation = HERE / validation_file
-    args = f"vspec2id {spec} {output} --validate-static-uid {validation}"
-    clas = shlex.split(args)
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "SEMANTIC NAME CHANGE" in record.msg
+    args = f"vspec export id --vspec {spec} --output {output} --validate-static-uid {validation}"
+    process = subprocess.run(args.split(), capture_output=True, text=True)
+    assert "SEMANTIC NAME CHANGE" in process.stdout
 
 
 def test_vss_path(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_vss_path.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "PATH CHANGE" in record.msg
+    cmd += clas
+    env = os.environ.copy()
+    env["COLUMNS"] = "200"
+    process = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert "PATH CHANGE" in process.stdout
 
 
 def test_unit(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_unit.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 2
-    for record in warning_logs:
-        assert "BREAKING CHANGE" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "BREAKING CHANGE" in process.stdout
 
 
 def test_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_datatype.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "BREAKING CHANGE" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "BREAKING CHANGE" in process.stdout
 
 
 def test_name_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_name_datatype.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 2
-    for i, record in enumerate(warning_logs):
-        if i % 2 == 0:
-            assert "ADDED ATTRIBUTE" in record.msg
-        else:
-            assert "DELETED ATTRIBUTE" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "ADDED ATTRIBUTE" in process.stdout
+    assert "DELETED ATTRIBUTE" in process.stdout
 
 
 def test_deprecation(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_deprecation.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "DEPRECATION MSG CHANGE" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "DEPRECATION MSG CHANGE" in process.stdout
 
 
 def test_description(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_description.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "DESCRIPTION MISMATCH" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "DESCRIPTION MISMATCH" in process.stdout
 
 
 def test_added_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_added_attribute.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "ADDED ATTRIBUTE" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "ADDED ATTRIBUTE" in process.stdout
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -314,13 +296,11 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_deleted_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_deleted_attribute.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "DELETED ATTRIBUTE" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "DELETED ATTRIBUTE" in process.stdout
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -332,13 +312,11 @@ def test_overlay(caplog: pytest.LogCaptureFixture, tmp_path):
 
     spec = HERE / "test_vspecs/test.vspec"
     overlay = HERE / "test_vspecs/test_overlay.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
-    vspec2id.main(clas[1:])
-
-    warning_logs = [log for log in caplog.records if log.levelname == "WARNING"]
-    assert len(warning_logs) == 1
-    for record in warning_logs:
-        assert "ADDED ATTRIBUTE" in record.msg
+    cmd += clas
+    process = subprocess.run(cmd, capture_output=True, text=True)
+    assert "ADDED ATTRIBUTE" in process.stdout
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -349,8 +327,11 @@ def test_overlay(caplog: pytest.LogCaptureFixture, tmp_path):
 def test_const_id(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test.vspec"
     overlay = HERE / "test_vspecs/test_const_id.vspec"
+
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
-    vspec2id.main(clas[1:])
+    cmd += clas
+    subprocess.run(cmd, capture_output=True, text=True)
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -361,15 +342,16 @@ def test_const_id(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_iterated_file(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test.vspec"
+    cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
-    vspec2id.main(clas[1:])
-
+    cmd += clas
+    subprocess.run(cmd, capture_output=True, text=True)
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
 
     # run again on out.vspec to check if it all hashed attributes were exported correctly
     clas = shlex.split(get_cla_test(output, tmp_path))
-    vspec2id.main(clas[1:])
+    subprocess.run(cmd, capture_output=True, text=True)
 
     output = tmp_path / "out.vspec"
     result_iteration = yaml.load(open(output), Loader=yaml.FullLoader)

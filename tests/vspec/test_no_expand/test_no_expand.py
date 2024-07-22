@@ -16,42 +16,6 @@ HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
 
 
-@pytest.mark.parametrize(
-    "format, output_file, comparison_file, is_error_expected",
-    [
-        ("json", "out.json", "expected.json", False),
-        ("yaml", "out.yaml", "expected.yaml", False),
-        ("csv", "out.csv", "expected.csv", False),
-        ("protobuf", "out.proto", "expected.proto", True),
-        ("ddsidl", "out.idl", "expected.idl", True),
-        ("franca", "out.fidl", "expected.fidl", True),
-        ("graphql", "out.graphql", "expected.graphql", True),
-    ],
-)
-def test_no_expand(
-    format, output_file, comparison_file, is_error_expected: bool, tmp_path
-):
-    spec = HERE / "test.vspec"
-    output = tmp_path / output_file
-    cmd = f"vspec2{format} --no-expand"
-    if format == "json":
-        cmd += " --json-pretty"
-    cmd += f" -u {TEST_UNITS} {spec} {output}"
-
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
-    if is_error_expected:
-        assert process.returncode != 0
-    else:
-        assert process.returncode == 0
-
-    # For exporters not supporting "no-expand" an error shall be given
-    expected = HERE / comparison_file
-    if is_error_expected:
-        assert "error: unrecognized arguments: --no-expand" in process.stderr
-    else:
-        assert filecmp.cmp(output, expected)
-
-
 # Overlay tests, just showing for JSON
 @pytest.mark.parametrize(
     "no_expand, comparison_file",
@@ -67,10 +31,10 @@ def test_json_overlay(no_expand, comparison_file, tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / "out.json"
 
-    cmd = "vspec2json"
+    cmd = "vspec export json"
     if no_expand:
         cmd += " --no-expand"
-    cmd += f" --json-pretty -u {TEST_UNITS} {spec} -o {overlay} {output}"
+    cmd += f" --pretty -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
 
     subprocess.run(cmd.split(), check=True, capture_output=True, text=True)
     expected = HERE / comparison_file

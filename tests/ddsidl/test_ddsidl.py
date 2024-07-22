@@ -18,7 +18,7 @@ def test_ddsldl(tmp_path):
     Tests that generated ddsidl is accepted by idlc
     """
 
-    cmd = f"vspec2ddsidl -u {TEST_UNITS} {HERE / 'test.vspec'} test.idl"
+    cmd = f"vspec export ddsidl -u {TEST_UNITS} -s {HERE / 'test.vspec'} -o test.idl"
     subprocess.run(cmd.split(), check=True)
     cmd = "idlc -l py test.idl"
     subprocess.run(cmd.split(), check=True)

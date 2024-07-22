@@ -16,6 +16,8 @@ deprecation = "^2.1.0"
 graphql-core = "*"
 rdflib = "^6.0.0"
 importlib-metadata = "^7.0"
+click = "^8.1.7"
+rich-click = "^1.8.3"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
@@ -29,16 +31,7 @@ cyclonedds = "*"
 
 
 [tool.poetry.scripts]
-vspec2binary = "vss_tools.vspec2binary:main"
-vspec2csv = "vss_tools.vspec2csv:main"
-vspec2franca = "vss_tools.vspec2franca:main"
-vspec2json = "vss_tools.vspec2json:main"
-vspec2jsonschema = "vss_tools.vspec2jsonschema:main"
-vspec2ddsidl = "vss_tools.vspec2ddsidl:main"
-vspec2yaml = "vss_tools.vspec2yaml:main"
-vspec2protobuf = "vss_tools.vspec2protobuf:main"
-vspec2graphql = "vss_tools.vspec2graphql:main"
-vspec2id = "vss_tools.vspec2id:main"
+vspec = "vss_tools.vspec.vspec:cli"
 
 [build-system]
 requires = ["poetry-core"]

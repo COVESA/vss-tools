@@ -10,14 +10,13 @@
 #
 # Convert vspec tree compatible JSON schema
 
-import argparse
 import json
+import rich_click as click
+from vss_tools.vspec.vssexporters.utils import get_trees
+import vss_tools.vspec.cli_options as clo
+from pathlib import Path
 from vss_tools import log
 from typing import Dict, Any
-from typing import Optional
-from vss_tools.vspec.model.vsstree import VSSNode
-from vss_tools.vspec.vss2x import Vss2X
-from vss_tools.vspec.vspec2vss_config import Vspec2VssConfig
 
 type_map = {
     "int8": "integer",
@@ -43,11 +42,18 @@ type_map = {
     "boolean[]": "array",
     "float[]": "array",
     "double[]": "array",
-    "string[]": "array"
+    "string[]": "array",
 }
 
 
-def export_node(json_dict, node, config, print_uuid):
+def export_node(
+    json_dict,
+    node,
+    print_uuid,
+    all_extended_attributes: bool,
+    no_additional_properties: bool,
+    require_all_properties: bool,
+):
     """Preparing nodes for JSON schema output."""
     # keyword with X- sign are left for extensions and they are not part of official JSON schema
     json_dict[node.name] = {
@@ -70,7 +76,7 @@ def export_node(json_dict, node, config, print_uuid):
         # change type to object
         json_dict[node.type]["type"] = "object"
 
-    if config.jsonschema_all_extended_attributes:
+    if all_extended_attributes:
         if node.type != "":
             json_dict[node.name]["x-VSStype"] = str(node.type.value)
         if node.data_type_str != "":
@@ -102,58 +108,125 @@ def export_node(json_dict, node, config, print_uuid):
 
     # Generate child nodes
     if node.is_branch() or node.is_struct():
-        if config.jsonschema_disallow_additional_properties:
+        if no_additional_properties:
             json_dict[node.name]["additionalProperties"] = False
         json_dict[node.name]["properties"] = {}
-        if config.jsonschema_require_all_properties:
+        if require_all_properties:
             json_dict[node.name]["required"] = [child.name for child in node.children]
         for child in node.children:
-            export_node(json_dict[node.name]["properties"], child, config, print_uuid)
+            export_node(
+                json_dict[node.name]["properties"],
+                child,
+                print_uuid,
+                all_extended_attributes,
+                no_additional_properties,
+                require_all_properties,
+            )
 
 
-class Vss2JsonSchema(Vss2X):
+@click.command()
+@clo.vspec_opt
+@clo.output_required_opt
+@clo.include_dirs_opt
+@clo.extended_attributes_opt
+@clo.strict_opt
+@clo.aborts_opt
+@clo.uuid_opt
+@clo.expand_opt
+@clo.overlays_opt
+@clo.quantities_opt
+@clo.units_opt
+@clo.types_opt
+@clo.types_output_opt
+@clo.extend_all_attributes_opt
+@clo.pretty_print_opt
+@click.option(
+    "--no-additional-properties",
+    is_flag=True,
+    help="Do not allow properties not defined in VSS tree",
+)
+@click.option(
+    "--require-all-properties",
+    is_flag=True,
+    help="Required all elements defined in VSS tree for a valid object",
+)
+def cli(
+    vspec: Path,
+    output: Path,
+    include_dirs: tuple[Path],
+    extended_attributes: tuple[str],
+    strict: bool,
+    aborts: tuple[str],
+    uuid: bool,
+    expand: bool,
+    overlays: tuple[Path],
+    quantities: tuple[Path],
+    units: tuple[Path],
+    types: tuple[Path],
+    types_output: Path,
+    extend_all_attributes: bool,
+    pretty: bool,
+    no_additional_properties: bool,
+    require_all_properties: bool,
+):
+    """
+    Export as a jsonschema.
+    """
+    tree, datatype_tree = get_trees(
+        include_dirs,
+        aborts,
+        strict,
+        extended_attributes,
+        uuid,
+        quantities,
+        vspec,
+        units,
+        types,
+        types_output,
+        overlays,
+        expand,
+    )
+    log.info("Generating JSON schema...")
+    indent = None
+    if pretty:
+        log.info("Serializing pretty JSON schema...")
+        indent = 2
 
-    def add_arguments(self, parser: argparse.ArgumentParser):
-        """Check for input arguments."""
-        parser.add_argument('--jsonschema-all-extended-attributes', action='store_true',
-                            help="Generate all extended attributes found in the model."
-                            "Should not be used with strict mode JSON Schema validators.")
-        parser.add_argument("--jsonschema-disallow-additional-properties", action='store_true',
-                            help="Do not allow properties not defined in VSS tree")
-        parser.add_argument("--jsonschema-require-all-properties", action='store_true',
-                            help="Require all elements defined in VSS tree for a valid object")
-        parser.add_argument('--jsonschema-pretty', action='store_true',
-                            help=" Pretty print JSON Schema output.")
+    signals_json_schema: Dict[str, Any] = {}
+    export_node(
+        signals_json_schema,
+        tree,
+        uuid,
+        extend_all_attributes,
+        no_additional_properties,
+        require_all_properties,
+    )
 
-    def generate(self, config: argparse.Namespace, signal_root: VSSNode, vspec2vss_config: Vspec2VssConfig,
-                 data_type_root: Optional[VSSNode] = None) -> None:
-        """Export function for generating JSON schema file."""
-        log.info("Generating JSON schema...")
-        indent = None
-        if config.jsonschema_pretty:
-            log.info("Serializing pretty JSON schema...")
-            indent = 2
+    # Add data types to the schema
+    if datatype_tree is not None:
+        data_types_json_schema: Dict[str, Any] = {}
+        export_node(
+            data_types_json_schema,
+            datatype_tree,
+            uuid,
+            extend_all_attributes,
+            no_additional_properties,
+            require_all_properties,
+        )
+        if extend_all_attributes:
+            signals_json_schema["x-ComplexDataTypes"] = data_types_json_schema
 
-        signals_json_schema: Dict[str, Any] = {}
-        export_node(signals_json_schema, signal_root, config, vspec2vss_config.generate_uuid)
+    # VSS models only have one root, so there should only be one
+    # key in the dict
+    assert len(signals_json_schema.keys()) == 1
+    top_node_name = list(signals_json_schema.keys())[0]
+    signals_json_schema = signals_json_schema.pop(top_node_name)
 
-        # Add data types to the schema
-        if data_type_root is not None:
-            data_types_json_schema: Dict[str, Any] = {}
-            export_node(data_types_json_schema, data_type_root, config, vspec2vss_config.generate_uuid)
-            if config.jsonschema_all_extended_attributes:
-                signals_json_schema["x-ComplexDataTypes"] = data_types_json_schema
-
-        # VSS models only have one root, so there should only be one
-        # key in the dict
-        assert (len(signals_json_schema.keys()) == 1)
-        top_node_name = list(signals_json_schema.keys())[0]
-        signals_json_schema = signals_json_schema.pop(top_node_name)
-
-        json_schema = {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "title": top_node_name,
-            "type": "object",
-            **signals_json_schema}
-        with open(config.output_file, 'w', encoding="utf-8") as output_file:
-            json.dump(json_schema, output_file, indent=indent, sort_keys=False)
+    json_schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": top_node_name,
+        "type": "object",
+        **signals_json_schema,
+    }
+    with open(output, "w", encoding="utf-8") as output_file:
+        json.dump(json_schema, output_file, indent=indent, sort_keys=False)

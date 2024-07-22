@@ -17,7 +17,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 def run_exporter(exporter, argument, tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / f"out.{exporter}"
-    cmd = f"vspec2{exporter}{argument} {spec} {output}"
+    cmd = f"vspec export {exporter}{argument} --vspec {spec} --output {output}"
 
     process = subprocess.run(cmd.split(), check=True, capture_output=True, text=True)
     expected = HERE / f"expected.{exporter}"
