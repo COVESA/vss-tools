@@ -34,7 +34,8 @@ def run_unit(
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
     cmd = f"vspec export json --pretty --vspec {spec} {unit_argument} {quantity_argument} --output {out}"
     env = os.environ.copy()
-    env["COLUMNS"] = "200"
+    # Long line needed as file name printed in some error messages
+    env["COLUMNS"] = "300"
     process = subprocess.run(
         cmd.split(), capture_output=True, text=True, cwd=HERE, env=env
     )
