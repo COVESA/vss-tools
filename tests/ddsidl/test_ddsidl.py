@@ -18,11 +18,14 @@ def test_ddsldl(tmp_path):
     Tests that generated ddsidl is accepted by idlc
     """
 
-    cmd = f"vspec export ddsidl -u {TEST_UNITS} -s {HERE / 'test.vspec'} -o test.idl"
+    generated_idl_file = tmp_path / "test.idl"
+    generated_python_file = tmp_path / "A/_test.py"
+
+    cmd = f"vspec export ddsidl -u {TEST_UNITS} -s {HERE / 'test.vspec'} -o {generated_idl_file}"
     subprocess.run(cmd.split(), check=True)
     cmd = "idlc -l py test.idl"
-    subprocess.run(cmd.split(), check=True)
+    subprocess.run(cmd.split(), check=True, cwd=tmp_path)
 
     # Basic sanity check that output is as expected
-    cmd = "grep -i A.String A/_test.py"
+    cmd = f"grep -i A.String {generated_python_file}"
     subprocess.run(cmd.split(), check=True)
