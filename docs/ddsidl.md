@@ -1,4 +1,6 @@
-VSS2DDSIDL exporter is used to export VSS file data to DDS IDL file _(4.2 version)_
+# Vspec DDS Exporter
+
+The vspec dds exporter is used to export VSS file data to DDS IDL file _(4.2 version)_
 
 ## Acronyms used:
 - DDS : Data Distribution Service

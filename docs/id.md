@@ -111,7 +111,7 @@ Vehicle.Cabin.Seat.Row1.DriverSide.IsBelted:
 ```
 
 Let's say the snippet above is a file called `const_id_overlay.vspec`, you could
-run the vspec2id.py like this:
+run the vspec id exporter like this:
 
 ```bash
 vspec export id --vspec spec/VehicleSignalSpecification.vspec --output const_test.vspec -l const_overlay.vspec
@@ -238,7 +238,7 @@ However, if you run into a hash collision, you can use constant UID attribute de
 
 ### Tests
 
-If you want to run the tests for the vspec2id implementation, please do
+If you want to run the tests for the vspec id exporter implementation, please do
 
 ```bash
 cd path/to/vss-tools

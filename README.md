@@ -98,7 +98,7 @@ You can do that in various ways:
 
 ## Installing additional tools
 
-If you intend to run testcases related to `vspec2protobuf.py` you need to install the protobuf compiler.
+If you intend to run testcases related to `vspec` proto exporter you need to install the protobuf compiler.
 Please follow official instructions for your OS. For Debian systems it would be:
 
 ```sh
