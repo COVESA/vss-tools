@@ -37,7 +37,7 @@ An encoded speed value of 20, would look something like this:
 
 Instead of sending the complete signal path like 'Vehicle.Speed', the serialization only contains the field number to reduce the amount of data to send. However, using field numbers as identifiers requires the same mapping between field numbers and fields on the encoding and decoding side.
 
-The vspec2proto generator supports two approaches for setting the field numbers with different advantages and drawbacks.
+The vspec proto exporter supports two approaches for setting the field numbers with different advantages and drawbacks.
 
 ### Incremental Field Numbers
 

@@ -1,4 +1,4 @@
-## vspec2graphql
+# Vspec Graphql Exporter
 
 This exporter allows to automatically generate a graphql schema that can represent VSS data.
 The resulting schema does only allow querying information. Mutations are not supported.

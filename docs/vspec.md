@@ -77,7 +77,7 @@ Note that not all exporters support that arugment
 
 > [!WARNING]
 > The UUID feature is deprecated and will be removed in VSS-tools 6.0.
-> If you need identifiers consider using [vspec2id](vspec2id.md)
+> If you need identifiers consider using [vspec id exporter](id.md)
 
 ### --expand/--no-expand
 
@@ -87,7 +87,7 @@ Instead instance information will be kept as additional information for the bran
 
 ### -e, --extended-attributes
 
-See section on [overlays](vspec2x.md#handling-of-overlays-and-extensions) below
+See section on [overlays](vspec.md#handling-of-overlays-and-extensions) below
 
 ## Handling of Data Types
 
@@ -377,7 +377,7 @@ The DDS-IDL exporter never generates uuid, i.e. the `--uuid` option has no effec
 The Graphql exporter never generates uuid, i.e. the `--uuid` option has no effect.
 
 ### --all-idl-features
-Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out because at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](VSS2DDSIDL.md).
+Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out because at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](ddsidl.md).
 
 ## GRAPHQL exporter notes
 
