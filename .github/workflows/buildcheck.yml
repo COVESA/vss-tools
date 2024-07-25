@@ -90,3 +90,10 @@ jobs:
           vspec export ddsidl --help
           vspec export protobuf --help
           vspec export graphql --help
+      - name: Test that generated DDSIDL is correct
+        run: |
+          pip install cyclonedds
+          cd tests/ddsidl
+          vspec export ddsidl -u ../vspec/test_units.yaml -s test.vspec -o test.idl
+          idlc -l py test.idl
+          grep -i A.String A/_test.py
