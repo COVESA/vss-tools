@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2021 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -23,7 +21,12 @@ from anytree import (  # type: ignore[import]
     Resolver,
 )
 
-from vss_tools.vspec.model.constants import VSSDataType, VSSType, VSSUnit, VSSUnitCollection
+from vss_tools.vspec.model.constants import (
+    VSSDataType,
+    VSSType,
+    VSSUnit,
+    VSSUnitCollection,
+)
 from vss_tools.vspec.model.exceptions import (
     ImpossibleMergeException,
     IncompleteElementException,
@@ -97,15 +100,15 @@ class VSSNode(Node):
     constUID: str | None = None
 
     # Reference nodes for using definitions from previously existing
-    reference_tree: Optional['VSSNode'] = None
+    reference_tree: Optional["VSSNode"] = None
     resolver = Resolver()
 
     @classmethod
-    def set_reference_tree(cls, tree: Optional['VSSNode']) -> None:
+    def set_reference_tree(cls, tree: Optional["VSSNode"]) -> None:
         cls.reference_tree = tree
 
     @classmethod
-    def get_reference_datatype(cls, node: 'VSSNode') -> Optional[str]:
+    def get_reference_datatype(cls, node: "VSSNode") -> Optional[str]:
         search_name = node.qualified_name()
 
         if cls.reference_tree is None:
@@ -120,7 +123,7 @@ class VSSNode(Node):
         return None
 
     @classmethod
-    def get_reference_type(cls, node: 'VSSNode') -> Optional[str]:
+    def get_reference_type(cls, node: "VSSNode") -> Optional[str]:
         search_name = node.qualified_name()
 
         if cls.reference_tree is None:
@@ -234,7 +237,6 @@ class VSSNode(Node):
 
         # Units are applicable only for primitives. Not user defined types.
         if self.has_unit():
-
             if not (self.is_signal() or self.is_property()):
                 log.error(
                     "Item %s cannot have unit, only allowed for signal and property!",
@@ -279,7 +281,6 @@ class VSSNode(Node):
         # Datatype check for unit performed first when we have set the right datatype
 
         if self.has_unit():
-
             if not self.has_datatype():
                 log.error(
                     "Unit specified for item not using standard datatype: %s", self.name
