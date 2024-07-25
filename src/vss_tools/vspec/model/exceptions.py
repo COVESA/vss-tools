@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -8,22 +6,20 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+
 class NameStyleValidationException(Exception):
     def __init__(self, message):
-
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
 
 class ImpossibleMergeException(Exception):
     def __init__(self, message):
-
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
 
 class IncompleteElementException(Exception):
     def __init__(self, message):
-
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
