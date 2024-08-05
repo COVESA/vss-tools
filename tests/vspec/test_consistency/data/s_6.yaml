@@ -1,0 +1,9 @@
+Vehicle:
+  type: branch
+  description: Vehicle
+
+Vehicle.Test:
+  type: sensor
+  datatype: string
+  description: Test
+  unit: kWh

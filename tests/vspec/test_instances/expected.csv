@@ -1,13 +1,13 @@
-"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
-"A","branch","","","","","","Branch A.","","",""
-"A.B","branch","","","","","","This description will be duplicated.","This comment will be duplicated","",""
-"A.B.Row1","branch","","","","","","This description will be duplicated.","This comment will be duplicated","",""
-"A.B.Row1.Left","branch","","","","","","This description will be duplicated.","This comment will be duplicated","",""
-"A.B.Row1.Left.C","sensor","int8","","km","","","This description will also exist multiple times.","As well as this comment.","",""
-"A.B.Row1.Right","branch","","","","","","This description will be duplicated.","This comment will be duplicated","",""
-"A.B.Row1.Right.C","sensor","int8","","km","","","This description will also exist multiple times.","As well as this comment.","",""
-"A.B.Row2","branch","","","","","","This description will be duplicated.","This comment will be duplicated","",""
-"A.B.Row2.Left","branch","","","","","","This description will be duplicated.","This comment will be duplicated","",""
-"A.B.Row2.Left.C","sensor","int8","","km","","","This description will also exist multiple times.","As well as this comment.","",""
-"A.B.Row2.Right","branch","","","","","","This description will be duplicated.","This comment will be duplicated","",""
-"A.B.Row2.Right.C","sensor","int8","","km","","","This description will also exist multiple times.","As well as this comment.","",""
+Signal,Type,DataType,Deprecated,Unit,Min,Max,Desc,Comment,Allowed,Default
+A,branch,,,,,,Branch A.,,,
+A.B,branch,,,,,,This description will be duplicated.,This comment will be duplicated,,
+A.B.Row1,branch,,,,,,This description will be duplicated.,This comment will be duplicated,,
+A.B.Row1.Left,branch,,,,,,This description will be duplicated.,This comment will be duplicated,,
+A.B.Row1.Left.C,sensor,int8,,km,,,This description will also exist multiple times.,As well as this comment.,,
+A.B.Row1.Right,branch,,,,,,This description will be duplicated.,This comment will be duplicated,,
+A.B.Row1.Right.C,sensor,int8,,km,,,This description will also exist multiple times.,As well as this comment.,,
+A.B.Row2,branch,,,,,,This description will be duplicated.,This comment will be duplicated,,
+A.B.Row2.Left,branch,,,,,,This description will be duplicated.,This comment will be duplicated,,
+A.B.Row2.Left.C,sensor,int8,,km,,,This description will also exist multiple times.,As well as this comment.,,
+A.B.Row2.Right,branch,,,,,,This description will be duplicated.,This comment will be duplicated,,
+A.B.Row2.Right.C,sensor,int8,,km,,,This description will also exist multiple times.,As well as this comment.,,

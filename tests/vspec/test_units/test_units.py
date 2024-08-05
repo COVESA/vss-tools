@@ -23,6 +23,7 @@ def run_unit(
     quantities=None,
     grep_present: bool = True,
     grep_string: Optional[str] = None,
+    fails: bool = False,
 ):
     if not quantities:
         quantities = []
@@ -32,25 +33,26 @@ def run_unit(
     out = tmp_path / "out.json"
     unit_argument = " ".join([f"-u {HERE / unit}" for unit in units])
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
-    cmd = f"vspec export json --pretty --vspec {spec} {unit_argument} {quantity_argument} --output {out}"
+    cmd = f"vspec export json --pretty --vspec {spec}"
+    cmd += f" {unit_argument} {quantity_argument} --output {out}"
     env = os.environ.copy()
     # Long line needed as file name printed in some error messages
     env["COLUMNS"] = "200"
     process = subprocess.run(
         cmd.split(), capture_output=True, text=True, cwd=HERE, env=env
     )
-    if process.returncode != 0:
-        pass
-    assert process.returncode == 0
-    assert filecmp.cmp(HERE / expected_file, out)
+
+    if fails:
+        assert process.returncode != 0
+    else:
+        assert process.returncode == 0
+        assert filecmp.cmp(HERE / expected_file, out)
 
     if grep_present and grep_string:
-        assert grep_string in process.stdout
+        assert grep_string in process.stdout or grep_string in process.stderr
 
 
-def run_unit_error(
-    tmp_path, vspec_file, units, grep_error, quantities=None
-):
+def run_unit_error(tmp_path, vspec_file, units, grep_error, quantities=None):
     if not quantities:
         quantities = []
     if not units:
@@ -58,12 +60,14 @@ def run_unit_error(
     out = tmp_path / "out.json"
     unit_argument = " ".join([f"-u {HERE / unit}" for unit in units])
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
-    cmd = f"vspec export json --pretty --vspec {vspec_file} {unit_argument} {quantity_argument} --output {out}"
+    cmd = f"vspec export json --pretty --vspec {vspec_file}"
+    cmd += f" {unit_argument} {quantity_argument} --output {out}"
     env = os.environ.copy()
     # Long line needed as file name printed in some error messages
     env["COLUMNS"] = "300"
     process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
+        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env
+    )
     assert process.returncode != 0
     if grep_error:
         assert grep_error in process.stdout or grep_error in process.stderr
@@ -95,6 +99,10 @@ def test_multiple_duplication(tmp_path):
         "signals_with_special_units.vspec",
         ["units_all.yaml", "units_all.yaml"],
         "expected_special.json",
+        None,
+        True,
+        "redefinition of 'puncheon'",
+        True,
     )
 
 
@@ -126,8 +134,9 @@ def test_multiple_unit_files(tmp_path):
 
 
 def test_unit_error_no_unit_file(tmp_path):
-    run_unit_error(tmp_path, "signals_with_special_units.vspec",
-                   None, "No units defined")
+    run_unit_error(
+        tmp_path, "signals_with_special_units.vspec", None, "No 'unit' files defined"
+    )
 
 
 # Not all units defined
@@ -138,7 +147,7 @@ def test_unit_error_unit_file_incomplete(tmp_path):
         tmp_path,
         "signals_with_special_units.vspec",
         ["units_hogshead.yaml"],
-        "Unknown unit",
+        "'puncheon' is not a valid unit",
     )
 
 
@@ -151,12 +160,6 @@ def test_unit_error_missing_file(tmp_path):
         "signals_with_special_units.vspec",
         ["file_that_does_not_exist.yaml"],
         "does not exist",
-    )
-
-
-def test_unit_on_branch(tmp_path):
-    run_unit_error(
-        tmp_path, "unit_on_branch.vspec", ["units_all.yaml"], "cannot have unit"
     )
 
 
@@ -210,7 +213,8 @@ def test_explicit_quantity_warning(tmp_path):
         "expected_special.json",
         ["quantity_volym.yaml"],
         True,
-        "Quantity volume used by unit puncheon has not been defined",
+        "Invalid quantity: 'volume'",
+        True,
     )
 
 
@@ -222,7 +226,8 @@ def test_quantity_redefinition(tmp_path):
         "expected_special.json",
         ["quantity_volym.yaml", "quantity_volym.yaml"],
         True,
-        "Redefinition of quantity volym",
+        "redefinition of 'volym'",
+        True,
     )
 
 
@@ -234,6 +239,6 @@ def test_quantity_err_no_def(tmp_path):
         tmp_path,
         "signals_with_special_units.vspec",
         ["units_all.yaml"],
-        "No definition found for quantity volume",
+        "'volume' is 'None'",
         ["quantities_no_def.yaml"],
     )

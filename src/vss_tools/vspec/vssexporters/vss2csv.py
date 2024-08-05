@@ -8,22 +8,22 @@
 
 # Convert vspec tree to CSV
 
-
+import csv
 from pathlib import Path
 from vss_tools import log
 import rich_click as click
 import vss_tools.vspec.cli_options as clo
-from vss_tools.vspec.model.vsstree import VSSNode
-from vss_tools.vspec.vssexporters.utils import get_trees
+from vss_tools.vspec.tree import VSSNode
+from vss_tools.vspec.utils.misc import getattr_nn
+from vss_tools.vspec.main import get_trees
 from anytree import PreOrderIter  # type: ignore[import]
-from typing import AnyStr
+from typing import Any
 
 
-# Write the header line
-
-
-def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bool):
-    arg_list = [
+def get_header(
+    with_uuid: bool, entry_type: str, with_instance_column: bool
+) -> list[str]:
+    row = [
         entry_type,
         "Type",
         "DataType",
@@ -36,53 +36,43 @@ def print_csv_header(file, uuid, entry_type: AnyStr, include_instance_column: bo
         "Allowed",
         "Default",
     ]
-    if uuid:
-        arg_list.append("Id")
-    if include_instance_column:
-        arg_list.append("Instances")
-    file.write(format_csv_line(arg_list))
+    if with_uuid:
+        row.append("Id")
+    if with_instance_column:
+        row.append("Instances")
+    return row
 
 
-# Format a data or header line according to the CSV standard (IETF RFC 4180)
-
-
-def format_csv_line(csv_fields):
-    formatted_csv_line = ""
-    for csv_field in csv_fields:
-        if csv_field is None:
-            csv_field = ""
-        formatted_csv_line = (
-            formatted_csv_line + '"' + str(csv_field).replace('"', '""') + '",'
-        )
-    return formatted_csv_line[:-1] + "\n"
-
-
-# Write the data lines
-
-
-def print_csv_content(file, tree: VSSNode, uuid, include_instance_column: bool):
-    tree_node: VSSNode
-    for tree_node in PreOrderIter(tree):
-        data_type_str = tree_node.get_datatype()
-        unit_str = tree_node.get_unit()
-        arg_list = [
-            tree_node.qualified_name("."),
-            tree_node.type.value,
-            data_type_str,
-            tree_node.deprecation,
-            unit_str,
-            tree_node.min,
-            tree_node.max,
-            tree_node.description,
-            tree_node.comment,
-            tree_node.allowed,
-            tree_node.default,
+def add_rows(
+    rows: list[list[Any]], root: VSSNode, with_uuid: bool, with_instance_column: bool
+) -> None:
+    node: VSSNode
+    for node in PreOrderIter(root):
+        data = node.get_vss_data()
+        row = [
+            node.get_fqn(),
+            data.type.value,
+            getattr_nn(data, "datatype", ""),
+            getattr_nn(data, "deprecation", ""),
+            getattr_nn(data, "unit", ""),
+            getattr_nn(data, "min", ""),
+            getattr_nn(data, "max", ""),
+            data.description,
+            getattr_nn(data, "comment", ""),
+            getattr_nn(data, "allowed", ""),
+            getattr_nn(data, "default", ""),
         ]
-        if uuid:
-            arg_list.append(tree_node.uuid)
-        if include_instance_column and tree_node.instances is not None:
-            arg_list.append(tree_node.instances)
-        file.write(format_csv_line(arg_list))
+        if with_uuid:
+            row.append(getattr_nn(node, "uuid", ""))
+        if with_instance_column:
+            row.append(getattr_nn(data, "instances", ""))
+        rows.append(row)
+
+
+def write_csv(rows: list[list[Any]], output: Path):
+    with open(output, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(rows)
 
 
 @click.command()
@@ -118,46 +108,31 @@ def cli(
     Export as CSV.
     """
     tree, datatype_tree = get_trees(
-        include_dirs,
-        aborts,
-        strict,
-        extended_attributes,
-        uuid,
-        quantities,
-        vspec,
-        units,
-        types,
-        types_output,
-        overlays,
-        expand,
+        vspec=vspec,
+        include_dirs=include_dirs,
+        aborts=aborts,
+        strict=strict,
+        extended_attributes=extended_attributes,
+        uuid=uuid,
+        quantities=quantities,
+        units=units,
+        types=types,
+        overlays=overlays,
+        expand=expand,
     )
     log.info("Generating CSV output...")
 
     generic_entry = datatype_tree and not types_output
-    include_instance_column = not expand
-    with open(output, "w") as f:
-        signal_entry_type = "Node" if generic_entry else "Signal"
-        print_csv_header(
-            f,
-            uuid,
-            signal_entry_type,
-            include_instance_column,
-        )
-        print_csv_content(f, tree, uuid, include_instance_column)
-        if datatype_tree is not None and generic_entry is True:
-            print_csv_content(
-                f,
-                datatype_tree,
-                uuid,
-                include_instance_column,
-            )
+    with_instance_column = not expand
 
-    if datatype_tree is not None and generic_entry is False:
-        with open(types_output, "w") as f:
-            print_csv_header(f, uuid, "Node", include_instance_column)
-            print_csv_content(
-                f,
-                datatype_tree,
-                uuid,
-                include_instance_column,
-            )
+    entry_type = "Node" if generic_entry else "Signal"
+    rows = [get_header(uuid, entry_type, with_instance_column)]
+    add_rows(rows, tree, uuid, with_instance_column)
+    if generic_entry and datatype_tree:
+        add_rows(rows, datatype_tree, uuid, with_instance_column)
+    write_csv(rows, output)
+
+    if not generic_entry and datatype_tree:
+        rows = [get_header(uuid, "Node", with_instance_column)]
+        add_rows(rows, datatype_tree, uuid, with_instance_column)
+        write_csv(rows, types_output)

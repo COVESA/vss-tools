@@ -22,6 +22,7 @@ vspec export --help
 │ jsonschema                        Export as a jsonschema.                                              │
 │ protobuf                          Export as protobuf.                                                  │
 │ yaml                              Export as YAML.                                                      │
+│ tree                              Export as Tree.                                                      │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 

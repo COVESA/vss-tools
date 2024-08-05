@@ -15,71 +15,67 @@ from typing import Dict
 import os
 import subprocess
 import pytest
-import vss_tools.vspec as vspec
 
 import vss_tools.vspec.vssexporters.vss2id as vss2id
 import yaml
 
-from vss_tools.vspec.model.constants import VSSDataType, VSSTreeType, VSSUnit
-from vss_tools.vspec.model.vsstree import VSSNode
 from vss_tools.vspec.utils.idgen_utils import get_all_keys_values
+from vss_tools.vspec.tree import VSSNode
+from vss_tools.vspec.datatypes import Datatypes
+from vss_tools.vspec.main import get_trees
 
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
-def get_cla_test(test_file: str, tmp_path: Path, overlay: str | None = None):
+def get_cla_test(test_file: Path, tmp_path: Path, overlay: str | None = None):
     args = f"--vspec {test_file}"
     output = tmp_path / "out.vspec"
     if overlay:
         args += f" -l {overlay}"
     validation = HERE / "validation_vspecs/validation.vspec"
     units = HERE / "test_vspecs/units.yaml"
-    args += f" --output {output} --validate-static-uid {validation} -u {units}"
+    args += f" --output {output} --validate-static-uid {validation} -u {units} -q {TEST_QUANT}"
     return args
 
 
 def get_test_node(
-    node_name: str,
-    unit: str,
-    datatype: VSSDataType,
-    allowed: str,
-    minimum: str,
-    maximum: str,
+    node_name,
+    unit,
+    datatype,
+    allowed,
+    minimum,
+    maximum,
 ) -> VSSNode:
     source = {
         "description": "some desc",
         "type": "branch",
-        "$file_name$": "testfile",
+        "unit": unit,
+        "datatype": datatype,
+        "min": minimum,
+        "max": maximum,
+        "allowed": allowed,
     }
-    node = VSSNode(node_name, source,
-                   VSSTreeType.SIGNAL_TREE.available_types())
-    node.unit = VSSUnit(unit)
-    node.data_type_str = datatype.value
-    node.validate_and_set_datatype()
-    node.allowed = allowed
-    node.min = minimum
-    node.max = maximum
-
-    return node
+    return VSSNode(node_name, None, source)
 
 
 @pytest.mark.parametrize(
     "node_name, unit, datatype, allowed, minimum, maximum, result_static_uid",
     [
-        ("TestNode", "m", VSSDataType.UINT16, "", 0, 10000, "A1D565B2"),
-        ("TestNode", "mm", VSSDataType.UINT32, "", "", "", "B5D7A8FA"),
-        ("TestUnit", "degrees/s", VSSDataType.FLOAT, "", "", "", "DEA9138C"),
-        ("TestMinMax", "percent", VSSDataType.UINT8, "", 0, 100, "88FC5491"),
-        ("TestEnum", "m", VSSDataType.STRING, ["YES, NO"], "", "", "06AEB370"),
+        ("TestNode", "m", Datatypes.UINT16[0], [], 0, 10000, "A1D565B2"),
+        ("TestNode", "mm", Datatypes.UINT32[0], [], None, None, "B5D7A8FA"),
+        ("TestUnit", "degrees/s", Datatypes.FLOAT[0], [], None, None, "DEA9138C"),
+        ("TestMinMax", "percent", Datatypes.UINT8[0], [], 0, 100, "88FC5491"),
+        ("TestEnum", "m", Datatypes.STRING[0], ["YES, NO"], None, None, "06AEB370"),
     ],
 )
 def test_generate_id(
     node_name: str,
     unit: str,
-    datatype: VSSDataType,
+    datatype: Datatypes,
     allowed: str,
     minimum: str,
     maximum: str,
@@ -104,10 +100,10 @@ def test_strict_mode(
     node_case_sensitive = get_test_node(
         node_name=node_name_case_sensitive,
         unit="m",
-        datatype=VSSDataType.FLOAT,
-        allowed="",
-        minimum="",
-        maximum="",
+        datatype=Datatypes.FLOAT[0],
+        allowed=[],
+        minimum=None,
+        maximum=None,
     )
     result_case_sensitive, _ = vss2id.generate_split_id(
         node_case_sensitive, id_counter=0, strict_mode=strict_mode
@@ -116,10 +112,10 @@ def test_strict_mode(
     node_case_insensitive = get_test_node(
         node_name=node_name_case_insensitive,
         unit="m",
-        datatype=VSSDataType.FLOAT,
-        allowed="",
-        minimum="",
-        maximum="",
+        datatype=Datatypes.FLOAT[0],
+        allowed=[],
+        minimum=None,
+        maximum=None,
     )
     result_case_insensitive, _ = vss2id.generate_split_id(
         node_case_insensitive, id_counter=0, strict_mode=strict_mode
@@ -138,16 +134,13 @@ def test_strict_mode(
 def test_export_node(
     request: pytest.FixtureRequest,
     test_file: str,
-    validation_file: str,
+    validation_file,
 ):
     vspec_file = HERE / test_file
     validation_file = HERE / validation_file
-    units = str(HERE / "test_vspecs/units.yaml")
+    unit_files = (HERE / "test_vspecs/units.yaml",)
 
-    vspec.load_units(str(vspec_file), [units])
-    tree = vspec.load_tree(
-        str(vspec_file), include_paths=["."], tree_type=VSSTreeType.SIGNAL_TREE
-    )
+    tree, _ = get_trees(vspec=vspec_file, units=unit_files, quantities=(TEST_QUANT,))
     yaml_dict: Dict[str, str] = {}
     vss2id.export_node(yaml_dict, tree, id_counter=0, strict_mode=False)
 
@@ -167,19 +160,16 @@ def test_export_node(
     ],
 )
 def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
-    tree = get_test_node("TestNode", "m", VSSDataType.UINT32, "", "", "")
-    child_node = get_test_node(
-        children_names[0], "m", VSSDataType.UINT32, "", "", "")
-    child_node2 = get_test_node(
-        children_names[1], "m", VSSDataType.UINT32, "", "", "")
+    tree = get_test_node("TestNode", "m", Datatypes.UINT32[0], "", "", "")
+    child_node = get_test_node(children_names[0], "m", Datatypes.UINT32[0], "", "", "")
+    child_node2 = get_test_node(children_names[1], "m", Datatypes.UINT32[0], "", "", "")
     tree.children = [child_node, child_node2]
 
     yaml_dict: Dict[str, dict] = {}
     if children_names[0] == children_names[1]:
         # assert system exit and log
         with pytest.raises(SystemExit) as pytest_wrapped_e:
-            vss2id.export_node(
-                yaml_dict, tree, id_counter=0, strict_mode=False)
+            vss2id.export_node(yaml_dict, tree, id_counter=0, strict_mode=False)
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == -1
         assert len(caplog.records) == 1 and all(
@@ -199,7 +189,7 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
 
 
 def test_full_script(caplog: pytest.LogCaptureFixture, tmp_path):
-    test_file: str = str(HERE / "test_vspecs/test.vspec")
+    test_file = HERE / "test_vspecs/test.vspec"
     cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(test_file, tmp_path))
     cmd += clas
@@ -218,7 +208,8 @@ def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str, tmp_pa
     spec = HERE / "test_vspecs/test.vspec"
     output = tmp_path / "out.vspec"
     validation = HERE / validation_file
-    args = f"vspec export id --vspec {spec} --output {output} --validate-static-uid {validation}"
+    args = f"vspec export id --vspec {spec} --output {output}"
+    args += f" --validate-static-uid {validation} -q {TEST_QUANT}"
     process = subprocess.run(args.split(), capture_output=True, text=True)
     assert "SEMANTIC NAME CHANGE" in process.stdout
 
@@ -309,13 +300,13 @@ def test_deleted_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
 
 
 def test_overlay(caplog: pytest.LogCaptureFixture, tmp_path):
-
     spec = HERE / "test_vspecs/test.vspec"
     overlay = HERE / "test_vspecs/test_overlay.vspec"
     cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
     cmd += clas
     process = subprocess.run(cmd, capture_output=True, text=True)
+    print(process.stdout)
     assert "ADDED ATTRIBUTE" in process.stdout
 
     output = tmp_path / "out.vspec"
