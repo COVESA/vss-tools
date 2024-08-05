@@ -7,3 +7,14 @@ length:
 temperature:
   definition: Partial derivative of internal energy with respect to entropy at constant volume
               and constant number of particles in the system (ISO 80000-3:2019)
+distance:
+  definition: Well, it's a distance
+
+angular-speed:
+  definition: Test
+
+rotational-speed:
+  definition: Test
+
+relation:
+  definition: Test

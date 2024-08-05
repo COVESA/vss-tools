@@ -44,9 +44,6 @@ type A {
 
   """A double."""
   double: A_Double
-
-  """A string."""
-  string: A_String
 }
 
 """A uint8."""
@@ -175,17 +172,5 @@ type A_Double {
   timestamp: String
 
   """Unit of A double."""
-  unit: String
-}
-
-"""A string."""
-type A_String {
-  """Value: A string."""
-  value: String
-
-  """Timestamp: A string."""
-  timestamp: String
-
-  """Unit of A string."""
   unit: String
 }

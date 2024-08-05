@@ -15,6 +15,7 @@ import filecmp
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 # First test case on all supported exportes
@@ -38,10 +39,11 @@ def test_overlay_struct_array(format, signals_out, expected_signal, tmp_path):
     cmd = f"vspec export {format}"
     if format == "json":
         cmd += " --pretty"
-    cmd += f" --types {struct} -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
+    cmd += f" --types {struct} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} -l {overlay} --output {output}"
     subprocess.run(cmd.split(), cwd=tmp_path, check=True)
 
     expected = HERE / expected_signal
+    print(cmd)
     assert filecmp.cmp(output, expected)
 
     if format == "protobuf":

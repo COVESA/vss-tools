@@ -1,0 +1,5 @@
+kWh:
+  definition: Energy consumption measured in kilowatt hours
+  unit: kilowatt hours
+  quantity: workie
+  allowed-datatypes: ['numeric']

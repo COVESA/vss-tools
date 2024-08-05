@@ -13,6 +13,7 @@ import subprocess
 HERE = Path(__file__).resolve().parent
 VSS_TOOLS_ROOT = (HERE / ".." / ".." / "..").absolute()
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 @pytest.mark.parametrize(
@@ -31,7 +32,7 @@ def test_description_error(
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
 
-    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} -q {TEST_QUANT}"
     if types_file:
         cmd += f" --types {HERE / types_file}"
     if types_out_file:
@@ -42,7 +43,9 @@ def test_description_error(
 
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
-    assert "No type specified" in process.stdout
+    print(process.stdout)
+    assert "has 1 model" in process.stdout
+    assert "CRITICAL" in process.stdout
 
 
 @pytest.mark.parametrize(
@@ -66,7 +69,9 @@ def type_case_sensitive(vspec_file: str, tmp_path):
 def test_scope_error(vspec_file: str, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS} --vspec {vspec_file} --output {out}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    cmd += f" -q {TEST_QUANT} --vspec {vspec_file} --output {out}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
-    assert "VSS Node A.UInt8 cannot have children" in process.stdout
+    assert "Invalid nodes=1" in process.stdout
+    assert "A.UInt8.CCC" in process.stdout

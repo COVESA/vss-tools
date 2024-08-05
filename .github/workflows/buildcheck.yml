@@ -94,6 +94,6 @@ jobs:
         run: |
           pip install cyclonedds
           cd tests/ddsidl
-          vspec export ddsidl -u ../vspec/test_units.yaml -s test.vspec -o test.idl
+          vspec export ddsidl -u ../vspec/test_units.yaml -s test.vspec -o test.idl -q ../vspec/test_quantities.yaml
           idlc -l py test.idl
           grep -i A.String A/_test.py
