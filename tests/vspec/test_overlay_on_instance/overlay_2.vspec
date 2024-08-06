@@ -50,6 +50,22 @@ A.B.Row3.Right.C:
   datatype: int8
   my_id: Lund
 
+# Adding one outside instance range is not handled in a special
+# way and therefore not allowed
+# A.B.Row5:
+#   type: branch
+#   description: Is mandatory!
+#
+# A.B.Row5.Right:
+#   type: branch
+#   description: Also mandatory!
+#
+# A.B.Row5.Right.C:
+#   datatype: float
+#   type: sensor
+#   unit: km
+#   my_id: Landskrona
+#   description: New Muhaha
 
 #Shall inherit comment
 A.S.Front.T:
