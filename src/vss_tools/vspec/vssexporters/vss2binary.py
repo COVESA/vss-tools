@@ -14,7 +14,6 @@ from vss_tools import log
 import vss_tools.vspec.cli_options as clo
 import rich_click as click
 from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.utils.misc import getattr_nn
 from vss_tools.vspec.main import get_trees
 
 
@@ -40,23 +39,22 @@ def intToHexChar(hexInt):
 
 def export_node(cdll: ctypes.CDLL, node: VSSNode, generate_uuid, out_file: str):
     uuid = "" if node.uuid is None else node.uuid
-    data = node.get_vss_data()
+    data = node.get_vss_data().as_dict()
     cdll.createBinaryCnode(
         out_file.encode(),
         node.name.encode(),
-        data.type.value.encode(),
+        data.get("type", "").encode(),
         uuid.encode(),
-        data.description.encode(),
-        getattr_nn(data, "datatype", "").encode(),
-        str(getattr_nn(data, "min", "")).encode(),
-        str(getattr_nn(data, "max", "")).encode(),
-        getattr_nn(data, "unit", "").encode(),
+        data.get("description", "").encode(),
+        data.get("datatype", "").encode(),
+        str(data.get("min", "")).encode(),
+        str(data.get("max", "")).encode(),
+        data.get("unit", "").encode(),
         b""
-        if getattr_nn(data, "allowed") is None
-        else allowedString(getattr_nn(data, "allowed")).encode(),
-        str(getattr_nn(data, "default", "")).encode(),
-        # TODO: How to handle "validate"? What is it?
-        b"",
+        if data.get("allowed") is None
+        else allowedString(data.get("allowed", "")).encode(),
+        str(data.get("default", "")).encode(),
+        str(data.get("validate", "")).encode(),
         len(node.children),
     )
     for child in node.children:
