@@ -66,6 +66,21 @@ class VSSNode(Node):  # type: ignore[misc]
         self.data = get_vss_raw(data, fqn)
         self.uuid: str | None = None
 
+    def copy(self) -> VSSNode:
+        node = VSSNode(
+            self.name,
+            self.get_fqn(),
+            self.data.model_dump(
+                mode="json",
+                exclude=set(["fqn"]),
+            ),
+        )
+        for c in self.children:
+            cp = c.copy()
+            cp.parent = node
+
+        return node
+
     def _post_attach(self, parent: VSSNode):
         """
         Updating the data fqn when getting reattached.
@@ -202,6 +217,11 @@ class VSSNode(Node):  # type: ignore[misc]
                 log.debug(f"'{instance_node.get_fqn()}', expanding...")
                 # Copy the reference node for creating instances
                 instance_node_copy = deepcopy(instance_node)
+
+                # PERF: instance_node_copy = instance_node.copy()
+                # does not work here because it does not include copying
+                # parents and therefore children fqns are different
+                # However we are using the fqns to decide where to insert them
 
                 # Remove children from copy that should not be instantiatet
                 for child in instance_node_copy.children:
@@ -371,7 +391,7 @@ def add_expanded_instance_children(
     # Adding them..
     for root in roots:
         for a in add:
-            c = deepcopy(a)
+            c = a.copy()
             c.parent = root
 
     # Now searching for all initial children
@@ -405,8 +425,8 @@ def expand_instance(
     new nodes to. Depending on how many new nodes
     will be generated or how the instance was provided,
     we are returning the initial roots or new roots with the
-    generated nodes.
     template contains a node copy for generating nodes
+    generated nodes.
     """
     # The behavior is different depending how instances have been defined
     # Instances could be again a list of strings
@@ -431,7 +451,7 @@ def expand_instance(
         for root in roots:
             # Need to copy the template so that we
             # are not messing with the same node
-            node = deepcopy(template)
+            node = template.copy()
             node.name = name
             node.data.instances = []  # type: ignore
             node.parent = root
