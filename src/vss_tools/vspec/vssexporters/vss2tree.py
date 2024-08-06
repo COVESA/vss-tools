@@ -79,7 +79,7 @@ def cli(
 
     rendered_tree = get_rendered_tree(tree, attr)
     if datatype_tree:
-        rendered_tree += get_rendered_tree(datatype_tree, attr)
+        rendered_tree += "\n" + get_rendered_tree(datatype_tree, attr)
 
     if output:
         log.info(f"Writing tree to: {output.absolute()}")
