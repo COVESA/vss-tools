@@ -165,7 +165,7 @@ class VSSNode(Node):  # type: ignore[misc]
         """
         connected = self.get_node_with_fqn(fqn)
         if connected:
-            log.info(f"Already connected: {fqn}")
+            log.debug(f"Already connected: {fqn}")
             return connected
         target_fqn = get_expected_parent(fqn)
         if not target_fqn:
@@ -252,7 +252,7 @@ class VSSNode(Node):  # type: ignore[misc]
                 instance_node.data.instances = []  # type: ignore
             instance_nodes = self.get_instance_nodes()
         if iterations:
-            log.info(f"Instances, iterations={iterations}, nodes={n_instance_nodes}")
+            log.debug(f"Instances, iterations={iterations}, nodes={n_instance_nodes}")
 
     def delete_nodes(self, nodes: tuple[VSSNode]) -> None:
         """
@@ -275,7 +275,7 @@ class VSSNode(Node):  # type: ignore[misc]
         It returns a list of fqn's and their violation reason
         """
         violations = []
-        log.info(f"Checking node name compliance for {self.name}")
+        log.debug(f"Checking node name compliance for {self.name}")
         camel_case_pattern = re.compile("[A-Z][A-Za-z0-9]*$")
         for node in PreOrderIter(self):
             match = re.match(camel_case_pattern, node.name)
@@ -512,7 +512,7 @@ def build_tree(
     if orphans:
         log.warning(f"Orphans: {len(orphans)}")
 
-    log.info(f"Tree, root='{root.name}', size={root.size}, height={root.height}")
+    log.debug(f"Tree, root='{root.name}', size={root.size}, height={root.height}")
     return root, orphans
 
 
