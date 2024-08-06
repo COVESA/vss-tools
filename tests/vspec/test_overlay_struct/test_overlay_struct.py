@@ -24,6 +24,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
         ("yaml", "out.yaml", "expected.yaml"),
         ("csv", "out.csv", "expected.csv"),
         ("protobuf", "out.proto", "expected.proto"),
+        ("apigear", "out.apigear", "expected.apigear"),
     ],
 )
 def test_overlay_struct(format, signals_out, expected_signal, tmp_path):
@@ -39,11 +40,19 @@ def test_overlay_struct(format, signals_out, expected_signal, tmp_path):
     cmd = f"vspec export {format}"
     if format == "json":
         cmd += " --pretty"
-    cmd += f" --types {struct1} --types {struct2} -u {TEST_UNITS} -l {overlay} --vspec {spec} --output {output}"
+    cmd += f" --types {struct1} --types {struct2} -u {TEST_UNITS} -l {overlay} --vspec {spec} "
+    if format == "apigear":
+        cmd += f"--output-dir {output}"
+    else:
+        cmd += f"--output {output}"
 
     subprocess.run(cmd.split(), cwd=tmp_path, check=True)
     expected = HERE / expected_signal
-    assert filecmp.cmp(output, expected)
+    if format == "apigear":
+        dcmp = filecmp.dircmp(output, expected)
+        assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+    else:
+        assert filecmp.cmp(output, expected)
 
     if format == "protobuf":
         types_proto = tmp_path / "Types" / "Types.proto"

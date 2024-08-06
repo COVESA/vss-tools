@@ -1,0 +1,43 @@
+schema: apigear.module/1.0
+name: A
+version: "1.0"
+
+interfaces:
+  - name: A
+    properties:
+      - name: UInt8
+        description: "A uint8."
+        type: int32
+      - name: Int8
+        description: "An int8."
+        type: int32
+      - name: UInt16
+        description: "A uint16."
+        type: int32
+      - name: Int16
+        description: "An int16."
+        type: int32
+      - name: UInt32
+        description: "A uint32."
+        type: int32
+      - name: Int32
+        description: "An int32"
+        type: int32
+      - name: UInt64
+        description: "A uint64."
+        type: int64
+      - name: Int64
+        description: "An int64"
+        type: int64
+      - name: IsBoolean
+        description: "A boolean"
+        type: bool
+      - name: Float
+        description: "A float."
+        type: float32
+      - name: Double
+        description: "A double."
+        type: float64
+      - name: String
+        description: "A string."
+        type: string

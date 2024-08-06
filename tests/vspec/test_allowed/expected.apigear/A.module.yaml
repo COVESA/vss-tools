@@ -1,0 +1,24 @@
+schema: apigear.module/1.0
+name: A
+version: "1.0"
+
+interfaces:
+  - name: A
+    properties:
+      - name: String
+        description: "A string"
+        type: A_String_Value
+      - name: StringArray
+        description: "A string array"
+        type: A_StringArray_Value
+
+enums:
+  - name: A_String_Value
+    members:
+      - name: January
+      - name: February
+  - name: A_StringArray_Value
+    members:
+      - name: January
+      - name: February
+      - name: March
