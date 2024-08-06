@@ -1,0 +1,46 @@
+schema: apigear.module/1.0
+name: A
+version: '1.0'
+interfaces:
+- name: A
+  properties:
+  - name: UInt8
+    type: int32
+    description: A uint8.
+  - name: ParentStructSensor
+    type: VehicleDataTypes_TestBranch1_ParentStruct
+    description: A rich sensor with user-defined data type.
+  - name: NestedStructSensor
+    type: VehicleDataTypes_TestBranch1_NestedStruct
+    description: A rich sensor with user-defined data type.
+structs:
+- name: VehicleDataTypes_TestBranch1_NestedStruct
+  fields:
+  - name: x
+    type: float64
+    description: x property
+  - name: y
+    type: float64
+    description: y property
+  - name: z
+    type: float64
+    description: z property
+- name: VehicleDataTypes_TestBranch1_ParentStruct
+  fields:
+  - name: x_property
+    type: VehicleDataTypes_TestBranch1_NestedStruct
+    description: A property of struct-type. The struct name is specified relative to the branch
+  - name: y_property
+    type: VehicleDataTypes_TestBranch1_NestedStruct
+    description: A property of struct-type. The struct name is specified as a fully qualified name
+  - name: x_properties
+    type: VehicleDataTypes_TestBranch1_NestedStruct
+    description: A property of struct-type array and an arraysize
+    array: true
+  - name: y_properties
+    type: VehicleDataTypes_TestBranch1_NestedStruct
+    description: A property of struct-type array and no arraysize
+    array: true
+  - name: z_property
+    type: float64
+    description: A primitive property

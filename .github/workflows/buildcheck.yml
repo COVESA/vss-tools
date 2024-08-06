@@ -83,6 +83,7 @@ jobs:
           # Just verify that we can start the tools
           vspec --help
           vspec export --help
+          vspec export apigear --help
           vspec export csv --help
           vspec export json --help
           vspec export yaml --help

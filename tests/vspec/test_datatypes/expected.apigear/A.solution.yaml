@@ -1,0 +1,11 @@
+schema: apigear.solution/1.0
+name: A
+version: '1.0'
+layers:
+- name: cpp
+  inputs:
+  - A.module.yaml
+  template: apigear-io/template-cpp14
+  features:
+  - stubs
+  output: cppservice

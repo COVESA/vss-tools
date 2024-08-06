@@ -12,6 +12,7 @@ vspec export --help
 │ --help                                              Show this message and exit.                        │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────╮
+│ apigear                           Export to ApiGear.                                                   │
 │ binary                            Export to Binary.                                                    │
 │ csv                               Export as CSV.                                                       │
 │ ddsidl                            Export as DDSIDL.                                                    │
@@ -44,6 +45,7 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
 ```
 ## Exporter docs
 
+- [apigear](./apigear.md)
 - [tree](./tree.md)
 - [ddsidl](./ddsidl.md)
 - [graphql](./graphql.md)
