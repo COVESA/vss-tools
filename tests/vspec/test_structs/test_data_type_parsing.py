@@ -51,6 +51,12 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
             "expected-signals-types.idl",
             "VehicleDataTypes.vspec",
         ),
+        (
+            "apigear",
+            "signals-out.apigear",
+            "expected-signals-types.apigear",
+            "VehicleDataTypes.vspec",
+        ),
     ],
 )
 def test_data_types_export_single_file(
@@ -65,10 +71,18 @@ def test_data_types_export_single_file(
     cmd = f"vspec export {format}"
     if format == "json":
         cmd += " --pretty"
-    cmd += f" --types {type_file} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} --output {output}"
+    cmd += f" --types {type_file} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} "
+    if format == "apigear":
+        cmd += f"--output-dir {output}"
+    else:
+        cmd += f"--output {output}"
     subprocess.run(cmd.split(), check=True)
     expected_output = HERE / expected_signal
-    assert filecmp.cmp(output, expected_output)
+    if format == "apigear":
+        dcmp = filecmp.dircmp(output, expected_output)
+        assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+    else:
+        assert filecmp.cmp(output, expected_output)
 
 
 @pytest.mark.parametrize(
@@ -332,3 +346,22 @@ def test_faulty_use_of_standard_attributes(vspec_file, types_file, error_msg, tm
     print(process.stderr)
     print(process.stdout)
     assert error_msg in process.stdout or error_msg in process.stderr
+
+
+def test_data_types_for_multiple_apigear_templates(tmp_path):
+    """
+    Test that data types are converted for every ApiGear template
+    """
+    types_file = HERE / "VehicleDataTypes.vspec"
+    vspec = HERE / "test.vspec"
+    out = tmp_path / "out.apigear"
+    cmd = f"vspec export apigear -u {TEST_UNITS} -q {TEST_QUANT} --types {types_file}"
+    cmd += f" --vspec {vspec} --output-dir {out}"
+    cmd += " --apigear-template-unreal-path unreal_path"
+    cmd += " --apigear-template-cpp-path cpp14_path"
+    cmd += " --apigear-template-qt5-path qt5_path"
+    cmd += " --apigear-template-qt6-path qt6_path"
+    subprocess.run(cmd.split(), check=True)
+    expected_output = HERE / "out.apigear"
+    dcmp = filecmp.dircmp(out, expected_output)
+    assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)

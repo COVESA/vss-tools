@@ -1,0 +1,35 @@
+schema: apigear.solution/1.0
+name: A
+version: '1.0'
+layers:
+- name: unreal
+  inputs:
+  - A.module.yaml
+  template: apigear-io/template-unreal
+  features:
+  - stubs
+  - plugin
+  output: unreal_path
+- name: cpp
+  inputs:
+  - A.module.yaml
+  template: apigear-io/template-cpp14
+  features:
+  - stubs
+  output: cpp14_path
+- name: qt5
+  inputs:
+  - A.module.yaml
+  template: apigear-io/template-qt5
+  features:
+  - stubs
+  - qmlplugin
+  output: qt5_path
+- name: qt6
+  inputs:
+  - A.module.yaml
+  template: apigear-io/template-qtcpp
+  features:
+  - stubs
+  - qmlplugin
+  output: qt6_path

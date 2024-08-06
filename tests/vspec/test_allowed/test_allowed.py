@@ -19,12 +19,20 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 def run_exporter(exporter, argument, tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / f"out.{exporter}"
-    cmd = f"vspec export {exporter}{argument} --vspec {spec} --output {output}"
+    cmd = f"vspec export {exporter}{argument} --vspec {spec} "
+    if exporter in ["apigear"]:
+        cmd += f"--output-dir {output}"
+    else:
+        cmd += f"--output {output}"
 
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode == 0
     expected = HERE / f"expected.{exporter}"
-    assert filecmp.cmp(output, expected)
+    if exporter in ["apigear"]:
+        dcmp = filecmp.dircmp(output, expected)
+        assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+    else:
+        assert filecmp.cmp(output, expected)
 
     # Check if warning given
     # ddsidl can not handle float and integer
@@ -36,6 +44,6 @@ def run_exporter(exporter, argument, tmp_path):
 def test_allowed(tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["json", "ddsidl", "csv", "yaml", "franca", "graphql"]
+    exporters = ["apigear", "json", "ddsidl", "csv", "yaml", "franca", "graphql"]
     for exporter in exporters:
         run_exporter(exporter, f" -u {TEST_UNITS} -q {TEST_QUANT}", tmp_path)

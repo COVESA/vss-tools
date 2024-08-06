@@ -1,0 +1,48 @@
+schema: apigear.module/1.0
+name: A
+version: '1.0'
+interfaces:
+- name: A
+  properties:
+  - name: IntNoMinMax
+    type: int32
+    description: No Min Max.
+  - name: IntOnlyMax
+    type: int32
+    description: Only Max.
+  - name: IntOnlyMin
+    type: int32
+    description: Only Min.
+  - name: IntMinMax
+    type: int32
+    description: Min & Max.
+  - name: IntMaxZero
+    type: int32
+    description: Max Zero.
+  - name: IntMinZero
+    type: int32
+    description: Min Zero.
+  - name: FloatNoMinMax
+    type: float32
+    description: No Min Max.
+  - name: FloatOnlyMax
+    type: float32
+    description: Only Max.
+  - name: FloatOnlyMin
+    type: float32
+    description: Only Min.
+  - name: FloatMinMax
+    type: float32
+    description: Min & Max.
+  - name: FloatMaxZero
+    type: float32
+    description: Max Zero.
+  - name: FloatMinZero
+    type: float32
+    description: Min Zero.
+  - name: FloatMaxZeroInt
+    type: float32
+    description: Max Zero.
+  - name: FloatMinZeroInt
+    type: float32
+    description: Min Zero.
