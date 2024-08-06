@@ -7,7 +7,6 @@
 # SPDX-License-Identifier: MPL-2.0
 from __future__ import annotations
 
-import copy
 from pathlib import Path
 from typing import Any
 
@@ -71,7 +70,7 @@ def deep_update(base: dict[str, Any], update: dict[str, Any]) -> None:
             if key in base and isinstance(base[key], dict):
                 deep_update(base[key], value)
             else:
-                base[key] = copy.deepcopy(value)
+                base[key] = value
         else:
             base[key] = value
 
