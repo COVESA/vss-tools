@@ -78,7 +78,11 @@ def deep_update(base: dict[str, Any], update: dict[str, Any]) -> None:
 
 class VSpec:
     def __init__(
-        self, source: Path, include_dirs: list[Path], prefix: str | None = None
+        self,
+        source: Path,
+        include_dirs: list[Path],
+        prefix: str | None = None,
+        level: int = 0,
     ):
         self.source = source
         self.prefix = prefix
@@ -89,7 +93,12 @@ class VSpec:
         self.content = source.read_text()
 
         self.data = yaml.safe_load(self.content)
-        log.info(f"Loaded 'VSpec', file={source.absolute()}, elements={len(self.data)}")
+        log_msg = f"Loaded 'VSpec', file={source.absolute()}, elements={len(self.data)}"
+        if level == 0:
+            log.info(log_msg)
+        else:
+            log.debug(log_msg)
+
         if self.data is None:
             self.data = {}
         if prefix:
@@ -106,7 +115,10 @@ class VSpec:
         includes = [Include(statement, prefix) for statement in include_statements]
         for include in includes:
             s = VSpec(
-                include.resolve_path(self.include_dirs), include_dirs, include.prefix
+                include.resolve_path(self.include_dirs),
+                include_dirs,
+                include.prefix,
+                level + 1,
             )
             strict_dict_update(self.data, s.data)
 
