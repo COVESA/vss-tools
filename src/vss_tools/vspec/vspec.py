@@ -55,11 +55,14 @@ class Include:
         )
 
 
-def strict_dict_update(base: dict[str, Any], update: dict[str, Any]) -> None:
+def strict_dict_update(
+    source: Path, base: dict[str, Any], update: dict[str, Any]
+) -> None:
     for k, v in update.items():
         if k in base:
             log.warning(f"Spec Conflict.\nCurrent content: {base[k]}")
             log.warning(f"Requested content: {v}")
+            log.warning(f"Caused by: {source.resolve().absolute()}")
             raise InvalidSpecDuplicatedEntryException(f"Duplicated key: {k}")
         base[k] = v
 
@@ -119,7 +122,7 @@ class VSpec:
                 include.prefix,
                 level + 1,
             )
-            strict_dict_update(self.data, s.data)
+            strict_dict_update(s.source, self.data, s.data)
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}, src={self.source}, prefix={self.prefix}"
