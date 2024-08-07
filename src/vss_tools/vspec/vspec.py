@@ -134,8 +134,7 @@ class VSpec:
 def load_vspec(include_dirs: tuple[Path, ...], specs: list[Path]) -> VSpec:
     spec = None
     for s in specs:
-        includes = list(include_dirs) + [s.parent]
-        vs = VSpec(s, list(includes))
+        vs = VSpec(s, list(include_dirs))
         if spec:
             spec.update(vs)
         else:
