@@ -95,14 +95,14 @@ class VSpec:
         self.content = source.read_text()
 
         self.data = yaml.safe_load(self.content)
+        if self.data is None:
+            self.data = {}
         log_msg = f"Loaded 'VSpec', file={source.absolute()}, elements={len(self.data)}"
         if level == 0:
             log.info(log_msg)
         else:
             log.debug(log_msg)
 
-        if self.data is None:
-            self.data = {}
         if prefix:
             tmp_data = {}
             for k, v in self.data.items():
