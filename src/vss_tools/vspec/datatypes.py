@@ -204,7 +204,6 @@ class Datatypes:
     def get_type(cls, datatype: str) -> tuple[str, Callable, list[str]] | None:
         for t in cls.types:
             if datatype == t[0]:
-                log.debug(f"'{datatype}', type={t[0]}")
                 return t
         return None
 
