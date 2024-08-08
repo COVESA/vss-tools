@@ -300,7 +300,7 @@ class VSSNode(Node):  # type: ignore[misc]
         for node in PreOrderIter(self):
             match = re.match(camel_case_pattern, node.name)
             if not match:
-                violations.append([node.name, "not CamelCase"])
+                violations.append([node.get_fqn(), "not CamelCase"])
             if isinstance(node.data, VSSDataDatatype):
                 if node.data.datatype == Datatypes.BOOLEAN[0]:
                     if not node.name.startswith("Is"):
