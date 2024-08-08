@@ -4,7 +4,9 @@
 [![License](https://img.shields.io/badge/License-MPL%202.0-blue.svg)](https://opensource.org/licenses/MPL-2.0)
 [![Build Status](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml/badge.svg)](https://github.com/COVESA/vss-tools/actions/workflows/buildcheck.yml?query=branch%3Amaster)
 
-The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification). VSS Tools is developed in parallel with VSS, please visit the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification) for information on how to contribute. If any questions arise, please check out the [FAQ](FAQ.md) for more information.
+The overall goal of VSS Tools is to provide a set of tools that can be used to convert or verify Vehicle Signal Specifications defined by the format specified by the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification).
+VSS Tools is developed in parallel with VSS, please visit the [COVESA VSS project](https://github.com/COVESA/vehicle_signal_specification) for information on how to contribute.
+If any questions arise, please check out the [FAQ](FAQ.md) for more information.
 
 ## Available Tools
 
@@ -23,122 +25,91 @@ Tools in the Obsolete Tools category may be deleted after 12 months.
 
 Examples on tool usage can be found in the [VSS Makefile](https://github.com/COVESA/vehicle_signal_specification/blob/master/Makefile) and in tool-specific documentation, if existing.
 
- Tool | Description | Tool Category         | Documentation                                                                                                         |
-| ------------------ | ----------- |-----------------------|-----------------------------------------------------------------------------------------------------------------------|
-| [vspec2x.py](vspec2x.py) | Parses and expands VSS into different text based output formats. Currently supports `json`, `yaml`,`csv`,`idl`  | Community Supported   | Try `./vspec2x --help` or check [vspec2x documentation](docs/vspec2x.md)                                              |
-[vspec2csv.py](vspec2csv.py) | Shortcut for [vspec2x.py](vspec2x.py) generating CSV output | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2ddsidl.py](vspec2ddsidl.py) | Shortcut for [vspec2x.py](vspec2x.py) generating DDS-IDL output | Community Supported   | [VSS2DDSIDL Documentation](docs/VSS2DDSIDL.md). For general parameters check [vspec2x documentation](docs/vspec2x.md) |
-[vspec2json.py](vspec2json.py) |  Shortcut for [vspec2x.py](vspec2x.py) generating JSON output | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2yaml.py](vspec2yaml.py) | Shortcut for [vspec2x.py](vspec2x.py) generating flattened YAML output | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2binary.py](vspec2binary.py) | The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below), and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go | Community Supported   | [vspec2binary Documentation](binary/README.md). For general parameters check [vspec2x documentation](docs/vspec2x.md) |
-[vspec2franca.py](vspec2franca.py) | Parses and expands a VSS and generates a Franca IDL specification | Community Supported   | Check [vspec2x documentation](docs/vspec2x.md)                                                                        |
-[vspec2c.py](obsolete/vspec2c.py) | The vspec2c tooling allows a vehicle signal specification to be translated from its source YAML file to native C code that has the entire specification encoded in it. | Obsolete (2022-11-01) | [Documentation](obsolete/vspec2c/README.md)                                                                           |
-[vspec2ocf.py](obsolete/ocf/vspec2ocf.py) | Parses and expands a VSS and generates a OCF specification | Obsolete (2022-11-01) | -                                                                                                                     |
-[vspec2protobuf.py](vspec2protobuf.py) | Parses and expands a VSS and generates a Protobuf specification | Contrib               | -                                                                                                                     |
-[vspec2ttl.py](contrib/vspec2ttl/vspec2ttl.py) | Parses and expands a VSS and generates a TTL specification | Contrib               | -                                                                                                                     |
-[vspec2graphql.py](vspec2graphql.py) | Parses and expands a VSS and generates a GraphQL specification | Community Supported   | [Documentation](docs/VSS2GRAPHQL.md)                                                                                  |
-[vspec2id.py](vspec2id.py) | Generates and validates static UIDs for a VSS | WIP                   | [vspec2id Documentation](./docs/vspec2id.md)                                                                          |
+General CLI help should be used for up to date info of how to use the tools.
 
-## Tool Architecture
+```bash
+vspec --help # Help about global flags
+vspec export --help # Shows help for the export functionality
+vspec export json --help # Shows help for the json exporter
+# ...
+```
 
-All current tools are based on common Python functionality in the `vspec` folder to read, parse and expand a Vehicle Signal Specification files(*.vspec files). As an example, if the standard [VSS root file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/VehicleSignalSpecification.vspec) is given as input then the Python tooling will read all included files, do a validation of the content, expand any instances used and create an in-memory representation which then can be used by specialized tools to generate the wanted output.
+Please check [here](./docs/vspec.md) for generic infos about exporters and their arguments
+as well as [here](./docs/vspec_arch.md) for design decision, architecture and limitations.
 
-## Getting started
 
-## Prerequisites
+## Compatibility with VSS
+
+The [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification) includes vss-tools as a submodule.
+The vss-tools version linked by the VSS repository is the preferred vss-tools version to use for that particular version of the VSS repository.
+It is not guaranteed that newer or older versions of vss-tools can successfully handle that particular version of the VSS repository.
+The table below gives an overview of basic version support for e.g. `vspec export json`.
+Other exporters may have stricter requirements.
+
+VSS-tools version | Supported VSS versions | Comments
+-----------------|------------------------|----------------
+`v3.0`| `v3.0` - `v3.1.1`
+`v3.1`| `v3.0` -`v4.0`
+`v4.0`| `v4.0`
+`v4.1`| `v4.0` -
+`<latest source>`| `v4.0` -
+
+### Changes affecting compatibility
+
+Examples on changes affecting compatibility
+
+* VSS version `v4.1` introduced a new syntax for the unit files that cannot be handled by `vss-tools < v4.1`
+* From `v4.0` vss-tools expects unit file to be explicitly specified or provided in the same directory as the VSS input.
+  VSS `v3.1` is the first VSS version including a unit file in the VSS repository.
+  This means vss-tools from `v4.0` onwards cannot handle VSS-versions prior to VSS `v3.1`
+* VSS-tools `v3.1` only supported `default` for attributes, resulting in that newer VSS-versions is not supported.
+* VSS-tools `v4.0` requires case-sensitive for type, resulting in that VSS versions `v3.1` and earlier is not supported.
+
+## Contributing
+
+### Prerequisites
 
 * If your environment behind a (corporate) proxy, the following environments variables must typically be set: `http_proxy` and `https_proxy` (including authentication e.g., `http://${proxy_username):$(proxy_password)@yourproxy.yourdomain`).
 * If using `apt` and you are behind a proxy, you may also need to configure proxy in `/etc/apt/apt.conf.d/proxy.conf`.
 
-## Basic Setup
+### Poetry
 
-The tools are in [continuous integration](https://github.com/COVESA/vss-tools/blob/master/.github/workflows/buildcheck.yml) tested using Python 3.8.12,
-but they are generally expected to be compatible with at least Python 3.8, 3.9 and 3.10.
-The setup example shown below is based on a fresh minimal install of Ubuntu 22.04.
+We are using [poetry](https://python-poetry.org/docs/) or a package and venv handling system.
+Therefore a requirement to develop a tool is to install poetry on your host machine. For that you will need Python > 3 as well as pip.
+Check [here](https://python-poetry.org/docs/#installation) for official installation instructions. The recommended one is the following, however installing it through pip/pipx works aswell:
 
-The first step is to make sure that python and required dependencies are installed. A possible installation flow is shown below.
-
-
-```sh
-# Install Python, in this case Python 3.10 as that is a version available on the update sites of Ununtu 22.04
-sudo apt install python3.10
-
-# For convenience make Python 3.10 available as default Python
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.10 100
-
-# Install required dependencies, running pip without sudo means that a user installation will be performed
-sudo apt install pip
-pip install anytree deprecation graphql-core
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
+You can then use the following command to install all dependencies and the `vss-tools` package:
+
+```bash
+poetry install
+```
+
+The call will create an `.venv` directory but does not automatically activate it.
+You can do that in various ways:
+- `poetry shell`: Spawns a new subshell with the appropriate environment activated. After that you can directly call tools
+- `poetry run <tool>`: Runs the given tool in the virtual environment but does return to the current environment after that
+- `. $(poetry env info --path)/bin/activate`: Enables the virtual environment. Since we do store virtual envs directly with the tool the command can be simplified to `. .venv/bin/activate`. See [here](https://python-poetry.org/docs/basic-usage/#using-poetry-run) for more detailed information how to run poetry e.g. for Windows and how to exit/deactive it.
+- We also have an `.envrc` that automatically sources the `.venv` when available. Check [direnv](https://direnv.net/) for how to set it up.
+
+
+## Installing additional tools
+
+If you intend to run testcases related to `vspec` proto exporter you need to install the protobuf compiler.
+Please follow official instructions for your OS. For Debian systems it would be:
 
 ```sh
-# Install protobuf compiler
-sudo apt install -y protobuf-compiler
+sudo apt update
+sudo apt install -y golang-go protobuf-compiler
 protoc --version  # Ensure compiler version is 3+
 ```
 
-The environment can be tested by calling one of the tools without arguments, then usage instructions shall be printed similar to below.
-
-```sh
-user@ubuntu:~/vss-tools$ ./vspec2csv.py
-usage: vspec2csv.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
-                    [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
-                    [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
-                    <vspec_file> <output_file>
-vspec2csv.py: error: the following arguments are required: <vspec_file>, <output_file>
-
-```
-
-## Advanced Setup
-
-If you want to run the tools with a specific Python version, or you do not want to change your current/global Python configuration you can use pyenv/pipenv.
-If you use a custom pip installation directory, set the `PYTHONPATH` environment variable to the directory that you set in the `pip.ini` file.
-[pipenv](https://pypi.org/project/pipenv/) is a tool that manages a virtual environment and install the package and its dependencies, making the process much simpler and predictable, since the `Pipfile` states the dependencies, while `Pipfile.lock` freezes the exact version in use.
-
-The setup example shown below is based on a fresh minimal install of Ubuntu 22.04.
-
-The first step is to make sure that pyenv and the wanted Python version (in the example 3.8.12) is installed
-
-```sh
-# Install dependencies, to be able to use curl and build python from source
-sudo apt-get install make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
-
-# Fetch and install pyenv and update variables
-curl https://pyenv.run | bash
-export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
-# Build and install wanted python version
-pyenv install 3.8.12
-```
-
-Install this project and its dependencies in the local `.venv` folder in this project, then use it (`pipenv shell`):
-
-```sh
-export PIPENV_VENV_IN_PROJECT=1 # will create a local `.venv` in the project, otherwise uses global location
-pip install pipenv
-export PATH=/home/user/.local/bin:$PATH
-pipenv install --dev # install the development dependencies as well
-```
-
-Then the virtual environment can be started and tested using (`pipenv shell`):
-
-```sh
-user@ubuntu:~/vss-tools$ pipenv shell
-Launching subshell in virtual environment...
-user@ubuntu:~/vss-tools$  . /home/user/vss-tools/.venv/bin/activate
-(vss-tools) user@ubuntu:~/vss-tools$ ./vspec2yaml.py
-usage: vspec2yaml.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style] [--format format] [--uuid]
-                     [-o overlays] [-u unit_file] [--json-all-extended-attributes] [--json-pretty] [--yaml-all-extended-attributes]
-                     [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
-                     <vspec_file> <output_file>
-vspec2yaml.py: error: the following arguments are required: <vspec_file>, <output_file>
-```
-
 ## Pre-commit set up
-This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks. pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
+This repository is set up to use pre-commit hooks. After you clone the project, run `pre-commit install` to install pre-commit into your git hooks.
+pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
 
 ## Building and installing with Pip
 

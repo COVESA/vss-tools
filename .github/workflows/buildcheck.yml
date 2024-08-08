@@ -2,57 +2,54 @@ name: Standard Build Check
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
     types:
       - opened
       - synchronize
       - reopened
       - ready_for_review
+  workflow_dispatch:
 
 concurrency:
   group: ci-check-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.8.12"  # keep in sync with vss-tools/Pipfile!
-  CI: 1  # shall any script needs to know if it's running in the CI
+  PYTHON_VERSION: "3.10.6" # keep in sync with vss-tools/Pipfile!
+  CI: 1 # shall any script needs to know if it's running in the CI
 
 jobs:
   buildtest:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout vss-tools
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install apt dependencies
         run: sudo apt install -y protobuf-compiler
       - name: Setup Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pipenv
-      - name: Install pipenv
+          cache: pip
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.8.3"
+      - name: Poetry install
+        run: poetry install
+      - name: Mypy
+        run: poetry run mypy src
+      - name: flake8
         run: |
-          python -m pip --quiet --no-input install --upgrade pip
-          python -m pip --quiet --no-input install --upgrade pipenv wheel
-      - name: Install dependencies with pipenv
-        run: |
-          pipenv install --deploy --dev
-      - name: Run mypy, fail on errors.
-        run: |
-          pipenv install mypy types-setuptools types-PyYAML
-          pipenv run mypy *.py vspec tests contrib
-      - name: Run flake8, errors not accepted!
-        run: |
-          pipenv install flake8
-          pipenv run flake8 *.py vspec tests contrib
-      - name: Run tests
-        run: |
-          pipenv run pytest
-      - name: Build binary library
+          poetry run flake8 src tests contrib
+      - name: Build binary library (Needed for pytest)
         run: |
           cd binary
           make
+      - name: Run tests
+        run: |
+          poetry run pytest --cov=vss_tools --cov-report=term-missing --cov-fail-under=90
       - name: Test Binary Go Parser
         run: |
           cd binary/go_parser
@@ -64,23 +61,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout vss-tools
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.8.3"
       - name: Test Pypi packaging
         run: |
-          # Separate build as we want a clean environment to make sure all dependencies are present
-          python -m pip --quiet --no-input install --upgrade pip
-          pip install -e .
+          poetry build
       - name: Test that tools can be started
         run: |
+          pip install dist/*.whl
+
           # Verify that it works from any directory
           mkdir /tmp/pypi_vss_test
           cd /tmp/pypi_vss_test
           # Just verify that we can start the tools
-          vspec2x.py --help
-          vspec2csv.py --help
-          vspec2json.py --help
-          vspec2yaml.py --help
-          vspec2franca.py --help
-          vspec2ddsidl.py --help
-          vspec2protobuf.py --help
-          vspec2graphql.py --help
+          vspec --help
+          vspec export --help
+          vspec export csv --help
+          vspec export json --help
+          vspec export yaml --help
+          vspec export franca --help
+          vspec export ddsidl --help
+          vspec export protobuf --help
+          vspec export graphql --help
+      - name: Test that generated DDSIDL is correct
+        run: |
+          pip install cyclonedds
+          cd tests/ddsidl
+          vspec export ddsidl -u ../vspec/test_units.yaml -s test.vspec -o test.idl
+          idlc -l py test.idl
+          grep -i A.String A/_test.py

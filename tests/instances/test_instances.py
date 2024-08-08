@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2022 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -9,15 +7,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typing import Dict
-from vspec.model.vsstree import VSSNode
-from vspec.model.constants import VSSType, VSSTreeType
-import vspec
-import os
-import sys
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.constants import VSSType, VSSTreeType
+import vss_tools.vspec as vspec
+from pathlib import Path
 import re
 
-myDir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(myDir, "../.."))
+HERE = Path(__file__).resolve().parent
+RESOURCES = HERE / "resources"
 
 
 #  TEST SIMPLE INSTANCE STRUCTURE #
@@ -30,27 +27,25 @@ sys.path.append(os.path.join(myDir, "../.."))
 
 
 # Needed test files
-TEST_FILES_SIMPLE = ["resources/instance_simple_range.vspec",
-                     "resources/instance_simple_enum.vspec",
-                     "resources/instance_simple_range_list.vspec",
-                     "resources/instance_simple_enum_list.vspec"]
-
-# test function: read in the files and compare the outcome
+TEST_FILES_SIMPLE = [
+    "instance_simple_range.vspec",
+    "instance_simple_enum.vspec",
+    "instance_simple_range_list.vspec",
+    "instance_simple_enum_list.vspec",
+]
 
 
 def test_simple_structures(request):
-    test_path = os.path.dirname(request.fspath)
     for tfs in TEST_FILES_SIMPLE:
         # load the file
-        tree = vspec.load_tree(os.path.join(test_path, tfs), [os.path.join(
-            test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
+        tree = vspec.load_tree(
+            str(RESOURCES / tfs), str(RESOURCES), VSSTreeType.SIGNAL_TREE
+        )
 
         # check if root node has 3 children
         assert len(tree.children) == 3
 
-        list_of_instances = ["Vehicle.Test1",
-                             "Vehicle.Test2",
-                             "Vehicle.Test3"]
+        list_of_instances = ["Vehicle.Test1", "Vehicle.Test2", "Vehicle.Test3"]
 
         for child in tree.children:
             assert child.qualified_name() in list_of_instances  # < list qualified names
@@ -73,17 +68,17 @@ def test_simple_structures(request):
 # TEST COMPLEX INSTANCE STRUCTURE #
 
 # Needed test files
-TEST_FILES_COMPLEX = ["resources/instance_complex_1.vspec",
-                      "resources/instance_complex_2.vspec",
-                      "resources/instance_complex_3.vspec",
-                      "resources/instance_complex_4.vspec"]
+TEST_FILES_COMPLEX = [
+    "instance_complex_1.vspec",
+    "instance_complex_2.vspec",
+    "instance_complex_3.vspec",
+    "instance_complex_4.vspec",
+]
 
 # test function: read in the files and compare the outcome
 
 
-def test_complex_structures(request):
-
-    test_path = os.path.dirname(request.fspath)
+def test_complex_structures():
     # helper function to check, if all information are present
 
     def check_instance_branch(branch: VSSNode, numberOfChildren: int):
@@ -92,8 +87,9 @@ def test_complex_structures(request):
 
     for tfs in TEST_FILES_COMPLEX:
         # load the file
-        tree = vspec.load_tree(os.path.join(test_path, tfs), [os.path.join(
-            test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
+        tree = vspec.load_tree(
+            str(RESOURCES / tfs), str(RESOURCES), VSSTreeType.SIGNAL_TREE
+        )
 
         # check if root node has 1 child and check first instances
         assert len(tree.children) == 1
@@ -104,21 +100,25 @@ def test_complex_structures(request):
         for child in tree.children[0].children:
             # 2nd level: Test1.Test2 - Test1.Test3
             assert child.qualified_name() in [
-                "Vehicle.Test1.Test2", "Vehicle.Test1.Test3"]
+                "Vehicle.Test1.Test2",
+                "Vehicle.Test1.Test3",
+            ]
             check_instance_branch(child, 3)
             for child_2 in child.children:
                 # 2nd level: Test1.Test2.Test4 - Test1.Test3.Test6
                 print(child_2.qualified_name())
                 assert None is not re.match(
-                    "^Vehicle.Test1.Test(2|3).Test(4|5|6)",
-                    child_2.qualified_name())
+                    "^Vehicle.Test1.Test(2|3).Test(4|5|6)", child_2.qualified_name(
+                    )
+                )
                 check_instance_branch(child_2, 4)
                 for child_3 in child_2.children:
                     # 3rd level: Test1.Test2.Test4.Test7 -
                     # Test1.Test3.Test6.Test10
                     assert None is not re.match(
                         "^Vehicle.Test1.Test(2|3).Test(4|5|6).Test(7|8|9|10)",
-                        child_3.qualified_name())
+                        child_3.qualified_name(),
+                    )
                     check_instance_branch(child_3, 1)
                     assert 1 == len(child_3.children)
                     child_4 = child_3.children[0]
@@ -126,7 +126,8 @@ def test_complex_structures(request):
                     # Test1.Test3.Test6.Test10.Test11
                     assert None is not re.match(
                         "^Vehicle.Test1.Test(2|3).Test(4|5|6).Test(7|8|9|10).Test11",
-                        child_4.qualified_name())
+                        child_4.qualified_name(),
+                    )
                     # All instances are expected to have one child
                     assert 1 == len(child_4.children)
                     assert child_4.children[0].name == "SomeThing"
@@ -143,15 +144,15 @@ def test_complex_structures(request):
 # TEST EXCLUSION FROM INSTANCE STRUCTURE #
 
 # Needed test files
-TEST_FILES_EXCLUDE = ["resources/instance_exclude_node.vspec"]
+TEST_FILES_EXCLUDE = ["instance_exclude_node.vspec"]
 
 
-def test_exclusion_from_instance(request):
-    test_path = os.path.dirname(request.fspath)
+def test_exclusion_from_instance():
     for tfs in TEST_FILES_EXCLUDE:
         # load the file
-        tree = vspec.load_tree(os.path.join(test_path, tfs), [os.path.join(
-            test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
+        tree = vspec.load_tree(
+            str(RESOURCES / tfs), str(RESOURCES), VSSTreeType.SIGNAL_TREE
+        )
         assert 6 == len(tree.children)
         name_list = []
         for child in tree.children:
@@ -161,7 +162,10 @@ def test_exclusion_from_instance(request):
                 assert "ExcludeSomeThing description" == child.description
                 assert 1 == len(child.children)
                 child_2 = child.children[0]
-                assert "Vehicle.ExcludeSomeThing.ExcludeSomethingLeaf" == child_2.qualified_name()
+                assert (
+                    "Vehicle.ExcludeSomeThing.ExcludeSomethingLeaf"
+                    == child_2.qualified_name()
+                )
                 assert "ExcludeSomethingLeaf description" == child_2.description
                 assert VSSType.ACTUATOR == child_2.type
 
@@ -174,11 +178,13 @@ def test_exclusion_from_instance(request):
         assert "Vehicle.ExcludeNode" in name_list
 
 
-def test_extended_attribute(request):
-    test_path = os.path.dirname(request.fspath)
+def test_extended_attribute():
     # load the file
-    tree = vspec.load_tree(os.path.join(test_path, "resources/instance_extended_attribute.vspec"), [os.path.join(
-                        test_path, "resources/")], VSSTreeType.SIGNAL_TREE)
+    tree = vspec.load_tree(
+        str(RESOURCES / "instance_extended_attribute.vspec"),
+        str(RESOURCES),
+        VSSTreeType.SIGNAL_TREE,
+    )
 
     # check if root node has 3 children
     assert len(tree.children) == 3
@@ -190,8 +196,11 @@ def test_extended_attribute(request):
             assert len(child.children) == 1
             assert child.children[0].name == "SomeThing"  # <... SomeThing
             assert len(child.children[0].extended_attributes.items()) == 1
-            assert isinstance(child.children[0].extended_attributes["dbc"], Dict)
-            assert isinstance(child.children[0].extended_attributes["dbc"]["signal"], str)
+            assert isinstance(
+                child.children[0].extended_attributes["dbc"], Dict)
+            assert isinstance(
+                child.children[0].extended_attributes["dbc"]["signal"], str
+            )
             assert child.children[0].extended_attributes["dbc"]["signal"] == "bababa"
             child.children[0].extended_attributes["dbc"]["signal"] = "lalala"
 

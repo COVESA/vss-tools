@@ -2,7 +2,9 @@ puncheon:
   definition: Volume measure in puncheons (1 puncheon = 318 liters)
   unit: Puncheon
   quantity: volume
+  allowed_datatypes: ['uint16', 'int16']
 hogshead:
   definition: Volume measure in hogsheads (1 hogshead = 238 liters)
   unit: Hogshead
   quantity: volume
+  allowed_datatypes: ['numeric']

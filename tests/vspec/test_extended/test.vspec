@@ -1,0 +1,19 @@
+# Copyright (c) 2024 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalA:
+  datatype: int8
+  type: sensor
+  unit: km
+  description: This is the first signal.
+  e1: First extension
+  e2: Second extension
+  e3: Third extension

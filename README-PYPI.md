@@ -6,15 +6,8 @@
 
 VSS-Tools is a collection of tools developed by [COVESA](https://www.covesa.global/) to validate and transform
 signal catalogs defined by the COVESA Vehicle Signal Specification (VSS) syntax. The PyPI packaging of VSS-tools
-provide tools for converting VSS source files (*.vspec) to:
+provide tools for converting VSS source files (*.vspec) to different formats.
 
-* CSV
-* DDS IDL
-* JSON
-* Yaml
-* Franca IDL
-* Protobuf
-* GraphQL
 
 ## Installing vss-tools
 
@@ -24,7 +17,7 @@ If you just want the latest version this should be sufficient:
 pip install vss-tools
 ```
 
-When installed tools like `vspec2x.py` shall be available on your path.
+When installed the cli tool `vspec` should be available in your `PATH`.
 
 For more information see the [VSS-Tools wiki](https://github.com/COVESA/vss-tools/wiki/PyPI-packing)
 

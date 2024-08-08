@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2022 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -10,14 +8,17 @@
 
 import pathlib
 import pytest
-import os
+import filecmp
+from pathlib import Path
+import subprocess
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / "test_units.yaml"
 
 
 def default_directories() -> list:
     directories = []
-    for path in pathlib.Path(dir_path).iterdir():
+    for path in HERE.iterdir():
         if path.is_dir():
             if list(path.rglob("*.vspec")):
                 # Exclude directories with custom made python file
@@ -25,41 +26,27 @@ def default_directories() -> list:
                     directories.append(path)
     return directories
 
+
 # Use directory name as test name
-
-
 def idfn(directory: pathlib.PosixPath):
     return directory.name
 
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
+def run_exporter(directory, exporter, tmp_path):
+    vspec = directory / "test.vspec"
+    output = tmp_path / f"out.{exporter}"
+    expected = directory / f"expected.{exporter}"
+    cmd = f"vspec export {exporter} -u {TEST_UNITS} --vspec {vspec} --output {output}"
+    subprocess.run(cmd.split(), check=True)
+    assert filecmp.cmp(output, expected)
 
 
-def run_exporter(directory, exporter):
-    os.chdir(directory.name)
-    test_str = "../../../vspec2" + exporter + ".py -u ../test_units.yaml test.vspec out." + exporter + \
-               " > out.txt"
-    result = os.system(test_str)
-    os.chdir("..")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-    os.chdir(directory.name)
-    test_str = "diff out." + exporter + " expected." + exporter
-    result = os.system(test_str)
-    os.system("rm -f out." + exporter + " out.txt")
-    os.chdir("..")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-
-@pytest.mark.parametrize('directory', default_directories(), ids=idfn)
-def test_exporters(directory, change_test_dir):
+@pytest.mark.parametrize("directory", default_directories(), ids=idfn)
+def test_exporters(directory, tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["json", "jsonschema", "ddsidl", "csv", "yaml", "franca", "graphql"]
+    exporters = ["json", "jsonschema", "ddsidl",
+                 "csv", "yaml", "franca", "graphql"]
 
     for exporter in exporters:
-        run_exporter(directory, exporter)
+        run_exporter(directory, exporter, tmp_path)

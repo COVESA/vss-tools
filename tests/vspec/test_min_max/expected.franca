@@ -1,0 +1,106 @@
+
+// Copyright (C) 2022, COVESA
+//
+// This program is licensed under the terms and conditions of the
+// Mozilla Public License, version 2.0.  The full text of the
+// Mozilla Public License is at https://www.mozilla.org/MPL/2.0/
+
+const UTF8String VSS_VERSION = "None"
+
+struct SignalSpec {
+    UInt32 id
+    String name
+    String type
+    String description
+    String datatype
+    String unit
+    Double min
+    Double max
+}
+
+const SignalSpec[] signal_spec = [
+{	name: "A.IntNoMinMax",
+	type: "sensor",
+	description: "No Min Max.",
+	datatype: "int8"
+},
+{	name: "A.IntOnlyMax",
+	type: "sensor",
+	description: "Only Max.",
+	datatype: "int8",
+	max: 32
+},
+{	name: "A.IntOnlyMin",
+	type: "sensor",
+	description: "Only Min.",
+	datatype: "int8",
+	min: 3
+},
+{	name: "A.IntMinMax",
+	type: "sensor",
+	description: "Min & Max.",
+	datatype: "int8",
+	min: 3,
+	max: 6
+},
+{	name: "A.IntMaxZero",
+	type: "sensor",
+	description: "Max Zero.",
+	datatype: "int8",
+	max: 0
+},
+{	name: "A.IntMinZero",
+	type: "sensor",
+	description: "Min Zero.",
+	datatype: "int8",
+	min: 0
+},
+{	name: "A.FloatNoMinMax",
+	type: "sensor",
+	description: "No Min Max.",
+	datatype: "float"
+},
+{	name: "A.FloatOnlyMax",
+	type: "sensor",
+	description: "Only Max.",
+	datatype: "float",
+	max: 32.3
+},
+{	name: "A.FloatOnlyMin",
+	type: "sensor",
+	description: "Only Min.",
+	datatype: "float",
+	min: -2.5
+},
+{	name: "A.FloatMinMax",
+	type: "sensor",
+	description: "Min & Max.",
+	datatype: "float",
+	min: -165.56323,
+	max: 236723.4
+},
+{	name: "A.FloatMaxZero",
+	type: "sensor",
+	description: "Max Zero.",
+	datatype: "float",
+	max: 0.0
+},
+{	name: "A.FloatMinZero",
+	type: "sensor",
+	description: "Min Zero.",
+	datatype: "float",
+	min: 0.0
+},
+{	name: "A.FloatMaxZeroInt",
+	type: "sensor",
+	description: "Max Zero.",
+	datatype: "float",
+	max: 0
+},
+{	name: "A.FloatMinZeroInt",
+	type: "sensor",
+	description: "Min Zero.",
+	datatype: "float",
+	min: 0
+}
+]

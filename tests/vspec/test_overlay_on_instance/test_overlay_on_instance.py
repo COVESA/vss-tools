@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
@@ -8,27 +6,39 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
+from pathlib import Path
+import subprocess
+import filecmp
 
+HERE = Path(__file__).resolve().parent
+TEST_UNITS = HERE / ".." / "test_units.yaml"
 
-@pytest.fixture
-def change_test_dir(request, monkeypatch):
-    # To make sure we run from test directory
-    monkeypatch.chdir(request.fspath.dirname)
 
 # Only running json exporter, overlay-functionality should be independent of selected exporter
+def test_expanded_overlay(tmp_path):
+    spec = HERE / "test.vspec"
+    overlay1 = HERE / "overlay_1.vspec"
+    overlay2 = HERE / "overlay_2.vspec"
+    output = tmp_path / "out.json"
+    cmd = f"vspec export json -e my_id --pretty -u {TEST_UNITS}"
+    cmd += f" --vspec {spec} -l {overlay1} -l {overlay2} --output {output}"
+    subprocess.run(cmd.split(), check=True)
+
+    expected = HERE / "expected.json"
+    assert filecmp.cmp(output, expected)
 
 
-def test_expanded_overlay(change_test_dir):
-    test_str = "../../../vspec2json.py  -e my_id --json-pretty -u ../test_units.yaml test.vspec " + \
-               "-o overlay_1.vspec -o overlay_2.vspec out.json > out.txt 2>&1"
-    result = os.system(test_str)
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
-
-    test_str = "diff out.json expected.json"
-    result = os.system(test_str)
-    os.system("rm -f out.json out.txt")
-    assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+def test_expanded_overlay_no_type_datatype(tmp_path):
+    """
+    This test shows current limitation on type/datatype lookup.
+    We cannot do lookup on expanded names containing instances.
+    That would require quite some more advanced lookup considering instance declarations.
+    Not impossible, but more complex.
+    """
+    spec = HERE / "test.vspec"
+    overlay = HERE / "overlay_no_type_datatype.vspec"
+    output = tmp_path / "out.json"
+    cmd = f"vspec export json -e my_id --pretty -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode != 0
+    assert "No type specified for A.B.Row1.Left.C" in process.stdout

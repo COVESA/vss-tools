@@ -1,80 +1,89 @@
-<h1> Binary Toolset </h1>
+# Binary Toolset
 The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below),
 and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go.<br>
 
-<h3>Binary Parser Usage </h3>
+## Binary Parser Usage
 The translation tool can be invoked via the make file available on the VSS repo (https://github.com/COVESA/vehicle_signal_specification):
 
-```
-$ make binary
+```bash
+make binary
 ```
 or, by invoking all tools:
 
-```
-$ make all
+```bash
+make all
 ```
 
-To <b>run the binary tool without using the make file</b>, the binary tool library must first be built in the binary directory, then the vspec2binary.py is executed in the root directory:
+To **run the binary tool without using the make file**, the binary tool library must first be built in the
+binary directory, then the binary exporter of `vspec exporter` is executed in the root directory:
 
+```bash
+cd binary
+gcc -shared -o binarytool.so -fPIC binarytool.c
+cd <vss-root>
+vspec export binary -u spec/units.yaml --vspec spec/VehicleSignalSpecification.vspec -o vss.binary -b binary/binarytool.so
 ```
-$ cd binary
-/binary$ gcc -shared -o binarytool.so -fPIC binarytool.c
-$ cd ..
-$ vspec2binary.py -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
-```
-where vss_rel_<current version>.binary is the tre file in binary format.
-<br><br>
+
+where `vss.binary` is the tree file in binary format.
+
 Current version is found at https://github.com/COVESA/vehicle_signal_specification/blob/master/VERSION.
-<br>
 
-<h4> Validation </h4>
-Access Control of the signals can be supported by including the extended attribute validate in each of the nodes. This attribute is used by the VISSv2 specification. More information can be found in: <a href="https://www.w3.org/TR/viss2-core/#access-control-selection">VISS Access Control. </a>In case the validate attribute is added to the nodes, it must be specified when invoking the tool using the extended attributes flag (-e):
+### Validation
+Access Control of the signals can be supported by including the extended attribute validate in each of the nodes.
+This attribute is used by the VISSv2 specification.
+More information can be found in:
+[VISS Access Control](https://www.w3.org/TR/viss2-core/#access-control-selection).
+In case the validate attribute is added to the nodes, it must be specified when invoking the tool
+using the extended attributes flag `-e`:
 
+```bash
+cd ..  # continue from the previous example
+vspec export binary -e validate -u ./spec/units.yaml --vspec ./spec/VehicleSignalSpecification.vspec -o vss.binary -b binary/binarytool.so
 ```
-$ vspec2binary.py -e validate -u ./spec/units.yaml ./spec/VehicleSignalSpecification.vspec vss.binary
-```
 
 
-<h3>Tool Functionalities </h3>
+## Tool Functionalities
 The two libraries provides the same set of methods, such as:
-<ul>
-<li>to read the file into memory,</li>
-<li>to write it back to file,</li>
-<li>to search the tree for a given path (with usage of wildcard in the path expression),</li>
-<li>to create a JSON file of the leaf node paths of the VSS tree,</li>
-<li>to traverse the tree (up/down/left/right),</li>
-<li>and more.</li>
-</ul>
+
+- to read the file into memory,
+- to write it back to file,
+- to search the tree for a given path (with usage of wildcard in the path expression),
+- to create a JSON file of the leaf node paths of the VSS tree,
+- to traverse the tree (up/down/left/right),
+- and more.
 
 Each library is also complemented with a testparser that uses the library to traverse the tree, make searches to it, etc.
-<br>
-A textbased UI presents different parser commands, that is then executed and the results are presented.<br>
 
-<h5>C parser</h5>
+A textbased UI presents different parser commands, that is then executed and the results are presented.
+
+### C parser
 To build the testparser from the c_parser directory:
 
+```bash
+cc testparser.c cparserlib.c -o ctestparser
 ```
-$ cc testparser.c cparserlib.c -o ctestparser
-```
-When starting it, the path to the binary file must be provided. If started from the c_parser directory, and assuming a binary tree file has been created in the VSS parent directory:
+When starting it, the path to the binary file must be provided. If started from the c_parser directory,
+and assuming a binary tree file has been created in the VSS parent directory:
 
-```
-$ ./ctestparser ../../../vss_rel_<current version>.binary
+```bash
+./ctestparser ../../../vss_rel_<current version>.binary
 ```
 
-<h5>Go parser </h5>
+### Go parser
 To build the testparser from the go_parser directory:
 
+```bash
+go build -o gotestparser testparser.go
 ```
-$ go build -o gotestparser testparser.go
-```
-When starting it, the path to the binary file must be provided. If started from the go_parser directory, and assuming a binary tree file has been created in the VSS parent directory:
+When starting it, the path to the binary file must be provided. If started from the go_parser directory,
+and assuming a binary tree file has been created in the VSS parent directory:
 
-```
-$ ./gotestparser ../../../vss_rel_<current version>.binary
+```bash
+./gotestparser ../../../vss_rel_<current version>.binary
 ```
 
-<h3>Encoding</h3>
+## Encoding
+
 The binary node file format is as follows:<br>
     Name        | Datatype  | #bytes<br>
     ---------------------------------------<br>
@@ -105,12 +114,13 @@ The binary node file format is as follows:<br>
 The Allowed string contains an array of allowed, each Allowed is preceeded by two characters holding the size of the Allowed sub-string.
 The size is in hex format, with values from "01" to "FF". An example is "03abc0A012345678902cd" which contains the three Alloweds "abc", "0123456789", and "cd".<br><br>
 
-The nodes are written into the file in the order given by an iterative method as shown in the following pseudocode:
-```
+The nodes are written into the file in the order given by a recursive method as shown in the following pseudocode:
+
+```python
 def traverseAndWriteNode(thisNode):
 	writeNode(thisNode)
 	for i = 0 ; i < thisNode.Children ; i++:
 		traverseAndWriteNode(thisNode.Child[i])
 ```
 
-When reading the file the same iterative pattern must be used to generate the correct VSS tree, as is the case for all the described tools.
+When reading the file the same recursive pattern must be used to generate the correct VSS tree, as is the case for all the described tools.

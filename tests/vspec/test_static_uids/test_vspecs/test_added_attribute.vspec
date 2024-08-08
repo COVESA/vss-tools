@@ -5,6 +5,7 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
+
 A:
   type: branch
   description: A is a test node
@@ -27,6 +28,14 @@ A.StringArray:
   datatype: string[]
   type: sensor
   description: A.StringArray is a leaf of A of datatype string array
+A.Struct:
+  type: branch
+  instances: ["Front", "Rear"]
+  description: A.Struct is a struct for front and rear signals.
+A.Struct.Sensor:
+  type: sensor
+  datatype: float
+  description: A.Struct.Sensor is a sensor in the front and the back.
 A.B:
   type: branch
   description: B is a branch of A
@@ -40,7 +49,7 @@ A.B.NewName:
   type: sensor
   unit: mm
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
-  fka: ['A.B.OldName', 'A.B.OlderName']
+  fka: ['A.B.OlderName', 'A.B.OldName']
 A.B.IsLeaf:
   datatype: string
   type: actuator

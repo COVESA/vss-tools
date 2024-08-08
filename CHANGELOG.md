@@ -15,7 +15,7 @@ It includes changes that are included in released version, but also changes plan
 ### Overlay Support
 
 Overlays introduced to allow customization of VSS. See [documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/overlay/).
-See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec2x.md) on how to include overlays when transforming VSS.
+See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md) on how to include overlays when transforming VSS.
 
 ## VSS-Tools 3.1 (Latest Release)
 
@@ -25,7 +25,7 @@ See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/do
 
 Support for defining signals with struct type added.
 For VSS 3.1 as experimental feature only supported by JSON exporter.
-For more information see [vspec2x documentation](docs/vspec2x.md)
+For more information see [vspec documentation](docs/vspec.md)
 
 ### Change in UUID handling.
 
@@ -47,7 +47,7 @@ The background is that they have been broken for a long period and no one has vo
 
 ### Support for specifying unit files
 
-Add new parameter `-u` has been introduced, see [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec2x.md#handling-of-units).
+Add new parameter `-u` has been introduced, see [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md#handling-of-units).
 Use of default unit file deprecated.
 At the same time a unit file has been added to [VSS](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml),
 allowing VSS tooling to control their own units rather than relying on units in VSS-tools.
@@ -67,8 +67,8 @@ In VSS-Tools 4.0 structs are supported in the following exporters:
 
 Other exporters do not support structs.
 
-It is possible to use specify muliple type files with `-vt`, and to use types in combination with overlays.
-For more information see [vspec2x documentation](docs/vspec2x.md)
+It is possible to use specify muliple type files with `--types`, and to use types in combination with overlays.
+For more information see [vspec documentation](docs/vspec.md)
 
 ### Change in UUID handling.
 
@@ -79,7 +79,7 @@ For VSS-Tools 4.0 the following behavior is implemented:
 * No warning is given if neither `--uuid` nor `--no-uuid` is used.
 * If both `--uuid` and `--no-uuid` is used an error is given.
 
-### Default unit fileremoved from vss-tools
+### Default unit file removed from vss-tools
 
 The default unit file `config.yaml`
 has been removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
@@ -88,7 +88,12 @@ From now on, if new units are needed for the VSS catalog they shall be added to 
 [VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
 
 
-## Implemented changes, not yet released in major version
+## Implemented changes, to be released as part of VSS-Tools 5.0
+
+### Major restructure of repository structure and CLI
+
+The vss-tools repository content structure and CLI has changed significantly
+For more information see [vspec documentation](docs/vspec.md)
 
 ### Struct support in vspec2ddsidl
 
@@ -111,4 +116,25 @@ if units refer to a quantity that has not been defined an information message wi
 
 ### Change in UUID handling.
 
+As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
+the legacy uuid functionality.
+
 * The parameter `--no-uuid` is now removed, and an error is given if `--no-uuid` is used.
+* The parameter `--uuid` is now deprecated.
+
+## Planned changes for VSS-Tools 6.0
+
+### Change in UUID handling.
+
+As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
+the legacy uuid functionality.
+
+* The parameter `--uuid` is now removed.
+
+### Tools installed as binaries without `.py` extension
+
+The project has been switched to poetry and all tools are available in your PATH once vss-tools is installed via pip.
+
+### Logging arguments
+
+General args have been extended with logging arguments `--log-level` and `--log-file`.

@@ -8,16 +8,16 @@
 
 A:
   description: A is a test node
-  staticUID: '0x6865518C'
+  staticUID: '0x5B38F4AC'
   type: branch
 A.B:
   description: B is a branch of A
-  staticUID: '0x5EE0702C'
+  staticUID: '0x4687862C'
   type: branch
 A.B.Int32:
   datatype: int32
   description: A.B.Int32 is a leaf of A.B of datatype int32
-  staticUID: '0x4322A0BF'
+  staticUID: '0xF59053DF'
   type: sensor
   unit: rpm
 A.B.IsLeaf:
@@ -26,51 +26,74 @@ A.B.IsLeaf:
   - 'NO'
   datatype: string
   description: This node is a leaf of the tree and it has allowed values (aka an enum).
-  staticUID: '0x51887178'
+  staticUID: '0x41EF3218'
   type: actuator
 A.B.Max:
   datatype: uint8
   description: A leaf that uses a maximum value.
   max: 100
-  staticUID: '0xACFF72AC'
+  staticUID: '0xCF708DCC'
   type: sensor
   unit: percent
 A.B.Min:
   datatype: uint8
   description: A leaf that uses a minimum value.
   min: 10
-  staticUID: '0xF66F948E'
+  staticUID: '0x2FC6BA2E'
   type: sensor
   unit: percent
 A.B.NewName:
   datatype: uint32
   description: A.B.NewName's old name is 'OldName'. And its even older name is 'OlderName'.
   fka:
-  - A.B.OldName
   - A.B.OlderName
-  staticUID: '0x63C22EF6'
+  - A.B.OldName
+  staticUID: '0x3FB9A236'
   type: sensor
   unit: mm
 A.Float:
   datatype: float
   description: A.Float is a leaf of A of datatype float
-  staticUID: '0xC83DDDBF'
+  staticUID: '0xA493DFBF'
   type: actuator
   unit: mm
 A.Int16:
   datatype: int16
   description: A.Int16 is a leaf of A of datatype int16
-  staticUID: '0xC50253A3'
+  staticUID: '0x3D9D89A3'
   type: sensor
   unit: rpm
 A.String:
   datatype: string
-  deprecation: This is test deprecation, let's say it used to be called Str instead String.
+  deprecation: This is test deprecation, let's say it used to be called Str instead
+    String.
   description: A.String is a leaf of A of datatype string
-  staticUID: '0x215470FC'
+  staticUID: '0x49A622FC'
   type: sensor
 A.StringArray:
   datatype: string[]
   description: A.StringArray is a leaf of A of datatype string array
-  staticUID: '0x2115794B'
+  staticUID: '0xE8A4A62B'
+  type: sensor
+A.Struct:
+  description: A.Struct is a struct for front and rear signals.
+  staticUID: '0xC45DAF7F'
+  type: branch
+A.Struct.Front:
+  description: A.Struct is a struct for front and rear signals.
+  staticUID: '0x6452E71A'
+  type: branch
+A.Struct.Front.Sensor:
+  datatype: float
+  description: A.Struct.Sensor is a sensor in the front and the back.
+  staticUID: '0x6815B7D2'
+  type: sensor
+A.Struct.Rear:
+  description: A.Struct is a struct for front and rear signals.
+  staticUID: '0x213554BD'
+  type: branch
+A.Struct.Rear.Sensor:
+  datatype: float
+  description: A.Struct.Sensor is a sensor in the front and the back.
+  staticUID: '0xFC9914F9'
   type: sensor

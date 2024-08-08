@@ -1,0 +1,108 @@
+# Copyright (c) 2024 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+A:
+  type: branch
+  description: Branch A.
+
+############ Testing Min Max Integer Type ##############
+#
+# Note: For now not testing scenarios that better should give errors
+# (but currently likely not giving errors) like:
+# - min larger than max
+# - min/max outside datatype value range
+# - min/max for type that does not support it (string, bool, struct, ...)
+# - Faulty type, like float value (with decimals?) for int
+
+A.IntNoMinMax:
+  datatype: int8
+  type: sensor
+  description: No Min Max.
+
+A.IntOnlyMax:
+  datatype: int8
+  max: 32
+  type: sensor
+  description: Only Max.
+
+A.IntOnlyMin:
+  datatype: int8
+  min: 3
+  type: sensor
+  description: Only Min.
+
+A.IntMinMax:
+  datatype: int8
+  min: 3
+  max: 6
+  type: sensor
+  description: Min & Max.
+
+A.IntMaxZero:
+  datatype: int8
+  max: 0
+  type: sensor
+  description: Max Zero.
+
+A.IntMinZero:
+  datatype: int8
+  min: 0
+  type: sensor
+  description: Min Zero.
+
+# Same but with float
+
+A.FloatNoMinMax:
+  datatype: float
+  type: sensor
+  description: No Min Max.
+
+A.FloatOnlyMax:
+  datatype: float
+  max: 32.3
+  type: sensor
+  description: Only Max.
+
+A.FloatOnlyMin:
+  datatype: float
+  min: -2.5
+  type: sensor
+  description: Only Min.
+
+A.FloatMinMax:
+  datatype: float
+  min: -165.56323
+  max: 236723.4
+  type: sensor
+  description: Min & Max.
+
+A.FloatMaxZero:
+  datatype: float
+  max: 0.0
+  type: sensor
+  description: Max Zero.
+
+A.FloatMinZero:
+  datatype: float
+  min: 0.0
+  type: sensor
+  description: Min Zero.
+
+# Float should accept int values as well (I think)
+
+A.FloatMaxZeroInt:
+  datatype: float
+  max: 0
+  type: sensor
+  description: Max Zero.
+
+A.FloatMinZeroInt:
+  datatype: float
+  min: 0
+  type: sensor
+  description: Min Zero.

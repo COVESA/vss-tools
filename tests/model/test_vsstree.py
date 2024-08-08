@@ -8,9 +8,11 @@
 
 import unittest
 import os
+import pytest
 
-from vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
-from vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.constants import VSSType, VSSDataType, VSSUnitCollection, VSSTreeType
+from vss_tools.vspec.model.vsstree import VSSNode
+from vss_tools.vspec.model.exceptions import NameStyleValidationException
 
 
 class TestVSSNode(unittest.TestCase):
@@ -79,6 +81,7 @@ class TestVSSNode(unittest.TestCase):
                   "datatype": "uint8", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
 
         unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+        VSSUnitCollection.reset_units()
         VSSUnitCollection.load_config_file(unit_file)
 
         node_target = VSSNode(
@@ -106,6 +109,96 @@ class TestVSSNode(unittest.TestCase):
         self.assertEqual(VSSUnitCollection.get_unit("hogshead"), node_target.unit)
         self.assertEqual(0, node_target.min)
         self.assertEqual(100, node_target.max)
+
+    def test_unit_datatype(self):
+
+        unit_file = os.path.join(os.path.dirname(__file__), 'explicit_units.yaml')
+        VSSUnitCollection.reset_units()
+        VSSUnitCollection.load_config_file(unit_file)
+
+        # int16 explicitly listed
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "int16", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("puncheon")
+
+        # uint16 explicitly listed
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("puncheon")
+
+        # uint16[] is ok as uint16 is explicitly listed
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16[]", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("puncheon")
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "float", "unit": "puncheon", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        # float not ok
+
+        with pytest.raises(SystemExit):
+            node_source = VSSNode(
+                "MyNode2",
+                source,
+                VSSTreeType.SIGNAL_TREE.available_types())
+
+        # Hogshead defined as "numeric", i.e. all numeric types shall be accepted
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("hogshead")
+
+        # Also array of numeric
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "uint16[]", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        node_source = VSSNode(
+            "MyNode2",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        assert node_source.unit == VSSUnitCollection.get_unit("hogshead")
+
+        # But not string
+
+        source = {"description": "some desc", "type": "sensor",
+                  "uuid": "2cc90035-e1c2-43bf-a394-1a439addc8ad",
+                  "datatype": "string", "unit": "hogshead", "min": 0, "max": 100, "$file_name$": "testfile"}
+
+        with pytest.raises(SystemExit):
+            node_source = VSSNode(
+                "MyNode2",
+                source,
+                VSSTreeType.SIGNAL_TREE.available_types())
 
     def test_tree_find(self):
         """
@@ -173,6 +266,58 @@ class TestVSSNode(unittest.TestCase):
             node_root)
 
         self.assertTrue(node_drivetrain.is_orphan())
+
+    def test_name_style_string(self):
+
+        source = {
+            "description": "Some element.",
+            "type": "sensor",
+            "datatype": "string",
+            "$file_name$": "testfile"}
+
+        node = VSSNode(
+            "this_name_is_not_allowed_in_standard_catalog",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        with pytest.raises(NameStyleValidationException):
+            node.validate_name_style("dummyfile")
+
+        node = VSSNode(
+            "ButThisNameIs",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        # No exception expected
+        node.validate_name_style("dummyfile")
+
+    def test_name_style_boolean(self):
+
+        source = {
+            "description": "Some element.",
+            "type": "sensor",
+            "datatype": "boolean",
+            "$file_name$": "testfile"}
+
+        node = VSSNode(
+            "this_name_is_not_allowed_in_standard_catalog",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        with pytest.raises(NameStyleValidationException):
+            node.validate_name_style("dummyfile")
+
+        # Boolean ones must start with "Is"
+        node = VSSNode(
+            "ThisNameNeither",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        with pytest.raises(NameStyleValidationException):
+            node.validate_name_style("dummyfile")
+
+        node = VSSNode(
+            "IsThisAllowedYesItIs",
+            source,
+            VSSTreeType.SIGNAL_TREE.available_types())
+        # No exception expected
+        node.validate_name_style("dummyfile")
 
 
 if __name__ == '__main__':
