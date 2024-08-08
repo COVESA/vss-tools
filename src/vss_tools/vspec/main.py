@@ -16,7 +16,7 @@ from vss_tools.vspec.model import (
     get_all_model_fields,
 )
 from vss_tools.vspec.tree import VSSNode, build_tree, ModelValidationException
-from vss_tools.vspec.vspec import load_vspec
+from vss_tools.vspec.vspec import load_vspec, InvalidSpecDuplicatedEntryException
 from vss_tools.vspec.units_quantities import load_quantities, load_units
 from vss_tools.vspec.datatypes import (
     dynamic_units,
@@ -121,7 +121,7 @@ def get_types_root(
     # We are iterating to be able to reference
     # types from earlier type files
     for types_file in list(types):
-        data = load_vspec(include_dirs, [types_file])
+        data = load_vspec(include_dirs, [types_file], "Types")
         root, orphans = build_tree(data.data)
         if orphans:
             log.error(f"Types model has orphans\n{orphans}")
@@ -210,9 +210,12 @@ def get_trees(
         log.critical(e)
         exit(1)
 
-    types_root = get_types_root(types, include_dirs)
-
-    vspec_data = load_vspec(include_dirs, [vspec] + list(overlays))
+    try:
+        types_root = get_types_root(types, include_dirs)
+        vspec_data = load_vspec(include_dirs, [vspec] + list(overlays))
+    except InvalidSpecDuplicatedEntryException as e:
+        log.critical(e)
+        exit(1)
 
     root, orphans = build_tree(vspec_data.data, connect_orphans=True)
 

@@ -49,22 +49,11 @@ class Include:
         for dir in include_dirs:
             path = dir / self.target
             if path.exists():
+                log.debug(f"'{self.statement}', resolved={path}")
                 return path
         raise IncludeNotFoundException(
             f"Unable to find include {self.target}. Include dirs: {include_dirs}"
         )
-
-
-def strict_dict_update(
-    source: Path, base: dict[str, Any], update: dict[str, Any]
-) -> None:
-    for k, v in update.items():
-        if k in base:
-            log.warning(f"Spec Conflict.\nCurrent content: {base[k]}")
-            log.warning(f"Requested content: {v}")
-            log.warning(f"Caused by: {source.resolve().absolute()}")
-            raise InvalidSpecDuplicatedEntryException(f"Duplicated key: {k}")
-        base[k] = v
 
 
 def deep_update(base: dict[str, Any], update: dict[str, Any]) -> None:
@@ -82,26 +71,16 @@ class VSpec:
     def __init__(
         self,
         source: Path,
-        include_dirs: list[Path],
         prefix: str | None = None,
-        level: int = 0,
     ):
         self.source = source
         self.prefix = prefix
-        self.include_dirs = [source.parent] + include_dirs
-        self.include_dirs = list(set(self.include_dirs))
-        log.debug(f"Include dirs: {include_dirs}")
 
-        self.content = source.read_text()
+        content = source.read_text()
 
-        self.data = yaml.safe_load(self.content)
+        self.data = yaml.safe_load(content)
         if self.data is None:
             self.data = {}
-        log_msg = f"Loaded 'VSpec', file={source.absolute()}, elements={len(self.data)}"
-        if level == 0:
-            log.info(log_msg)
-        else:
-            log.debug(log_msg)
 
         if prefix:
             tmp_data = {}
@@ -110,35 +89,50 @@ class VSpec:
                 tmp_data[new_key] = v
             self.data = tmp_data
 
-        lines = self.content.splitlines()
+        lines = content.splitlines()
         include_statements = [
             line.strip() for line in lines if line.strip().startswith("#include")
         ]
-        includes = [Include(statement, prefix) for statement in include_statements]
-        for include in includes:
-            s = VSpec(
-                include.resolve_path(self.include_dirs),
-                include_dirs,
-                include.prefix,
-                level + 1,
-            )
-            strict_dict_update(s.source, self.data, s.data)
+        self.includes = [Include(statement, prefix) for statement in include_statements]
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}, src={self.source}, prefix={self.prefix}"
+        return f"{self.__class__.__name__}, src={self.source}, prefix={self.prefix}, includes={len(self.includes)}"
 
     def update(self, other: VSpec) -> None:
         deep_update(self.data, other.data)
 
 
-def load_vspec(include_dirs: tuple[Path, ...], specs: list[Path]) -> VSpec:
+def get_vspecs(
+    include_dirs: tuple[Path, ...], spec: Path, prefix: str | None = None
+) -> list[VSpec]:
+    vspecs: list[VSpec] = []
+    vspec = VSpec(spec, prefix)
+    vspecs.append(vspec)
+
+    for include in vspec.includes:
+        include_spec = include.resolve_path([vspec.source.parent] + list(include_dirs))
+        vspecs.extend(get_vspecs(include_dirs, include_spec, include.prefix))
+
+    return vspecs
+
+
+def load_vspec(
+    include_dirs: tuple[Path, ...], specs: list[Path], identifier: str | None = None
+) -> VSpec:
     spec = None
+    vspecs: list[VSpec] = []
     for s in specs:
-        vs = VSpec(s, list(include_dirs))
-        if spec:
-            spec.update(vs)
+        vspecs.extend(get_vspecs(include_dirs, s))
+    pre = "VSpecs"
+    if identifier:
+        pre += f" ({identifier})"
+    log.info(f"{pre} loaded, amount={len(vspecs)}")
+    for vspec in vspecs:
+        log.debug(vspec)
+        if spec is None:
+            spec = vspec
         else:
-            spec = vs
+            spec.update(vspec)
     if not spec:
         msg = f"Weird behavior. Could not load any spec: {specs}"
         log.error(msg)
