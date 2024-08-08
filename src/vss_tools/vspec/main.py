@@ -94,8 +94,6 @@ def check_extra_attribute_violations(
     aborts: tuple[str, ...],
     extended_attributes: tuple[str, ...],
 ) -> None:
-    if extended_attributes:
-        log.info(f"User defined extra attributes: {extended_attributes}")
     extra_attributes = root.get_extra_attributes(extended_attributes)
     for attribute in extra_attributes:
         log.warning(f"Unknown extra attribute: '{attribute[0]}':'{attribute[1]}'")
@@ -209,6 +207,8 @@ def get_trees(
     Loading vspec files, building and validating trees (types and normal).
     Returning a tuple of the root and the types tree
     """
+    if extended_attributes:
+        log.info(f"User defined extra attributes: {extended_attributes}")
     try:
         load_quantities_and_units(quantities, units, vspec.parent)
     except ModelValidationException as e:
