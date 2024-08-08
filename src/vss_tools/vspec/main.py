@@ -82,7 +82,7 @@ def check_name_violations(root: VSSNode, strict: bool, aborts: tuple[str, ...]) 
         naming_violations = root.get_naming_violations()
         if naming_violations:
             for violation in naming_violations:
-                log.error(f"Name violation: '{violation[0]}' ({violation[1]})")
+                log.warning(f"Name violation: '{violation[0]}' ({violation[1]})")
             raise NameViolationException(
                 f"Name violations detected: {naming_violations}"
             )
