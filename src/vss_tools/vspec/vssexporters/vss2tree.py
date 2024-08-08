@@ -44,7 +44,7 @@ def get_rendered_tree(tree: VSSNode, attributes: tuple[str]) -> str:
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
-@click.option("--attr", "-a", help="Show VSSData attribute", multiple=True)
+@click.option("--attr", help="Show VSSData attribute", multiple=True)
 def cli(
     vspec: Path,
     include_dirs: tuple[Path],
