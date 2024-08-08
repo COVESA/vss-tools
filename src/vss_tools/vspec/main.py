@@ -168,6 +168,11 @@ def get_invalid_node_msgs(root: VSSNode) -> list[str]:
         if isinstance(node.data, VSSDataProperty):
             if not isinstance(node.parent.data, VSSDataStruct):
                 ok = False
+        elif isinstance(node.data, VSSDataStruct):
+            if not isinstance(node.parent.data, VSSDataStruct) and not isinstance(
+                node.parent.data, VSSDataBranch
+            ):
+                ok = False
         else:
             if not isinstance(node.parent.data, VSSDataBranch):
                 ok = False
