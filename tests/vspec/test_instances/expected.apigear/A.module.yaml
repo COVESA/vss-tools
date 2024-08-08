@@ -1,0 +1,25 @@
+schema: apigear.module/1.0
+name: A
+version: "1.0"
+
+interfaces:
+  - name: A_B_Row1_Left
+    properties:
+      - name: C
+        description: "This description will also exist multiple times."
+        type: int32
+  - name: A_B_Row1_Right
+    properties:
+      - name: C
+        description: "This description will also exist multiple times."
+        type: int32
+  - name: A_B_Row2_Left
+    properties:
+      - name: C
+        description: "This description will also exist multiple times."
+        type: int32
+  - name: A_B_Row2_Right
+    properties:
+      - name: C
+        description: "This description will also exist multiple times."
+        type: int32

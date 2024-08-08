@@ -1,0 +1,37 @@
+schema: apigear.module/1.0
+name: A
+version: "1.0"
+
+interfaces:
+  - name: A
+    properties:
+      - name: SingleLineNotQuoted
+        description: "A sensor."
+        type: float32
+      - name: SingleLineInternalQuotes
+        description: "A sensor."
+        type: float32
+      - name: SingleLineQuoted
+        description: "A sensor."
+        type: float32
+      - name: SingleLineQuotedInternalQuotes
+        description: "A sensor."
+        type: float32
+      - name: SingleLineComma
+        description: "A sensor."
+        type: float32
+      - name: SingleLineCommaQuoted
+        description: "A sensor."
+        type: float32
+      - name: MultiLineCommaNotQuoted
+        description: "A sensor."
+        type: float32
+      - name: MultiLineCommaQuoted
+        description: "A sensor."
+        type: float32
+      - name: MultiLineStyleInitialBreak
+        description: "A sensor."
+        type: float32
+      - name: MultiLineLiteralStyleQuote
+        description: "A sensor."
+        type: float32

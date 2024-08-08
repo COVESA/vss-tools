@@ -1,0 +1,25 @@
+schema: apigear.module/1.0
+name: A
+version: "1.0"
+
+interfaces:
+  - name: A
+    properties:
+      - name: SignalA
+        description: "This is the first signal."
+        type: Types_Struct1
+        array: true
+      - name: SignalB
+        description: "This is the second signal."
+        type: Types_Struct1
+        array: true
+
+structs:
+  - name: Types_Struct1
+    fields:
+      - name: x
+        description: "x property"
+        type: float64
+      - name: y
+        description: "y property"
+        type: int32

@@ -1,0 +1,12 @@
+schema: "apigear.solution/1.0"
+name: A
+version: "1.0"
+
+layers:
+  - name: cpp
+    inputs:
+      - A.module.yaml
+    output: ../cppservice
+    template: apigear-io/template-cpp14
+    features:
+      - examples_olink

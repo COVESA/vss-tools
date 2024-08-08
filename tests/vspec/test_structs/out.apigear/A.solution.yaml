@@ -1,0 +1,27 @@
+schema: "apigear.solution/1.0"
+name: A
+version: "1.0"
+
+layers:
+  - name: unreal
+    inputs:
+      - A.module.yaml
+    output: unreal_path
+    template: apigear-io/template-unreal
+  - name: cpp
+    inputs:
+      - A.module.yaml
+    output: cpp14_path
+    template: apigear-io/template-cpp14
+    features:
+      - examples_olink
+  - name: qt5
+    inputs:
+      - A.module.yaml
+    output: qt5_path
+    template: apigear-io/template-qt5
+  - name: qt6
+    inputs:
+      - A.module.yaml
+    output: qt6_path
+    template: apigear-io/template-qtcpp

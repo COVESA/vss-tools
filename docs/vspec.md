@@ -12,6 +12,7 @@ vspec export --help
 │ --help                                              Show this message and exit.                        │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────╮
+│ apigear                           Export to ApiGear.                                                   │
 │ binary                            Export to Binary.                                                    │
 │ csv                               Export as CSV.                                                       │
 │ ddsidl                            Export as DDSIDL.                                                    │
