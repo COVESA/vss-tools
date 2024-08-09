@@ -30,8 +30,6 @@ from vss_tools.vspec.datatypes import (
     resolve_datatype,
 )
 
-# TODO: Why do we exclude "arraysize"?
-# Added it because of "test_data_type_parsing.py"
 EXPORT_EXCLUDE_ATTRIBUTES = ["delete", "instantiate", "fqn", "arraysize", "aggregate"]
 
 
