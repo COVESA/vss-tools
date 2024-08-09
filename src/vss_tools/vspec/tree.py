@@ -222,6 +222,8 @@ class VSSNode(Node):  # type: ignore[misc]
                 # does not work here because it does not include copying
                 # parents and therefore children fqns are different
                 # However we are using the fqns to decide where to insert them
+                # Fixing that would increase performance a bit since `deepcopy`
+                # is very slow
 
                 # Remove children from copy that should not be instantiatet
                 for child in instance_node_copy.children:
