@@ -46,7 +46,7 @@ class Include:
                 self.prefix = split[2]
 
     def resolve_path(self, include_dirs: list[Path]) -> Path:
-        for dir in set(include_dirs):
+        for dir in include_dirs:
             path = dir / self.target
             if path.exists():
                 log.debug(f"'{self.statement}', resolved={path}")
