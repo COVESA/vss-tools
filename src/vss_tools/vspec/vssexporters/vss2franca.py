@@ -9,15 +9,17 @@
 # Convert vspec tree to franca
 
 
+from io import TextIOWrapper
 import rich_click as click
 from pathlib import Path
-from vss_tools.vspec.vssexporters.utils import get_trees
+from vss_tools.vspec.tree import VSSNode
+from vss_tools.vspec.main import get_trees
 import vss_tools.vspec.cli_options as clo
-from anytree import PreOrderIter  # type: ignore[import]
+from vss_tools import log
+from anytree import PreOrderIter
+
 
 # Write the header line
-
-
 def print_franca_header(file, version="unknown"):
     file.write(f"""
 // Copyright (C) 2022, COVESA
@@ -44,30 +46,36 @@ const SignalSpec[] signal_spec = [
 
 
 # Write the data lines
-def print_franca_content(file, tree, uuid):
+def print_franca_content(file: TextIOWrapper, root: VSSNode, with_uuid: bool) -> None:
     output = ""
-    for tree_node in PreOrderIter(tree):
-        if tree_node.parent:
+    node: VSSNode
+    for node in PreOrderIter(root):
+        data = node.get_vss_data()
+        if node.parent:
             if output:
                 output += ",\n{"
             else:
                 output += "{"
-            output += f"\tname: \"{tree_node.qualified_name('.')}\""
-            output += f',\n\ttype: "{tree_node.type.value}"'
-            output += f',\n\tdescription: "{tree_node.description}"'
-            if tree_node.has_datatype():
-                output += f',\n\tdatatype: "{tree_node.get_datatype()}"'
-            if uuid:
-                output += f',\n\tuuid: "{tree_node.uuid}"'
-            if tree_node.has_unit():
-                output += f',\n\tunit: "{tree_node.get_unit()}"'
-            if tree_node.min is not None:
-                output += f",\n\tmin: {tree_node.min}"
-            if tree_node.max is not None:
-                output += f",\n\tmax: {tree_node.max}"
-            if tree_node.allowed:
-                output += f",\n\tallowed: {tree_node.allowed}"
-
+            output += f'\tname: "{node.get_fqn()}"'
+            output += f',\n\ttype: "{data.type.value}"'
+            output += f',\n\tdescription: "{data.description}"'
+            datatype = getattr(data, "datatype", None)
+            if datatype:
+                output += f',\n\tdatatype: "{datatype}"'
+            if with_uuid:
+                output += f',\n\tuuid: "{node.uuid}"'
+            unit = getattr(data, "unit", None)
+            if unit:
+                output += f',\n\tunit: "{unit}"'
+            min = getattr(data, "min", None)
+            if min is not None:
+                output += f",\n\tmin: {min}"
+            max = getattr(data, "max", None)
+            if max is not None:
+                output += f",\n\tmax: {max}"
+            allowed = getattr(data, "allowed", None)
+            if allowed:
+                output += f",\n\tallowed: {allowed}"
             output += "\n}"
     file.write(output)
 
@@ -100,23 +108,19 @@ def cli(
     """
     Export as Franca.
     """
-    print("Generating Franca output...")
+    log.info("Generating Franca output...")
     tree, datatype_tree = get_trees(
-        include_dirs,
-        aborts,
-        strict,
-        extended_attributes,
-        uuid,
-        quantities,
-        vspec,
-        units,
-        tuple(),
-        None,
-        overlays,
-        True,
+        vspec=vspec,
+        include_dirs=include_dirs,
+        aborts=aborts,
+        strict=strict,
+        extended_attributes=extended_attributes,
+        uuid=uuid,
+        quantities=quantities,
+        units=units,
+        overlays=overlays,
     )
-    outfile = open(output, "w")
-    print_franca_header(outfile, franca_vss_version)
-    print_franca_content(outfile, tree, uuid)
-    outfile.write("\n]")
-    outfile.close()
+    with open(output, "w") as f:
+        print_franca_header(f, franca_vss_version)
+        print_franca_content(f, tree, uuid)
+        f.write("\n]")

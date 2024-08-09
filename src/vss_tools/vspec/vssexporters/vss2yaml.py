@@ -11,70 +11,12 @@
 #
 
 
-from vss_tools.vspec.model.vsstree import VSSNode
 import yaml
 import rich_click as click
 import vss_tools.vspec.cli_options as clo
 from pathlib import Path
-from vss_tools.vspec.vssexporters.utils import get_trees
-from typing import Dict, Any
+from vss_tools.vspec.main import get_trees
 from vss_tools import log
-
-
-def export_node(yaml_dict, node, print_uuid, extend_all_attributes: bool, expand: bool):
-    node_path = node.qualified_name()
-
-    yaml_dict[node_path] = {}
-
-    yaml_dict[node_path]["type"] = str(node.type.value)
-
-    if node.is_signal() or node.is_property():
-        yaml_dict[node_path]["datatype"] = node.get_datatype()
-
-    # many optional attributes are initilized to "" in vsstree.py
-    if node.min is not None:
-        yaml_dict[node_path]["min"] = node.min
-    if node.max is not None:
-        yaml_dict[node_path]["max"] = node.max
-    if node.allowed != "":
-        yaml_dict[node_path]["allowed"] = node.allowed
-    if node.default != "":
-        yaml_dict[node_path]["default"] = node.default
-    if node.deprecation != "":
-        yaml_dict[node_path]["deprecation"] = node.deprecation
-
-    # in case of unit or aggregate, the attribute will be missing
-    try:
-        yaml_dict[node_path]["unit"] = str(node.unit.value)
-    except AttributeError:
-        pass
-    try:
-        yaml_dict[node_path]["aggregate"] = node.aggregate
-    except AttributeError:
-        pass
-
-    yaml_dict[node_path]["description"] = node.description
-
-    if node.comment != "":
-        yaml_dict[node_path]["comment"] = node.comment
-
-    if print_uuid:
-        yaml_dict[node_path]["uuid"] = node.uuid
-
-    for k, v in node.extended_attributes.items():
-        if (
-            not extend_all_attributes
-            and k not in VSSNode.whitelisted_extended_attributes
-        ):
-            continue
-        yaml_dict[node_path][k] = v
-
-    # Include instance information if we run tool in "no-expand" mode
-    if not expand and node.instances is not None:
-        yaml_dict[node_path]["instances"] = node.instances
-
-    for child in node.children:
-        export_node(yaml_dict, child, print_uuid, extend_all_attributes, expand)
 
 
 def export_yaml(file_name, content_dict):
@@ -131,40 +73,34 @@ def cli(
     quantities: tuple[Path],
     units: tuple[Path],
     types: tuple[Path],
-    types_output: Path,
+    types_output: Path | None,
     extend_all_attributes: bool,
 ):
     """
     Export as YAML.
     """
     tree, datatype_tree = get_trees(
-        include_dirs,
-        aborts,
-        strict,
-        extended_attributes,
-        uuid,
-        quantities,
-        vspec,
-        units,
-        types,
-        types_output,
-        overlays,
-        expand,
+        vspec=vspec,
+        include_dirs=include_dirs,
+        aborts=aborts,
+        strict=strict,
+        extended_attributes=extended_attributes,
+        uuid=uuid,
+        quantities=quantities,
+        units=units,
+        types=types,
+        overlays=overlays,
+        expand=expand,
     )
     log.info("Generating YAML output...")
+    tree_data = tree.as_flat_dict(extend_all_attributes)
 
-    signals_yaml_dict: Dict[str, Any] = {}
-    export_node(signals_yaml_dict, tree, uuid, extend_all_attributes, expand)
-
-    if datatype_tree is not None:
-        data_types_yaml_dict: Dict[str, Any] = {}
-        export_node(
-            data_types_yaml_dict, datatype_tree, uuid, extend_all_attributes, expand
-        )
+    if datatype_tree:
+        datatype_tree_data = datatype_tree.as_flat_dict(extend_all_attributes)
         if not types_output:
             log.info("Adding custom data types to signal dictionary")
-            signals_yaml_dict["ComplexDataTypes"] = data_types_yaml_dict
+            tree_data["ComplexDataTypes"] = datatype_tree_data
         else:
-            export_yaml(types_output, data_types_yaml_dict)
+            export_yaml(types_output, datatype_tree_data)
 
-    export_yaml(output, signals_yaml_dict)
+    export_yaml(output, tree_data)

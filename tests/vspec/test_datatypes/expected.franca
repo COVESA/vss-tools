@@ -83,11 +83,5 @@ const SignalSpec[] signal_spec = [
 	description: "A double.",
 	datatype: "double",
 	unit: "km"
-},
-{	name: "A.String",
-	type: "sensor",
-	description: "A string.",
-	datatype: "string",
-	unit: "km"
 }
 ]

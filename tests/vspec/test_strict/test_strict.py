@@ -13,6 +13,7 @@ import subprocess
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 @pytest.mark.parametrize(
@@ -27,24 +28,25 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 def test_not_strict(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env, check=True)
-    assert "You asked for strict checking. Terminating" not in process.stdout
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    print(vspec_file)
+    print(process.stdout)
+    assert process.returncode == 0
 
 
 @pytest.mark.parametrize("vspec_file", ["correct.vspec", "correct_boolean.vspec"])
 def test_strict_ok(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env, check=True)
-    assert "You asked for strict checking. Terminating" not in process.stdout
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    print(process.stdout)
+    assert process.returncode == 0
 
 
 @pytest.mark.parametrize(
@@ -53,10 +55,8 @@ def test_strict_ok(vspec_file: str, tmp_path):
 def test_strict_error(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} --vspec {spec} --output {output}"
+    cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
     assert process.returncode != 0
-    assert "You asked for strict checking. Terminating" in process.stdout

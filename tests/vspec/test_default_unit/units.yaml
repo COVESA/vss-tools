@@ -1,15 +1,17 @@
 # Unit file with default name
 # Same name as https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml
-units:
-  x:
-    label: xxxxxxxxx
-    description: Distance in x
-    domain: distance
-  y:
-    label: yyyyyyyyy
-    description: Distance in y
-    domain: distance
-  z:
-    label: zzzzzzzzz
-    description: Distance in z
-    domain: distance
+x:
+  unit: xxxxxxxxx
+  definition: Distance in x
+  quantity: distance
+  allowed-datatypes: ['numeric']
+y:
+  unit: yyyyyyyyy
+  definition: Distance in y
+  quantity: distance
+  allowed-datatypes: ['numeric']
+z:
+  unit: zzzzzzzzz
+  definition: Distance in z
+  quantity: distance
+  allowed-datatypes: ['numeric']

@@ -43,12 +43,6 @@ A.IsBoolean:
   description: A boolean
   type: sensor
 
-A.String:
-  datatype: string
-  description: A string.
-  type: sensor
-  unit: km
-
 A.UInt16:
   datatype: uint16
   description: A uint16.

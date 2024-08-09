@@ -31,4 +31,3 @@ A.AA.SignalAA:
 A.AB.SignalAB:
   type: sensor
   datatype: uint8
-  description: New signal in new branch.

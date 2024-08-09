@@ -1,0 +1,9 @@
+Vehicle:
+  type: branch
+  description: Vehicle
+
+Vehicle.Test:
+  type: sensor
+  datatype: uint8
+  arraysize: 2
+  description: Test

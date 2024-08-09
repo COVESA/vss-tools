@@ -1,0 +1,12 @@
+Vehicle:
+  type: branch
+  description: Vehicle
+
+Vehicle.Test:
+  type: sensor
+  datatype: uint8
+  description: Test
+  min: 0
+  max: 3
+  allowed:
+  - 2

@@ -76,11 +76,4 @@ double value;
 //const string type ="sensor";
 //const string description="A double.";
 };
-struct _String
-{
-string value;
-//const string unit="km";
-//const string type ="sensor";
-//const string description="A string.";
-};
 };

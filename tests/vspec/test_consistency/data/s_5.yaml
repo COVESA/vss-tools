@@ -1,0 +1,10 @@
+Vehicle:
+  type: branch
+  description: Vehicle
+
+Vehicle.Test:
+  type: sensor
+  datatype: uint8
+  description: Test
+  default: 4
+  allowed: [1,2,3]

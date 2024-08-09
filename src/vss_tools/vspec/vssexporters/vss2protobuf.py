@@ -9,21 +9,21 @@
 # Convert vspec file to proto
 #
 
-import os
+from io import TextIOWrapper
 import sys
 import rich_click as click
 import vss_tools.vspec.cli_options as clo
-from vss_tools.vspec.vssexporters.utils import get_trees
+from vss_tools.vspec.model import (
+    VSSDataDatatype,
+    VSSDataStruct,
+    VSSDataBranch,
+)
+from vss_tools.vspec.main import get_trees
+from vss_tools.vspec.tree import VSSNode
 from pathlib import Path
-from typing import Set
 
-from anytree import PreOrderIter  # type: ignore[import]
+from anytree import findall
 from vss_tools import log
-from vss_tools.vspec.model.vsstree import VSSNode
-
-# Add path to main py vspec  parser
-myDir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(myDir, ".."))
 
 PATH_DELIMITER = "."
 DIR_DELIMITER = "/"
@@ -37,130 +37,123 @@ mapped = {
 }
 
 
-class ProtoExporter(object):
-    def __init__(self, out_dir: Path):
-        self.out_files: Set[Path] = set()
-        self.out_dir = out_dir
-
-    def setup_file(self, fp: Path, package_name: str):
-        with open(fp, "w") as proto_file:
-            log.info(f"Initializing {fp}, package {package_name}")
-            proto_file.write('syntax = "proto3";\n\n')
-            # set up the proto's package
-            proto_file.write(f"package {package_name};\n\n")
-            self.out_files.add(fp)
-
-    def traverse_data_type_tree(self, tree: VSSNode, static_uid, add_optional):
-        """
-        All structs in a branch are written to a single .proto file.
-        The file's base name is same as the branch's name
-        The fully qualified path of the type becomes the package.
-
-        Example A.B.C.MyType becomes:
-        "package A.B.C;
-        message MyType{}"
-
-        The files are organized by package.
-        With the above example, the file generated is
-        A/B/C/C.proto
-        """
-
-        tree_node: VSSNode
-
-        for tree_node in filter(lambda n: n.is_struct(), PreOrderIter(tree)):
-            type_qn = tree_node.qualified_name(PATH_DELIMITER).split(PATH_DELIMITER)
-            curr_branch_qn = type_qn[:-1]
-            # create dir if necessary
-            dp = self.out_dir / Path(DIR_DELIMITER.join(curr_branch_qn))
-            dp.mkdir(parents=True, exist_ok=True)
-
-            curr_branch = type_qn[-2]
-            fp = dp / Path(f"{curr_branch}.proto")
-            is_first_write = fp not in self.out_files
-            if is_first_write:
-                self.setup_file(fp, ".".join(curr_branch_qn))
-            with open(fp, "a") as proto_file:
-                # import of other proto types in other branches
-                imports = []
-                for c_node in filter(
-                    lambda c: c.is_property() and not c.has_datatype(),
-                    tree_node.children,
-                ):
-                    child_branch_path = c_node.get_datatype().split(PATH_DELIMITER)[:-1]
-                    child_branch_path_str = DIR_DELIMITER.join(child_branch_path)
-                    if child_branch_path_str != DIR_DELIMITER.join(curr_branch_qn):
-                        child_basename = child_branch_path[-1]
-                        imports.append(
-                            f"{child_branch_path_str}/{child_basename}.proto"
-                        )
-
-                # unique sorted list
-                imports = list(set(imports))
-                imports.sort()
-                for importstmt in imports:
-                    proto_file.write(f'import "{importstmt}";\n')
-                proto_file.write("\n")
-
-                proto_file.write(f"message {type_qn[-1]} {{" + "\n")
-                print_message_body(
-                    tree_node.children, proto_file, static_uid, add_optional
-                )
-                proto_file.write("}\n\n")
-                log.info(f"Wrote {type_qn[-1]} to {fp}")
+def init_package_file(path: Path, package_name: str):
+    with open(path, "w") as f:
+        log.info(f"Initializing {path}, package {package_name}")
+        f.write('syntax = "proto3";\n\n')
+        f.write(f"package {package_name};\n\n")
 
 
-def traverse_signal_tree(tree: VSSNode, proto_file, static_uid, add_optional):
-    proto_file.write('syntax = "proto3";\n\n')
-    tree_node: VSSNode
+def traverse_data_type_tree(
+    tree: VSSNode, static_uid: bool, add_optional: bool, out_dir: Path
+):
+    """
+    All structs in a branch are written to a single .proto file.
+    The file's base name is same as the branch's name
+    The fully qualified path of the type becomes the package.
 
-    # get all the import statements for dependent types (structs)
+    Example A.B.C.MyType becomes:
+    "package A.B.C;
+    message MyType{}"
+
+    The files are organized by package.
+    With the above example, the file generated is
+    A/B/C/C.proto
+    """
+
+    node: VSSNode
+    for node in findall(tree, filter_=lambda n: isinstance(n.data, VSSDataStruct)):
+        # A/B/C/MyType
+        struct_path = Path(node.get_fqn("/"))
+
+        # <out-dir>/A/B/C
+        package_path = out_dir / struct_path.parent
+        package_path.mkdir(parents=True, exist_ok=True)
+
+        # <out-dir>/A/B/C/C.proto
+        out_file = package_path / f"{package_path.name}.proto"
+        if not out_file.exists():
+            init_package_file(out_file, ".".join(struct_path.parent.parts))
+
+        with open(out_file, "a") as fd:
+            imports = []
+            for c_node in findall(
+                node, filter_=lambda n: isinstance(n.data, VSSDataDatatype)
+            ):
+                datatype = c_node.data.datatype
+                if "." not in datatype:
+                    continue
+                c_struct_path = Path(datatype.replace(".", "/"))
+                if c_struct_path.parent != struct_path.parent:
+                    imports.append(
+                        f"{c_struct_path.parent}/{c_struct_path.parent.name}.proto"
+                    )
+
+            write_imports(fd, imports)
+
+            fd.write(f"message {struct_path.name} {{" + "\n")
+            print_messages(node.children, fd, static_uid, add_optional)
+            fd.write("}\n\n")
+            log.info(f"Wrote {struct_path.name} to {out_file}")
+
+
+def traverse_signal_tree(
+    tree: VSSNode, fd: TextIOWrapper, static_uid: bool, add_optional: bool
+):
+    fd.write('syntax = "proto3";\n\n')
+
     imports = []
-    for c_node in filter(
-        lambda c: c.is_signal() and not c.has_datatype(), PreOrderIter(tree)
-    ):
-        child_path = c_node.get_datatype().split(PATH_DELIMITER)[:-1]
-        child_basename = child_path[-1]
-        imports.append(f"{DIR_DELIMITER.join(child_path)}/{child_basename}.proto")
-
-    # unique sorted list
-    imports = list(set(imports))
-    imports.sort()
-    # write import statements to file
-    for importstmt in imports:
-        proto_file.write(f'import "{importstmt}";\n')
-    proto_file.write("\n")
+    for node in findall(tree, filter_=lambda n: isinstance(n.data, VSSDataDatatype)):
+        datatype = node.data.datatype
+        if "." not in datatype:
+            continue
+        struct_path = Path(node.data.datatype.replace(".", "/"))  # type: ignore
+        imports.append(f"{struct_path.parent}/{struct_path.parent.name}.proto")
+    write_imports(fd, imports)
 
     # write proto messages to file
-    for tree_node in filter(lambda n: n.is_branch(), PreOrderIter(tree)):
-        proto_file.write(f"message {tree_node.qualified_name('')} {{" + "\n")
-        print_message_body(tree_node.children, proto_file, static_uid, add_optional)
-        proto_file.write("}\n\n")
+    for node in findall(
+        tree, filter_=lambda node: isinstance(node.data, VSSDataBranch)
+    ):
+        fd.write(f"message {node.get_fqn('')} {{" + "\n")
+        print_messages(node.children, fd, static_uid, add_optional)
+        fd.write("}\n\n")
 
 
-def print_message_body(nodes, proto_file, static_uid, add_optional):
-    usedKeys = {}
+def write_imports(fd: TextIOWrapper, imports: list[str]):
+    imports = list(set(imports))
+    imports.sort()
+    for stmt in imports:
+        fd.write(f'import "{stmt}";\n')
+    fd.write("\n")
+
+
+def print_messages(
+    nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, add_optional: bool
+):
+    usedKeys: dict[int, str] = {}
     for i, node in enumerate(nodes, 1):
-        if not (node.is_branch() or node.is_struct()):
-            dt_val = node.get_datatype()
+        if isinstance(node.data, VSSDataDatatype):
+            dt_val = node.data.datatype
             data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
             if dt_val.endswith("[]"):
                 data_type = "repeated " + data_type
             elif add_optional:
                 data_type = "optional " + data_type
         else:
-            data_type = node.qualified_name("")
+            data_type = node.get_fqn("")
             if add_optional:
                 data_type = "optional " + data_type
         if static_uid:
-            if "staticUID" not in node.extended_attributes:
+            if "staticUID" not in node.data.get_extra_attributes():
                 log.fatal(
                     (
-                        f"Aborting because {node.qualified_name('.')} does not have the staticUID attribute. "
+                        f"Aborting because {node.get_fqn()} does not have the staticUID attribute. "
                         f"When using the option --static-uid each node must have the attribute staticUID."
                     )
                 )
                 sys.exit(-1)
-            fieldNumber = int(int(node.extended_attributes["staticUID"], 0) / 8)
+            fieldNumber = int(int(getattr(node.data, "staticUID"), 0) / 8)
             if fieldNumber < 20000 and fieldNumber >= 19000:
                 log.fatal("""Aborting because field number {fieldNumber} for signal {node.name} is in
                 reservered range between 19000 and 20000. Consider changing the signal to alter the staticUID.""")
@@ -169,17 +162,17 @@ def print_message_body(nodes, proto_file, static_uid, add_optional):
                 log.fatal(
                     (
                         f"Aborting, due to collision for fieldNumber {fieldNumber}. "
-                        f"It is used by {node.qualified_name('.')} and {usedKeys[fieldNumber]}. "
+                        f"It is used by {node.get_fqn()} and {usedKeys[fieldNumber]}. "
                         "Consider changing the signals to alter the staticUID."
                     )
                 )
-                proto_file.truncate(0)
+                fd.truncate(0)
                 sys.exit(-1)
             else:
-                usedKeys[fieldNumber] = node.qualified_name(".")
+                usedKeys[fieldNumber] = node.get_fqn()
         else:
             fieldNumber = i
-        proto_file.write(f"  {data_type} {node.name} = {fieldNumber};" + "\n")
+        fd.write(f"  {data_type} {node.name} = {fieldNumber};" + "\n")
 
 
 @click.command()
@@ -215,7 +208,7 @@ def cli(
     quantities: tuple[Path],
     units: tuple[Path],
     types: tuple[Path],
-    types_out_dir: Path,
+    types_out_dir: Path | None,
     static_uid: bool,
     add_optional: bool,
 ):
@@ -224,27 +217,23 @@ def cli(
     """
     log.info("Generating protobuf output...")
     tree, datatype_tree = get_trees(
-        include_dirs,
-        aborts,
-        strict,
-        extended_attributes,
-        False,
-        quantities,
-        vspec,
-        units,
-        types,
-        None,
-        overlays,
-        True,
+        vspec=vspec,
+        include_dirs=include_dirs,
+        aborts=aborts,
+        strict=strict,
+        extended_attributes=extended_attributes,
+        quantities=quantities,
+        units=units,
+        types=types,
+        overlays=overlays,
     )
-    if datatype_tree is not None:
-        if types_out_dir:
-            exporter_path = types_out_dir
-        else:
-            exporter_path = Path.cwd()
-        log.debug(f"Will use {exporter_path} for type exports")
-        exporter = ProtoExporter(exporter_path)
-        exporter.traverse_data_type_tree(datatype_tree, static_uid, add_optional)
+    if datatype_tree:
+        if not types_out_dir:
+            types_out_dir = Path.cwd()
+            log.warning(
+                f"No output directory given. Writing to: {types_out_dir.absolute()}"
+            )
+        traverse_data_type_tree(datatype_tree, static_uid, add_optional, types_out_dir)
 
     with open(output, "w") as f:
         log.info(f"Writing to: {output}")

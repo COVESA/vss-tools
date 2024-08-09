@@ -23,8 +23,8 @@ A.B.IsLeaf:
 A.B.Max:
   datatype: uint8
   description: A leaf that uses a maximum value.
-  min: 0
   max: 100
+  min: 0
   staticUID: '0xCF708DCC'
   type: sensor
   unit: percent
@@ -58,7 +58,8 @@ A.Int16:
   unit: rpm
 A.String:
   datatype: string
-  deprecation: This is test deprecation, let's say it used to be called Str instead String.
+  deprecation: This is test deprecation, let's say it used to be called Str instead
+    String.
   description: A.String is a leaf of A of datatype string
   staticUID: '0x49A622FC'
   type: sensor

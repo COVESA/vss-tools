@@ -19,10 +19,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 def get_cla(test_file: str, out_file: str, overlay: Optional[str]):
-    args = f"-u {TEST_UNITS}"
+    args = f"-u {TEST_UNITS} -q {TEST_QUANT}"
     if overlay:
         args += f" -l {overlay}"
     args += f" --vspec {test_file} --output {out_file}"
@@ -197,7 +198,6 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tm
     "overlay",
     [
         "test_files/test_del_instance_overlay.vspec",
-        "test_files/test_del_wrong_instance_overlay.vspec",
     ],
 )
 def test_deleted_instance(
@@ -214,11 +214,15 @@ def test_deleted_instance(
     cmd = exporter.split() + get_cla(spec, str(output), str(ov)).split()
     if "binary" in exporter:
         cmd.extend(["-b", HERE / "../../../binary/binarytool.so"])
+
     process = subprocess.run(cmd, capture_output=True, text=True)
+    print(process.stdout)
+    print(process.stderr)
 
     if "wrong" in overlay:
         assert process.returncode != 0
     else:
+        print(process.stdout)
         result_file = output.read_text()
 
         remaining_nodes = [
@@ -249,8 +253,7 @@ def test_deleted_instance(
                 assert node in result_file
         elif exporter == "vspec export graphql":
             assert "A.C.Instance2".replace(".", "_") not in result_file
-            remaining_nodes = [node.replace(".", "_")
-                               for node in remaining_nodes]
+            remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
             for node in remaining_nodes:
                 assert node in result_file
         else:

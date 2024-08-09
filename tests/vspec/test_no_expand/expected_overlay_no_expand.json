@@ -60,7 +60,9 @@
           }
         },
         "description": "Branch with instance range.",
-        "instances": "Test[1,4]",
+        "instances": [
+          "Test[1,4]"
+        ],
         "type": "branch"
       },
       "D": {

@@ -1,0 +1,10 @@
+Vehicle:
+  type: branch
+  description: Vehicle
+
+Vehicle.Test:
+  type: attribute
+  datatype: uint8[]
+  default: [1,2,3]
+  arraysize: 2
+  description: Test

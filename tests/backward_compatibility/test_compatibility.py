@@ -26,12 +26,9 @@ import subprocess
 #
 
 
-@pytest.mark.parametrize("tag",
-                         [
-                          'v4',
-                          'v4.0',
-                          'v4.1',
-                          'v4.2'])
+# TODO: Should be reparametrized to future releases
+@pytest.mark.skip(reason="Strict unit and quantity requires old releases to be patched")
+@pytest.mark.parametrize("tag", ["v4", "v4.0", "v4.1", "v4.2"])
 def test_compatibility(tag, tmp_path):
     """
     Test that we still can analyze wanted versions without error

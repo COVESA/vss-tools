@@ -5,8 +5,18 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
-
+from typing import Any
 import re
+
+
+def getattr_nn(o: object, name: str, default: Any | None = None) -> Any:
+    """
+    Wraps getattr() but will also use 'default' if result is None
+    """
+    result = getattr(o, name, default)
+    if result is None and default is not None:
+        result = default
+    return result
 
 
 def camel_case(st):

@@ -14,6 +14,7 @@ import subprocess
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / "test_units.yaml"
+TEST_QUANT = HERE / "test_quantities.yaml"
 
 
 def default_directories() -> list:
@@ -36,8 +37,10 @@ def run_exporter(directory, exporter, tmp_path):
     vspec = directory / "test.vspec"
     output = tmp_path / f"out.{exporter}"
     expected = directory / f"expected.{exporter}"
-    cmd = f"vspec export {exporter} -u {TEST_UNITS} --vspec {vspec} --output {output}"
+    cmd = f"vspec export {exporter} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} --output {output}"
     subprocess.run(cmd.split(), check=True)
+    print(output)
+    print(expected)
     assert filecmp.cmp(output, expected)
 
 
@@ -45,8 +48,7 @@ def run_exporter(directory, exporter, tmp_path):
 def test_exporters(directory, tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["json", "jsonschema", "ddsidl",
-                 "csv", "yaml", "franca", "graphql"]
+    exporters = ["json", "jsonschema", "ddsidl", "csv", "yaml", "franca", "graphql"]
 
     for exporter in exporters:
         run_exporter(directory, exporter, tmp_path)

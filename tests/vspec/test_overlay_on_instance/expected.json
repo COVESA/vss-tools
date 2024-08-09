@@ -155,25 +155,6 @@
             "comment": "An example comment",
             "description": "Branch A.B, instances defined in list",
             "type": "branch"
-          },
-          "Row5": {
-            "children": {
-              "Right": {
-                "children": {
-                  "C": {
-                    "datatype": "float",
-                    "description": "New Muhaha",
-                    "my_id": "Landskrona",
-                    "type": "sensor",
-                    "unit": "km"
-                  }
-                },
-                "description": "Also mandatory!",
-                "type": "branch"
-              }
-            },
-            "description": "Is mandatory!",
-            "type": "branch"
           }
         },
         "comment": "An example comment",

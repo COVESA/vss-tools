@@ -22,6 +22,7 @@ vspec export --help
 │ jsonschema                        Export as a jsonschema.                                              │
 │ protobuf                          Export as protobuf.                                                  │
 │ yaml                              Export as YAML.                                                      │
+│ tree                              Export as Tree.                                                      │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -41,6 +42,13 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
            INFO     Serializing compact JSON...                                            vss2json.py:148
 
 ```
+## Exporter docs
+
+- [tree](./tree.md)
+- [ddsidl](./ddsidl.md)
+- [graphql](./graphql.md)
+- [id](./id.md)
+- [protobuf](./protobuf.md)
 
 ## Argument Explanations
 

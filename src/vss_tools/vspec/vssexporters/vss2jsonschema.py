@@ -11,7 +11,9 @@
 
 import json
 import rich_click as click
-from vss_tools.vspec.vssexporters.utils import get_trees
+from vss_tools.vspec.model import VSSDataBranch, VSSDataDatatype, VSSDataStruct
+from vss_tools.vspec.tree import VSSNode
+from vss_tools.vspec.main import get_trees
 import vss_tools.vspec.cli_options as clo
 from pathlib import Path
 from vss_tools import log
@@ -47,66 +49,71 @@ type_map = {
 
 def export_node(
     json_dict,
-    node,
-    print_uuid,
+    node: VSSNode,
+    print_uuid: bool,
     all_extended_attributes: bool,
     no_additional_properties: bool,
     require_all_properties: bool,
 ):
     """Preparing nodes for JSON schema output."""
     # keyword with X- sign are left for extensions and they are not part of official JSON schema
+    data = node.get_vss_data()
     json_dict[node.name] = {
-        "description": node.description,
+        "description": data.description,
     }
 
-    if node.is_signal() or node.is_property():
-        json_dict[node.name]["type"] = type_map[node.data_type_str]
+    if isinstance(data, VSSDataDatatype):
+        json_dict[node.name]["type"] = type_map[data.datatype]
 
-    # many optional attributes are initialized to "" in vsstree.py
-    if node.min is not None:
-        json_dict[node.name]["minimum"] = node.min
-    if node.max is not None:
-        json_dict[node.name]["maximum"] = node.max
-    if node.allowed != "":
-        json_dict[node.name]["enum"] = node.allowed
-    if node.default != "":
-        json_dict[node.name]["default"] = node.default
-    if node.is_struct():
-        # change type to object
-        json_dict[node.type]["type"] = "object"
+    min = getattr(data, "min", None)
+    if min is not None:
+        json_dict[node.name]["minimum"] = min
+
+    max = getattr(data, "max", None)
+    if max is not None:
+        json_dict[node.name]["maximum"] = max
+
+    allowed = getattr(data, "allowed", None)
+    if allowed:
+        json_dict[node.name]["enum"] = allowed
+
+    default = getattr(data, "default", None)
+    if default:
+        json_dict[node.name]["default"] = default
+
+    if isinstance(data, VSSDataStruct):
+        json_dict[node.name]["type"] = "object"
 
     if all_extended_attributes:
-        if node.type != "":
-            json_dict[node.name]["x-VSStype"] = str(node.type.value)
-        if node.data_type_str != "":
-            json_dict[node.name]["x-datatype"] = node.data_type_str
-        if node.deprecation != "":
-            json_dict[node.name]["x-deprecation"] = node.deprecation
+        json_dict[node.name]["x-VSStype"] = data.type.value
+        datatype = getattr(data, "datatype", None)
+        if datatype:
+            json_dict[node.name]["x-datatype"] = datatype
+        if data.deprecation:
+            json_dict[node.name]["x-deprecation"] = data.deprecation
 
         # in case of unit or aggregate, the attribute will be missing
-        try:
-            json_dict[node.name]["x-unit"] = str(node.unit.value)
-        except AttributeError:
-            pass
-        try:
-            json_dict[node.name]["x-aggregate"] = node.aggregate
-            if node.aggregate:
-                # change type to object
-                json_dict[node.type]["type"] = "object"
-        except AttributeError:
-            pass
+        unit = getattr(data, "unit", None)
+        if unit:
+            json_dict[node.name]["x-unit"] = unit
 
-        if node.comment != "":
-            json_dict[node.name]["x-comment"] = node.comment
+        aggregate = getattr(data, "aggregate", None)
+        if aggregate:
+            json_dict[node.name]["x-aggregate"] = aggregate
+            if aggregate:
+                json_dict[node.name]["type"] = "object"
+
+        if data.comment:
+            json_dict[node.name]["x-comment"] = data.comment
 
         if print_uuid:
             json_dict[node.name]["x-uuid"] = node.uuid
 
-    for k, v in node.extended_attributes.items():
-        json_dict[node.name][k] = v
+    for field in data.get_extra_attributes():
+        json_dict[node.name][field] = getattr(data, field)
 
     # Generate child nodes
-    if node.is_branch() or node.is_struct():
+    if isinstance(data, VSSDataBranch) or isinstance(node.data, VSSDataStruct):
         if no_additional_properties:
             json_dict[node.name]["additionalProperties"] = False
         json_dict[node.name]["properties"] = {}
@@ -136,7 +143,6 @@ def export_node(
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
-@clo.types_output_opt
 @clo.extend_all_attributes_opt
 @clo.pretty_print_opt
 @click.option(
@@ -162,7 +168,6 @@ def cli(
     quantities: tuple[Path],
     units: tuple[Path],
     types: tuple[Path],
-    types_output: Path,
     extend_all_attributes: bool,
     pretty: bool,
     no_additional_properties: bool,
@@ -172,18 +177,17 @@ def cli(
     Export as a jsonschema.
     """
     tree, datatype_tree = get_trees(
-        include_dirs,
-        aborts,
-        strict,
-        extended_attributes,
-        uuid,
-        quantities,
-        vspec,
-        units,
-        types,
-        types_output,
-        overlays,
-        expand,
+        vspec=vspec,
+        include_dirs=include_dirs,
+        aborts=aborts,
+        strict=strict,
+        extended_attributes=extended_attributes,
+        uuid=uuid,
+        quantities=quantities,
+        units=units,
+        types=types,
+        overlays=overlays,
+        expand=expand,
     )
     log.info("Generating JSON schema...")
     indent = None

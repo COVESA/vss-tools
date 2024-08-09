@@ -13,5 +13,4 @@ A:
 A.NotStartingWithIs:
   datatype: boolean
   type: sensor
-  unit: km
   description: Faulty name for boolean (if for VSS catalog)!
