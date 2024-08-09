@@ -109,7 +109,7 @@ def check_extra_attribute_violations(
 
 
 def get_types_root(
-    types: tuple[Path, ...], include_dirs: tuple[Path, ...]
+    types: tuple[Path, ...], include_dirs: list[Path]
 ) -> VSSNode | None:
     if not types:
         log.debug("No user 'types' defined")
@@ -215,9 +215,14 @@ def get_trees(
         log.critical(e)
         exit(1)
 
+    unique_include_dirs = []
+    for include_dir in include_dirs:
+        if include_dir not in unique_include_dirs:
+            unique_include_dirs.append(include_dir)
+
     try:
-        types_root = get_types_root(types, include_dirs)
-        vspec_data = load_vspec(include_dirs, [vspec] + list(overlays))
+        types_root = get_types_root(types, unique_include_dirs)
+        vspec_data = load_vspec(unique_include_dirs, [vspec] + list(overlays))
     except InvalidSpecDuplicatedEntryException as e:
         log.critical(e)
         exit(1)
