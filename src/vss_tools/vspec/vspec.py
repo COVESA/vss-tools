@@ -117,12 +117,12 @@ def get_vspecs(
 
 
 def load_vspec(
-    include_dirs: tuple[Path, ...], specs: list[Path], identifier: str | None = None
+    include_dirs: list[Path], specs: list[Path], identifier: str | None = None
 ) -> VSpec:
     spec = None
     vspecs: list[VSpec] = []
     for s in specs:
-        includes = [s.parent] + list(include_dirs)
+        includes = [s.parent] + include_dirs
         vspecs.extend(get_vspecs(includes, s))
     pre = "VSpecs"
     if identifier:
