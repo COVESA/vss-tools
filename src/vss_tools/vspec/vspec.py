@@ -46,7 +46,7 @@ class Include:
                 self.prefix = split[2]
 
     def resolve_path(self, include_dirs: list[Path]) -> Path:
-        for dir in include_dirs:
+        for dir in set(include_dirs):
             path = dir / self.target
             if path.exists():
                 log.debug(f"'{self.statement}', resolved={path}")
@@ -103,15 +103,15 @@ class VSpec:
 
 
 def get_vspecs(
-    include_dirs: tuple[Path, ...], spec: Path, prefix: str | None = None
+    includes: list[Path], spec: Path, prefix: str | None = None
 ) -> list[VSpec]:
     vspecs: list[VSpec] = []
     vspec = VSpec(spec, prefix)
     vspecs.append(vspec)
 
     for include in vspec.includes:
-        include_spec = include.resolve_path([vspec.source.parent] + list(include_dirs))
-        vspecs.extend(get_vspecs(include_dirs, include_spec, include.prefix))
+        include_spec = include.resolve_path(includes + [vspec.source.parent])
+        vspecs.extend(get_vspecs(includes, include_spec, include.prefix))
 
     return vspecs
 
@@ -122,7 +122,8 @@ def load_vspec(
     spec = None
     vspecs: list[VSpec] = []
     for s in specs:
-        vspecs.extend(get_vspecs(include_dirs, s))
+        includes = [s.parent] + list(include_dirs)
+        vspecs.extend(get_vspecs(includes, s))
     pre = "VSpecs"
     if identifier:
         pre += f" ({identifier})"
