@@ -141,9 +141,9 @@ class VSSDataBranch(VSSData):
 
 class VSSUnit(BaseModel):
     definition: str
-    unit: str
+    unit: str | None
     quantity: str
-    allowed_datatypes: list[str] = Field(alias="allowed-datatypes")
+    allowed_datatypes: list[str] | None = Field(alias="allowed-datatypes", default=None)
 
     @field_validator("quantity")
     @classmethod

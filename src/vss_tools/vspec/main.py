@@ -73,8 +73,12 @@ def load_quantities_and_units(
     dynamic_quantities.extend(list(quantity_data.keys()))
     unit_data = load_units(list(units))
     for k, v in unit_data.items():
-        dynamic_units[k] = v.allowed_datatypes
-        dynamic_units[v.unit] = v.allowed_datatypes
+        allowed_datatypes = []
+        if v.allowed_datatypes is not None:
+            allowed_datatypes = v.allowed_datatypes
+        if v.unit is not None:
+            dynamic_units[v.unit] = allowed_datatypes
+        dynamic_units[k] = allowed_datatypes
 
 
 def check_name_violations(root: VSSNode, strict: bool, aborts: tuple[str, ...]) -> None:
@@ -108,9 +112,7 @@ def check_extra_attribute_violations(
             )
 
 
-def get_types_root(
-    types: tuple[Path, ...], include_dirs: list[Path]
-) -> VSSNode | None:
+def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode | None:
     if not types:
         log.debug("No user 'types' defined")
         return None
@@ -252,8 +254,6 @@ def get_trees(
     if types_root:
         validate_tree(types_root)
         try:
-            # TODO: Should type tree properties be compliant to name-style?
-            # check_name_violations(types_root, strict, aborts)
             check_extra_attribute_violations(
                 types_root, True, aborts, extended_attributes
             )
