@@ -305,8 +305,8 @@ class VSSNode(Node):  # type: ignore[misc]
                 violations.append([node.get_fqn(), "not CamelCase"])
             if isinstance(node.data, VSSDataDatatype):
                 if node.data.datatype == Datatypes.BOOLEAN[0]:
-                    if not node.name.startswith("Is"):
-                        violations.append([node.get_fqn(), "Not starting with 'Is'"])
+                    if not node.name.startswith("Is") and not node.name.startswith("Has"):
+                        violations.append([node.get_fqn(), "Not starting with 'Is' or 'Has'"])
         if violations:
             log.info(f"Naming violations: {len(violations)}")
         return violations
