@@ -51,6 +51,7 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
 - [graphql](./graphql.md)
 - [id](./id.md)
 - [protobuf](./protobuf.md)
+- [samm](./samm.md)
 
 ## Argument Explanations
 
