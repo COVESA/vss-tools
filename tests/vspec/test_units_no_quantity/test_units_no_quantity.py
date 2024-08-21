@@ -5,11 +5,11 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
-import os
-from typing import Optional
-from pathlib import Path
-import subprocess
 import filecmp
+import os
+import subprocess
+from pathlib import Path
+from typing import Optional
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
@@ -30,9 +30,7 @@ def run_unit(
     cmd += f" {unit_argument} {quantity_argument} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env
-    )
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
     print(process.stdout)
     if fails:
         assert process.returncode != 0

@@ -10,11 +10,13 @@
 
 import ctypes
 from pathlib import Path
-from vss_tools import log
-import vss_tools.vspec.cli_options as clo
+
 import rich_click as click
-from vss_tools.vspec.tree import VSSNode
+
+import vss_tools.vspec.cli_options as clo
+from vss_tools import log
 from vss_tools.vspec.main import get_trees
+from vss_tools.vspec.tree import VSSNode
 
 
 def allowedString(allowedList):
@@ -50,9 +52,7 @@ def export_node(cdll: ctypes.CDLL, node: VSSNode, generate_uuid, out_file: str):
         str(data.get("min", "")).encode(),
         str(data.get("max", "")).encode(),
         data.get("unit", "").encode(),
-        b""
-        if data.get("allowed") is None
-        else allowedString(data.get("allowed", "")).encode(),
+        b"" if data.get("allowed") is None else allowedString(data.get("allowed", "")).encode(),
         str(data.get("default", "")).encode(),
         str(data.get("validate", "")).encode(),
         len(node.children),

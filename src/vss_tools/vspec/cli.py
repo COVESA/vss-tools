@@ -7,16 +7,16 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import logging
-import rich_click as click
-from vss_tools.vspec.lazy_group import LazyGroup
-import vss_tools.vspec.cli_options as clo
-from vss_tools import log
 from pathlib import Path
 
+import rich_click as click
 
-@click.group(
-    context_settings={"auto_envvar_prefix": "vss_tools"}, invoke_without_command=True
-)
+import vss_tools.vspec.cli_options as clo
+from vss_tools import log
+from vss_tools.vspec.lazy_group import LazyGroup
+
+
+@click.group(context_settings={"auto_envvar_prefix": "vss_tools"}, invoke_without_command=True)
 @clo.log_level_opt
 @clo.log_file_opt
 @click.version_option()
@@ -26,9 +26,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         click.echo(ctx.get_help())
     if log_file:
         file_handler = logging.FileHandler(log_file, mode="w")
-        file_handler.setFormatter(
-            logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
-        )
+        file_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
         log.addHandler(file_handler)
 
     log.setLevel(log_level)

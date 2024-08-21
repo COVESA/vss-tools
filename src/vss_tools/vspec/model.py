@@ -5,22 +5,22 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
+import re
 from enum import Enum
 from typing import Any
-from typing_extensions import Self
-from rich.pretty import pretty_repr
-from vss_tools import log
-import re
 
 from pydantic import (
     BaseModel,
+    ConfigDict,
+    Field,
     ValidationError,
     field_validator,
     model_validator,
-    Field,
-    ConfigDict,
 )
+from rich.pretty import pretty_repr
+from typing_extensions import Self
 
+from vss_tools import log
 from vss_tools.vspec.datatypes import (
     Datatypes,
     dynamic_quantities,
@@ -49,9 +49,7 @@ class ModelValidationException(Exception):
 
     def __str__(self) -> str:
         errors = self.ve.errors(include_url=False)
-        return (
-            f"'{self.element}' has {len(errors)} model error(s):\n{pretty_repr(errors)}"
-        )
+        return f"'{self.element}' has {len(errors)} model error(s):\n{pretty_repr(errors)}"
 
 
 class NodeType(str, Enum):
@@ -92,11 +90,7 @@ class VSSRaw(BaseModel):
         if not with_extra_attributes:
             excludes.extend(self.get_extra_attributes())
         data = {
-            k: v
-            for k, v in self.model_dump(
-                mode="json", exclude_none=True, exclude=set(excludes)
-            ).items()
-            if v != []
+            k: v for k, v in self.model_dump(mode="json", exclude_none=True, exclude=set(excludes)).items() if v != []
         }
         return data
 
@@ -182,9 +176,7 @@ class VSSDataDatatype(VSSData):
         datatype is an array
         """
         if self.arraysize is not None:
-            assert is_array(
-                self.datatype
-            ), f"'arraysize' set on a non array datatype: '{self.datatype}'"
+            assert is_array(self.datatype), f"'arraysize' set on a non array datatype: '{self.datatype}'"
         return self
 
     @model_validator(mode="after")
@@ -199,13 +191,9 @@ class VSSDataDatatype(VSSData):
                     self.default, list
                 ), f"'default' with type '{type(self.default)}' does not match datatype '{self.datatype}'"
                 if self.arraysize:
-                    assert (
-                        len(self.default) == self.arraysize
-                    ), "'default' array size does not match 'arraysize'"
+                    assert len(self.default) == self.arraysize, "'default' array size does not match 'arraysize'"
                 for v in self.default:
-                    assert Datatypes.is_datatype(
-                        v, self.datatype
-                    ), f"'{v}' is not of type '{self.datatype}'"
+                    assert Datatypes.is_datatype(v, self.datatype), f"'{v}' is not of type '{self.datatype}'"
             else:
                 assert not isinstance(
                     self.default, list
@@ -226,9 +214,7 @@ class VSSDataDatatype(VSSData):
             if not isinstance(self.default, list):
                 values = [self.default]
             for v in values:  # type: ignore
-                assert (
-                    v in self.allowed
-                ), f"default value '{v}' is not in 'allowed' list"
+                assert v in self.allowed, f"default value '{v}' is not in 'allowed' list"
         return self
 
     @model_validator(mode="after")
@@ -239,9 +225,7 @@ class VSSDataDatatype(VSSData):
         """
         if self.allowed:
             for v in self.allowed:
-                assert Datatypes.is_datatype(
-                    v, self.datatype
-                ), f"'{v}' is not of type '{self.datatype}'"
+                assert Datatypes.is_datatype(v, self.datatype), f"'{v}' is not of type '{self.datatype}'"
         return self
 
     @model_validator(mode="after")
@@ -255,9 +239,7 @@ class VSSDataDatatype(VSSData):
 
     @model_validator(mode="after")
     def check_datatype(self) -> Self:
-        assert self.datatype in get_all_datatypes(
-            self.fqn
-        ), f"'{self.datatype}' is not a valid datatype"
+        assert self.datatype in get_all_datatypes(self.fqn), f"'{self.datatype}' is not a valid datatype"
         self.datatype = resolve_datatype(self.datatype, self.fqn)
         return self
 
@@ -274,12 +256,9 @@ class VSSDataDatatype(VSSData):
         referenced in the unit if given
         """
         if self.unit:
-            assert Datatypes.get_type(
-                self.datatype
-            ), f"Cannot use 'unit' with complex datatype: '{self.datatype}'"
+            assert Datatypes.get_type(self.datatype), f"Cannot use 'unit' with complex datatype: '{self.datatype}'"
             assert any(
-                Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a)
-                for a in dynamic_units[self.unit]
+                Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in dynamic_units[self.unit]
             ), f"'{self.datatype}' is not allowed for unit '{self.unit}'"
         return self
 

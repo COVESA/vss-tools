@@ -5,8 +5,8 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
-from typing import Any
 import re
+from typing import Any
 
 
 def getattr_nn(o: object, name: str, default: Any | None = None) -> Any:

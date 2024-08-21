@@ -11,11 +11,11 @@
 #
 
 
+import subprocess
+from pathlib import Path
 from typing import Optional
 
 import pytest
-import subprocess
-from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"

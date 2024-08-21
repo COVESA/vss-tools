@@ -10,19 +10,19 @@
 
 import csv
 from pathlib import Path
-from vss_tools import log
-import rich_click as click
-import vss_tools.vspec.cli_options as clo
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.utils.misc import getattr_nn
-from vss_tools.vspec.main import get_trees
-from anytree import PreOrderIter  # type: ignore[import]
 from typing import Any
 
+import rich_click as click
+from anytree import PreOrderIter  # type: ignore[import]
 
-def get_header(
-    with_uuid: bool, entry_type: str, with_instance_column: bool
-) -> list[str]:
+import vss_tools.vspec.cli_options as clo
+from vss_tools import log
+from vss_tools.vspec.main import get_trees
+from vss_tools.vspec.tree import VSSNode
+from vss_tools.vspec.utils.misc import getattr_nn
+
+
+def get_header(with_uuid: bool, entry_type: str, with_instance_column: bool) -> list[str]:
     row = [
         entry_type,
         "Type",
@@ -43,9 +43,7 @@ def get_header(
     return row
 
 
-def add_rows(
-    rows: list[list[Any]], root: VSSNode, with_uuid: bool, with_instance_column: bool
-) -> None:
+def add_rows(rows: list[list[Any]], root: VSSNode, with_uuid: bool, with_instance_column: bool) -> None:
     node: VSSNode
     for node in PreOrderIter(root):
         data = node.get_vss_data()

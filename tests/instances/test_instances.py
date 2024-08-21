@@ -6,12 +6,13 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from anytree import RenderTree
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.main import get_trees
-from pathlib import Path
-import vss_tools.vspec.model as model
 import re
+from pathlib import Path
+
+import vss_tools.vspec.model as model
+from anytree import RenderTree
+from vss_tools.vspec.main import get_trees
+from vss_tools.vspec.tree import VSSNode
 
 HERE = Path(__file__).resolve().parent
 RESOURCES = HERE / "resources"
@@ -109,9 +110,7 @@ def test_complex_structures():
             for child_2 in child.children:
                 # 2nd level: Test1.Test2.Test4 - Test1.Test3.Test6
                 print(child_2.get_fqn())
-                assert None is not re.match(
-                    "^Vehicle.Test1.Test(2|3).Test(4|5|6)", child_2.get_fqn()
-                )
+                assert None is not re.match("^Vehicle.Test1.Test(2|3).Test(4|5|6)", child_2.get_fqn())
                 check_instance_branch(child_2, 4)
                 child_3: VSSNode
                 for child_3 in child_2.children:
@@ -164,9 +163,7 @@ def test_exclusion_from_instance():
                 assert "ExcludeSomeThing description" == child.data.description
                 assert 1 == len(child.children)
                 child_2 = child.children[0]
-                assert (
-                    "Vehicle.ExcludeSomeThing.ExcludeSomethingLeaf" == child_2.get_fqn()
-                )
+                assert "Vehicle.ExcludeSomeThing.ExcludeSomethingLeaf" == child_2.get_fqn()
                 assert "ExcludeSomethingLeaf description" == child_2.data.description
                 assert model.NodeType.ACTUATOR == child_2.data.type
 
@@ -180,9 +177,7 @@ def test_exclusion_from_instance():
 
 
 def test_extended_attribute():
-    tree, _ = get_trees(
-        vspec=RESOURCES / "instance_extended_attribute.vspec", include_dirs=(RESOURCES,)
-    )
+    tree, _ = get_trees(vspec=RESOURCES / "instance_extended_attribute.vspec", include_dirs=(RESOURCES,))
 
     # check if root node has 3 children
     assert len(tree.children) == 3

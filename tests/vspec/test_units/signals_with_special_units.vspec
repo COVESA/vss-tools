@@ -8,10 +8,9 @@ A.SignalPuncheon:
   type: sensor
   unit: puncheon
   description: Volume in puncheons.
-  
+
 A.SignalHogshead:
   datatype: float
   type: sensor
   unit: hogshead
   description: Volume in hogshead.
-

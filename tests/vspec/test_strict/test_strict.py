@@ -6,10 +6,11 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
@@ -49,9 +50,7 @@ def test_strict_ok(vspec_file: str, tmp_path):
     assert process.returncode == 0
 
 
-@pytest.mark.parametrize(
-    "vspec_file", ["faulty_case.vspec", "faulty_name_boolean.vspec"]
-)
+@pytest.mark.parametrize("vspec_file", ["faulty_case.vspec", "faulty_name_boolean.vspec"])
 def test_strict_error(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"

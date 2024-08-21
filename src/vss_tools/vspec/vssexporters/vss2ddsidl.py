@@ -11,14 +11,16 @@
 #
 
 import keyword
-from vss_tools import log
+from pathlib import Path
+
 import rich_click as click
+
 import vss_tools.vspec.cli_options as clo
+from vss_tools import log
+from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.model import VSSDataBranch, VSSDataStruct
 from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.utils.misc import getattr_nn
-from pathlib import Path
 
 c_keywords = [
     "auto",
@@ -144,11 +146,7 @@ idl_keywords = [
 
 
 def getAllowedName(name):
-    if (
-        name.lower() in c_keywords
-        or name.lower() in idl_keywords
-        or keyword.iskeyword(name.lower)
-    ):
+    if name.lower() in c_keywords or name.lower() in idl_keywords or keyword.iskeyword(name.lower):
         return "_" + name
     else:
         return name
@@ -189,9 +187,7 @@ dataTypesMap_covesa_dds = {
 }
 
 
-def export_node(
-    node: VSSNode, generate_uuid: bool, generate_all_idl_features: bool
-) -> None:
+def export_node(node: VSSNode, generate_uuid: bool, generate_all_idl_features: bool) -> None:
     """
     This method is used to traverse VSS node and to create corresponding DDS IDL buffer string
     """
@@ -267,44 +263,26 @@ def export_node(
         if datatype is not None:
             # adding range if min and max are specified in vspec file
             if min is not None and max is not None and generate_all_idl_features:
-                idl_file_buffer.append(
-                    "@range(min=" + str(min) + " ,max=" + str(max) + ")"
-                )
+                idl_file_buffer.append("@range(min=" + str(min) + " ,max=" + str(max) + ")")
 
             if allowed_values is None:
                 if default is None:
                     idl_file_buffer.append(
-                        (
-                            "sequence<" + datatype + "> value"
-                            if arraysize is not None
-                            else datatype + " value"
-                        )
-                        + ";"
+                        ("sequence<" + datatype + "> value" if arraysize is not None else datatype + " value") + ";"
                     )
                 else:
                     # default values in IDL file are not accepted by CycloneDDS/FastDDS :
                     # these values can be generated if --all-idl-features is set as True
                     idl_file_buffer.append(
-                        (
-                            "sequence<" + datatype + "> value"
-                            if arraysize is not None
-                            else datatype + " value"
-                        )
-                        + (
-                            "  default " + str(default)
-                            if generate_all_idl_features
-                            else ""
-                        )
+                        ("sequence<" + datatype + "> value" if arraysize is not None else datatype + " value")
+                        + ("  default " + str(default) if generate_all_idl_features else "")
                         + ";"
                     )
             else:
                 # this is the case where allowed values are provided, accordingly contents are converted to enum
                 if default is None:
                     idl_file_buffer.append(
-                        getAllowedName(node.name)
-                        + "_M::"
-                        + getAllowedName(node.name)
-                        + "Values value;"
+                        getAllowedName(node.name) + "_M::" + getAllowedName(node.name) + "Values value;"
                     )
                 else:
                     # default values in IDL file are not accepted by CycloneDDS/FastDDS :
@@ -319,26 +297,15 @@ def export_node(
                     )
 
         if unit is not None:
-            idl_file_buffer.append(
-                ("" if generate_all_idl_features else "//")
-                + 'const string unit="'
-                + unit
-                + '";'
-            )
+            idl_file_buffer.append(("" if generate_all_idl_features else "//") + 'const string unit="' + unit + '";')
 
         data = node.get_vss_data()
         idl_file_buffer.append(
-            ("" if generate_all_idl_features else "//")
-            + 'const string type ="'
-            + str(data.type.value)
-            + '";'
+            ("" if generate_all_idl_features else "//") + 'const string type ="' + str(data.type.value) + '";'
         )
 
         idl_file_buffer.append(
-            ("" if generate_all_idl_features else "//")
-            + 'const string description="'
-            + data.description
-            + '";'
+            ("" if generate_all_idl_features else "//") + 'const string description="' + data.description + '";'
         )
         idl_file_buffer.append("};")
 
@@ -394,9 +361,7 @@ class StructExporter(object):
             datatype_str = datatype.replace(".", "::").split("[", 1)[0]
             is_seq = "[" in datatype
             if is_seq:
-                self.str_buf += (
-                    f"sequence<{datatype_str}> {getAllowedName(node.name)};\n"
-                )
+                self.str_buf += f"sequence<{datatype_str}> {getAllowedName(node.name)};\n"
             else:
                 self.str_buf += f"{datatype_str} {getAllowedName(node.name)};\n"
 

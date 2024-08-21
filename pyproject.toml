@@ -44,4 +44,4 @@ disable_error_code = "import-untyped"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "I"]
+select = ["E", "F", "I"]

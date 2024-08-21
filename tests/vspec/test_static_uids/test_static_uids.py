@@ -10,21 +10,19 @@
 # Convert vspec files to various other formats
 #
 
-import shlex
-from typing import Dict
 import os
+import shlex
 import subprocess
-import pytest
+from pathlib import Path
+from typing import Dict
 
+import pytest
 import vss_tools.vspec.vssexporters.vss2id as vss2id
 import yaml
-
-from vss_tools.vspec.utils.idgen_utils import get_all_keys_values
-from vss_tools.vspec.tree import VSSNode
 from vss_tools.vspec.datatypes import Datatypes
 from vss_tools.vspec.main import get_trees
-
-from pathlib import Path
+from vss_tools.vspec.tree import VSSNode
+from vss_tools.vspec.utils.idgen_utils import get_all_keys_values
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
@@ -94,9 +92,7 @@ def test_generate_id(
         ("TestNode", "testnode", True),
     ],
 )
-def test_strict_mode(
-    node_name_case_sensitive: str, node_name_case_insensitive: str, strict_mode: bool
-):
+def test_strict_mode(node_name_case_sensitive: str, node_name_case_insensitive: str, strict_mode: bool):
     node_case_sensitive = get_test_node(
         node_name=node_name_case_sensitive,
         unit="m",
@@ -105,9 +101,7 @@ def test_strict_mode(
         minimum=None,
         maximum=None,
     )
-    result_case_sensitive, _ = vss2id.generate_split_id(
-        node_case_sensitive, id_counter=0, strict_mode=strict_mode
-    )
+    result_case_sensitive, _ = vss2id.generate_split_id(node_case_sensitive, id_counter=0, strict_mode=strict_mode)
 
     node_case_insensitive = get_test_node(
         node_name=node_name_case_insensitive,
@@ -117,9 +111,7 @@ def test_strict_mode(
         minimum=None,
         maximum=None,
     )
-    result_case_insensitive, _ = vss2id.generate_split_id(
-        node_case_insensitive, id_counter=0, strict_mode=strict_mode
-    )
+    result_case_insensitive, _ = vss2id.generate_split_id(node_case_insensitive, id_counter=0, strict_mode=strict_mode)
 
     if strict_mode:
         assert result_case_sensitive != result_case_insensitive
@@ -170,11 +162,9 @@ def test_duplicate_hash(caplog: pytest.LogCaptureFixture, children_names: list):
         # assert system exit and log
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             vss2id.export_node(yaml_dict, tree, id_counter=0, strict_mode=False)
-        assert pytest_wrapped_e.type == SystemExit
+        assert pytest_wrapped_e.type is SystemExit
         assert pytest_wrapped_e.value.code == -1
-        assert len(caplog.records) == 1 and all(
-            log.levelname == "CRITICAL" for log in caplog.records
-        )
+        assert len(caplog.records) == 1 and all(log.levelname == "CRITICAL" for log in caplog.records)
     else:
         # assert all IDs different
         vss2id.export_node(yaml_dict, tree, id_counter=0, strict_mode=False)

@@ -6,23 +6,25 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from vss_tools import log
-from anytree import PreOrderIter, findall
 from pathlib import Path
+
+from anytree import PreOrderIter, findall
+
+from vss_tools import log
+from vss_tools.vspec.datatypes import (
+    dynamic_datatypes,
+    dynamic_quantities,
+    dynamic_units,
+)
 from vss_tools.vspec.model import (
     VSSDataBranch,
     VSSDataProperty,
     VSSDataStruct,
     get_all_model_fields,
 )
-from vss_tools.vspec.tree import VSSNode, build_tree, ModelValidationException
-from vss_tools.vspec.vspec import load_vspec, InvalidSpecDuplicatedEntryException
+from vss_tools.vspec.tree import ModelValidationException, VSSNode, build_tree
 from vss_tools.vspec.units_quantities import load_quantities, load_units
-from vss_tools.vspec.datatypes import (
-    dynamic_units,
-    dynamic_datatypes,
-    dynamic_quantities,
-)
+from vss_tools.vspec.vspec import InvalidSpecDuplicatedEntryException, load_vspec
 
 
 class NameViolationException(Exception):
@@ -45,9 +47,7 @@ class PropertyOrphansException(Exception):
     pass
 
 
-def load_quantities_and_units(
-    quantities: tuple[Path, ...], units: tuple[Path, ...], vspec_root: Path
-) -> None:
+def load_quantities_and_units(quantities: tuple[Path, ...], units: tuple[Path, ...], vspec_root: Path) -> None:
     """
     Loading quantities and units.
     Side effect: filling global 'dynamic_quantities' and 'dynamic_units' from 'datatypes'
@@ -57,17 +57,13 @@ def load_quantities_and_units(
         if default_quantity.exists():
             quantities = (default_quantity,)
         else:
-            log.warning(
-                f"No 'quantity' files defined. Default not existing: {default_quantity.absolute()}"
-            )
+            log.warning(f"No 'quantity' files defined. Default not existing: {default_quantity.absolute()}")
     if not units:
         default_unit = vspec_root / "units.yaml"
         if default_unit.exists():
             units = (default_unit,)
         else:
-            log.warning(
-                f"No 'unit' files defined. Default not existing: {default_unit.absolute()}"
-            )
+            log.warning(f"No 'unit' files defined. Default not existing: {default_unit.absolute()}")
 
     quantity_data = load_quantities(list(quantities))
     dynamic_quantities.extend(list(quantity_data.keys()))
@@ -87,9 +83,7 @@ def check_name_violations(root: VSSNode, strict: bool, aborts: tuple[str, ...]) 
         if naming_violations:
             for violation in naming_violations:
                 log.warning(f"Name violation: '{violation[0]}' ({violation[1]})")
-            raise NameViolationException(
-                f"Name violations detected: {naming_violations}"
-            )
+            raise NameViolationException(f"Name violations detected: {naming_violations}")
 
 
 def check_extra_attribute_violations(
@@ -107,9 +101,7 @@ def check_extra_attribute_violations(
             )
     if strict or "unknown-attribute" in aborts:
         if extra_attributes:
-            raise ExtraAttributesException(
-                f"Forbidden extra attributes detected: {extra_attributes}"
-            )
+            raise ExtraAttributesException(f"Forbidden extra attributes detected: {extra_attributes}")
 
 
 def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode | None:
@@ -169,9 +161,7 @@ def get_invalid_node_msgs(root: VSSNode) -> list[str]:
             if not isinstance(node.parent.data, VSSDataStruct):
                 ok = False
         elif isinstance(node.data, VSSDataStruct):
-            if not isinstance(node.parent.data, VSSDataStruct) and not isinstance(
-                node.parent.data, VSSDataBranch
-            ):
+            if not isinstance(node.parent.data, VSSDataStruct) and not isinstance(node.parent.data, VSSDataBranch):
                 ok = False
         else:
             if not isinstance(node.parent.data, VSSDataBranch):
@@ -194,15 +184,15 @@ def validate_tree(root: VSSNode) -> None:
 
 def get_trees(
     vspec: Path,
-    include_dirs: tuple[Path, ...] = tuple(),
-    aborts: tuple[str, ...] = tuple(),
+    include_dirs: tuple[Path, ...] = (),
+    aborts: tuple[str, ...] = (),
     strict: bool = False,
-    extended_attributes: tuple[str, ...] = tuple(),
+    extended_attributes: tuple[str, ...] = (),
     uuid: bool = False,
-    quantities: tuple[Path, ...] = tuple(),
-    units: tuple[Path, ...] = tuple(),
-    types: tuple[Path, ...] = tuple(),
-    overlays: tuple[Path, ...] = tuple(),
+    quantities: tuple[Path, ...] = (),
+    units: tuple[Path, ...] = (),
+    types: tuple[Path, ...] = (),
+    overlays: tuple[Path, ...] = (),
     expand: bool = True,
 ) -> tuple[VSSNode, VSSNode | None]:
     """
@@ -254,9 +244,7 @@ def get_trees(
     if types_root:
         validate_tree(types_root)
         try:
-            check_extra_attribute_violations(
-                types_root, True, aborts, extended_attributes
-            )
+            check_extra_attribute_violations(types_root, True, aborts, extended_attributes)
         except (NameViolationException, ExtraAttributesException) as e:
             log.critical(e)
             exit(1)

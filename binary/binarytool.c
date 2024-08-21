@@ -32,7 +32,7 @@ void writeNodeData(char* name, char* type, char* uuid, char* descr, char* dataty
     uint16_t allowedLen = (uint16_t)strlen(allowed);
     uint8_t defaultAllowedLen = (uint8_t)strlen(defaultAllowed);
     uint8_t validateLen = (uint8_t)strlen(validate);
-    
+
     fwrite(&nameLen, sizeof(uint8_t), 1, treeFp);
     fwrite(name, sizeof(char)*nameLen, 1, treeFp);
     fwrite(&typeLen, sizeof(uint8_t), 1, treeFp);

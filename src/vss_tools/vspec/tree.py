@@ -6,27 +6,28 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 from __future__ import annotations
+
 import re
-from typing import Any
 import uuid
+from copy import deepcopy
+from typing import Any
 
 from anytree import Node, PreOrderIter, find, findall
-from copy import deepcopy
+from pydantic import ValidationError
 
 from vss_tools import log
-from vss_tools.vspec.vspec import deep_update
+from vss_tools.vspec.datatypes import Datatypes, dynamic_datatypes
 from vss_tools.vspec.model import (
+    ModelValidationException,
     VSSData,
+    VSSDataBranch,
     VSSDataDatatype,
     VSSDataStruct,
     VSSRaw,
     get_vss_raw,
-    VSSDataBranch,
     resolve_vss_raw,
-    ModelValidationException,
 )
-from pydantic import ValidationError
-from vss_tools.vspec.datatypes import Datatypes, dynamic_datatypes
+from vss_tools.vspec.vspec import deep_update
 
 SEPARATOR = "."
 
@@ -59,9 +60,7 @@ class VSSNode(Node):  # type: ignore[misc]
 
     separator = SEPARATOR
 
-    def __init__(
-        self, name: str, fqn: str | None, data: dict[str, Any], **kwargs: Any
-    ) -> None:
+    def __init__(self, name: str, fqn: str | None, data: dict[str, Any], **kwargs: Any) -> None:
         super().__init__(name, **kwargs)
         self.data = get_vss_raw(data, fqn)
         self.uuid: str | None = None
@@ -86,9 +85,7 @@ class VSSNode(Node):  # type: ignore[misc]
         Updating the data fqn when getting reattached.
         We need the fqn in the data for validation purposes.
         """
-        log.debug(
-            f"Got attached to parent='{parent.get_fqn()}', new fqn='{self.get_fqn()}'"
-        )
+        log.debug(f"Got attached to parent='{parent.get_fqn()}', new fqn='{self.get_fqn()}'")
         self.data.fqn = self.get_fqn(SEPARATOR)
 
     def _post_detach(self, parent: VSSNode):
@@ -96,9 +93,7 @@ class VSSNode(Node):  # type: ignore[misc]
 
     def get_vss_data(self) -> VSSData:
         if not isinstance(self.data, VSSData):
-            raise NoVSSDataException(
-                f"'{self.get_fqn()}' data does not contain 'VSSData'"
-            )
+            raise NoVSSDataException(f"'{self.get_fqn()}' data does not contain 'VSSData'")
         else:
             return self.data
 
@@ -109,14 +104,12 @@ class VSSNode(Node):  # type: ignore[misc]
         """
         Resolves raw nodes into "higher" nodes
         """
-        vss_raw_nodes = findall(
-            self, filter_=lambda node: isinstance(node.data, VSSRaw)
-        )
+        vss_raw_nodes = findall(self, filter_=lambda node: isinstance(node.data, VSSRaw))
         for node in vss_raw_nodes:
             try:
                 node.data = resolve_vss_raw(node.data)
             except ValidationError as e:
-                raise ModelValidationException(node.get_fqn(), e)
+                raise ModelValidationException(node.get_fqn(), e) from None
 
     def get_child(self, fqn: str) -> VSSNode | None:
         for child in self.children:
@@ -159,8 +152,7 @@ class VSSNode(Node):  # type: ignore[misc]
     def get_instance_nodes(self) -> tuple[VSSNode, ...]:
         return findall(
             self,
-            filter_=lambda node: isinstance(node.data, VSSDataBranch)
-            and node.data.instances,
+            filter_=lambda node: isinstance(node.data, VSSDataBranch) and node.data.instances,
         )
 
     def get_node_with_fqn(self, fqn: str, sep: str = SEPARATOR) -> VSSNode | None:
@@ -228,17 +220,13 @@ class VSSNode(Node):  # type: ignore[misc]
                 # Remove children from copy that should not be instantiatet
                 for child in instance_node_copy.children:
                     if not getattr(child.data, "instantiate", True):
-                        log.debug(
-                            f"'{child.get_fqn()}', removing from copy (instantiate=False)"
-                        )
+                        log.debug(f"'{child.get_fqn()}', removing from copy (instantiate=False)")
                         child.parent = None
 
                 # Remove children from instance node that need to be put on created instances instead
                 for child in instance_node.children:
                     if getattr(child.data, "instantiate", True):
-                        log.debug(
-                            f"'{child.get_fqn()}', removing from node (instantiate=True)"
-                        )
+                        log.debug(f"'{child.get_fqn()}', removing from node (instantiate=True)")
                         child.parent = None
 
                 # Roots to attach generated nodes
@@ -253,9 +241,7 @@ class VSSNode(Node):  # type: ignore[misc]
                 # On every iteration, we get back new nodes to attach new instances to (roots)
                 # as well as the nodes that have been generated
                 for instance in instance_node.data.instances:  # type: ignore
-                    roots, generated = expand_instance(
-                        roots, instance_node_copy, instance
-                    )
+                    roots, generated = expand_instance(roots, instance_node_copy, instance)
                     generated_instance_nodes.extend(generated)
 
                 # Since we do not want to append original children
@@ -267,9 +253,7 @@ class VSSNode(Node):  # type: ignore[misc]
 
                 # Appending all original children at the right place
                 # Possibly overwriting content if wished
-                add_expanded_instance_children(
-                    generated_instance_leaf_nodes, instance_node, instance_node_copy
-                )
+                add_expanded_instance_children(generated_instance_leaf_nodes, instance_node, instance_node_copy)
 
                 instance_node.data.instances = []  # type: ignore
             instance_nodes = self.get_instance_nodes()
@@ -287,9 +271,7 @@ class VSSNode(Node):  # type: ignore[misc]
             node.parent = None
         size_after = self.size
         if nodes:
-            log.info(
-                f"Nodes deleted, given={len(nodes)}, overall={size_before - size_after}"
-            )
+            log.info(f"Nodes deleted, given={len(nodes)}, overall={size_before - size_after}")
 
     def get_naming_violations(self) -> list[list[str]]:
         """
@@ -369,9 +351,7 @@ def find_children_ids(node_ids: list[str], name: str) -> list[str]:
     return ids
 
 
-def add_expanded_instance_children(
-    roots: list[VSSNode], instance_root: VSSNode, instance_copy: VSSNode
-):
+def add_expanded_instance_children(roots: list[VSSNode], instance_root: VSSNode, instance_copy: VSSNode):
     """
     Adds initial children of node that started the instance expansion (instance_root)
     The initial state of the node has been freezed in instance_copy.
@@ -474,9 +454,7 @@ def count_seperator(s: str) -> int:
     return s.count(SEPARATOR)
 
 
-def build_tree(
-    data: dict[str, Any], connect_orphans: bool = False
-) -> tuple[VSSNode, dict[str, VSSNode]]:
+def build_tree(data: dict[str, Any], connect_orphans: bool = False) -> tuple[VSSNode, dict[str, VSSNode]]:
     """
     Building a tree out of raw dictionary data.
     Also tries to find orphans and connects orphans

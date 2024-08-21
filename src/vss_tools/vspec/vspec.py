@@ -51,9 +51,7 @@ class Include:
             if path.exists():
                 log.debug(f"'{self.statement}', resolved={path}")
                 return path
-        raise IncludeNotFoundException(
-            f"Unable to find include {self.target}. Include dirs: {include_dirs}"
-        )
+        raise IncludeNotFoundException(f"Unable to find include {self.target}. Include dirs: {include_dirs}")
 
 
 def deep_update(base: dict[str, Any], update: dict[str, Any]) -> None:
@@ -90,9 +88,7 @@ class VSpec:
             self.data = tmp_data
 
         lines = content.splitlines()
-        include_statements = [
-            line.strip() for line in lines if line.strip().startswith("#include")
-        ]
+        include_statements = [line.strip() for line in lines if line.strip().startswith("#include")]
         self.includes = [Include(statement, prefix) for statement in include_statements]
 
     def __str__(self) -> str:
@@ -102,9 +98,7 @@ class VSpec:
         deep_update(self.data, other.data)
 
 
-def get_vspecs(
-    includes: list[Path], spec: Path, prefix: str | None = None
-) -> list[VSpec]:
+def get_vspecs(includes: list[Path], spec: Path, prefix: str | None = None) -> list[VSpec]:
     vspecs: list[VSpec] = []
     vspec = VSpec(spec, prefix)
     vspecs.append(vspec)
@@ -116,9 +110,7 @@ def get_vspecs(
     return vspecs
 
 
-def load_vspec(
-    include_dirs: list[Path], specs: list[Path], identifier: str | None = None
-) -> VSpec:
+def load_vspec(include_dirs: list[Path], specs: list[Path], identifier: str | None = None) -> VSpec:
     spec = None
     vspecs: list[VSpec] = []
     for s in specs:

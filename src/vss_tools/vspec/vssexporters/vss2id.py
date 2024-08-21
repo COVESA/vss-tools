@@ -10,16 +10,15 @@
 # Generate IDs of 4bytes size, 3 bytes incremental value + 1 byte for layer id.
 
 import sys
-from typing import Dict, Tuple, Any
+from pathlib import Path
+from typing import Any, Dict, Tuple
 
+import rich_click as click
 import yaml
 
-from vss_tools.vspec.utils.misc import getattr_nn
-from vss_tools.vspec.main import get_trees
-import rich_click as click
 import vss_tools.vspec.cli_options as clo
-from pathlib import Path
 from vss_tools import log
+from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.tree import VSSNode
 from vss_tools.vspec.utils import vss2id_val
 from vss_tools.vspec.utils.idgen_utils import (
@@ -27,11 +26,10 @@ from vss_tools.vspec.utils.idgen_utils import (
     get_all_keys_values,
     get_node_identifier_bytes,
 )
+from vss_tools.vspec.utils.misc import getattr_nn
 
 
-def generate_split_id(
-    node: VSSNode, id_counter: int, strict_mode: bool
-) -> Tuple[str, int]:
+def generate_split_id(node: VSSNode, id_counter: int, strict_mode: bool) -> Tuple[str, int]:
     """Generates static UIDs using 4-byte FNV-1 hash.
 
     @param node: VSSNode that we want to generate a static UID for
@@ -68,9 +66,7 @@ def generate_split_id(
     return hashed_str, id_counter + 1
 
 
-def export_node(
-    data: dict[str, Any], node: VSSNode, id_counter, strict_mode: bool
-) -> Tuple[int, int]:
+def export_node(data: dict[str, Any], node: VSSNode, id_counter, strict_mode: bool) -> Tuple[int, int]:
     """Recursive function to export the full tree to a dict
 
     @param data: the to be exported dict
@@ -202,8 +198,7 @@ def cli(
 
     if validate_static_uid:
         log.info(
-            f"Now validating nodes, static UIDs, types, units and description with "
-            f"file '{validate_static_uid}'"
+            f"Now validating nodes, static UIDs, types, units and description with " f"file '{validate_static_uid}'"
         )
 
         validation_tree, _ = get_trees(

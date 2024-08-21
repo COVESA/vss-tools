@@ -10,13 +10,15 @@
 
 
 from io import TextIOWrapper
-import rich_click as click
 from pathlib import Path
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.main import get_trees
+
+import rich_click as click
+from anytree import PreOrderIter
+
 import vss_tools.vspec.cli_options as clo
 from vss_tools import log
-from anytree import PreOrderIter
+from vss_tools.vspec.main import get_trees
+from vss_tools.vspec.tree import VSSNode
 
 
 # Write the header line
