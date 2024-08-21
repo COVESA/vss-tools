@@ -747,6 +747,11 @@ char* VSSgetAllowedElement(long nodeHandle, int index) {
 	return (char*)(((node_t*)((intptr_t)nodeHandle))->allowedDef[index]);
 }
 
+char* VSSgetDefault(long nodeHandle) {
+    node_t* node = ((node_t*)((intptr_t)nodeHandle));
+    return node->defaultAllowed;
+}
+
 char* VSSgetUnit(long nodeHandle) {
 	nodeTypes_t type = VSSgetType(nodeHandle);
 	if (type != BRANCH && type != STRUCT)
