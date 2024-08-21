@@ -39,3 +39,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 disable_error_code = "import-untyped"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I"]
