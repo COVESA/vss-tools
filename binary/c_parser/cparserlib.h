@@ -76,6 +76,7 @@ int VSSgetValidation(long nodeHandle);
 char* VSSgetDescr(long nodeHandle);
 int VSSgetNumOfAllowedElements(long nodeHandle);
 char* VSSgetAllowedElement(long nodeHandle, int index);
+char* VSSgetDefault(long nodeHandle);
 char* VSSgetUnit(long nodeHandle);
 uint8_t getMaxValidation(uint8_t newValidation, uint8_t currentMaxValidation);
 uint8_t translateToMatrixIndex(uint8_t index);
