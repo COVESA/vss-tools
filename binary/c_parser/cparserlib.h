@@ -9,6 +9,11 @@
 * Parser library for a  C binary format VSS tree.
 **/
 
+#pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UNKNOWN 0
 typedef enum {SENSOR=1, ACTUATOR, ATTRIBUTE, BRANCH, STRUCT, PROPERTY } nodeTypes_t;
 
@@ -54,7 +59,7 @@ typedef struct noScopeList_t {
     path_t path;
 } noScopeList_t;
 
-long VSSReadTree(char* filePath);
+long VSSReadTree(const char *filePath);
 void VSSWriteTree(char* filePath, long rootHandle);
 int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, searchData_t* searchData, bool anyDepth,  bool leafNodesOnly, int listSize, noScopeList_t* noScopeList, int* validation);
 int VSSGetLeafNodesList(long rootNode, char* listFname);
@@ -74,3 +79,7 @@ char* VSSgetAllowedElement(long nodeHandle, int index);
 char* VSSgetUnit(long nodeHandle);
 uint8_t getMaxValidation(uint8_t newValidation, uint8_t currentMaxValidation);
 uint8_t translateToMatrixIndex(uint8_t index);
+
+#ifdef __cplusplus
+};
+#endif
