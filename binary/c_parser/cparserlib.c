@@ -237,7 +237,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 		context->speculationIndex++;
 	}
 	context->maxValidation = getMaxValidation(VSSgetValidation(thisNode), context->maxValidation);
-	if (VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
+	if ((VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT) || context->leafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			strcpy(context->searchData[context->numOfMatches].responsePaths, context->matchPath);
 			context->searchData[context->numOfMatches].foundNodeHandles = thisNode;
@@ -306,7 +306,7 @@ int hexToInt(char hexDigit) {
 
 int countAllowedElements(char* allowedStr) {  // allowed string has format "XXallowed1XXallowed2...XXallowedx", where XX are hex values; X=[0-9,A-F]
     int allowed = 0;
-    for (int index = 0 ; index < strlen(allowedStr) ; ) {
+    for (int index = 0 ; index < (int)strlen(allowedStr) ; ) {
         char* hexLen = &(allowedStr[index]);
         int allowedLen = hexToInt(hexLen[0]) * 16 + hexToInt(hexLen[1]);
         index += allowedLen + 2;
@@ -622,7 +622,7 @@ void initContext_LNL(SearchContext_t* context, char* searchPath, long rootNode, 
 	}
 }
 
-long VSSReadTree(char* filePath) {
+long VSSReadTree(const char* filePath) {
 	treeFp = fopen(filePath, "r");
 	if (treeFp == NULL) {
 		printf("Could not open file for reading tree data\n");
