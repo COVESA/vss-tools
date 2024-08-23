@@ -150,20 +150,6 @@ def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
         mapping = yaml.constructor.Constructor.construct_mapping(
             loader, node, deep=deep)
 
-        # Replace
-        # { 'Vehicle.Speed': { 'datatype': 'boolean', 'type': 'sensor' }}
-        # with
-        # { '$name$': 'Vehicle.Speed', 'datatype': 'boolean', 'type': 'sensor' }
-
-        for key, val in list(mapping.items()):
-            if key[0] == '$':
-                continue
-
-            if val is None:
-                mapping['$name$'] = key
-                del mapping[key]
-                break
-
         # Add line number and file name to element.
         if node.__line__ is not None:
             mapping['$line$'] = node.__line__
