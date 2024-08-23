@@ -657,7 +657,7 @@ int VSSGetLeafNodesList(long rootNode, char* listFname) {
 
 	FILE* listFp = fopen(listFname, "w+");
 	fwrite("{\"leafpaths\":[", 14, 1, listFp);
-	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
+	initContext_LNL(context, "*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
 	traverseNode(rootNode, context);
 	fwrite("]}", 2, 1, listFp);
 	fclose(listFp);
@@ -672,7 +672,7 @@ int VSSGetUuidList(long rootNode, char* listFname) {
 
 	FILE* listFp = fopen(listFname, "w+");
 	fwrite("{\"leafuuids\":[", 14, 1, listFp);
-	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
+	initContext_LNL(context, "*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
 	traverseNode(rootNode, context);
 	//    int len = strlen(leafNodeList);
 	//    leafNodeList[len-2] = '\0';
