@@ -30,7 +30,7 @@ from vss_tools.vspec.datatypes import (
     resolve_datatype,
 )
 
-EXPORT_EXCLUDE_ATTRIBUTES = ["delete", "instantiate", "fqn", "arraysize", "aggregate"]
+EXPORT_EXCLUDE_ATTRIBUTES = ["delete", "instantiate", "fqn", "arraysize", "aggregate", "is_instance"]
 
 
 class ModelException(Exception):
@@ -117,6 +117,7 @@ class VSSData(VSSRaw):
 class VSSDataBranch(VSSData):
     instances: Any = None
     aggregate: bool = False
+    is_instance: bool = False
 
     @field_validator("instances")
     @classmethod
