@@ -1,0 +1,5 @@
+Vehicle:
+  bar: null
+  description: Vehicle
+  foo: null
+  type: branch

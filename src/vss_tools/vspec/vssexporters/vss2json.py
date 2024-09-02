@@ -20,8 +20,8 @@ from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.tree import VSSNode
 
 
-def get_data(node: VSSNode, with_extra_attributes: bool = True):
-    data = node.data.as_dict(with_extra_attributes)
+def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attributes: tuple[str, ...] = ()):
+    data = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
     if node.uuid:
         data["uuid"] = node.uuid
     if len(node.children) > 0:
@@ -85,7 +85,7 @@ def cli(
     if pretty:
         indent = 2
 
-    signals_data = {tree.name: get_data(tree, extend_all_attributes)}
+    signals_data = {tree.name: get_data(tree, extend_all_attributes, extended_attributes)}
 
     if datatype_tree:
         types_data: dict[str, Any] = {datatype_tree.name: get_data(datatype_tree, extend_all_attributes)}
