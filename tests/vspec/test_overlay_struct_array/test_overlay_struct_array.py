@@ -6,12 +6,11 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-
-
-from pathlib import Path
-import subprocess
 import filecmp
+import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"

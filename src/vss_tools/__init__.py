@@ -6,6 +6,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 import logging
+
 from rich.logging import RichHandler
 
 logging.basicConfig(

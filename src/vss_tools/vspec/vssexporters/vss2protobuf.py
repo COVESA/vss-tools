@@ -9,21 +9,22 @@
 # Convert vspec file to proto
 #
 
-from io import TextIOWrapper
 import sys
-import rich_click as click
-import vss_tools.vspec.cli_options as clo
-from vss_tools.vspec.model import (
-    VSSDataDatatype,
-    VSSDataStruct,
-    VSSDataBranch,
-)
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.tree import VSSNode
+from io import TextIOWrapper
 from pathlib import Path
 
+import rich_click as click
 from anytree import findall
+
+import vss_tools.vspec.cli_options as clo
 from vss_tools import log
+from vss_tools.vspec.main import get_trees
+from vss_tools.vspec.model import (
+    VSSDataBranch,
+    VSSDataDatatype,
+    VSSDataStruct,
+)
+from vss_tools.vspec.tree import VSSNode
 
 PATH_DELIMITER = "."
 DIR_DELIMITER = "/"
@@ -44,9 +45,7 @@ def init_package_file(path: Path, package_name: str):
         f.write(f"package {package_name};\n\n")
 
 
-def traverse_data_type_tree(
-    tree: VSSNode, static_uid: bool, add_optional: bool, out_dir: Path
-):
+def traverse_data_type_tree(tree: VSSNode, static_uid: bool, add_optional: bool, out_dir: Path):
     """
     All structs in a branch are written to a single .proto file.
     The file's base name is same as the branch's name
@@ -77,17 +76,13 @@ def traverse_data_type_tree(
 
         with open(out_file, "a") as fd:
             imports = []
-            for c_node in findall(
-                node, filter_=lambda n: isinstance(n.data, VSSDataDatatype)
-            ):
+            for c_node in findall(node, filter_=lambda n: isinstance(n.data, VSSDataDatatype)):
                 datatype = c_node.data.datatype
                 if "." not in datatype:
                     continue
                 c_struct_path = Path(datatype.replace(".", "/"))
                 if c_struct_path.parent != struct_path.parent:
-                    imports.append(
-                        f"{c_struct_path.parent}/{c_struct_path.parent.name}.proto"
-                    )
+                    imports.append(f"{c_struct_path.parent}/{c_struct_path.parent.name}.proto")
 
             write_imports(fd, imports)
 
@@ -97,9 +92,7 @@ def traverse_data_type_tree(
             log.info(f"Wrote {struct_path.name} to {out_file}")
 
 
-def traverse_signal_tree(
-    tree: VSSNode, fd: TextIOWrapper, static_uid: bool, add_optional: bool
-):
+def traverse_signal_tree(tree: VSSNode, fd: TextIOWrapper, static_uid: bool, add_optional: bool):
     fd.write('syntax = "proto3";\n\n')
 
     imports = []
@@ -112,9 +105,7 @@ def traverse_signal_tree(
     write_imports(fd, imports)
 
     # write proto messages to file
-    for node in findall(
-        tree, filter_=lambda node: isinstance(node.data, VSSDataBranch)
-    ):
+    for node in findall(tree, filter_=lambda node: isinstance(node.data, VSSDataBranch)):
         fd.write(f"message {node.get_fqn('')} {{" + "\n")
         print_messages(node.children, fd, static_uid, add_optional)
         fd.write("}\n\n")
@@ -128,9 +119,7 @@ def write_imports(fd: TextIOWrapper, imports: list[str]):
     fd.write("\n")
 
 
-def print_messages(
-    nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, add_optional: bool
-):
+def print_messages(nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, add_optional: bool):
     usedKeys: dict[int, str] = {}
     for i, node in enumerate(nodes, 1):
         if isinstance(node.data, VSSDataDatatype):
@@ -230,9 +219,7 @@ def cli(
     if datatype_tree:
         if not types_out_dir:
             types_out_dir = Path.cwd()
-            log.warning(
-                f"No output directory given. Writing to: {types_out_dir.absolute()}"
-            )
+            log.warning(f"No output directory given. Writing to: {types_out_dir.absolute()}")
         traverse_data_type_tree(datatype_tree, static_uid, add_optional, types_out_dir)
 
     with open(output, "w") as f:

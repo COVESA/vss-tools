@@ -6,9 +6,10 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
@@ -25,9 +26,7 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
         ("correct.vspec", "no_description_type_property.vspec", "ot.json"),
     ],
 )
-def test_description_error(
-    vspec_file: str, type_file: str, type_out_file: str, tmp_path
-):
+def test_description_error(vspec_file: str, type_file: str, type_out_file: str, tmp_path):
     output = tmp_path / "out.json"
     log = tmp_path / "out.log"
     cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS} -q {TEST_QUANT}"

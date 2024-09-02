@@ -6,10 +6,11 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
@@ -85,8 +86,6 @@ def test_extended_error(extended_args: str, tmp_path):
     # Make sure there is no line break that affects compare
     os.environ["COLUMNS"] = "120"
 
-    process = subprocess.run(
-        cmd.split(), stdout=subprocess.PIPE, text=True, stderr=subprocess.STDOUT
-    )
+    process = subprocess.run(cmd.split(), stdout=subprocess.PIPE, text=True, stderr=subprocess.STDOUT)
     assert process.returncode != 0
     assert "not allowed" in process.stdout

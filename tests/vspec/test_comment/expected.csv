@@ -11,6 +11,6 @@ A.MultiLineCommaQuoted,sensor,float,,km,,,A sensor.,"August, is a great month!",
 A.MultiLineStyleInitialBreak,sensor,float,,km,,,A sensor.,"October,
 is a great month!
 ",,
-A.MultiLineLiteralStyleQuote,sensor,float,,km,,,A sensor.,"November, 
+A.MultiLineLiteralStyleQuote,sensor,float,,km,,,A sensor.,"November,
 is a ""great"" month!
 ",,

@@ -8,14 +8,16 @@
 
 # Convert vspec tree to JSON
 
-from vss_tools.vspec.tree import VSSNode
 import json
-from typing import Any
-import rich_click as click
-import vss_tools.vspec.cli_options as clo
-from vss_tools.vspec.main import get_trees
 from pathlib import Path
+from typing import Any
+
+import rich_click as click
+
+import vss_tools.vspec.cli_options as clo
 from vss_tools import log
+from vss_tools.vspec.main import get_trees
+from vss_tools.vspec.tree import VSSNode
 
 
 def get_data(node: VSSNode, with_extra_attributes: bool = True):
@@ -86,9 +88,7 @@ def cli(
     signals_data = {tree.name: get_data(tree, extend_all_attributes)}
 
     if datatype_tree:
-        types_data: dict[str, Any] = {
-            datatype_tree.name: get_data(datatype_tree, extend_all_attributes)
-        }
+        types_data: dict[str, Any] = {datatype_tree.name: get_data(datatype_tree, extend_all_attributes)}
         if not types_output:
             log.info("Adding custom data types to signal dictionary")
             signals_data["ComplexDataTypes"] = types_data

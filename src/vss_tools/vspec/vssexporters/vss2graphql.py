@@ -6,30 +6,31 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from pathlib import Path
+from typing import Dict
+
 import rich_click as click
-from vss_tools import log
+from graphql import (
+    GraphQLArgument,
+    GraphQLBoolean,
+    GraphQLField,
+    GraphQLFloat,
+    GraphQLInt,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLObjectType,
+    GraphQLSchema,
+    GraphQLString,
+    print_schema,
+)
+
 import vss_tools.vspec.cli_options as clo
+from vss_tools import log
+from vss_tools.vspec.datatypes import Datatypes
+from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.model import VSSDataDatatype
 from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.main import get_trees
-from pathlib import Path
 from vss_tools.vspec.utils.misc import camel_back
-from typing import Dict
-from vss_tools.vspec.datatypes import Datatypes
-
-from graphql import (
-    GraphQLSchema,
-    GraphQLObjectType,
-    GraphQLField,
-    GraphQLArgument,
-    GraphQLNonNull,
-    GraphQLString,
-    GraphQLList,
-    print_schema,
-    GraphQLInt,
-    GraphQLFloat,
-    GraphQLBoolean,
-)
 
 GRAPHQL_TYPE_MAPPING = {
     Datatypes.INT8[0]: GraphQLInt,
@@ -73,17 +74,14 @@ def get_schema_from_tree(root: VSSNode, additional_leaf_fields: list) -> str:
         after=GraphQLArgument(
             GraphQLString,
             description=(
-                "Filter data to only provide information that was sent "
-                "from the vehicle after that timestamp."
+                "Filter data to only provide information that was sent " "from the vehicle after that timestamp."
             ),
         ),
     )
 
     root_query = GraphQLObjectType(
         "Query",
-        lambda: {
-            "vehicle": GraphQLField(to_gql_type(root, additional_leaf_fields), args)
-        },
+        lambda: {"vehicle": GraphQLField(to_gql_type(root, additional_leaf_fields), args)},
     )
     return print_schema(GraphQLSchema(root_query))
 
@@ -109,28 +107,19 @@ def leaf_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQ
     if additional_leaf_fields:
         for additional_field in additional_leaf_fields:
             if len(additional_field) == 2:
-                field_dict[additional_field[0]] = field(
-                    node, f" {str(additional_field[1])}: "
-                )
+                field_dict[additional_field[0]] = field(node, f" {str(additional_field[1])}: ")
             else:
-                raise GraphQLFieldException(
-                    "", "", "Incorrect format of graphql field specification"
-                )
+                raise GraphQLFieldException("", "", "Incorrect format of graphql field specification")
     unit = getattr(node.data, "unit", None)
     if unit:
         field_dict["unit"] = field(node, "Unit of ")
     return field_dict
 
 
-def branch_fields(
-    node: VSSNode, additional_leaf_fields: list
-) -> Dict[str, GraphQLField]:
+def branch_fields(node: VSSNode, additional_leaf_fields: list) -> Dict[str, GraphQLField]:
     # we only consider nodes that either have children or are datatype leafs
     valid = (c for c in node.children if len(c.children) or hasattr(c.data, "datatype"))
-    return {
-        camel_back(c.name): field(c, type=to_gql_type(c, additional_leaf_fields))
-        for c in valid
-    }
+    return {camel_back(c.name): field(c, type=to_gql_type(c, additional_leaf_fields)) for c in valid}
 
 
 def field(node: VSSNode, description_prefix="", type=GraphQLString) -> GraphQLField:

@@ -6,8 +6,9 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
 import subprocess
+
+import pytest
 
 # Test all VSS versions we support
 #

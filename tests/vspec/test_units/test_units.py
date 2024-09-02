@@ -5,11 +5,11 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
-import os
-from typing import Optional
-from pathlib import Path
-import subprocess
 import filecmp
+import os
+import subprocess
+from pathlib import Path
+from typing import Optional
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
@@ -38,9 +38,7 @@ def run_unit(
     env = os.environ.copy()
     # Long line needed as file name printed in some error messages
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env
-    )
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
 
     if fails:
         assert process.returncode != 0
@@ -65,9 +63,7 @@ def run_unit_error(tmp_path, vspec_file, units, grep_error, quantities=None):
     env = os.environ.copy()
     # Long line needed as file name printed in some error messages
     env["COLUMNS"] = "300"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, cwd=HERE, env=env
-    )
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
     assert process.returncode != 0
     if grep_error:
         assert grep_error in process.stdout or grep_error in process.stderr
@@ -134,9 +130,7 @@ def test_multiple_unit_files(tmp_path):
 
 
 def test_unit_error_no_unit_file(tmp_path):
-    run_unit_error(
-        tmp_path, "signals_with_special_units.vspec", None, "No 'unit' files defined"
-    )
+    run_unit_error(tmp_path, "signals_with_special_units.vspec", None, "No 'unit' files defined")
 
 
 # Not all units defined

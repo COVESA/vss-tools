@@ -1,4 +1,3 @@
-
 # Copyright (c) 2023 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the

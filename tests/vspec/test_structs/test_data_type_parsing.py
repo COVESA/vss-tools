@@ -6,11 +6,12 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
 import filecmp
-from pathlib import Path
+import os
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 VSS_TOOLS_ROOT = (HERE / ".." / ".." / "..").absolute()
@@ -53,9 +54,7 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
         ),
     ],
 )
-def test_data_types_export_single_file(
-    format, signals_out, expected_signal, type_file, tmp_path
-):
+def test_data_types_export_single_file(format, signals_out, expected_signal, type_file, tmp_path):
     """
     Test that data types provided in vspec format are converted correctly
     """
@@ -211,9 +210,7 @@ def test_data_types_export_to_proto(
         ),
     ],
 )
-def test_data_types_invalid_reference_in_data_type_tree(
-    types_file, error_msg, tmp_path
-):
+def test_data_types_invalid_reference_in_data_type_tree(types_file, error_msg, tmp_path):
     """
     Test that errors are surfaced when data type name references are invalid within the data type tree
     """

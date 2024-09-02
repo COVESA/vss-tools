@@ -6,8 +6,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"

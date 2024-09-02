@@ -5,10 +5,10 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
-import os
-from pathlib import Path
-import subprocess
 import filecmp
+import os
+import subprocess
+from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"

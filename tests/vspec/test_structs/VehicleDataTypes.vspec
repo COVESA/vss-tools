@@ -6,5 +6,3 @@ VehicleDataTypes.TestBranch1:
   type: branch
   description: "Test branch with structs and properties definitions"
 #include TestBranch1.vspec VehicleDataTypes.TestBranch1
-
-

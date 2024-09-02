@@ -6,12 +6,12 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from vss_tools import log
 import sys
 from typing import Optional
+
 from anytree import PreOrderIter
 
-
+from vss_tools import log
 from vss_tools.vspec.tree import VSSNode
 from vss_tools.vspec.utils.idgen_utils import fnv1_32_wrapper
 
@@ -66,14 +66,8 @@ def validate_static_uids(signals_dict: dict, validation_tree: VSSNode, strict: b
             return None
 
     def check_deprecation(k: str, v: dict, match_tuple: tuple):
-        if (
-            "deprecation" in v.keys()
-            and validation_tree_nodes[match_tuple[1]].data.deprecation
-        ):
-            if (
-                v["deprecation"]
-                != validation_tree_nodes[match_tuple[1]].data.deprecation
-            ):
+        if "deprecation" in v.keys() and validation_tree_nodes[match_tuple[1]].data.deprecation:
+            if v["deprecation"] != validation_tree_nodes[match_tuple[1]].data.deprecation:
                 log.warning(
                     f"[Validation] DEPRECATION MSG CHANGE: Deprecation message "
                     f"for '{k}' was "
@@ -126,8 +120,7 @@ def validate_static_uids(signals_dict: dict, validation_tree: VSSNode, strict: b
                         )
                     else:
                         log.warning(
-                            f"[Validation] ADDED ATTRIBUTE: "
-                            f"The node '{key}' was added since the last validation."
+                            f"[Validation] ADDED ATTRIBUTE: " f"The node '{key}' was added since the last validation."
                         )
                 else:
                     validation_tree_nodes.pop(semantic_match)

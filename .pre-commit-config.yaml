@@ -5,15 +5,26 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-merge-conflict
       - id: trailing-whitespace
         exclude_types: ["csv", "proto"]
       - id: end-of-file-fixer
         exclude_types: ["json", "proto"]
         exclude: ".*\\.[fidl|jsonschema]"
       - id: check-yaml
+      - id: check-toml
       - id: check-added-large-files
-
-  - repo: https://github.com/pycqa/flake8
-    rev: "7.0.0"
+      - id: mixed-line-ending
+        exclude: ".*\\.csv"
+      - id: check-vcs-permalinks
+      - id: debug-statements
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.7
     hooks:
-      - id: flake8
+      - id: ruff
+        args: [ --fix, --unsafe-fixes ]
+      - id: ruff-format

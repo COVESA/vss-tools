@@ -6,6 +6,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 from typing import Any, Callable, Set
+
 from vss_tools import log
 
 # Global objects to be extended by other code parts
@@ -260,14 +261,8 @@ def get_dynamic_datatypes(fqn: str | None = None) -> list[str]:
     The fqn is needed to support the namespaced custom datatypes
     """
     fqn_namespaced_datatypes = set(get_fqn_namespaced_datatypes(fqn).keys())
-    dynamic_array_datatypes = [
-        f"{t}[]" for t in dynamic_datatypes | fqn_namespaced_datatypes
-    ]
-    return (
-        list(dynamic_datatypes)
-        + dynamic_array_datatypes
-        + list(fqn_namespaced_datatypes)
-    )
+    dynamic_array_datatypes = [f"{t}[]" for t in dynamic_datatypes | fqn_namespaced_datatypes]
+    return list(dynamic_datatypes) + dynamic_array_datatypes + list(fqn_namespaced_datatypes)
 
 
 def get_all_datatypes(fqn: str | None = None) -> list[str]:

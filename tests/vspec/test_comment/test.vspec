@@ -55,7 +55,7 @@ A.MultiLineCommaNotQuoted:
   type: sensor
   unit: km
   description: A sensor.
-  comment: July, 
+  comment: July,
            is a great month!
 
 A.MultiLineCommaQuoted:
@@ -63,10 +63,10 @@ A.MultiLineCommaQuoted:
   type: sensor
   unit: km
   description: A sensor.
-  comment: "August, 
+  comment: "August,
            is a great month!"
-           
-           
+
+
 A.MultiLineStyleInitialBreak:
   datatype: float
   type: sensor
@@ -81,6 +81,6 @@ A.MultiLineLiteralStyleQuote:
   type: sensor
   unit: km
   description: A sensor.
-  comment: | 
-           November, 
+  comment: |
+           November,
            is a "great" month!

@@ -5,9 +5,10 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
-import pytest
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
@@ -28,9 +29,7 @@ DATA = HERE / "data"
         (8, 1, 4, "'default' array size does not match 'arraysize'"),
     ],
 )
-def test_consistency(
-    spec_id: int, quantity_id: int, unit_id: int, expected_out: str, tmp_path: Path
-):
+def test_consistency(spec_id: int, quantity_id: int, unit_id: int, expected_out: str, tmp_path: Path):
     spec = DATA / f"s_{spec_id}.yaml"
     quantity = DATA / f"q_{quantity_id}.yaml"
     unit = DATA / f"u_{unit_id}.yaml"

@@ -6,9 +6,11 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from pathlib import Path
+
 import rich_click as click
 from rich_click import option
-from pathlib import Path
+
 from vss_tools.vspec.model import get_all_model_fields
 
 
@@ -26,9 +28,7 @@ def validate_attribute(value):
 
 log_level_opt = click.option(
     "--log-level",
-    type=click.Choice(
-        ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], case_sensitive=False
-    ),
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], case_sensitive=False),
     default="INFO",
     help="Log level.",
     show_default=True,
@@ -72,9 +72,7 @@ aborts_opt = option(
     show_choices=True,
 )
 
-uuid_opt = option(
-    "--uuid/--no-uuid", help="Whether to add UUIDs.", show_default=True, default=False
-)
+uuid_opt = option("--uuid/--no-uuid", help="Whether to add UUIDs.", show_default=True, default=False)
 
 expand_opt = option(
     "--expand/--no-expand",
@@ -161,6 +159,4 @@ extend_all_attributes_opt = option(
     show_default=True,
 )
 
-pretty_print_opt = option(
-    "--pretty/--no-pretty", help="Pretty print.", default=False, show_default=True
-)
+pretty_print_opt = option("--pretty/--no-pretty", help="Pretty print.", default=False, show_default=True)

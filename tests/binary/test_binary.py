@@ -6,8 +6,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "vspec" / "test_units.yaml"
@@ -18,9 +18,7 @@ BIN_DIR = HERE / ".." / ".." / "binary"
 def check_expected_for_tool(tool_path, signal_name: str, grep_str: str, test_binary):
     stdin = f"m\n{signal_name}\n1\nq"
     cmd = f"{tool_path} {test_binary}"
-    process = subprocess.run(
-        cmd.split(), input=stdin, check=True, capture_output=True, text=True
-    )
+    process = subprocess.run(cmd.split(), input=stdin, check=True, capture_output=True, text=True)
     print(process.stdout)
     assert grep_str in process.stdout
 

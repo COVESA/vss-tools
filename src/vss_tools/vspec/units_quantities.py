@@ -6,10 +6,12 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 from pathlib import Path
-from vss_tools.vspec.model import VSSUnit, VSSQuantity, ModelValidationException
-from pydantic import ValidationError
+
 import yaml
+from pydantic import ValidationError
+
 from vss_tools import log
+from vss_tools.vspec.model import ModelValidationException, VSSQuantity, VSSUnit
 
 
 class UnitQuantityRedefinitionException(Exception):
@@ -29,9 +31,7 @@ def load_units_or_quantities(
         if not content:
             log.warning(f"{file}, empty")
             continue
-        log.info(
-            f"Loaded '{class_type.__name__}', file={file.absolute()}, elements={len(content)}"
-        )
+        log.info(f"Loaded '{class_type.__name__}', file={file.absolute()}, elements={len(content)}")
         for k, v in content.items():
             if v is None:
                 log.error(f"'{class_type.__name__}', '{k}' is 'None'")
@@ -42,7 +42,7 @@ def load_units_or_quantities(
             try:
                 data[k] = class_type(**v)
             except ValidationError as e:
-                raise ModelValidationException(k, e)
+                raise ModelValidationException(k, e) from None
     return data
 
 

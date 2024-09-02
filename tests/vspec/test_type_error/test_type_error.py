@@ -6,9 +6,10 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 VSS_TOOLS_ROOT = (HERE / ".." / ".." / "..").absolute()
@@ -26,9 +27,7 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
         ("correct.vspec", "no_type_property.vspec", "ot.json", None),
     ],
 )
-def test_description_error(
-    vspec_file: str, types_file, types_out_file, overlay_file, tmp_path
-):
+def test_description_error(vspec_file: str, types_file, types_out_file, overlay_file, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
 
@@ -48,9 +47,7 @@ def test_description_error(
     assert "CRITICAL" in process.stdout
 
 
-@pytest.mark.parametrize(
-    "vspec_file", [("branch_wrong_case.vspec"), ("sensor_wrong_case.vspec")]
-)
+@pytest.mark.parametrize("vspec_file", [("branch_wrong_case.vspec"), ("sensor_wrong_case.vspec")])
 def type_case_sensitive(vspec_file: str, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"

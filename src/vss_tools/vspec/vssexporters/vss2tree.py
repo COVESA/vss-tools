@@ -6,13 +6,14 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import vss_tools.vspec.cli_options as clo
-from vss_tools.vspec.main import get_trees
-import rich_click as click
 from pathlib import Path
-from anytree import RenderTree
-from vss_tools import log
 
+import rich_click as click
+from anytree import RenderTree
+
+import vss_tools.vspec.cli_options as clo
+from vss_tools import log
+from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.tree import VSSNode
 
 

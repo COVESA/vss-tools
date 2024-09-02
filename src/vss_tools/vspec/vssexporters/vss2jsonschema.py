@@ -10,14 +10,16 @@
 # Convert vspec tree compatible JSON schema
 
 import json
+from pathlib import Path
+from typing import Any, Dict
+
 import rich_click as click
+
+import vss_tools.vspec.cli_options as clo
+from vss_tools import log
+from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.model import VSSDataBranch, VSSDataDatatype, VSSDataStruct
 from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.main import get_trees
-import vss_tools.vspec.cli_options as clo
-from pathlib import Path
-from vss_tools import log
-from typing import Dict, Any
 
 type_map = {
     "int8": "integer",

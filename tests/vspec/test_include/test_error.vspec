@@ -21,4 +21,3 @@ A.B:
 # As "A.BBBBBB" does not exist we shall get a warning
 # It will be treated as an implicit branch, which likely is not intentional
 #include include_b.vspec A.BBBBBB
-
