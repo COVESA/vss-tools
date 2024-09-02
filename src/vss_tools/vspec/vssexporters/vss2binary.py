@@ -24,11 +24,10 @@
 #
 # if a field is not present (e.g. min, max, unit, allowed, default, validate),
 # the length is 0.
-#
 
 import struct
-from typing import BinaryIO
 from pathlib import Path
+from typing import BinaryIO
 
 import rich_click as click
 
