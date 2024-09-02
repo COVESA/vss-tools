@@ -85,13 +85,21 @@ class VSSRaw(BaseModel):
         self,
         with_extra_attributes: bool = True,
         exclude_fields: list[str] = EXPORT_EXCLUDE_ATTRIBUTES,
+        extended_attributes: tuple[str, ...] = (),
     ) -> dict[str, Any]:
         excludes = exclude_fields.copy()
         if not with_extra_attributes:
-            excludes.extend(self.get_extra_attributes())
-        data = {
-            k: v for k, v in self.model_dump(mode="json", exclude_none=True, exclude=set(excludes)).items() if v != []
-        }
+            for extra_attribute in self.get_extra_attributes():
+                if extra_attribute not in extended_attributes:
+                    excludes.append(extra_attribute)
+        data = {}
+        for k, v in self.model_dump(mode="json", exclude_none=False, exclude=set(excludes)).items():
+            if k not in extended_attributes:
+                if v == []:
+                    continue
+                if v is None:
+                    continue
+            data[k] = v
         return data
 
 
@@ -108,7 +116,9 @@ class VSSData(VSSRaw):
 
     @field_validator("constUID")
     @classmethod
-    def check_const_uid_format(cls, v: str) -> str:
+    def check_const_uid_format(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
         pattern = r"^0x[0-9A-Fa-f]{8}$"
         assert bool(re.match(pattern, v)), f"'{v}' is not a valid 'constUID'"
         return v
@@ -126,6 +136,8 @@ class VSSDataBranch(VSSData):
         and even of a list of lists.
         Normalizing it to be a list
         """
+        if v is None:
+            return []
         if not (isinstance(v, str) or isinstance(v, list)):
             assert False, f"'{v}' is not a valid 'instances' content"
         if isinstance(v, str):
@@ -245,7 +257,9 @@ class VSSDataDatatype(VSSData):
 
     @field_validator("unit")
     @classmethod
-    def check_valid_unit(cls, v: str) -> str:
+    def check_valid_unit(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
         assert v in dynamic_units, f"'{v}' is not a valid unit"
         return v
 
@@ -298,12 +312,12 @@ def resolve_vss_raw(model: VSSRaw) -> VSSData:
     Resolves a raw model to the actual node that
     it should be validated to
     """
-    model = VSSData(**model.model_dump(exclude_none=True))
+    model = VSSData(**model.model_dump())
     cls = TYPE_CLASS_MAP.get(model.type)
     if not cls:
         log.warning(f"No class mapping for type='{model.type.value}'")
         raise ModelException()
-    model = cls(**model.model_dump(exclude_none=True))
+    model = cls(**model.model_dump())
     return model  # type: ignore
 
 

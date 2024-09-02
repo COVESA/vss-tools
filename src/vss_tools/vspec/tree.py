@@ -307,7 +307,7 @@ class VSSNode(Node):  # type: ignore[misc]
             log.warning(f"Attributes, violations={len(violations)}")
         return violations
 
-    def as_flat_dict(self, with_extra_attributes: bool) -> dict[str, Any]:
+    def as_flat_dict(self, with_extra_attributes: bool, extended_attributes: tuple[str, ...] = ()) -> dict[str, Any]:
         """
         Generates a flat dict and whether to include
         user attributes or not
@@ -316,7 +316,7 @@ class VSSNode(Node):  # type: ignore[misc]
         node: VSSNode
         for node in PreOrderIter(self):
             key = node.get_fqn()
-            data[key] = node.data.as_dict(with_extra_attributes)
+            data[key] = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
             if node.uuid:
                 data[key]["uuid"] = node.uuid
         return data
