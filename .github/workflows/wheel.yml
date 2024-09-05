@@ -1,0 +1,42 @@
+name: wheel
+
+on:
+  push:
+    branches: [master]
+
+env:
+  PYTHON_VERSION: "3.10.6"
+  CI: 1 # shall any script needs to know if it's running in the CI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout vss-tools
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.8.3"
+      - name: Poetry build
+        run: poetry build
+      - name: Rename Wheel
+        run: |
+          set -e
+          cd dist
+          old_wheel_name=$(ls *.whl)
+          new_wheel_name=$(echo $old_wheel_name | sed -nr 's/(vss_tools)-([^-]*)-(.*)/\1-nightly-\3/p')
+          mv "$old_wheel_name" "$new_wheel_name"
+          echo "File renamed from $old_wheel_name to $new_wheel_name"
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          tag_name: nightly
+          files: dist/*.whl
+          fail_on_unmatched_files: true
