@@ -16,7 +16,7 @@ from vss_tools.vspec.datatypes import Datatypes
 from vss_tools.vspec.model import NodeType
 from vss_tools.vspec.tree import VSSNode
 
-from ..config import config as cfg
+from ..config import Config
 from .data_types_and_units import DataTypes, DataUnits
 from .samm_concepts import SammCConcepts, SammConcepts
 from .string_helper import str_to_lc_first_camel_case, str_to_uc_first_camel_case
@@ -329,7 +329,7 @@ def get_node_description(vss_node: VSSNode) -> str:
     ):
         if '"' in vss_node.data.description:
             # Escape double quotes within vss_node.description
-            vss_node.data.description = vss_node.data.description.replace('"', f'{cfg.CUSTOM_ESCAPE_CHAR}"')
+            vss_node.data.description = vss_node.data.description.replace('"', f'{Config.CUSTOM_ESCAPE_CHAR}"')
 
         # Set 3 spaces spacer, so to align 'VSS path:' with 'Description:'
         spacer = "    "
@@ -339,7 +339,7 @@ def get_node_description(vss_node: VSSNode) -> str:
     #       Add the vss_node.comment to its description
     if hasattr(vss_node.data, "comment") and vss_node.data.comment and len(vss_node.data.comment.strip()) > 0:
         if '"' in vss_node.data.comment:
-            vss_node.data.comment = vss_node.data.comment.replace('"', f'{cfg.CUSTOM_ESCAPE_CHAR}"')
+            vss_node.data.comment = vss_node.data.comment.replace('"', f'{Config.CUSTOM_ESCAPE_CHAR}"')
 
         # Use the 3 empty spaces spacer, when there is description,
         # otherwise set it to align 'VSS path:' with 'Comment:'

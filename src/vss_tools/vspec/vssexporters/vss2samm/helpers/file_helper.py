@@ -11,17 +11,17 @@ from pathlib import Path
 from rdflib import Graph
 from vss_tools import log
 
-from ..config import config as cfg
+from ..config import Config
 
 
 # Write RDF Graph data to specified file
-def write_graph_to_file(path_to_file: Path, file_name: str, graph: Graph):
+def write_graph_to_file(path: Path, name: str, graph: Graph):
     log.debug(
         "Writing RDF Graph to \n  -- file: '%s' \n  -- location: '%s'\n  -- current working directory: '%s'\n",
-        file_name,
-        path_to_file,
+        name,
+        path,
         Path.cwd(),
-    )  # type: ignore
+    )
 
     filedata = graph.serialize(format="ttl")
 
@@ -36,23 +36,18 @@ def write_graph_to_file(path_to_file: Path, file_name: str, graph: Graph):
 
     # Cleanup some CUSTOM ESCAPED, by this script characters.
     # Usually double and single quotes in node.description or node.comment field
-    filedata = filedata.replace(cfg.CUSTOM_ESCAPE_CHAR, "\\")
+    filedata = filedata.replace(Config.CUSTOM_ESCAPE_CHAR, "\\")
 
     # Cleanup xsd:anyURI with xsd:double
     filedata = filedata.replace("xsd:anyURI", "xsd:double")
 
-    # Make sure that output_folder is created with default permissions
-    output_folder: Path = Path(path_to_file)
-    output_folder.mkdir(parents=True, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
 
     # Create and write data to ttl file
-    output_file: Path = output_folder / f"{file_name}.ttl"
-    file_writer = output_file.open("w")
-    file_writer.write(filedata)
+    output_file = path / f"{name}.ttl"
 
-    # Add new line and close the file
-    file_writer.write("\n")
-    file_writer.close()
+    with open(output_file, "w") as f:
+        f.write(filedata)
+        f.write("\n")
 
-    # Return file location
     return output_file

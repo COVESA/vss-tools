@@ -11,7 +11,7 @@ from enum import Enum
 
 from rdflib import URIRef
 
-from ..config import config as cfg
+from ..config import Config
 from . import string_helper as str_helper
 from .namespaces import samm_base_namespace, samm_output_namespace
 
@@ -63,7 +63,7 @@ class SammConcepts(Enum):
     PROPERTY = "Property"
 
     def __init__(self, vss_name):
-        self.ns = f"{samm_base_namespace}:meta-model:{cfg.SAMM_VERSION}#"
+        self.ns = f"{samm_base_namespace}:meta-model:{Config.SAMM_VERSION}#"
         self.vsso_name = vss_name
 
     @property
@@ -100,7 +100,7 @@ class SammCConcepts(Enum):
     VALUES = "values"
 
     def __init__(self, vss_name):
-        self.ns = f"{samm_base_namespace}:characteristic:{cfg.SAMM_VERSION}#"
+        self.ns = f"{samm_base_namespace}:characteristic:{Config.SAMM_VERSION}#"
         self.vsso_name = vss_name
 
     @property

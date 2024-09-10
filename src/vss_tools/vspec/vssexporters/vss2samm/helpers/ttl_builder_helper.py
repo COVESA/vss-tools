@@ -9,7 +9,8 @@
 from typing import Sequence
 
 from rdflib import Graph, Literal, URIRef
-from rdflib.namespace import RDF, XSD
+from rdflib.namespace._RDF import RDF
+from rdflib.namespace._XSD import XSD
 from vss_tools import log
 from vss_tools.vspec.tree import VSSNode
 

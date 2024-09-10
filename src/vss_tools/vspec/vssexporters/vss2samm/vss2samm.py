@@ -10,35 +10,17 @@
 # Convert all vspec input files to a ESMF - Aspect Model Editor (SAMM) - ttl formatted file(s).
 #
 
-
-import importlib
 from pathlib import Path
 
 import rich_click as click
 import vss_tools.vspec.cli_options as clo
+import vss_tools.vspec.vssexporters.vss2samm.helpers.ttl_helper as ttl_helper
+import vss_tools.vspec.vssexporters.vss2samm.helpers.vss_helper as vss_helper
 from vss_tools import log
 from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.tree import VSSNode
 
-from .config import config as cfg
-
-VSSConcepts = None
-vss_helper = None
-ttl_helper = None
-
-
-def __setup_environment(output_namespace, vspec_version, split_depth: int) -> None:
-    # Initialize config before to load other helpers / libraries, based on defined by user input, config data
-    cfg.init(output_namespace, vspec_version, split_depth)
-
-    global VSSConcepts
-    VSSConcepts = importlib.import_module("vss_tools.vspec.vssexporters.vss2samm.helpers.samm_concepts").VSSConcepts
-
-    global vss_helper
-    vss_helper = importlib.import_module("vss_tools.vspec.vssexporters.vss2samm.helpers.vss_helper")
-
-    global ttl_helper
-    ttl_helper = importlib.import_module("vss_tools.vspec.vssexporters.vss2samm.helpers.ttl_helper")
+from . import config as cfg
 
 
 # TODO: Currently this is a workaround to read the Vehicle.VersionVSS, which is provided from COVESA/VSS
@@ -181,14 +163,13 @@ def cli(
 
     log.info("Loading VSS Tree...\n")
 
-    tree, datatype_tree = get_trees(
+    tree, _ = get_trees(
         vspec, include_dirs, aborts, strict, extended_attributes, uuid, quantities, units, types, overlays, expand
     )
 
     # Get the VSS version from the vss_tree::VersionVSS
     vss_version = __get_version_vss(tree)
-
-    __setup_environment(output_namespace, vss_version, split_depth)
+    cfg.init(output_namespace, vss_version, split_depth)
 
     included_signals = None
     included_branches = None
@@ -207,11 +188,11 @@ def cli(
         "Update output: '%s' with ESMF namespace: '%s' and VSS Version: '%s'.\n",
         target_folder,
         output_namespace,
-        cfg.VSPEC_VERSION,
+        cfg.Config.VSPEC_VERSION,
     )
 
     # Make sure that target folder gets reflected with respect to current output_namespace and VSPEC_VERSION
-    target_folder = Path(f"{target_folder}/{output_namespace}/{cfg.VSPEC_VERSION}")
+    target_folder = Path(f"{target_folder}/{output_namespace}/{cfg.Config.VSPEC_VERSION}")
 
     log.info("Generating SAMM output...\n")
 

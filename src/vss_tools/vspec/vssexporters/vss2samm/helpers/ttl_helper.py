@@ -9,12 +9,12 @@
 from pathlib import Path
 
 from rdflib import Graph, URIRef
-from rdflib.namespace import RDF
+from rdflib.namespace._RDF import RDF
 from vss_tools import log
 from vss_tools.vspec.model import NodeType
 from vss_tools.vspec.tree import VSSNode
 
-from ..config import config as cfg
+from ..config import Config
 from . import ttl_builder_helper as ttl_builder
 from . import vss_helper as vss_helper
 from .file_helper import write_graph_to_file
@@ -148,7 +148,7 @@ def handle_branch_node(
     for child_node in vss_node.children:
         child_node_uri = None
 
-        if split_vss and child_node.depth <= cfg.SPLIT_DEPTH and child_node.data.type is NodeType.BRANCH:
+        if split_vss and child_node.depth <= Config.SPLIT_DEPTH and child_node.data.type is NodeType.BRANCH:
             # Build VSS node into separate Aspect model
             # when --split option is provided
             # and depth of current VSSNode is within specified config SPLIT_DEPT level,
