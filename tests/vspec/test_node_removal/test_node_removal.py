@@ -63,8 +63,6 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str], tmp_
     if overlay:
         ov = str(HERE / overlay)
     cmd = exporter.split() + get_cla(spec, str(output), ov).split()
-    if "binary" in exporter:
-        cmd.extend(["-b", HERE / "../../../binary/binarytool.so"])
     process = subprocess.run(cmd, capture_output=True, text=True)
     assert process.returncode == 0
     result = output.read_text()
@@ -140,8 +138,6 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tm
     if overlay:
         ov = str(HERE / overlay)
     cmd = exporter.split() + get_cla(spec, str(output), ov).split()
-    if "binary" in exporter:
-        cmd.extend(["-b", HERE / "../../../binary/binarytool.so"])
     process = subprocess.run(cmd, capture_output=True, text=True)
     assert process.returncode == 0
     result_file = output.read_text()
@@ -212,8 +208,6 @@ def test_deleted_instance(
 
     ov = HERE / overlay
     cmd = exporter.split() + get_cla(spec, str(output), str(ov)).split()
-    if "binary" in exporter:
-        cmd.extend(["-b", HERE / "../../../binary/binarytool.so"])
 
     process = subprocess.run(cmd, capture_output=True, text=True)
     print(process.stdout)

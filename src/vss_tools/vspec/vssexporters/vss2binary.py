@@ -7,9 +7,27 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # Convert vspec tree to binary format
+#
+# This is the pure Python version of the binary exporter. The
+# format has been taken from the C version at
+# https://github.com/COVESA/vss-tools/blob/4.2/binary/binarytool.c
+# This is a basic "length"/"data" format, where the length is in front
+# of each field, and the field order is fixed.
+#
+# The length fields are mostly 8 bit (i.e. long strings/paths are not
+# supported) with the exception of description and allowed (16 bit).
+# The order of fields (where each field is composed of
+# fieldlength + fielddata) is:
+#
+# name (vsspath), type, uuid, description, datatype, min, max, unit,
+# allowed, default, validate
+#
+# if a field is not present (e.g. min, max, unit, allowed, default, validate),
+# the length is 0.
 
-import ctypes
+import struct
 from pathlib import Path
+from typing import BinaryIO
 
 import rich_click as click
 
@@ -39,37 +57,56 @@ def intToHexChar(hexInt):
         return chr(hexInt - 10 + ord("A"))
 
 
-def export_node(cdll: ctypes.CDLL, node: VSSNode, generate_uuid, out_file: str):
-    uuid = "" if node.uuid is None else node.uuid
+# Create a struct containing the length of the string as uint8
+#  and the string itself
+def create_l8v_string(s: str) -> bytes:
+    pack = struct.pack(f"{len(s)+1}p", s.encode())
+    # log.debug(f"create_l8v_string: {s} as {pack.hex()}")
+    return pack
+
+
+# Create a struct containing the length of the string as uint16
+#  and the string itself
+def create_l16v_string(s: str) -> bytes:
+    pack = struct.pack(f"=H{len(s)}s", len(s), s.encode())
+    # log.debug(f"create_l16v_string: {s} as {pack.hex()}")
+    return pack
+
+
+def export_node(node: VSSNode, generate_uuid, f: BinaryIO):
     data = node.get_vss_data().as_dict()
-    cdll.createBinaryCnode(
-        out_file.encode(),
-        node.name.encode(),
-        data.get("type", "").encode(),
-        uuid.encode(),
-        data.get("description", "").encode(),
-        data.get("datatype", "").encode(),
-        str(data.get("min", "")).encode(),
-        str(data.get("max", "")).encode(),
-        data.get("unit", "").encode(),
-        b"" if data.get("allowed") is None else allowedString(data.get("allowed", "")).encode(),
-        str(data.get("default", "")).encode(),
-        str(data.get("validate", "")).encode(),
-        len(node.children),
-    )
+
+    f.write(create_l8v_string(node.name))
+    f.write(create_l8v_string(data.get("type", "")))
+    if node.uuid is None:
+        log.debug(("No UUID for node %s", node.name))
+        f.write(struct.pack("B", 0))
+    else:
+        f.write(create_l8v_string(node.uuid))
+
+    f.write(create_l16v_string(data.get("description", "")))
+    f.write(create_l8v_string(data.get("datatype", "")))
+    f.write(create_l8v_string(str(data.get("min", ""))))
+    f.write(create_l8v_string(str(data.get("max", ""))))
+    f.write(create_l8v_string(data.get("unit", "")))
+
+    if data.get("allowed") is None:
+        f.write(struct.pack("H", 0))
+    else:
+        f.write(create_l16v_string(allowedString(data.get("allowed", ""))))
+
+    f.write(create_l8v_string(str(data.get("default", ""))))
+    f.write(create_l8v_string(str(data.get("validate", ""))))
+
+    f.write(struct.pack("B", len(node.children)))
+
     for child in node.children:
-        export_node(cdll, child, generate_uuid, out_file)
+        export_node(child, generate_uuid, f)
 
 
 @click.command()
 @clo.vspec_opt
 @clo.output_required_opt
-@click.option(
-    "--bintool-dll",
-    "-b",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-)
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -89,27 +126,11 @@ def cli(
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
-    bintool_dll: Path,
 ):
     """
     Export to Binary.
     """
-    cdll = ctypes.CDLL(str(bintool_dll))
-    cdll.createBinaryCnode.argtypes = (
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_char_p,
-        ctypes.c_int,
-    )
+
     tree, _ = get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
@@ -122,5 +143,6 @@ def cli(
         overlays=overlays,
     )
     log.info("Generating binary output...")
-    export_node(cdll, tree, uuid, str(output))
-    log.info(f"Binary output generated in {output}")
+    with open(str(output), "wb") as f:
+        export_node(tree, uuid, f)
+    log.info("Binary output generated in %s", output)
