@@ -436,6 +436,8 @@ def expand_instance(
             node = template.copy()
             node.name = name
             node.data.instances = []  # type: ignore
+            if isinstance(node.data, VSSDataBranch):
+                node.data.is_instance = True
             node.parent = root
             nodes.append(node)
             node.children = []
