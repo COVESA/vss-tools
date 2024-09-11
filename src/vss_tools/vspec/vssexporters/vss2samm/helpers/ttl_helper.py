@@ -11,7 +11,7 @@ from pathlib import Path
 from rdflib import Graph, URIRef
 from rdflib.namespace import RDF
 from vss_tools import log
-from vss_tools.vspec.model import NodeType
+from vss_tools.vspec.model import VSSDataBranch
 from vss_tools.vspec.tree import VSSNode
 
 from ..config import config as cfg
@@ -66,11 +66,10 @@ def parse_vss_tree(path_to_ttl: Path, vss_node: VSSNode, split_vss: bool):
 
 def handle_vss_node(path_to_ttl: Path, graph: Graph, vss_node: VSSNode, is_aspect: bool, split_vss: bool):
     log.debug(
-        "Handle VSSNode: '%s'\n  -- node VSS path: '%s'\n  -- is_aspect: '%s'\n  -- is_expanded: '%s'\n",
+        "Handle VSSNode: '%s'\n  -- node VSS path: '%s'\n  -- is_aspect: '%s'\n",
         vss_node.name,
         vss_node.get_fqn(),
         is_aspect,
-        vss_helper.is_node_expanded(vss_node),
     )
 
     # Check if node is deprecated and return DEPRECATED so it will be skipped for further conversion to TTL
@@ -90,10 +89,10 @@ def handle_vss_node(path_to_ttl: Path, graph: Graph, vss_node: VSSNode, is_aspec
     # Build the general graph node for current vss_node
     node_uri = ttl_builder.add_graph_node(graph, vss_node, is_aspect)
 
-    if hasattr(vss_node.data, "type") and vss_node.data.type is NodeType.BRANCH:
+    if isinstance(vss_node.data, VSSDataBranch):
         node_char_uri = ttl_builder.add_node_branch_characteristic(graph, vss_node, node_uri)
 
-        if vss_node.data.instances and vss_helper.is_node_expanded(vss_node) is False:  # type: ignore
+        if vss_node.data.instances:
             # Build instance(s) node(s) for the current vss_node ONLY when node is NOT EXPANDED.
             # Otherwise, the expanded child nodes will cause conflicts with generated instance nodes
             # and mess up the generated aspect model.
@@ -148,7 +147,7 @@ def handle_branch_node(
     for child_node in vss_node.children:
         child_node_uri = None
 
-        if split_vss and child_node.depth <= cfg.SPLIT_DEPTH and child_node.data.type is NodeType.BRANCH:
+        if split_vss and child_node.depth <= cfg.SPLIT_DEPTH and isinstance(child_node.data, VSSDataBranch):
             # Build VSS node into separate Aspect model
             # when --split option is provided
             # and depth of current VSSNode is within specified config SPLIT_DEPT level,
