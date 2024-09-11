@@ -13,7 +13,7 @@ from typing import Any
 from rdflib import URIRef
 from vss_tools import log
 from vss_tools.vspec.datatypes import Datatypes
-from vss_tools.vspec.model import NodeType
+from vss_tools.vspec.model import NodeType, VSSDataBranch
 from vss_tools.vspec.tree import VSSNode
 
 from ..config import config as cfg
@@ -155,150 +155,55 @@ def should_use_parent_prefix(vss_node: VSSNode) -> bool:
 
 
 # Helper function to check, whether specified vss_node is selected to be converted to a TTL model
-def is_vss_node_selected_for_processing(
-    selected_signals_paths: list[str], vss_node: VSSNode, parent_is_expanded: bool = False
-) -> bool:
-    if selected_signals_paths is None or (type(selected_signals_paths) is list and len(selected_signals_paths) == 0):
+def is_vss_node_selected_for_processing(selected_signals_paths: list[str], vss_node: VSSNode) -> bool:
+    if not selected_signals_paths:
         return True
 
     # VSSNode get_fqn returns the VSS path in form: PARENT_NAME.PATH.TO.NODE.NODE_NAME
     vss_node_path = vss_node.get_fqn()
     node_is_selected = False
 
+    # NOTE: if the expand_opt is used in vss2samm exporter,
+    #       there will be required additional logic to make sure that "expanded" paths like:
+    #
+    #           Vehicle.Cabin.Door.Row1.DriverSide.Window.Position
+    #
+    #       would map to selected path:
+    #
+    #           Vehicle.Cabin.Door.Window.Position
+
     for selected_signal_path in selected_signals_paths:
-        if parent_is_expanded:
-            # Try to find the extra - EXPANDED path part based on selected_signal_path and current vss_node_path
-
-            # TODO-NOTE: We need to find more dynamic way for extracting of expanded steps
-            #            from the VSS path of current vss_node,
-            #            so to make sure that check for selected_paths is properly done./
-            #
-            #            For the moment these are collected from all, current VSS Nodes with instances,
-            #            but we should be able to collect them automatically.
-            #
-            #      NOTE: When option: --no-expand is used, then each VssNode which has some instances,
-            #            has its instances listed like:
-            #               vss_node.data.instances = [Row[1,2][DriverSide, PassengerSide]]
-            #
-            #            When the default --expand is used, the instances of such VssNode is just an empty array, like:
-            #               vss_node.data.instances = []
-            vss_node_instance_keywords = [
-                "Low",
-                "High",
-                "Left",
-                "Middle",
-                "Right",
-                "Front",
-                "Center",
-                "Rear",
-                "DriverSide",
-                "PassengerSide",
-                "Driver",
-                "Passenger",
-                "Primary",
-                "Secondary",
-                "FrontLeft",
-                "FrontMiddle",
-                "FrontRight",
-                "RearLeft",
-                "RearMiddle",
-                "RearRight",
-                "AnyPosition",
-            ]
-
-            # NOTE: Since there could be instance entries like: Row1, Row2... Row#
-            #       or Sensor1, Sensor2... Sensor#
-            #       which are more "dynamic", we use a RegExp to catch such entries.
-            #       Therefore they are not added in above collection.
-            rows_sensor_number_regexp = "((Row|Sensor){1}[0-9]+)"
-
-            # Expanded nodes have paths in the form: Vehicle.PARENT_NODE.Row1.DriverSide.NODE_NAME
-            # Normalize - shrink expanded vss_path to its normal form i.e. Vehicle.PARENT_NODE.NODE_NAME
-            # before to compare it with selected_signal_path
-            expanded_vss_path = vss_node_path
-            for step in expanded_vss_path.split("."):
-                if step in vss_node_instance_keywords or re.match(rows_sensor_number_regexp, step) is not None:
-                    # Remove only instance keywords
-                    vss_node_path = vss_node_path.replace(step, "")
-
-            # When expanded_steps is removed from vss_node_path,
-            # there might be remaining dots (.) at either start / end of the string
-            # or adjacent multiple dots within the path.
-            #
-            # For example: Vehicle.Cabin.Door...IsLocked or .Vehicle.Cabin.Door..Window.
-            #
-            # Make sure to clean these extra - dots (.) and put the path in normal format: Vehicle.Cabin.Door.IsLocked
-            vss_node_path = re.sub(r"\.{2,}", ".", vss_node_path)
-            if vss_node_path.startswith("."):
-                vss_node_path = vss_node_path[1:]
-            if vss_node_path.endswith("."):
-                vss_node_path = vss_node_path[:-1]
-
-        # Check if current node is selected as usual
-        if len(vss_node_path) > len(selected_signal_path):
-            # Check if selected signal_path is part of the current vss_node path
-            node_is_selected = selected_signal_path in vss_node_path
-
-        else:
-            # Check if the current current vss_node path is part of the selected signal_path
-            node_is_selected = vss_node_path in selected_signal_path
+        node_is_selected = selected_signal_path.startswith(vss_node_path) or vss_node_path.startswith(
+            selected_signal_path
+        )
 
         if node_is_selected:
             break
 
-    if (
-        node_is_selected is False
-        and parent_is_expanded is True
-        and hasattr(vss_node, "children")
-        and len(vss_node.children) > 0
-    ):
-        # Check if some of the children of the current vss_node is in selected_signals_paths
-        # when node is not selected and one of its VSSNode ancestor(s) has been expanded.
-        for child_node in vss_node.children:
-            # Keep searching for selected child node(s) and make sure to pass the parent_is_expanded flag
-            # since this node might not be selected / expanded, but its parent or some of its child(ren) could be
-            node_is_selected = is_vss_node_selected_for_processing(
-                selected_signals_paths, child_node, parent_is_expanded or is_node_expanded(vss_node)
-            )
-
-            if node_is_selected:
-                break
-
     return node_is_selected
 
 
-# Filter provided vss_node, based on specified selected_paths
-# and return a new vss_node with just selected_paths VSSNodes
-def filter_vss_tree(vss_node: VSSNode, selected_paths: list[str], parent_is_expanded: bool = False) -> VSSNode | None:
-    if is_vss_node_selected_for_processing(selected_paths, vss_node, parent_is_expanded):
-        # VSSNode was selected for processing - filter its child nodes before to return it
-        filtered_children = []
-
-        if vss_node.children and len(vss_node.children) > 0:
-            node_is_expanded = is_node_expanded(vss_node)
-
-            # Filter vss_node child nodes
+# Traverse through provided vss_node, based on specified selected_paths
+# and mark each Node which is NOT "selected" for removal from the provided vss_node
+def filter_vss_tree_for_deletion(vss_node: VSSNode, selected_paths: list[str]) -> None:
+    if vss_node is not None:
+        if isinstance(vss_node.data, VSSDataBranch):
+            # Filter branch node and its children
             for child_node in vss_node.children:
-                # Call this function recursively so to filter current child_node
-                filtered_child_node = filter_vss_tree(
-                    child_node, selected_paths, parent_is_expanded or node_is_expanded
-                )
+                filter_vss_tree_for_deletion(child_node, selected_paths)
 
-                if filtered_child_node:
-                    # Add filtered child_node to filtered_children or skip it
-                    filtered_children.append(filtered_child_node)
+            children_to_delete = len(list(filter(lambda n: n.get_vss_data().delete, vss_node.children)))
 
-        # Update children with just selected ones
-        if len(filtered_children) > 0:
-            vss_node.children = filtered_children
+            if len(vss_node.children) == children_to_delete:
+                # Mark this node for deletion since none of its children have been selected for processing
+                vss_node.data.delete = True
 
-        # ELSE: The whole vss_node has been selected. Just return it as it is.
-
-        # Return vss_node with its filtered children or the whole node as it is
-        return vss_node
-
-    # ELSE: vss_node was not selected. Just return None so it will be skipped for further processing
-    return None
+            # TODO: if needed, add support for filtering of instances
+            #       when vss_node.data.delete is False and len(vss_node.data.instances) > 0
+        else:
+            # Handle node as it is a leaf
+            if not is_vss_node_selected_for_processing(selected_paths, vss_node):
+                vss_node.data.delete = True  # type: ignore
 
 
 def get_node_property_name(vss_node: VSSNode) -> str:
@@ -375,6 +280,7 @@ def get_instances_dict_tree(vss_node_instances: list | None, node_instance_name:
     if type(vss_node_instances) is list and len(vss_node_instances) > 0:
         for instance_key in range(len(vss_node_instances)):
             instance = vss_node_instances[instance_key]
+
             parsed_instance = parse_instance(instance)
             parsed_instances.append(parsed_instance)
 
@@ -595,34 +501,3 @@ def get_data_unit_uri(unit: str):
         log.warning("No DataUnit found for unit: '%s'.\nDEFAULTING it to: '%s'\n", unit, DataUnits["blank"])
 
         return DataUnits["blank"]
-
-
-# Helper function to check if a VSSNode is expanded
-def is_node_expanded(vss_node: VSSNode):
-    # NOTE: a VSSNode is expanded when: its data.instances is set and is empty i.e.,
-    #       it has been instantiated and each of its instances is part of its children
-    has_instances = hasattr(vss_node.data, "instances") and vss_node.data.instances is not None
-    node_is_expanded = has_instances and len(vss_node.data.instances) == 0  # type: ignore
-
-    if (
-        has_instances
-        and node_is_expanded is False
-        and hasattr(vss_node, "children")
-        and vss_node.children
-        and len(vss_node.children) > 0
-    ):
-        # NOTE: this is a workaround since currently
-        #       it does not seem that there is a proper way to check if VSSNode is expanded or not i.e.,
-        #       when this script is running with:
-        #         1. the DEFAULT: --expand option which will lead to expansion of instances as children
-        #         2. or user has specified the --no-expand option - to prevent above instantiation i.e.,
-        #            instances are not created as children
-        #            and this VssNode children holds ONLY the properties (details) of a single instance.
-        for child_node in vss_node.children:
-            node_is_expanded = is_node_expanded(child_node)
-
-            if node_is_expanded is True:
-                # It is enough if at least 1 child node is expanded.
-                break
-
-    return node_is_expanded

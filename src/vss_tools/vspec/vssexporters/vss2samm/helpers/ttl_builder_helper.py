@@ -245,19 +245,19 @@ def add_node_leaf(graph: Graph, node_uri: URIRef, vss_node: VSSNode):
 
                     rdf_type = SammConcepts.CHARACTERISTIC
 
-                if vss_node.data.default:  # type: ignore
+                if hasattr(vss_node.data, "default") and vss_node.data.default:
                     __add_node_tuple(
                         graph,
                         node_uri,
                         SammConcepts.EXAMPLE_VALUE.uri,
-                        Literal(vss_node.data.default, datatype=data_type),  # type: ignore
+                        Literal(vss_node.data.default, datatype=data_type),
                     )
 
             case SammConcepts.CHARACTERISTIC:
                 # Handle CHARACTERISTIC type nodes
                 log.debug(" -- set regular node values")
 
-                if vss_node.data.default:  # type: ignore
+                if hasattr(vss_node.data, "default") and vss_node.data.default:
                     if (
                         hasattr(vss_node.data, "unit")
                         and vss_node.data.unit
@@ -277,13 +277,13 @@ def add_node_leaf(graph: Graph, node_uri: URIRef, vss_node: VSSNode):
                         #       Example: '2000-01-01T14:23:00',
                         #                '0001-01-01T00:00:00.00000+00:00',
                         #                '2023-11-27T16:26:05.671Z'
-                        if not vss_node.data.default.startswith("0000"):  # type: ignore
+                        if not vss_node.data.default.startswith("0000"):
                             # Add property node exampleValue date time - TIMESTAMP, if is provided and valid
                             __add_node_tuple(
                                 graph,
                                 node_uri,
                                 SammConcepts.EXAMPLE_VALUE.uri,
-                                Literal(vss_node.data.default, datatype=data_type),  # type: ignore
+                                Literal(vss_node.data.default, datatype=data_type),
                             )
                         else:
                             log.warning(
@@ -293,7 +293,7 @@ def add_node_leaf(graph: Graph, node_uri: URIRef, vss_node: VSSNode):
                                 "or\n"
                                 "    yyyy-mm-ddThh:mm:ss.milliseconds+hh:mm\n"
                                 "where yyyy cannot be just 0000, i.e. 0001 is valid year, but 0000 is not valid.\n",
-                                vss_node.data.default,  # type: ignore
+                                vss_node.data.default,
                                 vss_node.name,
                             )
 

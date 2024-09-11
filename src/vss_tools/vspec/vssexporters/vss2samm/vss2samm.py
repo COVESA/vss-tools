@@ -13,18 +13,21 @@
 
 import importlib
 from pathlib import Path
+from types import ModuleType
+from typing import Optional
 
 import rich_click as click
 import vss_tools.vspec.cli_options as clo
+from anytree import findall
 from vss_tools import log
 from vss_tools.vspec.main import get_trees
 from vss_tools.vspec.tree import VSSNode
 
 from .config import config as cfg
 
-VSSConcepts = None
-vss_helper = None
-ttl_helper = None
+VSSConcepts: Optional[ModuleType] = None
+vss_helper: Optional[ModuleType] = None
+ttl_helper: Optional[ModuleType] = None
 
 
 def __setup_environment(output_namespace, vspec_version, split_depth: int) -> None:
@@ -150,7 +153,6 @@ Path to or name for the target folder, where generated aspect models (.ttl files
 @clo.strict_opt
 @clo.aborts_opt
 @clo.uuid_opt
-@clo.expand_opt
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
@@ -164,7 +166,6 @@ def cli(
     strict: bool,
     aborts: tuple[str],
     uuid: bool,
-    expand: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
@@ -181,18 +182,25 @@ def cli(
 
     log.info("Loading VSS Tree...\n")
 
-    tree, datatype_tree = get_trees(
-        vspec, include_dirs, aborts, strict, extended_attributes, uuid, quantities, units, types, overlays, expand
+    # NOTE: Currently the VSS Tree is loaded as "--no-expand"-ed i.e., VSSNode's instances will not be instantiated.
+    #       In order to save some redundancy in expanded nodes,
+    #       this script will instantiate corresponding instances directly on the aspect model contents.
+    #
+    #       If required to handle --expand / --no-expand options, the expand_opt can be included.
+    #       Just keep in mind that this might lead to some additional logic,
+    #       to make sure that each case is handled correctly.
+    vss_tree, datatype_tree = get_trees(
+        vspec, include_dirs, aborts, strict, extended_attributes, uuid, quantities, units, types, overlays, False
     )
 
     # Get the VSS version from the vss_tree::VersionVSS
-    vss_version = __get_version_vss(tree)
+    vss_version = __get_version_vss(vss_tree)
 
     __setup_environment(output_namespace, vss_version, split_depth)
 
-    included_signals = None
-    included_branches = None
-    included_signals_input = None
+    included_signals = []
+    included_branches = []
+    included_signals_input = []
 
     if signals_file:
         log.info("Using signals from:\n    '%s'\n", signals_file)
@@ -201,7 +209,7 @@ def cli(
             included_signals_input = f.read().splitlines()
 
     else:
-        log.info("No signals selected.\nCreating model for the whole tree.\n")
+        log.info("No signals selected.\nCreating model for the whole VSS tree.\n")
 
     log.info(
         "Update output: '%s' with ESMF namespace: '%s' and VSS Version: '%s'.\n",
@@ -216,8 +224,8 @@ def cli(
     log.info("Generating SAMM output...\n")
 
     if included_signals_input:
-        included_signals = []
-        included_branches = []
+        log.info("Included paths:\n%s\n", included_signals_input)
+
         for signal in included_signals_input:
             path = signal.split(".")
             included_signals.append(path[-1])
@@ -233,33 +241,41 @@ def cli(
     if included_signals:
         log.info("Included signals:\n%s\n", included_signals)
 
-    if included_signals_input:
-        log.info("Included paths:\n%s\n", included_signals_input)
-
     parsed_tree_uri = None
 
-    # NOTE: below used parse_vss_tree function will store generated RDF Graph to dedicated TTL file
-    if included_signals_input and type(included_signals_input) is list and len(included_signals_input) > 0:
-        # Filter the VSS tree based on included_signals_input
-        # NOTE: the main Vehicle tree, would not have a parent node,
-        #       so skip 3rd parameter and leave it to its default value: False
-        filtered_vss_tree = vss_helper.filter_vss_tree(tree, included_signals_input)  # type: ignore
+    if vss_helper is not None and ttl_helper is not None:
+        # NOTE: below used parse_vss_tree function will store generated RDF Graph to dedicated TTL file
+        if len(included_signals_input) > 0:
+            # Filter the VSS tree based on included_signals_input
+            vss_helper.filter_vss_tree_for_deletion(vss_tree, included_signals_input)
 
-        if filtered_vss_tree:
-            # Parse the filtered_vss_tree to AME TTL.
-            parsed_tree_uri = ttl_helper.parse_vss_tree(target_folder, filtered_vss_tree, split)  # type: ignore
+            # Remove nodes, which were marked as "not selected" i.e. to be deleted
+            vss_tree.delete_nodes(findall(vss_tree, filter_=lambda n: n.get_vss_data().delete))
+
+            if vss_tree:
+                # Parse the filtered tree to AME TTL.
+                parsed_tree_uri = ttl_helper.parse_vss_tree(target_folder, vss_tree, split)
+
+            else:
+                # Parse the whole tree as usual.
+                parsed_tree_uri = ttl_helper.parse_vss_tree(target_folder, vss_tree, split)
 
         else:
-            # Parse the whole tree as usual
-            parsed_tree_uri = ttl_helper.parse_vss_tree(target_folder, tree, split)  # type: ignore
+            # Work with vss_tree as usual.
+            parsed_tree_uri = ttl_helper.parse_vss_tree(target_folder, vss_tree, split)
 
-    else:
-        # Work with vss_tree as usual
-        parsed_tree_uri = ttl_helper.parse_vss_tree(target_folder, tree, split)  # type: ignore
+        if parsed_tree_uri != "DEPRECATED":
+            log.info(
+                "\nVSS to ESMF - SAMM processing - COMPLETED\n\nAll ttl files are located in: '%s'\n\n", target_folder
+            )
+        else:
+            log.warning(
+                "VSS to ESMF - SAMM processing - COMPLETED\n\n"
+                "VSS tree was not converted because it is DEPRECATED.\n\n"
+            )
 
-    if parsed_tree_uri != "DEPRECATED":
-        log.info("\nVSS to ESMF - SAMM processing - COMPLETED\n\nAll ttl files are located in: '%s'\n\n", target_folder)
     else:
         log.warning(
-            "VSS to ESMF - SAMM processing - COMPLETED\n\n" "VSS tree was not converted because it is DEPRECATED.\n\n"
+            "VSS to ESMF - SAMM processing - COMPLETED\n\n"
+            "VSS tree was not converted because required helpers were not initialized.\n\n"
         )
