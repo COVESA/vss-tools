@@ -19,9 +19,11 @@ def run_exporter(exporter, argument, compare_suffix, tmp_path):
     vspec = HERE / "test.vspec"
     out = tmp_path / f"out.{exporter}"
     cmd = f"vspec export {exporter}{argument} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} --output {out}"
-    subprocess.run(cmd.split(), check=True)
+    process = subprocess.run(cmd.split(), check=True)
     expected = HERE / f"expected_{compare_suffix}.{exporter}"
     assert filecmp.cmp(out, expected)
+    if argument == "--uuid":
+        assert "UUID support is deprecated" in process.stderr
 
 
 def test_uuid(tmp_path):
@@ -31,6 +33,7 @@ def test_uuid(tmp_path):
     exporters = ["json", "ddsidl", "csv", "yaml", "franca"]
     for exporter in exporters:
         run_exporter(exporter, " --uuid", "uuid", tmp_path)
+        run_exporter(exporter, " --no-uuid", "no_uuid", tmp_path)
         run_exporter(exporter, "", "no_uuid", tmp_path)
 
 
@@ -46,6 +49,7 @@ def run_error_test(tool, argument, arg_error_expected: bool, tmp_path):
         assert process.returncode == 0
 
 
+# At the moment you do not get warning if using --no-uuid
 def test_obsolete_arg(tmp_path):
     """
     Check that obsolete argument --no-uuid results in error
