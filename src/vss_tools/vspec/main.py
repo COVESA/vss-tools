@@ -229,6 +229,7 @@ def get_trees(
         root.expand_instances()
 
     if uuid:
+        log.warning("UUID support is deprecated and will be removed in VSS-tools 6.0")
         root.add_uuids()
 
     try:
