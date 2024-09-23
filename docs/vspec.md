@@ -52,6 +52,7 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
 - [id](./id.md)
 - [protobuf](./protobuf.md)
 - [samm](./samm.md)
+- [go](./go.md)
 
 ## Argument Explanations
 

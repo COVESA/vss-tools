@@ -36,16 +36,19 @@ def idfn(directory: pathlib.PosixPath):
 
 def run_exporter(directory, exporter, tmp_path):
     vspec = directory / "test.vspec"
+    types = directory / "types.vspec"
     output = tmp_path / f"out.{exporter}"
     expected = directory / f"expected.{exporter}"
+    if not expected.exists():
+        return
     cmd = f"vspec export {exporter} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} "
+    if types.exists():
+        cmd += f" --types {types}"
     if exporter in ["apigear"]:
-        cmd += f"--output-dir {output}"
+        cmd += f" --output-dir {output}"
     else:
-        cmd += f"--output {output}"
+        cmd += f" --output {output}"
     subprocess.run(cmd.split(), check=True)
-    print(output)
-    print(expected)
     if exporter in ["apigear"]:
         dcmp = filecmp.dircmp(output, expected)
         assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
@@ -57,8 +60,7 @@ def run_exporter(directory, exporter, tmp_path):
 def test_exporters(directory, tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["apigear", "json", "jsonschema", "ddsidl",
-                 "csv", "yaml", "franca", "graphql"]
+    exporters = ["apigear", "json", "jsonschema", "ddsidl", "csv", "yaml", "franca", "graphql", "go"]
 
     for exporter in exporters:
         run_exporter(directory, exporter, tmp_path)
