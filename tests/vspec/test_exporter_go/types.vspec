@@ -1,0 +1,26 @@
+Types:
+  type: branch
+  description: Types
+
+Types.Struct:
+  type: struct
+  description: Special
+
+Types.Struct.x:
+  type: property
+  datatype: StructEmbedded
+  description: X
+
+Types.Struct.y:
+  type: property
+  datatype: uint8
+  description: Y
+
+Types.StructEmbedded:
+  type: struct
+  description: Bar
+
+Types.StructEmbedded.z:
+  type: property
+  datatype: uint8[]
+  description: Z
