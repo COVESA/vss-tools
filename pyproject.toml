@@ -3,7 +3,7 @@ name = "vss-tools"
 homepage="https://github.com/COVESA/vss-tools"
 description='COVESA Vehicle Signal Specification tooling.'
 authors = ["COVESA VSS <covesa-dev@covesa.global>"]
-version = "5.0rc0"
+version = "5.0rc1"
 license = "Mozilla Public License 2.0"
 readme = ["README.md", "README-PYPI.md"]
 
@@ -11,7 +11,7 @@ readme = ["README.md", "README-PYPI.md"]
 python = "^3.10"
 rich = "^13.7.1"
 pyyaml = "^6.0.1"
-anytree = "^2.8.0"
+anytree = "^2.9.0"
 deprecation = "^2.1.0"
 graphql-core = "*"
 rdflib = "^6.0.0"
