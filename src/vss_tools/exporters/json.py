@@ -22,8 +22,6 @@ from vss_tools.tree import VSSNode
 
 def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attributes: tuple[str, ...] = ()):
     data = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
-    if node.uuid:
-        data["uuid"] = node.uuid
     if len(node.children) > 0:
         data["children"] = {}
     for child in node.children:
@@ -38,7 +36,6 @@ def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attribu
 @clo.extended_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
-@clo.uuid_opt
 @clo.expand_opt
 @clo.overlays_opt
 @clo.quantities_opt
@@ -54,7 +51,6 @@ def cli(
     extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
-    uuid: bool,
     expand: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
@@ -73,7 +69,6 @@ def cli(
         aborts=aborts,
         strict=strict,
         extended_attributes=extended_attributes,
-        uuid=uuid,
         quantities=quantities,
         units=units,
         types=types,
