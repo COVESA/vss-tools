@@ -6,41 +6,20 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import filecmp
 import subprocess
 from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
 TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
-def run_exporter(exporter, argument, compare_suffix, tmp_path):
-    vspec = HERE / "test.vspec"
-    out = tmp_path / f"out.{exporter}"
-    cmd = f"vspec export {exporter}{argument} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} --output {out}"
-    process = subprocess.run(cmd.split(), check=True)
-    expected = HERE / f"expected_{compare_suffix}.{exporter}"
-    assert filecmp.cmp(out, expected)
-    if argument == "--uuid":
-        assert "UUID support is deprecated" in process.stderr
-
-
-def test_uuid(tmp_path):
-    # Run all "supported" exporters that supports uuid, i.e. not those in contrib
-    # Exception is "binary", as it is assumed output may vary depending on
-    # target
-    exporters = ["json", "ddsidl", "csv", "yaml", "franca"]
-    for exporter in exporters:
-        run_exporter(exporter, " --uuid", "uuid", tmp_path)
-        run_exporter(exporter, " --no-uuid", "no_uuid", tmp_path)
-        run_exporter(exporter, "", "no_uuid", tmp_path)
-
-
-def run_error_test(tool, argument, arg_error_expected: bool, tmp_path):
+def run_error_test(tool, exporter, argument, arg_error_expected: bool, tmp_path):
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
-    cmd = f"{tool} {argument} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} --output {out}"
+    cmd = f"{tool} {exporter} {argument} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} --output {out}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     if arg_error_expected:
         assert process.returncode != 0
@@ -49,18 +28,14 @@ def run_error_test(tool, argument, arg_error_expected: bool, tmp_path):
         assert process.returncode == 0
 
 
-# At the moment you do not get warning if using --no-uuid
-def test_obsolete_arg(tmp_path):
+@pytest.mark.parametrize(
+    "exporter",
+    ["binary", "csv", "ddsidl", "franca", "graphql", "id", "json", "jsonschema", "protobuf", "tree", "yaml"],
+)
+def test_obsolete_arg(exporter, tmp_path):
     """
-    Check that obsolete argument --no-uuid results in error
+    Check that you get errors for all
     """
-    run_error_test("vspec export json", "", False, tmp_path)
-    run_error_test("vspec export json", "--uuid", False, tmp_path)
-    run_error_test("vspec export json", "--no-uuid", False, tmp_path)
-
-
-def test_uuid_unsupported(tmp_path):
-    """
-    Test that we get an error if using --uuid for tools not supporting it
-    """
-    run_error_test("vspec export graphql", "--uuid", True, tmp_path)
+    run_error_test("vspec export ", exporter, "", False, tmp_path)
+    run_error_test("vspec export ", exporter, "--uuid", True, tmp_path)
+    run_error_test("vspec export ", exporter, "--no-uuid", True, tmp_path)

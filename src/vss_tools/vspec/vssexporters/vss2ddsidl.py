@@ -187,7 +187,7 @@ dataTypesMap_covesa_dds = {
 }
 
 
-def export_node(node: VSSNode, generate_uuid: bool, generate_all_idl_features: bool) -> None:
+def export_node(node: VSSNode, generate_all_idl_features: bool) -> None:
     """
     This method is used to traverse VSS node and to create corresponding DDS IDL buffer string
     """
@@ -199,7 +199,7 @@ def export_node(node: VSSNode, generate_uuid: bool, generate_all_idl_features: b
         idl_file_buffer.append("module " + getAllowedName(node.name))
         idl_file_buffer.append("{")
         for child in node.children:
-            export_node(child, generate_uuid, generate_all_idl_features)
+            export_node(child, generate_all_idl_features)
         idl_file_buffer.append("};")
         idl_file_buffer.append("")
     else:
@@ -233,8 +233,6 @@ def export_node(node: VSSNode, generate_uuid: bool, generate_all_idl_features: b
 
         idl_file_buffer.append("struct " + getAllowedName(node.name))
         idl_file_buffer.append("{")
-        if generate_uuid:
-            idl_file_buffer.append("string uuid;")
         # fetching value of datatype and obtaining the equivalent DDS type
         try:
             if datatype:
@@ -372,11 +370,11 @@ class StructExporter(object):
         self.str_buf += suffix
 
 
-def export_idl(file, root, generate_uuids=True, generate_all_idl_features=False):
+def export_idl(file, root, generate_all_idl_features=False):
     """This method is used to traverse through the root VSS node to build
     -> DDS IDL equivalent string buffer and to serialize it acccordingly into a file
     """
-    export_node(root, generate_uuids, generate_all_idl_features)
+    export_node(root, generate_all_idl_features)
     file.write("\n".join(idl_file_buffer))
     log.info("IDL file generated at location : " + file.name)
 
@@ -388,7 +386,6 @@ def export_idl(file, root, generate_uuids=True, generate_all_idl_features=False)
 @clo.extended_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
-@clo.uuid_opt
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
@@ -405,7 +402,6 @@ def cli(
     extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
-    uuid: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
@@ -421,7 +417,6 @@ def cli(
         aborts=aborts,
         strict=strict,
         extended_attributes=extended_attributes,
-        uuid=uuid,
         quantities=quantities,
         units=units,
         types=types,
@@ -438,6 +433,5 @@ def cli(
         export_idl(
             idl_out,
             tree,
-            uuid,
             all_idl_features,
         )
