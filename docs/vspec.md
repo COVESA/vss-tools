@@ -81,16 +81,6 @@ Terminates parsing, when the name of a signal does not follow [VSS Naming Conven
 ### --strict/--no-strict
 Enables `--aborts unknown-attribute` and `--aborts name-style`
 
-### --uuid/--no-uuid
-Request the exporter to output UUIDs. The UUID generated is an RFC 4122 Version 5 UUID created from the qualified name
-of the node and the UUID of the namespace `vehicle_signal_specification`.
-
-Note that not all exporters support that arugment
-
-> [!WARNING]
-> The UUID feature is deprecated and will be removed in VSS-tools 6.0.
-> If you need identifiers consider using [vspec id exporter](id.md)
-
 ### --expand/--no-expand
 
 By default all tools expand instance information so that instance information like "Row1" become a branch just like
@@ -359,7 +349,6 @@ Lets the exporter generate _all_ extended metadata attributes found in the model
 | deprecation   | x-deprecation |
 | aggregate     | x-aggregate   |
 | comment       | x-comment     |
-| uuid          | x-uuid        |
 
 Not that strict JSON schema validators might not accept jsonschemas with such extra, non-standard entries.
 
@@ -381,12 +370,6 @@ If the paramter is set it will pretty-print the JSON output, otherwise you will 
 
 ### --extended-all-attributes
 Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter.
-
-## DDS-IDL exporter notes
-The DDS-IDL exporter never generates uuid, i.e. the `--uuid` option has no effect.
-
-## Graphql exporter notes
-The Graphql exporter never generates uuid, i.e. the `--uuid` option has no effect.
 
 ### --all-idl-features
 Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out because at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](ddsidl.md).

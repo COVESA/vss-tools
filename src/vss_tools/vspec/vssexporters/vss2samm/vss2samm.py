@@ -152,7 +152,6 @@ Path to or name for the target folder, where generated aspect models (.ttl files
 @clo.extended_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
-@clo.uuid_opt
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
@@ -165,7 +164,6 @@ def cli(
     extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
-    uuid: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
@@ -190,7 +188,7 @@ def cli(
     #       Just keep in mind that this might lead to some additional logic,
     #       to make sure that each case is handled correctly.
     vss_tree, datatype_tree = get_trees(
-        vspec, include_dirs, aborts, strict, extended_attributes, uuid, quantities, units, types, overlays, False
+        vspec, include_dirs, aborts, strict, extended_attributes, quantities, units, types, overlays, False
     )
 
     # Get the VSS version from the vss_tree::VersionVSS
