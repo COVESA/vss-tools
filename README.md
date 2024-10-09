@@ -62,18 +62,22 @@ It is not guaranteed that newer or older versions of vss-tools can successfully 
 The table below gives an overview of basic version support for e.g. `vspec export json`.
 Other exporters may have stricter requirements.
 
-VSS-tools version | Supported VSS versions | Comments
+VSS-tools version | Supported VSS catalog versions | Comments
 -----------------|------------------------|----------------
 `v3.0`| `v3.0` - `v3.1.1`
 `v3.1`| `v3.0` -`v4.0`
 `v4.0`| `v4.0`
 `v4.1`| `v4.0` -
-`<latest source>`| `v4.0` -
+`4.2`| `v4.0` -
+`5.0`| `v5.0` -
+`<latest source>`| `v5.0` -
 
 ### Changes affecting compatibility
 
 Examples on changes affecting compatibility
 
+* Somewhat stricter control in VSS-tools 5.0 onwards,
+  minor changes required in VSS 4.X catalogs to make it pass the control.
 * VSS version `v4.1` introduced a new syntax for the unit files that cannot be handled by `vss-tools < v4.1`
 * From `v4.0` vss-tools expects unit file to be explicitly specified or provided in the same directory as the VSS input.
   VSS `v3.1` is the first VSS version including a unit file in the VSS repository.
