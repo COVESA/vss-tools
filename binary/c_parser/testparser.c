@@ -58,6 +58,7 @@ void showNodeData(long currentNode, int currentChild) {
 }
 
 int main(int argc, char** argv) {
+    (void)argc;
 
     vspecfile = argv[1];
     rootNode = VSSReadTree(vspecfile);
