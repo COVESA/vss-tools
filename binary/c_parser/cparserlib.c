@@ -352,7 +352,9 @@ char* extractAllowedElement(char* allowedBuf, int elemIndex) {
 }
 
 void populateNode(node_t* thisNode) {
-	ret = fread(&(thisNode->nameLen), sizeof(uint8_t), 1, treeFp);
+    uint8_t nameLen;
+    ret = fread(&nameLen, sizeof(uint8_t), 1, treeFp);
+    thisNode->nameLen = nameLen;
 	thisNode->name = (char*) malloc(sizeof(char)*(thisNode->nameLen+1));
 	ret = fread(thisNode->name, sizeof(char)*thisNode->nameLen, 1, treeFp);
 	thisNode->name[thisNode->nameLen] = '\0';
