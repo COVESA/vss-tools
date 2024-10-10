@@ -654,7 +654,7 @@ int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, searchData_t* 
 	return context->numOfMatches;
 }
 
-int VSSGetLeafNodesList(long rootNode, char* listFname) {
+int VSSGetLeafNodesList(long rootNode, const char* listFname) {
 	struct SearchContext_t searchContext;
 	struct SearchContext_t* context = &searchContext;
 	isGetLeafNodeList = true;

@@ -62,7 +62,7 @@ typedef struct noScopeList_t {
 long VSSReadTree(const char *filePath);
 void VSSWriteTree(char* filePath, long rootHandle);
 int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, searchData_t* searchData, bool anyDepth,  bool leafNodesOnly, int listSize, noScopeList_t* noScopeList, int* validation);
-int VSSGetLeafNodesList(long rootNode, char* listFname);
+int VSSGetLeafNodesList(long rootNode, const char* listFname);
 int VSSGetUuidList(long rootNode, char* listFname);
 
 long VSSgetParent(long nodeHandle);
