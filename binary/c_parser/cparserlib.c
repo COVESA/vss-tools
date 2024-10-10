@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <fcntl.h>
+#include <assert.h>
 #include "cparserlib.h"
 
 FILE* treeFp;
@@ -307,6 +308,7 @@ int hexToInt(char hexDigit) {
 int countAllowedElements(char* allowedStr) {  // allowed string has format "XXallowed1XXallowed2...XXallowedx", where XX are hex values; X=[0-9,A-F]
     int allowed = 0;
     for (int index = 0 ; index < (int)strlen(allowedStr) ; ) {
+        assert(index >= 0);
         char* hexLen = &(allowedStr[index]);
         int allowedLen = hexToInt(hexLen[0]) * 16 + hexToInt(hexLen[1]);
         index += allowedLen + 2;
