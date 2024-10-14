@@ -11,18 +11,19 @@
 
 import abc
 import typing
-import yaml
-import rich_click as click
-import vss_tools.vspec.cli_options as clo
-
 from enum import Enum, Flag, auto
-from vss_tools import log
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.model import VSSDataBranch, VSSDataStruct, VSSDataDatatype
-from vss_tools.vspec.datatypes import Datatypes
-from vss_tools.vspec.main import get_trees
-from pathlib import Path
 from math import inf
+from pathlib import Path
+
+import rich_click as click
+import yaml
+
+import vss_tools.cli_options as clo
+from vss_tools import log
+from vss_tools.datatypes import Datatypes
+from vss_tools.main import get_trees
+from vss_tools.model import VSSDataBranch, VSSDataDatatype, VSSDataStruct
+from vss_tools.tree import VSSNode
 
 
 class SolutionLayers(Flag):
@@ -62,7 +63,7 @@ class ApiGearEnumeration(ApiGearComplexType):
         self.variants: typing.List[tuple[str, int | None]] = []
 
 
-class ApiGearType():
+class ApiGearType:
     def __init__(self, type: str):
         super().__init__()
 
@@ -76,7 +77,7 @@ class ApiGearType():
         return t
 
 
-class ApiGearProperty():
+class ApiGearProperty:
     def __init__(self, type: ApiGearType):
         super().__init__()
 
@@ -234,7 +235,7 @@ def export_node(node: VSSNode, module: ApiGearModule, interface: ApiGearInterfac
 
 def export_data_type_node(node: VSSNode | None, module: ApiGearModule, structure: ApiGearStructure | None = None):
     """This method is used to traverse through the root VSS Data Types node to build
-       -> ApiGear equivalent string buffer and to serialize it accordingly into a module
+    -> ApiGear equivalent string buffer and to serialize it accordingly into a module
     """
     if node is None:
         return
@@ -271,7 +272,7 @@ def generate_module(directory: Path, module: ApiGearModule, module_name: str, mo
         "schema": "apigear.module/1.0",
         "name": module_name,
         "version": "1.0",
-        "interfaces": []
+        "interfaces": [],
     }
 
     for interface in module.interfaces:
@@ -342,15 +343,16 @@ def generate_module(directory: Path, module: ApiGearModule, module_name: str, mo
     log.info(f"Module file generated at location: {module_path}")
 
 
-def generate_solution(directory: Path, module_filename: str, module_name: str,
-                      layers: typing.Dict[SolutionLayers, Path]):
+def generate_solution(
+    directory: Path, module_filename: str, module_name: str, layers: typing.Dict[SolutionLayers, Path]
+):
     log.debug("Generating solution file")
 
     yaml_dict: typing.Dict[str, typing.Any] = {
         "schema": "apigear.solution/1.0",
         "name": module_name,
         "version": "1.0",
-        "layers": []
+        "layers": [],
     }
     unreal: typing.Dict[str, typing.Any] = {
         "name": "unreal",
@@ -410,10 +412,11 @@ def export_yaml(file_name, content_dict):
         )
 
 
-def export_apigear(directory: Path, root: VSSNode, data_type_tree: VSSNode | None,
-                   layers: typing.Dict[SolutionLayers, Path]):
+def export_apigear(
+    directory: Path, root: VSSNode, data_type_tree: VSSNode | None, layers: typing.Dict[SolutionLayers, Path]
+):
     """This method is used to traverse through the root VSS node to build
-       -> ApiGear equivalent string buffer and to serialize it accordingly into a file
+    -> ApiGear equivalent string buffer and to serialize it accordingly into a file
     """
     module = ApiGearModule()
     module_name = root.name
@@ -423,7 +426,7 @@ def export_apigear(directory: Path, root: VSSNode, data_type_tree: VSSNode | Non
     log.debug(f"Module name: {module_name}")
     log.debug(f"Module filename: {module_filename}")
 
-    if (not layers):
+    if not layers:
         layers = {SolutionLayers.CPP: Path("./cppservice")}
         log.warning(f"No layers provided! Defaulting to CPP in {layers[SolutionLayers.CPP]}")
 
@@ -512,13 +515,13 @@ def cli(
     output_dir.mkdir(exist_ok=True, parents=True)
 
     layers = {}
-    if (apigear_template_unreal_path is not None):
+    if apigear_template_unreal_path is not None:
         layers[SolutionLayers.UNREAL] = apigear_template_unreal_path
-    if (apigear_template_cpp_path is not None):
+    if apigear_template_cpp_path is not None:
         layers[SolutionLayers.CPP] = apigear_template_cpp_path
-    if (apigear_template_qt5_path is not None):
+    if apigear_template_qt5_path is not None:
         layers[SolutionLayers.QT5] = apigear_template_qt5_path
-    if (apigear_template_qt6_path is not None):
+    if apigear_template_qt6_path is not None:
         layers[SolutionLayers.QT6] = apigear_template_qt6_path
 
     export_apigear(output_dir, tree, data_type_tree, layers)

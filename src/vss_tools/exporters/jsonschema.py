@@ -15,11 +15,11 @@ from typing import Any, Dict
 
 import rich_click as click
 
-import vss_tools.vspec.cli_options as clo
+import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.model import VSSDataBranch, VSSDataDatatype, VSSDataStruct
-from vss_tools.vspec.tree import VSSNode
+from vss_tools.main import get_trees
+from vss_tools.model import VSSDataBranch, VSSDataDatatype, VSSDataStruct
+from vss_tools.tree import VSSNode
 
 type_map = {
     "int8": "integer",

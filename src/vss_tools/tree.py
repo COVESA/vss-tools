@@ -16,8 +16,8 @@ from anytree import Node, PreOrderIter, find, findall
 from pydantic import ValidationError
 
 from vss_tools import log
-from vss_tools.vspec.datatypes import Datatypes, dynamic_datatypes
-from vss_tools.vspec.model import (
+from vss_tools.datatypes import Datatypes, dynamic_datatypes
+from vss_tools.model import (
     ModelValidationException,
     VSSData,
     VSSDataBranch,
@@ -27,7 +27,7 @@ from vss_tools.vspec.model import (
     get_vss_raw,
     resolve_vss_raw,
 )
-from vss_tools.vspec.vspec import deep_update
+from vss_tools.vspec import deep_update
 
 SEPARATOR = "."
 

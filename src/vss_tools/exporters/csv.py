@@ -15,11 +15,11 @@ from typing import Any
 import rich_click as click
 from anytree import PreOrderIter  # type: ignore[import]
 
-import vss_tools.vspec.cli_options as clo
+import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.utils.misc import getattr_nn
+from vss_tools.main import get_trees
+from vss_tools.tree import VSSNode
+from vss_tools.utils.misc import getattr_nn
 
 
 def get_header(with_uuid: bool, entry_type: str, with_instance_column: bool) -> list[str]:

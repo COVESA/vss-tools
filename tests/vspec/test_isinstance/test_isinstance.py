@@ -8,7 +8,7 @@
 
 from pathlib import Path
 
-from vss_tools.vspec.main import get_trees
+from vss_tools.main import get_trees
 
 HERE = Path(__file__).resolve().parent
 

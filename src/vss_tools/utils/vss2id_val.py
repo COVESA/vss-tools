@@ -12,8 +12,8 @@ from typing import Optional
 from anytree import PreOrderIter
 
 from vss_tools import log
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.utils.idgen_utils import fnv1_32_wrapper
+from vss_tools.tree import VSSNode
+from vss_tools.utils.idgen_utils import fnv1_32_wrapper
 
 
 def validate_static_uids(signals_dict: dict, validation_tree: VSSNode, strict: bool):

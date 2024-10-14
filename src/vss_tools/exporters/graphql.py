@@ -24,13 +24,13 @@ from graphql import (
     print_schema,
 )
 
-import vss_tools.vspec.cli_options as clo
+import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.vspec.datatypes import Datatypes
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.model import VSSDataDatatype
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.utils.misc import camel_back
+from vss_tools.datatypes import Datatypes
+from vss_tools.main import get_trees
+from vss_tools.model import VSSDataDatatype
+from vss_tools.tree import VSSNode
+from vss_tools.utils.misc import camel_back
 
 GRAPHQL_TYPE_MAPPING = {
     Datatypes.INT8[0]: GraphQLInt,
