@@ -17,12 +17,12 @@ from pathlib import Path
 from typing import Dict
 
 import pytest
-import vss_tools.vspec.vssexporters.vss2id as vss2id
+import vss_tools.exporters.id as vss2id
 import yaml
-from vss_tools.vspec.datatypes import Datatypes
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.utils.idgen_utils import get_all_keys_values
+from vss_tools.datatypes import Datatypes
+from vss_tools.main import get_trees
+from vss_tools.tree import VSSNode
+from vss_tools.utils.idgen_utils import get_all_keys_values
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"

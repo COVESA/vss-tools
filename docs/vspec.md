@@ -39,8 +39,8 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
                     /Users/Bar/workspace/vehicle_signal_specification/spec/units.yaml
            INFO     Loading vspec from spec/VehicleSignalSpecification.vspec...                utils.py:81
 [16:40:04] INFO     Check type usage                                                       __init__.py:117
-           INFO     Generating JSON output...                                              vss2json.py:142
-           INFO     Serializing compact JSON...                                            vss2json.py:148
+           INFO     Generating JSON output...                                                  json.py:142
+           INFO     Serializing compact JSON...                                                json.py:148
 
 ```
 ## Exporter docs

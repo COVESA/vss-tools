@@ -11,10 +11,10 @@ from pathlib import Path
 import rich_click as click
 from anytree import RenderTree
 
-import vss_tools.vspec.cli_options as clo
+import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.tree import VSSNode
+from vss_tools.main import get_trees
+from vss_tools.tree import VSSNode
 
 
 def get_rendered_tree(tree: VSSNode, attributes: tuple[str]) -> str:

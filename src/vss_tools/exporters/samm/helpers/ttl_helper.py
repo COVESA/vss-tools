@@ -11,8 +11,8 @@ from pathlib import Path
 from rdflib import Graph, URIRef
 from rdflib.namespace import RDF
 from vss_tools import log
-from vss_tools.vspec.model import VSSDataBranch
-from vss_tools.vspec.tree import VSSNode
+from vss_tools.model import VSSDataBranch
+from vss_tools.tree import VSSNode
 
 from ..config import config as cfg
 from . import ttl_builder_helper as ttl_builder

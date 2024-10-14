@@ -16,17 +16,17 @@ from typing import Any, Dict, Tuple
 import rich_click as click
 import yaml
 
-import vss_tools.vspec.cli_options as clo
+import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.tree import VSSNode
-from vss_tools.vspec.utils import vss2id_val
-from vss_tools.vspec.utils.idgen_utils import (
+from vss_tools.main import get_trees
+from vss_tools.tree import VSSNode
+from vss_tools.utils import vss2id_val
+from vss_tools.utils.idgen_utils import (
     fnv1_32_hash,
     get_all_keys_values,
     get_node_identifier_bytes,
 )
-from vss_tools.vspec.utils.misc import getattr_nn
+from vss_tools.utils.misc import getattr_nn
 
 
 def generate_split_id(node: VSSNode, id_counter: int, strict_mode: bool) -> Tuple[str, int]:

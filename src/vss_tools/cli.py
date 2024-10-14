@@ -11,9 +11,9 @@ from pathlib import Path
 
 import rich_click as click
 
-import vss_tools.vspec.cli_options as clo
+import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.vspec.lazy_group import LazyGroup
+from vss_tools.lazy_group import LazyGroup
 
 
 @click.group(context_settings={"auto_envvar_prefix": "vss_tools"}, invoke_without_command=True)
@@ -35,20 +35,20 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
 @cli.group(
     cls=LazyGroup,
     lazy_subcommands={
-        "apigear": "vss_tools.vspec.vssexporters.vss2apigear:cli",
-        "binary": "vss_tools.vspec.vssexporters.vss2binary:cli",
-        "csv": "vss_tools.vspec.vssexporters.vss2csv:cli",
-        "ddsidl": "vss_tools.vspec.vssexporters.vss2ddsidl:cli",
-        "franca": "vss_tools.vspec.vssexporters.vss2franca:cli",
-        "graphql": "vss_tools.vspec.vssexporters.vss2graphql:cli",
-        "id": "vss_tools.vspec.vssexporters.vss2id:cli",
-        "json": "vss_tools.vspec.vssexporters.vss2json:cli",
-        "jsonschema": "vss_tools.vspec.vssexporters.vss2jsonschema:cli",
-        "protobuf": "vss_tools.vspec.vssexporters.vss2protobuf:cli",
-        "yaml": "vss_tools.vspec.vssexporters.vss2yaml:cli",
-        "tree": "vss_tools.vspec.vssexporters.vss2tree:cli",
-        "samm": "vss_tools.vspec.vssexporters.vss2samm.vss2samm:cli",
-        "go": "vss_tools.vspec.vssexporters.vss2go:cli",
+        "apigear": "vss_tools.exporters.apigear:cli",
+        "binary": "vss_tools.exporters.binary:cli",
+        "csv": "vss_tools.exporters.csv:cli",
+        "ddsidl": "vss_tools.exporters.ddsidl:cli",
+        "franca": "vss_tools.exporters.franca:cli",
+        "graphql": "vss_tools.exporters.graphql:cli",
+        "id": "vss_tools.exporters.id:cli",
+        "json": "vss_tools.exporters.json:cli",
+        "jsonschema": "vss_tools.exporters.jsonschema:cli",
+        "protobuf": "vss_tools.exporters.protobuf:cli",
+        "yaml": "vss_tools.exporters.yaml:cli",
+        "tree": "vss_tools.exporters.tree:cli",
+        "samm": "vss_tools.exporters.samm:cli",
+        "go": "vss_tools.exporters.go:cli",
     },
 )
 @click.pass_context
