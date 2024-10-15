@@ -5,7 +5,7 @@ description='COVESA Vehicle Signal Specification tooling.'
 authors = ["COVESA VSS <covesa-dev@covesa.global>"]
 version = "6.0a0"
 license = "Mozilla Public License 2.0"
-readme = ["README.md", "README-PYPI.md"]
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
