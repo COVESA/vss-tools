@@ -11,7 +11,7 @@ import yaml
 from pydantic import ValidationError
 
 from vss_tools import log
-from vss_tools.vspec.model import ModelValidationException, VSSQuantity, VSSUnit
+from vss_tools.model import ModelValidationException, VSSQuantity, VSSUnit
 
 
 class UnitQuantityRedefinitionException(Exception):

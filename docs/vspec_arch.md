@@ -137,7 +137,7 @@ That means that we can define the cli interface of subcommands in their own file
 The main cli entrypoint for `vspec` is defined in [vspec.py](../src/vss_tools/vspec/vspec.py).
 There you can also see all the subcommands referenced.
 When building a new exporter tool, this is the place that needs to be adapted as well
-as creating a new file similar to the other exporters in [vssexporters](../src/vss_tools/vspec/vssexporters).
+as creating a new file similar to the other exporters in [exporters](../src/vss_tools/vspec/exporters).
 
 It is also possible to build a complete different script entrypoint and not hook into the current interface.
 All cli options can be imported and used via [cli_options.py](../src/vss_tools/vspec/cli_options.py).

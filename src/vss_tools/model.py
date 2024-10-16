@@ -21,7 +21,7 @@ from rich.pretty import pretty_repr
 from typing_extensions import Self
 
 from vss_tools import log
-from vss_tools.vspec.datatypes import (
+from vss_tools.datatypes import (
     Datatypes,
     dynamic_quantities,
     dynamic_units,

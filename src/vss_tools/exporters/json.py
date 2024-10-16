@@ -14,10 +14,10 @@ from typing import Any
 
 import rich_click as click
 
-import vss_tools.vspec.cli_options as clo
+import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.tree import VSSNode
+from vss_tools.main import get_trees
+from vss_tools.tree import VSSNode
 
 
 def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attributes: tuple[str, ...] = ()):

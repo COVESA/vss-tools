@@ -11,7 +11,7 @@ from typing import Sequence
 from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import RDF, XSD
 from vss_tools import log
-from vss_tools.vspec.tree import VSSNode
+from vss_tools.tree import VSSNode
 
 from . import vss_helper as vss_helper
 from .data_types_and_units import DataTypes

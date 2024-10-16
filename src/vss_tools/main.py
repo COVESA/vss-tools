@@ -11,20 +11,20 @@ from pathlib import Path
 from anytree import PreOrderIter, findall
 
 from vss_tools import log
-from vss_tools.vspec.datatypes import (
+from vss_tools.datatypes import (
     dynamic_datatypes,
     dynamic_quantities,
     dynamic_units,
 )
-from vss_tools.vspec.model import (
+from vss_tools.model import (
     VSSDataBranch,
     VSSDataProperty,
     VSSDataStruct,
     get_all_model_fields,
 )
-from vss_tools.vspec.tree import ModelValidationException, VSSNode, build_tree
-from vss_tools.vspec.units_quantities import load_quantities, load_units
-from vss_tools.vspec.vspec import InvalidSpecDuplicatedEntryException, load_vspec
+from vss_tools.tree import ModelValidationException, VSSNode, build_tree
+from vss_tools.units_quantities import load_quantities, load_units
+from vss_tools.vspec import InvalidSpecDuplicatedEntryException, load_vspec
 
 
 class NameViolationException(Exception):

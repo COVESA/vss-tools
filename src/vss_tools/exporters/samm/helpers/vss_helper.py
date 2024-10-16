@@ -12,9 +12,9 @@ from typing import Any
 
 from rdflib import URIRef
 from vss_tools import log
-from vss_tools.vspec.datatypes import Datatypes
-from vss_tools.vspec.model import NodeType, VSSDataBranch
-from vss_tools.vspec.tree import VSSNode
+from vss_tools.datatypes import Datatypes
+from vss_tools.model import NodeType, VSSDataBranch
+from vss_tools.tree import VSSNode
 
 from ..config import config as cfg
 from .data_types_and_units import DataTypes, DataUnits

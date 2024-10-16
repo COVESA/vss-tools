@@ -11,7 +11,7 @@ from pathlib import Path
 import rich_click as click
 from rich_click import option
 
-from vss_tools.vspec.model import get_all_model_fields
+from vss_tools.model import get_all_model_fields
 
 
 def validate_attribute(value):

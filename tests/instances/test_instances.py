@@ -9,10 +9,10 @@
 import re
 from pathlib import Path
 
-import vss_tools.vspec.model as model
+import vss_tools.model as model
 from anytree import RenderTree
-from vss_tools.vspec.main import get_trees
-from vss_tools.vspec.tree import VSSNode
+from vss_tools.main import get_trees
+from vss_tools.tree import VSSNode
 
 HERE = Path(__file__).resolve().parent
 RESOURCES = HERE / "resources"
