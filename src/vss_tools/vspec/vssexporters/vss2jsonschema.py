@@ -52,7 +52,6 @@ type_map = {
 def export_node(
     json_dict,
     node: VSSNode,
-    print_uuid: bool,
     all_extended_attributes: bool,
     no_additional_properties: bool,
     require_all_properties: bool,
@@ -108,9 +107,6 @@ def export_node(
         if data.comment:
             json_dict[node.name]["x-comment"] = data.comment
 
-        if print_uuid:
-            json_dict[node.name]["x-uuid"] = node.uuid
-
     for field in data.get_extra_attributes():
         json_dict[node.name][field] = getattr(data, field)
 
@@ -125,7 +121,6 @@ def export_node(
             export_node(
                 json_dict[node.name]["properties"],
                 child,
-                print_uuid,
                 all_extended_attributes,
                 no_additional_properties,
                 require_all_properties,
@@ -139,7 +134,6 @@ def export_node(
 @clo.extended_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
-@clo.uuid_opt
 @clo.expand_opt
 @clo.overlays_opt
 @clo.quantities_opt
@@ -164,7 +158,6 @@ def cli(
     extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
-    uuid: bool,
     expand: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
@@ -184,7 +177,6 @@ def cli(
         aborts=aborts,
         strict=strict,
         extended_attributes=extended_attributes,
-        uuid=uuid,
         quantities=quantities,
         units=units,
         types=types,
@@ -201,7 +193,6 @@ def cli(
     export_node(
         signals_json_schema,
         tree,
-        uuid,
         extend_all_attributes,
         no_additional_properties,
         require_all_properties,
@@ -213,7 +204,6 @@ def cli(
         export_node(
             data_types_json_schema,
             datatype_tree,
-            uuid,
             extend_all_attributes,
             no_additional_properties,
             require_all_properties,

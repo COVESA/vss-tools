@@ -188,7 +188,6 @@ def get_trees(
     aborts: tuple[str, ...] = (),
     strict: bool = False,
     extended_attributes: tuple[str, ...] = (),
-    uuid: bool = False,
     quantities: tuple[Path, ...] = (),
     units: tuple[Path, ...] = (),
     types: tuple[Path, ...] = (),
@@ -227,10 +226,6 @@ def get_trees(
 
     if expand:
         root.expand_instances()
-
-    if uuid:
-        log.warning("UUID support is deprecated and will be removed in VSS-tools 6.0")
-        root.add_uuids()
 
     try:
         root.resolve()

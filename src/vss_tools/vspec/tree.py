@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import re
-import uuid
 from copy import deepcopy
 from typing import Any
 
@@ -63,7 +62,6 @@ class VSSNode(Node):  # type: ignore[misc]
     def __init__(self, name: str, fqn: str | None, data: dict[str, Any], **kwargs: Any) -> None:
         super().__init__(name, **kwargs)
         self.data = get_vss_raw(data, fqn)
-        self.uuid: str | None = None
 
     def copy(self) -> VSSNode:
         node = VSSNode(
@@ -141,13 +139,6 @@ class VSSNode(Node):  # type: ignore[misc]
                 match.merge(child)
             else:
                 child.parent = self
-
-    def add_uuids(self) -> None:
-        VSS_NAMESPACE = "vehicle_signal_specification"
-        namespace_uuid = uuid.uuid5(uuid.NAMESPACE_OID, VSS_NAMESPACE)
-        node: VSSNode
-        for node in PreOrderIter(self):
-            node.uuid = uuid.uuid5(namespace_uuid, node.get_fqn()).hex
 
     def get_instance_nodes(self) -> tuple[VSSNode, ...]:
         return findall(
@@ -317,8 +308,6 @@ class VSSNode(Node):  # type: ignore[misc]
         for node in PreOrderIter(self):
             key = node.get_fqn()
             data[key] = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
-            if node.uuid:
-                data[key]["uuid"] = node.uuid
         return data
 
 
