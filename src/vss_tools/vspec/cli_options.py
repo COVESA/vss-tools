@@ -72,8 +72,6 @@ aborts_opt = option(
     show_choices=True,
 )
 
-uuid_opt = option("--uuid/--no-uuid", help="Whether to add UUIDs.", show_default=True, default=False)
-
 expand_opt = option(
     "--expand/--no-expand",
     default=True,

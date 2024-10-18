@@ -19,7 +19,7 @@
 # The order of fields (where each field is composed of
 # fieldlength + fielddata) is:
 #
-# name (vsspath), type, uuid, description, datatype, min, max, unit,
+# name (vsspath), type, description, datatype, min, max, unit,
 # allowed, default, validate
 #
 # if a field is not present (e.g. min, max, unit, allowed, default, validate),
@@ -73,16 +73,13 @@ def create_l16v_string(s: str) -> bytes:
     return pack
 
 
-def export_node(node: VSSNode, generate_uuid, f: BinaryIO):
+def export_node(node: VSSNode, f: BinaryIO):
     data = node.get_vss_data().as_dict()
 
     f.write(create_l8v_string(node.name))
     f.write(create_l8v_string(data.get("type", "")))
-    if node.uuid is None:
-        log.debug(("No UUID for node %s", node.name))
-        f.write(struct.pack("B", 0))
-    else:
-        f.write(create_l8v_string(node.uuid))
+    # Keeping UUID field in output for now (always 0)
+    f.write(struct.pack("B", 0))
 
     f.write(create_l16v_string(data.get("description", "")))
     f.write(create_l8v_string(data.get("datatype", "")))
@@ -101,7 +98,7 @@ def export_node(node: VSSNode, generate_uuid, f: BinaryIO):
     f.write(struct.pack("B", len(node.children)))
 
     for child in node.children:
-        export_node(child, generate_uuid, f)
+        export_node(child, f)
 
 
 @click.command()
@@ -111,7 +108,6 @@ def export_node(node: VSSNode, generate_uuid, f: BinaryIO):
 @clo.extended_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
-@clo.uuid_opt
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
@@ -122,7 +118,6 @@ def cli(
     extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
-    uuid: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
@@ -137,12 +132,11 @@ def cli(
         aborts=aborts,
         strict=strict,
         extended_attributes=extended_attributes,
-        uuid=uuid,
         quantities=quantities,
         units=units,
         overlays=overlays,
     )
     log.info("Generating binary output...")
     with open(str(output), "wb") as f:
-        export_node(tree, uuid, f)
+        export_node(tree, f)
     log.info("Binary output generated in %s", output)

@@ -54,7 +54,6 @@ class NoAliasDumper(yaml.SafeDumper):
 @clo.extended_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
-@clo.uuid_opt
 @clo.expand_opt
 @clo.overlays_opt
 @clo.quantities_opt
@@ -69,7 +68,6 @@ def cli(
     extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
-    uuid: bool,
     expand: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
@@ -87,7 +85,6 @@ def cli(
         aborts=aborts,
         strict=strict,
         extended_attributes=extended_attributes,
-        uuid=uuid,
         quantities=quantities,
         units=units,
         types=types,

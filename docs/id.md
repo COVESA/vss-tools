@@ -25,7 +25,6 @@ identifiers.
 │                                                               [default: no-strict]                         │
 │    --aborts               -a  [unknown-attribute|name-style]  Abort on selected option. The '--strict'     │
 │                                                               option enables all of them.                  │
-│    --uuid/--no-uuid                                           Whether to add UUIDs. [default: no-uuid]     │
 │    --expand/--no-expand                                       Whether to expand the tree.                  │
 │                                                               [default: expand]                            │
 │    --overlays             -l  FILE                            Overlay files to apply on top of the vspec.  │
