@@ -1,0 +1,291 @@
+@prefix : <urn:samm:com.covesa.vss.spec:1.0.0#> .
+@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> .
+@prefix samm-c: <urn:samm:org.eclipse.esmf.samm:characteristic:2.1.0#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:A a samm:Aspect ;
+    samm:events () ;
+    samm:operations () ;
+    samm:preferredName "A"@en ;
+    samm:properties ( :a ) .
+
+:a a samm:Property ;
+    samm:characteristic :ACharacteristic ;
+    samm:preferredName "A"@en .
+
+:floatMaxZero a samm:Property ;
+    samm:characteristic :FloatMaxZeroTrait ;
+    samm:preferredName "Float Max Zero"@en .
+
+:floatMaxZeroInt a samm:Property ;
+    samm:characteristic :FloatMaxZeroIntTrait ;
+    samm:preferredName "Float Max Zero Int"@en .
+
+:floatMinMax a samm:Property ;
+    samm:characteristic :FloatMinMaxTrait ;
+    samm:preferredName "Float Min Max"@en .
+
+:floatMinZero a samm:Property ;
+    samm:characteristic :FloatMinZeroTrait ;
+    samm:preferredName "Float Min Zero"@en .
+
+:floatMinZeroInt a samm:Property ;
+    samm:characteristic :FloatMinZeroIntTrait ;
+    samm:preferredName "Float Min Zero Int"@en .
+
+:floatNoMinMax a samm:Property ;
+    samm:characteristic :FloatNoMinMaxCharacteristic ;
+    samm:preferredName "Float No Min Max"@en .
+
+:floatOnlyMax a samm:Property ;
+    samm:characteristic :FloatOnlyMaxTrait ;
+    samm:preferredName "Float Only Max"@en .
+
+:floatOnlyMin a samm:Property ;
+    samm:characteristic :FloatOnlyMinTrait ;
+    samm:preferredName "Float Only Min"@en .
+
+:intMaxZero a samm:Property ;
+    samm:characteristic :IntMaxZeroTrait ;
+    samm:preferredName "Int Max Zero"@en .
+
+:intMinMax a samm:Property ;
+    samm:characteristic :IntMinMaxTrait ;
+    samm:preferredName "Int Min Max"@en .
+
+:intMinZero a samm:Property ;
+    samm:characteristic :IntMinZeroTrait ;
+    samm:preferredName "Int Min Zero"@en .
+
+:intNoMinMax a samm:Property ;
+    samm:characteristic :IntNoMinMaxCharacteristic ;
+    samm:preferredName "Int No Min Max"@en .
+
+:intOnlyMax a samm:Property ;
+    samm:characteristic :IntOnlyMaxTrait ;
+    samm:preferredName "Int Only Max"@en .
+
+:intOnlyMin a samm:Property ;
+    samm:characteristic :IntOnlyMinTrait ;
+    samm:preferredName "Int Only Min"@en .
+
+:ACharacteristic a samm:Characteristic ;
+    samm:dataType :AEntity ;
+    samm:description """
+VSS path    : A
+
+Description: Branch A."""@en ;
+    samm:name "ACharacteristic" .
+
+:AEntity a samm:Entity ;
+    samm:properties ( [ samm:property :intNoMinMax; samm:payloadName "intNoMinMax" ] [ samm:property :intOnlyMax; samm:payloadName "intOnlyMax" ] [ samm:property :intOnlyMin; samm:payloadName "intOnlyMin" ] [ samm:property :intMinMax; samm:payloadName "intMinMax" ] [ samm:property :intMaxZero; samm:payloadName "intMaxZero" ] [ samm:property :intMinZero; samm:payloadName "intMinZero" ] [ samm:property :floatNoMinMax; samm:payloadName "floatNoMinMax" ] [ samm:property :floatOnlyMax; samm:payloadName "floatOnlyMax" ] [ samm:property :floatOnlyMin; samm:payloadName "floatOnlyMin" ] [ samm:property :floatMinMax; samm:payloadName "floatMinMax" ] [ samm:property :floatMaxZero; samm:payloadName "floatMaxZero" ] [ samm:property :floatMinZero; samm:payloadName "floatMinZero" ] [ samm:property :floatMaxZeroInt; samm:payloadName "floatMaxZeroInt" ] [ samm:property :floatMinZeroInt; samm:payloadName "floatMinZeroInt" ] ) .
+
+:FloatMaxZeroBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatMaxZero
+
+Description: Max Zero."""@en .
+
+:FloatMaxZeroConstraint a samm-c:RangeConstraint ;
+    samm-c:maxValue "0.0"^^xsd:float ;
+    samm:name "FloatMaxZeroConstraint" .
+
+:FloatMaxZeroIntBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatMaxZeroInt
+
+Description: Max Zero."""@en .
+
+:FloatMaxZeroIntConstraint a samm-c:RangeConstraint ;
+    samm-c:maxValue "0"^^xsd:float ;
+    samm:name "FloatMaxZeroIntConstraint" .
+
+:FloatMaxZeroIntTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :FloatMaxZeroIntBaseCharacteristic ;
+    samm-c:constraint :FloatMaxZeroIntConstraint ;
+    samm:name "FloatMaxZeroIntTrait" .
+
+:FloatMaxZeroTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :FloatMaxZeroBaseCharacteristic ;
+    samm-c:constraint :FloatMaxZeroConstraint ;
+    samm:name "FloatMaxZeroTrait" .
+
+:FloatMinMaxBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatMinMax
+
+Description: Min & Max."""@en .
+
+:FloatMinMaxConstraint a samm-c:RangeConstraint ;
+    samm-c:maxValue "236723.4"^^xsd:float ;
+    samm-c:minValue "-165.56323"^^xsd:float ;
+    samm:name "FloatMinMaxConstraint" .
+
+:FloatMinMaxTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :FloatMinMaxBaseCharacteristic ;
+    samm-c:constraint :FloatMinMaxConstraint ;
+    samm:name "FloatMinMaxTrait" .
+
+:FloatMinZeroBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatMinZero
+
+Description: Min Zero."""@en .
+
+:FloatMinZeroConstraint a samm-c:RangeConstraint ;
+    samm-c:minValue "0.0"^^xsd:float ;
+    samm:name "FloatMinZeroConstraint" .
+
+:FloatMinZeroIntBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatMinZeroInt
+
+Description: Min Zero."""@en .
+
+:FloatMinZeroIntConstraint a samm-c:RangeConstraint ;
+    samm-c:minValue "0"^^xsd:float ;
+    samm:name "FloatMinZeroIntConstraint" .
+
+:FloatMinZeroIntTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :FloatMinZeroIntBaseCharacteristic ;
+    samm-c:constraint :FloatMinZeroIntConstraint ;
+    samm:name "FloatMinZeroIntTrait" .
+
+:FloatMinZeroTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :FloatMinZeroBaseCharacteristic ;
+    samm-c:constraint :FloatMinZeroConstraint ;
+    samm:name "FloatMinZeroTrait" .
+
+:FloatNoMinMaxCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatNoMinMax
+
+Description: No Min Max."""@en .
+
+:FloatOnlyMaxBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatOnlyMax
+
+Description: Only Max."""@en .
+
+:FloatOnlyMaxConstraint a samm-c:RangeConstraint ;
+    samm-c:maxValue "32.3"^^xsd:float ;
+    samm:name "FloatOnlyMaxConstraint" .
+
+:FloatOnlyMaxTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :FloatOnlyMaxBaseCharacteristic ;
+    samm-c:constraint :FloatOnlyMaxConstraint ;
+    samm:name "FloatOnlyMaxTrait" .
+
+:FloatOnlyMinBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.FloatOnlyMin
+
+Description: Only Min."""@en .
+
+:FloatOnlyMinConstraint a samm-c:RangeConstraint ;
+    samm-c:minValue "-2.5"^^xsd:float ;
+    samm:name "FloatOnlyMinConstraint" .
+
+:FloatOnlyMinTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :FloatOnlyMinBaseCharacteristic ;
+    samm-c:constraint :FloatOnlyMinConstraint ;
+    samm:name "FloatOnlyMinTrait" .
+
+:IntMaxZeroBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.IntMaxZero
+
+Description: Max Zero."""@en .
+
+:IntMaxZeroConstraint a samm-c:RangeConstraint ;
+    samm-c:maxValue "0"^^xsd:byte ;
+    samm:name "IntMaxZeroConstraint" .
+
+:IntMaxZeroTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :IntMaxZeroBaseCharacteristic ;
+    samm-c:constraint :IntMaxZeroConstraint ;
+    samm:name "IntMaxZeroTrait" .
+
+:IntMinMaxBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.IntMinMax
+
+Description: Min & Max."""@en .
+
+:IntMinMaxConstraint a samm-c:RangeConstraint ;
+    samm-c:maxValue "6"^^xsd:byte ;
+    samm-c:minValue "3"^^xsd:byte ;
+    samm:name "IntMinMaxConstraint" .
+
+:IntMinMaxTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :IntMinMaxBaseCharacteristic ;
+    samm-c:constraint :IntMinMaxConstraint ;
+    samm:name "IntMinMaxTrait" .
+
+:IntMinZeroBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.IntMinZero
+
+Description: Min Zero."""@en .
+
+:IntMinZeroConstraint a samm-c:RangeConstraint ;
+    samm-c:minValue "0"^^xsd:byte ;
+    samm:name "IntMinZeroConstraint" .
+
+:IntMinZeroTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :IntMinZeroBaseCharacteristic ;
+    samm-c:constraint :IntMinZeroConstraint ;
+    samm:name "IntMinZeroTrait" .
+
+:IntNoMinMaxCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.IntNoMinMax
+
+Description: No Min Max."""@en .
+
+:IntOnlyMaxBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.IntOnlyMax
+
+Description: Only Max."""@en .
+
+:IntOnlyMaxConstraint a samm-c:RangeConstraint ;
+    samm-c:maxValue "32"^^xsd:byte ;
+    samm:name "IntOnlyMaxConstraint" .
+
+:IntOnlyMaxTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :IntOnlyMaxBaseCharacteristic ;
+    samm-c:constraint :IntOnlyMaxConstraint ;
+    samm:name "IntOnlyMaxTrait" .
+
+:IntOnlyMinBaseCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.IntOnlyMin
+
+Description: Only Min."""@en .
+
+:IntOnlyMinConstraint a samm-c:RangeConstraint ;
+    samm-c:minValue "3"^^xsd:byte ;
+    samm:name "IntOnlyMinConstraint" .
+
+:IntOnlyMinTrait a samm-c:Trait ;
+    samm-c:baseCharacteristic :IntOnlyMinBaseCharacteristic ;
+    samm-c:constraint :IntOnlyMinConstraint ;
+    samm:name "IntOnlyMinTrait" .
+
+

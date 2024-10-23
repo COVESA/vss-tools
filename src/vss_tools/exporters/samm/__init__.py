@@ -36,13 +36,13 @@ def __setup_environment(output_namespace, vspec_version, split_depth: int) -> No
     cfg.init(output_namespace, vspec_version, split_depth)
 
     global VSSConcepts
-    VSSConcepts = importlib.import_module("vss_tools.vspec.exporters.samm.helpers.samm_concepts").VSSConcepts
+    VSSConcepts = importlib.import_module("vss_tools.exporters.samm.helpers.samm_concepts").VSSConcepts
 
     global vss_helper
-    vss_helper = importlib.import_module("vss_tools.vspec.exporters.samm.helpers.vss_helper")
+    vss_helper = importlib.import_module("vss_tools.exporters.samm.helpers.vss_helper")
 
     global ttl_helper
-    ttl_helper = importlib.import_module("vss_tools.vspec.exporters.samm.helpers.ttl_helper")
+    ttl_helper = importlib.import_module("vss_tools.exporters.samm.helpers.ttl_helper")
 
 
 # TODO: Currently this is a workaround to read the Vehicle.VersionVSS, which is provided from COVESA/VSS
