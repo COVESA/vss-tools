@@ -1,0 +1,4 @@
+# No indentation - that is bad and should give an error
+A:
+type: branch
+description: Branch A.
