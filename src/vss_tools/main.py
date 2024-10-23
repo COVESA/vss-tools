@@ -24,7 +24,7 @@ from vss_tools.model import (
 )
 from vss_tools.tree import ModelValidationException, VSSNode, build_tree
 from vss_tools.units_quantities import load_quantities, load_units
-from vss_tools.vspec import InvalidSpecDuplicatedEntryException, load_vspec
+from vss_tools.vspec import InvalidSpecDuplicatedEntryException, InvalidSpecException, load_vspec
 
 
 class NameViolationException(Exception):
@@ -215,7 +215,7 @@ def get_trees(
     try:
         types_root = get_types_root(types, unique_include_dirs)
         vspec_data = load_vspec(unique_include_dirs, [vspec] + list(overlays))
-    except InvalidSpecDuplicatedEntryException as e:
+    except (InvalidSpecDuplicatedEntryException, InvalidSpecException) as e:
         log.critical(e)
         exit(1)
 

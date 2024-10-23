@@ -23,6 +23,10 @@ class IncludeNotFoundException(Exception):
     pass
 
 
+class InvalidSpecException(Exception):
+    pass
+
+
 class InvalidSpecDuplicatedEntryException(Exception):
     pass
 
@@ -79,6 +83,10 @@ class VSpec:
         self.data = yaml.safe_load(content)
         if self.data is None:
             self.data = {}
+
+        for key, value in self.data.items():
+            if not isinstance(value, dict):
+                raise InvalidSpecException(f"{self.source.absolute()}, Invalid key value: {key}={value}")
 
         if prefix:
             tmp_data = {}
