@@ -192,7 +192,6 @@ class VSSDataDatatype(VSSData):
             assert is_array(self.datatype), f"'arraysize' set on a non array datatype: '{self.datatype}'"
         return self
 
-    @model_validator(mode="after")
     def check_type_default_consistency(self) -> Self:
         """
         Checks that the default value
@@ -230,7 +229,6 @@ class VSSDataDatatype(VSSData):
                 assert v in self.allowed, f"default value '{v}' is not in 'allowed' list"
         return self
 
-    @model_validator(mode="after")
     def check_allowed_datatype_consistency(self) -> Self:
         """
         Checks that allowed values are valid
@@ -254,6 +252,8 @@ class VSSDataDatatype(VSSData):
     def check_datatype(self) -> Self:
         assert self.datatype in get_all_datatypes(self.fqn), f"'{self.datatype}' is not a valid datatype"
         self.datatype = resolve_datatype(self.datatype, self.fqn)
+        self.check_type_default_consistency()
+        self.check_allowed_datatype_consistency()
         return self
 
     @field_validator("unit")
