@@ -1,6 +1,6 @@
 Vehicle:
   type: branch
-  instances: 
+  instances:
     - ["Test1","Test2","Test3"]
   description: High-level vehicle data.
 

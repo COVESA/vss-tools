@@ -6,14 +6,15 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-
-from pathlib import Path
-import subprocess
 import filecmp
+import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 # Overlay tests, just showing for JSON
@@ -34,8 +35,9 @@ def test_json_overlay(no_expand, comparison_file, tmp_path):
     cmd = "vspec export json"
     if no_expand:
         cmd += " --no-expand"
-    cmd += f" --pretty -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
+    cmd += f" --pretty -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} -l {overlay} --output {output}"
 
-    subprocess.run(cmd.split(), check=True, capture_output=True, text=True)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode == 0
     expected = HERE / comparison_file
     assert filecmp.cmp(output, expected)

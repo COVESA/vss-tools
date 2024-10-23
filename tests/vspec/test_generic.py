@@ -6,14 +6,16 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pathlib
-import pytest
 import filecmp
-from pathlib import Path
+import pathlib
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / "test_units.yaml"
+TEST_QUANT = HERE / "test_quantities.yaml"
 
 
 def default_directories() -> list:
@@ -34,19 +36,31 @@ def idfn(directory: pathlib.PosixPath):
 
 def run_exporter(directory, exporter, tmp_path):
     vspec = directory / "test.vspec"
+    types = directory / "types.vspec"
     output = tmp_path / f"out.{exporter}"
     expected = directory / f"expected.{exporter}"
-    cmd = f"vspec export {exporter} -u {TEST_UNITS} --vspec {vspec} --output {output}"
+    if not expected.exists():
+        return
+    cmd = f"vspec export {exporter} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} "
+    if types.exists():
+        cmd += f" --types {types}"
+    if exporter in ["apigear"]:
+        cmd += f" --output-dir {output}"
+    else:
+        cmd += f" --output {output}"
     subprocess.run(cmd.split(), check=True)
-    assert filecmp.cmp(output, expected)
+    if exporter in ["apigear"]:
+        dcmp = filecmp.dircmp(output, expected)
+        assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+    else:
+        assert filecmp.cmp(output, expected)
 
 
 @pytest.mark.parametrize("directory", default_directories(), ids=idfn)
 def test_exporters(directory, tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["json", "jsonschema", "ddsidl",
-                 "csv", "yaml", "franca", "graphql"]
+    exporters = ["apigear", "json", "jsonschema", "ddsidl", "csv", "yaml", "franca", "graphql", "go"]
 
     for exporter in exporters:
         run_exporter(directory, exporter, tmp_path)

@@ -67,11 +67,3 @@ A.Double:
   type: sensor
   unit: km
   description: A double.
-  
-A.String:
-  datatype: string
-  type: sensor
-  unit: km
-  description: A string.
-  
-  

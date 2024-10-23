@@ -581,7 +581,7 @@ func VSSGetLeafNodesList(rootNode *def.Node_t, listFname string) int {
 	return 0
     }
     treeFp.Write([]byte("{\"leafpaths\":["))
-    initContext_LNL(&context, "Vehicle.*", rootNode, true, true, 0, nil)  // anyDepth = true, leafNodesOnly = true
+    initContext_LNL(&context, "*", rootNode, true, true, 0, nil)  // anyDepth = true, leafNodesOnly = true
     traverseNode(rootNode, &context)
     treeFp.Write([]byte("]}"))
     treeFp.Close()
@@ -599,7 +599,7 @@ func VSSGetUuidList(rootNode *def.Node_t, listFname string) int {
 	return 0
     }
     treeFp.Write([]byte("{\"leafuuids\":["))
-    initContext_LNL(&context, "Vehicle.*", rootNode, true, true, 0, nil)  // anyDepth = true, leafNodesOnly = true
+    initContext_LNL(&context, "*", rootNode, true, true, 0, nil)  // anyDepth = true, leafNodesOnly = true
     traverseNode(rootNode, &context)
     treeFp.Write([]byte("]}"))
     treeFp.Close()

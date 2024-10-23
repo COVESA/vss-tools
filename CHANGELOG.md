@@ -7,17 +7,110 @@ It includes changes that are included in released version, but also changes plan
 *This document only contain changes introduced in VSS-Tools 3.0 or later!*
 
 
+## Planned changes for VSS-Tools 6.0
 
-## VSS-Tools 3.0
+### Change in UUID handling.
 
-[Complete release notes including VSS-Tools changes](https://github.com/COVESA/vehicle_signal_specification/releases/tag/v3.0)
+As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
+the legacy uuid functionality.
 
-### Overlay Support
+* The parameters `--uuid`/`--no-uuid` are now removed.
 
-Overlays introduced to allow customization of VSS. See [documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/overlay/).
-See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md) on how to include overlays when transforming VSS.
 
-## VSS-Tools 3.1 (Latest Release)
+## VSS-Tools 5.0
+
+### Major restructure of repository structure and CLI
+
+The vss-tools repository content structure and CLI has changed significantly
+For more information see [vspec documentation](docs/vspec.md)
+
+### Change in UUID handling.
+
+As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
+the legacy uuid functionality.
+
+* The parameter `--uuid` is now deprecated and a warning is given if used.
+
+*No warning given any longer if `--no-uuid` is used due to refactored cli interface*
+
+### Tools installed as binaries without `.py` extension
+
+The project has been switched to poetry and all tools are available in your PATH once vss-tools is installed via pip.
+
+### Logging arguments
+
+General args have been extended with logging arguments `--log-level` and `--log-file`.
+
+## SAMM Exporter added
+
+See [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/samm.md)
+
+## APIGEAR Exporter added
+
+See [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/apigear.md)
+
+## VSS-Tools 4.2
+
+No significant changes in vss-tools
+
+
+## VSS-Tools 4.1
+
+### Struct support in vspec2ddsidl
+
+The vspec2ddsidl tool now supports structs
+
+### Jsonschema tool added
+
+A new tool vspec2jsonschema has been added
+
+### Id generator tool added
+
+A new tool vspec2id has been added. It can be used to generate and maintain unique identifiers for signals.
+
+### Unit files and quantity files
+
+A new syntax has been introduced for unit files. The old syntax is still supported.
+Domains have now been renamed to Quantities.
+In addition to this a quantity file format has been defined, and the tool will inform
+if units refer to a quantity that has not been defined an information message will be printed.
+
+
+## VSS-Tools 4.0
+
+### Struct support feature
+
+In VSS-Tools 4.0 structs are supported in the following exporters:
+
+* JSON
+* Yaml
+* CSV
+* Protobuf
+
+Other exporters do not support structs.
+
+It is possible to use specify muliple type files with `--types`, and to use types in combination with overlays.
+For more information see [vspec documentation](docs/vspec.md)
+
+### Change in UUID handling.
+
+For VSS-Tools 4.0 the following behavior is implemented:
+
+* By default no UUIDs are generated.
+* The parameter `--no-uuid` is now considered deprecated, and a warning is given if `--no-uuid` is used.
+* No warning is given if neither `--uuid` nor `--no-uuid` is used.
+* If both `--uuid` and `--no-uuid` is used an error is given.
+
+### Default unit file removed from vss-tools
+
+The default unit file `config.yaml`
+has been removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
+file must exist, or a unit file must be specified by `-u`.
+From now on, if new units are needed for the VSS catalog they shall be added to the
+[VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
+
+
+## VSS-Tools 3.1
 
 [Complete release notes including VSS-Tools changes](https://github.com/COVESA/vehicle_signal_specification/releases/tag/v3.1)
 
@@ -54,87 +147,11 @@ allowing VSS tooling to control their own units rather than relying on units in 
 Default behavior for units have changed, if there is a file `units.yaml` in the same directory as the `*.vspec`
 file it will be used, only if not existing `config.yaml` in vss-tools will be used.
 
-## VSS-Tools 4.0
+## VSS-Tools 3.0
 
-### Struct support feature
+[Complete release notes including VSS-Tools changes](https://github.com/COVESA/vehicle_signal_specification/releases/tag/v3.0)
 
-In VSS-Tools 4.0 structs are supported in the following exporters:
+### Overlay Support
 
-* JSON
-* Yaml
-* CSV
-* Protobuf
-
-Other exporters do not support structs.
-
-It is possible to use specify muliple type files with `--types`, and to use types in combination with overlays.
-For more information see [vspec documentation](docs/vspec.md)
-
-### Change in UUID handling.
-
-For VSS-Tools 4.0 the following behavior is implemented:
-
-* By default no UUIDs are generated.
-* The parameter `--no-uuid` is now considered deprecated, and a warning is given if `--no-uuid` is used.
-* No warning is given if neither `--uuid` nor `--no-uuid` is used.
-* If both `--uuid` and `--no-uuid` is used an error is given.
-
-### Default unit file removed from vss-tools
-
-The default unit file `config.yaml`
-has been removed from VSS-tools. This means that either a file `units.yaml` in the same directory as the `*.vspec`
-file must exist, or a unit file must be specified by `-u`.
-From now on, if new units are needed for the VSS catalog they shall be added to the
-[VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
-
-
-## Implemented changes, to be released as part of VSS-Tools 5.0
-
-### Major restructure of repository structure and CLI
-
-The vss-tools repository content structure and CLI has changed significantly
-For more information see [vspec documentation](docs/vspec.md)
-
-### Struct support in vspec2ddsidl
-
-The vspec2ddsidl tool now supports structs
-
-### Jsonschema tool added
-
-A new tool vspec2jsonschema has been added
-
-### Id generator tool added
-
-A new tool vspec2id has been added. It can be used to generate and maintain unique identifiers for signals.
-
-### Unit files and quantity files
-
-A new syntax has been introduced for unit files. The old syntax is still supported.
-Domains have now been renamed to Quantities.
-In addition to this a quantity file format has been defined, and the tool will inform
-if units refer to a quantity that has not been defined an information message will be printed.
-
-### Change in UUID handling.
-
-As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
-the legacy uuid functionality.
-
-* The parameter `--no-uuid` is now removed, and an error is given if `--no-uuid` is used.
-* The parameter `--uuid` is now deprecated.
-
-## Planned changes for VSS-Tools 6.0
-
-### Change in UUID handling.
-
-As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
-the legacy uuid functionality.
-
-* The parameter `--uuid` is now removed.
-
-### Tools installed as binaries without `.py` extension
-
-The project has been switched to poetry and all tools are available in your PATH once vss-tools is installed via pip.
-
-### Logging arguments
-
-General args have been extended with logging arguments `--log-level` and `--log-file`.
+Overlays introduced to allow customization of VSS. See [documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/overlay/).
+See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md) on how to include overlays when transforming VSS.

@@ -13,5 +13,4 @@ A:
 A.IsSomething:
   datatype: boolean
   type: sensor
-  unit: km
   description: OK name for a boolean!

@@ -17,7 +17,11 @@ A.MultiLineCommaQuoted:
   unit: km
 
 A.MultiLineLiteralStyleQuote:
-  comment: "November, \nis a \"great\" month!\n"
+  comment: 'November,
+
+    is a "great" month!
+
+    '
   datatype: float
   description: A sensor.
   type: sensor

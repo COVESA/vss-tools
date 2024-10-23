@@ -1,0 +1,4 @@
+Vehicle:
+  type: branch
+  description: Vehicle
+  datatype: uint8

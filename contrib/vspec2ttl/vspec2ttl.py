@@ -11,18 +11,18 @@
 #
 # Convert vspec file to TTL
 #
-from enum import Enum
-from rdflib.namespace import RDFS, OWL, RDF, SKOS
-from rdflib import Graph, Literal, URIRef, BNode
-from vss_tools.vspec.model.constants import VSSTreeType
-from vss_tools.vspec.model.vsstree import VSSNode, VSSType, VSSDataType
-from typing import Dict
-import vss_tools.vspec as vspec
-from anytree import PreOrderIter  # type: ignore[import]
+import argparse
 import os
 import sys
-import argparse
+from enum import Enum
+from typing import Dict
 
+import vss_tools.vspec as vspec
+from anytree import PreOrderIter  # type: ignore[import]
+from rdflib import BNode, Graph, Literal, URIRef
+from rdflib.namespace import OWL, RDF, RDFS, SKOS
+from vss_tools.vspec.model.constants import VSSTreeType
+from vss_tools.vspec.model.vsstree import VSSDataType, VSSNode, VSSType
 
 # Add path to main py vspec  parser
 myDir = os.path.dirname(os.path.realpath(__file__))
@@ -41,7 +41,7 @@ sys.path.append(os.path.join(myDir, "../.."))
 COMPONENTS_AS_CLASSES = False
 
 
-class VssoCoreConcepts (Enum):
+class VssoCoreConcepts(Enum):
     ###
     # Class to define the concepts and their names for later references
     ###
@@ -67,11 +67,11 @@ class VssoCoreConcepts (Enum):
 
     @property
     def uri(self):
-        return URIRef(f'{self.ns}{self.value}')
+        return URIRef(f"{self.ns}{self.value}")
 
     @property
     def uri_string(self):
-        return f'{self.ns}{self.value}'
+        return f"{self.ns}{self.value}"
 
 
 def setup_graph():
@@ -186,7 +186,7 @@ def print_ttl_content(file, tree: VSSNode):
 
         # basic metadata, independent of node type
         graph.add((node, RDFS.label, Literal(name, "en")))
-        graph.add((node, VssoCoreConcepts.VSS_CLASSIFICATION.uri, Literal(tree_node.qualified_name('.'), "en")))
+        graph.add((node, VssoCoreConcepts.VSS_CLASSIFICATION.uri, Literal(tree_node.qualified_name("."), "en")))
         graph.add((node, SKOS.definition, Literal(tree_node.description, "en")))
 
         # if a comment is set in the VSS node add the comment to the ontology
@@ -213,8 +213,9 @@ def print_ttl_content(file, tree: VSSNode):
         elif VSSType.BRANCH == tree_node.type and not COMPONENTS_AS_CLASSES:
             graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_COMP.uri))
             if tree_node.parent:
-                graph.add((node, VssoCoreConcepts.PART_OF_VEH_COMP.uri,
-                          URIRef(namespace + setTTLName(tree_node.parent))))
+                graph.add(
+                    (node, VssoCoreConcepts.PART_OF_VEH_COMP.uri, URIRef(namespace + setTTLName(tree_node.parent)))
+                )
 
         # attributes, sensors & actuators
         else:
@@ -236,7 +237,7 @@ def print_ttl_content(file, tree: VSSNode):
                 # check different datatypes in use
                 if tree_node.datatype is not None:
                     # Assumed that all nodes have datatype
-                    if (tree_node.datatype in datatypes.keys()):
+                    if tree_node.datatype in datatypes.keys():
                         datatypes[tree_node.datatype] += 1
                     else:
                         datatypes[tree_node.datatype] = 1
@@ -248,7 +249,7 @@ def print_ttl_content(file, tree: VSSNode):
                     graph.add((node, RDF.type, VssoCoreConcepts.VEHICLE_ACT.uri))
 
     # write the file and print the metadata.
-    graph.serialize(file, format='ttl')
+    graph.serialize(file, format="ttl")
     for ns, url in graph.namespaces():
         print(f"@prefix {ns}: <{url}>")
     print(duplication)
@@ -257,18 +258,29 @@ def print_ttl_content(file, tree: VSSNode):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Convert vspec to protobuf.")
     arguments = sys.argv[1:]
 
-    parser.add_argument('-I', '--include-dir', action='append', metavar='dir', type=str, default=[],
-                        help='Add include directory to search for included vspec files.')
-    parser.add_argument('-u', '--unit-file', action='append', metavar='unit_file', type=str, default=[],
-                        help='Unit file to be used for generation. Argument -u may be used multiple times.')
-    parser.add_argument('vspec_file', metavar='<vspec_file>',
-                        help='The vehicle specification file to convert.')
-    parser.add_argument('output_file', metavar='<output_file>',
-                        help='The file to write output to.')
+    parser.add_argument(
+        "-I",
+        "--include-dir",
+        action="append",
+        metavar="dir",
+        type=str,
+        default=[],
+        help="Add include directory to search for included vspec files.",
+    )
+    parser.add_argument(
+        "-u",
+        "--unit-file",
+        action="append",
+        metavar="unit_file",
+        type=str,
+        default=[],
+        help="Unit file to be used for generation. Argument -u may be used multiple times.",
+    )
+    parser.add_argument("vspec_file", metavar="<vspec_file>", help="The vehicle specification file to convert.")
+    parser.add_argument("output_file", metavar="<output_file>", help="The file to write output to.")
 
     args = parser.parse_args(arguments)
 

@@ -11,17 +11,16 @@ import os
 
 
 def string_exists(file_path, search_string) -> bool:
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         content = file.read()
         if search_string in content:
             return True
     return False
 
 
-if __name__ == '__main__':
-
-    files = os.getenv('files')
-    files = files.split(',')
+if __name__ == "__main__":
+    files = os.getenv("files")
+    files = files.split(",")
     for file in files:
         file = os.path.abspath(file)
         if os.path.isfile(file):

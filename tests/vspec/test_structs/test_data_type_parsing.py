@@ -6,15 +6,17 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-import os
 import filecmp
-from pathlib import Path
+import os
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 VSS_TOOLS_ROOT = (HERE / ".." / ".." / "..").absolute()
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 @pytest.mark.parametrize(
@@ -50,11 +52,15 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
             "expected-signals-types.idl",
             "VehicleDataTypes.vspec",
         ),
+        (
+            "apigear",
+            "signals-out.apigear",
+            "expected-signals-types.apigear",
+            "VehicleDataTypes.vspec",
+        ),
     ],
 )
-def test_data_types_export_single_file(
-    format, signals_out, expected_signal, type_file, tmp_path
-):
+def test_data_types_export_single_file(format, signals_out, expected_signal, type_file, tmp_path):
     """
     Test that data types provided in vspec format are converted correctly
     """
@@ -64,10 +70,18 @@ def test_data_types_export_single_file(
     cmd = f"vspec export {format}"
     if format == "json":
         cmd += " --pretty"
-    cmd += f" --types {type_file} -u {TEST_UNITS} --vspec {vspec} --output {output}"
+    cmd += f" --types {type_file} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} "
+    if format == "apigear":
+        cmd += f"--output-dir {output}"
+    else:
+        cmd += f"--output {output}"
     subprocess.run(cmd.split(), check=True)
     expected_output = HERE / expected_signal
-    assert filecmp.cmp(output, expected_output)
+    if format == "apigear":
+        dcmp = filecmp.dircmp(output, expected_output)
+        assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+    else:
+        assert filecmp.cmp(output, expected_output)
 
 
 @pytest.mark.parametrize(
@@ -116,7 +130,8 @@ def test_data_types_export_multi_file(
     cmd = f"vspec export {format}"
     if format == "json":
         cmd += " --pretty"
-    cmd += f" --types {type_file} -u {TEST_UNITS} --types-output {types_output} --vspec {vspec} --output {output}"
+    cmd += f" --types {type_file} -u {TEST_UNITS} -q {TEST_QUANT} --types-output {types_output}"
+    cmd += f" --vspec {vspec} --output {output}"
     subprocess.run(cmd.split(), check=True)
     expected_signal = HERE / expected_signal
     expected_data_types = HERE / expected_data_types
@@ -173,7 +188,8 @@ def test_data_types_export_to_proto(
     data_types_out = tmp_path
 
     cmd = (
-        f"vspec export protobuf --types {type_vspec_file} -u {TEST_UNITS} --types-out-dir {data_types_out}"
+        f"vspec export protobuf --types {type_vspec_file} -u {TEST_UNITS} -q {TEST_QUANT}"
+        f" --types-out-dir {data_types_out}"
         f" --vspec {signal_vspec_file} --output {actual_signal_file}"
     )
 
@@ -196,21 +212,19 @@ def test_data_types_export_to_proto(
     [
         (
             "VehicleDataTypesInvalidStructWithQualifiedName.vspec",
-            "2 data type reference errors detected",
+            "'VehicleDataTypes.NestedStruct1' is not a valid datatype",
         ),
         (
             "VehicleDataTypesWithCircularRefs.vspec",
-            "4 data type reference errors detected",
+            "'ParentStruct' is not a valid datatype",
         ),
         (
             "VehicleDataTypesInvalidStruct.vspec",
-            "Data type not found. Data Type: NestedStruct1",
+            "'NestedStruct1' is not a valid datatype",
         ),
     ],
 )
-def test_data_types_invalid_reference_in_data_type_tree(
-    types_file, error_msg, tmp_path
-):
+def test_data_types_invalid_reference_in_data_type_tree(types_file, error_msg, tmp_path):
     """
     Test that errors are surfaced when data type name references are invalid within the data type tree
     """
@@ -218,9 +232,11 @@ def test_data_types_invalid_reference_in_data_type_tree(
     output_types = tmp_path / "VehicleDataTypes.vspec"
     vspec = HERE / "test.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {output_types} --vspec {vspec} --output {output}"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    env = os.environ.copy()
+    env["COLUMNS"] = "200"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
     assert process.returncode != 0
     assert error_msg in process.stdout
 
@@ -230,7 +246,7 @@ def test_data_types_invalid_reference_in_data_type_tree(
     [
         (
             "VehicleDataTypesInvalidStructWithOrphanProperties.vspec",
-            "Orphan property detected. y_property is not defined under a struct",
+            "invalid parent: 'VSSDataBranch'",
         )
     ],
 )
@@ -243,12 +259,11 @@ def test_data_types_orphan_properties(types_file, error_msg, tmp_path):
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
 
-    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
     assert process.returncode != 0
     assert error_msg in process.stdout
 
@@ -262,18 +277,14 @@ def test_data_types_invalid_reference_in_signal_tree(tmp_path):
     vspec = HERE / "test-invalid-datatypes.vspec"
     out = tmp_path / "out.json"
 
-    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
     assert process.returncode != 0
 
-    error_msg = (
-        "Following types were referenced in signals but have not been defined: "
-        "VehicleDataTypes.TestBranch1.ParentStruct1, VehicleDataTypes.TestBranch1.NestedStruct1"
-    )
+    error_msg = "'VehicleDataTypes.TestBranch1.ParentStruct1' is not a valid datatype"
     assert error_msg in process.stdout
 
 
@@ -284,17 +295,13 @@ def test_error_when_no_user_defined_data_types_are_provided(tmp_path):
     """
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
-    cmd = f"vspec export json -u {TEST_UNITS} --pretty --vspec {vspec} --output {out}"
+    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
     assert process.returncode != 0
 
-    error_msg = (
-        "Following types were referenced in signals but have not been defined: "
-        "VehicleDataTypes.TestBranch1.ParentStruct, VehicleDataTypes.TestBranch1.NestedStruct"
-    )
+    error_msg = "'VehicleDataTypes.TestBranch1.ParentStruct' is not a valid datatype"
     assert error_msg in process.stdout
 
 
@@ -304,13 +311,17 @@ def test_error_when_no_user_defined_data_types_are_provided(tmp_path):
         (
             "test.vspec",
             "VehicleDataTypesStructWithDataType.vspec",
-            "cannot have datatype, only allowed for signal and property",
+            "Unknown extra attribute: 'VehicleDataTypes.TestBranch1.NestedStruct':'datatype'",
         ),
-        ("test.vspec", "VehicleDataTypesStructWithUnit.vspec", "cannot have unit"),
+        (
+            "test.vspec",
+            "VehicleDataTypesStructWithUnit.vspec",
+            "Unknown extra attribute: 'VehicleDataTypes.TestBranch1.NestedStruct':'unit'",
+        ),
         (
             "test_with_unit_on_struct_signal.vspec",
             "VehicleDataTypes.vspec",
-            "Unit specified for item not using standard datatype",
+            "Cannot use 'unit' with complex datatype: 'VehicleDataTypes.TestBranch1.ParentStruct'",
         ),
     ],
 )
@@ -323,11 +334,31 @@ def test_faulty_use_of_standard_attributes(vspec_file, types_file, error_msg, tm
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
 
-    cmd = f"vspec export json -u {TEST_UNITS} --pretty --types {types_file}"
+    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {types_out} --vspec {vspec_file} --output {out}"
     env = os.environ.copy()
     env["COLUMNS"] = "200"
-    process = subprocess.run(
-        cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
     assert process.returncode != 0
-    assert error_msg in process.stdout
+    print(process.stderr)
+    print(process.stdout)
+    assert error_msg in process.stdout or error_msg in process.stderr
+
+
+def test_data_types_for_multiple_apigear_templates(tmp_path):
+    """
+    Test that data types are converted for every ApiGear template
+    """
+    types_file = HERE / "VehicleDataTypes.vspec"
+    vspec = HERE / "test.vspec"
+    out = tmp_path / "out.apigear"
+    cmd = f"vspec export apigear -u {TEST_UNITS} -q {TEST_QUANT} --types {types_file}"
+    cmd += f" --vspec {vspec} --output-dir {out}"
+    cmd += " --apigear-template-unreal-path unreal_path"
+    cmd += " --apigear-template-cpp-path cpp14_path"
+    cmd += " --apigear-template-qt5-path qt5_path"
+    cmd += " --apigear-template-qt6-path qt6_path"
+    subprocess.run(cmd.split(), check=True)
+    expected_output = HERE / "out.apigear"
+    dcmp = filecmp.dircmp(out, expected_output)
+    assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)

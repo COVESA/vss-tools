@@ -6,12 +6,14 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 @pytest.mark.parametrize(
@@ -24,18 +26,19 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
         ("correct.vspec", "no_description_type_property.vspec", "ot.json"),
     ],
 )
-def test_description_error(
-    vspec_file: str, type_file: str, type_out_file: str, tmp_path
-):
+def test_description_error(vspec_file: str, type_file: str, type_out_file: str, tmp_path):
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    log = tmp_path / "out.log"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS} -q {TEST_QUANT}"
     if type_file:
         cmd += f" --types {HERE / type_file}"
     if type_out_file:
         cmd += f" --types-output {tmp_path / type_out_file}"
     cmd += f" --vspec {HERE / vspec_file} --output {output}"
 
-    print(cmd)
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
-    assert "Invalid VSS element" in process.stdout
+    log_content = log.read_text()
+    print(log_content)
+    assert "'type': 'missing'" in log_content
+    assert "1 model error(s):" in log_content

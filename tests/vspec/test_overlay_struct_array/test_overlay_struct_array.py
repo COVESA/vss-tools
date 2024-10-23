@@ -6,15 +6,15 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import pytest
-
-
-from pathlib import Path
-import subprocess
 import filecmp
+import subprocess
+from pathlib import Path
+
+import pytest
 
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
+TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 # First test case on all supported exportes
@@ -25,6 +25,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
         ("yaml", "out.yaml", "expected.yaml"),
         ("csv", "out.csv", "expected.csv"),
         ("protobuf", "out.proto", "expected.proto"),
+        ("apigear", "out.apigear", "expected.apigear"),
     ],
 )
 def test_overlay_struct_array(format, signals_out, expected_signal, tmp_path):
@@ -38,11 +39,20 @@ def test_overlay_struct_array(format, signals_out, expected_signal, tmp_path):
     cmd = f"vspec export {format}"
     if format == "json":
         cmd += " --pretty"
-    cmd += f" --types {struct} -u {TEST_UNITS} --vspec {spec} -l {overlay} --output {output}"
+    cmd += f" --types {struct} -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} -l {overlay} "
+    if format == "apigear":
+        cmd += f"--output-dir {output}"
+    else:
+        cmd += f"--output {output}"
     subprocess.run(cmd.split(), cwd=tmp_path, check=True)
 
     expected = HERE / expected_signal
-    assert filecmp.cmp(output, expected)
+    print(cmd)
+    if format == "apigear":
+        dcmp = filecmp.dircmp(output, expected)
+        assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+    else:
+        assert filecmp.cmp(output, expected)
 
     if format == "protobuf":
         types_proto = tmp_path / "Types" / "Types.proto"

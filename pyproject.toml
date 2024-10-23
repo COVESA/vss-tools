@@ -3,21 +3,22 @@ name = "vss-tools"
 homepage="https://github.com/COVESA/vss-tools"
 description='COVESA Vehicle Signal Specification tooling.'
 authors = ["COVESA VSS <covesa-dev@covesa.global>"]
-version = "5.0a0"
+version = "6.0a0"
 license = "Mozilla Public License 2.0"
-readme = ["README.md", "README-PYPI.md"]
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
 rich = "^13.7.1"
 pyyaml = "^6.0.1"
-anytree = "^2.8.0"
+anytree = "^2.9.0"
 deprecation = "^2.1.0"
 graphql-core = "*"
 rdflib = "^6.0.0"
 importlib-metadata = "^7.0"
 click = "^8.1.7"
 rich-click = "^1.8.3"
+pydantic = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
@@ -30,8 +31,17 @@ pre-commit = "*"
 
 
 [tool.poetry.scripts]
-vspec = "vss_tools.vspec.vspec:cli"
+vspec = "vss_tools.cli:cli"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+disable_error_code = "import-untyped"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

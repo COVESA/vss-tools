@@ -50,22 +50,22 @@ A.B.Row3.Right.C:
   datatype: int8
   my_id: Lund
 
-# Adding one outside instance range, shall not inherit original comment
-# Row5 and Row5.Right does not exist in standard tree, so explicit definition with description needed
-A.B.Row5:
-  type: branch
-  description: Is mandatory!
-
-A.B.Row5.Right:
-  type: branch
-  description: Also mandatory!
-
-A.B.Row5.Right.C:
-  datatype: float
-  type: sensor
-  unit: km
-  my_id: Landskrona
-  description: New Muhaha
+# Adding one outside instance range is not handled in a special
+# way and therefore not allowed
+# A.B.Row5:
+#   type: branch
+#   description: Is mandatory!
+#
+# A.B.Row5.Right:
+#   type: branch
+#   description: Also mandatory!
+#
+# A.B.Row5.Right.C:
+#   datatype: float
+#   type: sensor
+#   unit: km
+#   my_id: Landskrona
+#   description: New Muhaha
 
 #Shall inherit comment
 A.S.Front.T:
@@ -114,8 +114,6 @@ A.S.Front.TT.Left.TTT.TTTY:
   unit: celsius
   description: Auch some temperature.
   my_id: "Extended attribute"
-
-
 
 
 # Just adding a comment deep down - check that two level branch  (TTT.T4) after instantiation works

@@ -12,6 +12,7 @@ vspec export --help
 │ --help                                              Show this message and exit.                        │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────╮
+│ apigear                           Export to ApiGear.                                                   │
 │ binary                            Export to Binary.                                                    │
 │ csv                               Export as CSV.                                                       │
 │ ddsidl                            Export as DDSIDL.                                                    │
@@ -22,6 +23,7 @@ vspec export --help
 │ jsonschema                        Export as a jsonschema.                                              │
 │ protobuf                          Export as protobuf.                                                  │
 │ yaml                              Export as YAML.                                                      │
+│ tree                              Export as Tree.                                                      │
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -37,10 +39,20 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
                     /Users/Bar/workspace/vehicle_signal_specification/spec/units.yaml
            INFO     Loading vspec from spec/VehicleSignalSpecification.vspec...                utils.py:81
 [16:40:04] INFO     Check type usage                                                       __init__.py:117
-           INFO     Generating JSON output...                                              vss2json.py:142
-           INFO     Serializing compact JSON...                                            vss2json.py:148
+           INFO     Generating JSON output...                                                  json.py:142
+           INFO     Serializing compact JSON...                                                json.py:148
 
 ```
+## Exporter docs
+
+- [apigear](./apigear.md)
+- [tree](./tree.md)
+- [ddsidl](./ddsidl.md)
+- [graphql](./graphql.md)
+- [id](./id.md)
+- [protobuf](./protobuf.md)
+- [samm](./samm.md)
+- [go](./go.md)
 
 ## Argument Explanations
 

@@ -1,16 +1,16 @@
-"Signal","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
-"A","branch","","","","","","Branch A.","","",""
-"A.SingleLineNotQuoted","sensor","float","","km","","","A sensor.","January is a great month!","",""
-"A.SingleLineInternalQuotes","sensor","float","","km","","","A sensor.","February is a ""great"" month!","",""
-"A.SingleLineQuoted","sensor","float","","km","","","A sensor.","March is a great month!","",""
-"A.SingleLineQuotedInternalQuotes","sensor","float","","km","","","A sensor.","April is a ""great"" month!","",""
-"A.SingleLineComma","sensor","float","","km","","","A sensor.","May, is a great month!","",""
-"A.SingleLineCommaQuoted","sensor","float","","km","","","A sensor.","June, is a great month!","",""
-"A.MultiLineCommaNotQuoted","sensor","float","","km","","","A sensor.","July, is a great month!","",""
-"A.MultiLineCommaQuoted","sensor","float","","km","","","A sensor.","August, is a great month!","",""
-"A.MultiLineStyleInitialBreak","sensor","float","","km","","","A sensor.","October,
+Signal,Type,DataType,Deprecated,Unit,Min,Max,Desc,Comment,Allowed,Default
+A,branch,,,,,,Branch A.,,,
+A.SingleLineNotQuoted,sensor,float,,km,,,A sensor.,January is a great month!,,
+A.SingleLineInternalQuotes,sensor,float,,km,,,A sensor.,"February is a ""great"" month!",,
+A.SingleLineQuoted,sensor,float,,km,,,A sensor.,March is a great month!,,
+A.SingleLineQuotedInternalQuotes,sensor,float,,km,,,A sensor.,"April is a ""great"" month!",,
+A.SingleLineComma,sensor,float,,km,,,A sensor.,"May, is a great month!",,
+A.SingleLineCommaQuoted,sensor,float,,km,,,A sensor.,"June, is a great month!",,
+A.MultiLineCommaNotQuoted,sensor,float,,km,,,A sensor.,"July, is a great month!",,
+A.MultiLineCommaQuoted,sensor,float,,km,,,A sensor.,"August, is a great month!",,
+A.MultiLineStyleInitialBreak,sensor,float,,km,,,A sensor.,"October,
 is a great month!
-","",""
-"A.MultiLineLiteralStyleQuote","sensor","float","","km","","","A sensor.","November, 
+",,
+A.MultiLineLiteralStyleQuote,sensor,float,,km,,,A sensor.,"November,
 is a ""great"" month!
-","",""
+",,

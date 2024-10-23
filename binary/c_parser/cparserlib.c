@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <fcntl.h>
+#include <assert.h>
 #include "cparserlib.h"
 
 FILE* treeFp;
@@ -237,7 +238,7 @@ int saveMatchingNode(long thisNode, SearchContext_t* context, bool* done) {
 		context->speculationIndex++;
 	}
 	context->maxValidation = getMaxValidation(VSSgetValidation(thisNode), context->maxValidation);
-	if (VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT || context->leafNodesOnly == false) {
+	if ((VSSgetType(thisNode) != BRANCH && VSSgetType(thisNode) != STRUCT) || context->leafNodesOnly == false) {
 		if ( isGetLeafNodeList == false && isGetUuidList == false) {
 			strcpy(context->searchData[context->numOfMatches].responsePaths, context->matchPath);
 			context->searchData[context->numOfMatches].foundNodeHandles = thisNode;
@@ -306,7 +307,8 @@ int hexToInt(char hexDigit) {
 
 int countAllowedElements(char* allowedStr) {  // allowed string has format "XXallowed1XXallowed2...XXallowedx", where XX are hex values; X=[0-9,A-F]
     int allowed = 0;
-    for (int index = 0 ; index < strlen(allowedStr) ; ) {
+    for (int index = 0 ; index < (int)strlen(allowedStr) ; ) {
+        assert(index >= 0);
         char* hexLen = &(allowedStr[index]);
         int allowedLen = hexToInt(hexLen[0]) * 16 + hexToInt(hexLen[1]);
         index += allowedLen + 2;
@@ -350,7 +352,9 @@ char* extractAllowedElement(char* allowedBuf, int elemIndex) {
 }
 
 void populateNode(node_t* thisNode) {
-	ret = fread(&(thisNode->nameLen), sizeof(uint8_t), 1, treeFp);
+    uint8_t nameLen;
+    ret = fread(&nameLen, sizeof(uint8_t), 1, treeFp);
+    thisNode->nameLen = nameLen;
 	thisNode->name = (char*) malloc(sizeof(char)*(thisNode->nameLen+1));
 	ret = fread(thisNode->name, sizeof(char)*thisNode->nameLen, 1, treeFp);
 	thisNode->name[thisNode->nameLen] = '\0';
@@ -622,7 +626,7 @@ void initContext_LNL(SearchContext_t* context, char* searchPath, long rootNode, 
 	}
 }
 
-long VSSReadTree(char* filePath) {
+long VSSReadTree(const char* filePath) {
 	treeFp = fopen(filePath, "r");
 	if (treeFp == NULL) {
 		printf("Could not open file for reading tree data\n");
@@ -650,14 +654,14 @@ int VSSSearchNodes(char* searchPath, long rootNode, int maxFound, searchData_t* 
 	return context->numOfMatches;
 }
 
-int VSSGetLeafNodesList(long rootNode, char* listFname) {
+int VSSGetLeafNodesList(long rootNode, const char* listFname) {
 	struct SearchContext_t searchContext;
 	struct SearchContext_t* context = &searchContext;
 	isGetLeafNodeList = true;
 
 	FILE* listFp = fopen(listFname, "w+");
 	fwrite("{\"leafpaths\":[", 14, 1, listFp);
-	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
+	initContext_LNL(context, "*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
 	traverseNode(rootNode, context);
 	fwrite("]}", 2, 1, listFp);
 	fclose(listFp);
@@ -672,7 +676,7 @@ int VSSGetUuidList(long rootNode, char* listFname) {
 
 	FILE* listFp = fopen(listFname, "w+");
 	fwrite("{\"leafuuids\":[", 14, 1, listFp);
-	initContext_LNL(context, "Vehicle.*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
+	initContext_LNL(context, "*", rootNode, listFp, true, true, 0, NULL);  // anyDepth = true, leafNodesOnly = true
 	traverseNode(rootNode, context);
 	//    int len = strlen(leafNodeList);
 	//    leafNodeList[len-2] = '\0';
@@ -745,6 +749,11 @@ int VSSgetNumOfAllowedElements(long nodeHandle) {
 
 char* VSSgetAllowedElement(long nodeHandle, int index) {
 	return (char*)(((node_t*)((intptr_t)nodeHandle))->allowedDef[index]);
+}
+
+char* VSSgetDefault(long nodeHandle) {
+    node_t* node = ((node_t*)((intptr_t)nodeHandle));
+    return node->defaultAllowed;
 }
 
 char* VSSgetUnit(long nodeHandle) {

@@ -1,0 +1,13 @@
+Vehicle:
+  description: Vehicle
+  type: branch
+
+Vehicle.Door:
+  description: Door
+  type: branch
+  instances:
+  - Row[1,2]
+
+Vehicle.Door.Row1.Special:
+  description: Special
+  type: branch

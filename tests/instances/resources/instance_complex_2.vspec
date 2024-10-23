@@ -1,6 +1,6 @@
 Vehicle:
   type: branch
-  instances: 
+  instances:
     - ["Test1"]
     - Test[2,3]
     - ["Test4", "Test5", "Test6"]
