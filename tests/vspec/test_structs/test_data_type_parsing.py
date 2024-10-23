@@ -354,3 +354,42 @@ def test_data_types_for_multiple_apigear_templates(tmp_path):
     expected_output = HERE / "out.apigear"
     dcmp = filecmp.dircmp(out, expected_output)
     assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+
+
+@pytest.mark.parametrize("file", ["test_struct_default.vspec", "test_struct_default_array.vspec"])
+def test_error_default_for_struct(tmp_path, file):
+    """
+    Test that we get an error if trying to use default for struct
+    """
+    vspec = HERE / file
+    types_file = HERE / "VehicleDataTypes.vspec"
+    out = tmp_path / "out.json"
+    cmd = (
+        f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} "
+        f"--output {out} --types {types_file}"
+    )
+    env = os.environ.copy()
+    env["COLUMNS"] = "200"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    assert process.returncode != 0
+
+    # Only checking first of type name to be able to handle both test cases
+    error_msg = "Default values not allowed for user defined type 'VehicleDataTypes.TestBranch1.ParentStruct"
+    assert error_msg in process.stdout
+
+
+def test_error_default_for_struct_array_empty(tmp_path):
+    """
+    Test that we get an error if trying to use default for struct
+    """
+    vspec = HERE / "test_struct_default_array_empty.vspec"
+    types_file = HERE / "VehicleDataTypes.vspec"
+    out = tmp_path / "out.json"
+    cmd = (
+        f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} "
+        + f"--output {out} --types {types_file}"
+    )
+    env = os.environ.copy()
+    env["COLUMNS"] = "200"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    assert process.returncode == 0

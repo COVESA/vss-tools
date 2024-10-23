@@ -198,6 +198,14 @@ class VSSDataDatatype(VSSData):
         is consistent with the given datatype
         """
         if self.default is not None:
+            if Datatypes.get_type(self.datatype) is None:
+                # Default for custom datatypes only allowed for the special case that the datatype is an array
+                # and the default value is []
+                # See rules at https://github.com/COVESA/vehicle_signal_specification/blob/master/docs-gen/content/rule_set/data_entry/data_types_struct.md#default-values # noqa: E501
+                assert (
+                    self.datatype.endswith("[]") and not self.default
+                ), f"Default values not allowed for user defined type '{self.datatype}'"
+
             if is_array(self.datatype):
                 assert isinstance(
                     self.default, list
