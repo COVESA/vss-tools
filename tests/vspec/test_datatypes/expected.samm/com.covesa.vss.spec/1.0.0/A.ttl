@@ -1,0 +1,179 @@
+@prefix : <urn:samm:com.covesa.vss.spec:1.0.0#> .
+@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> .
+@prefix samm-c: <urn:samm:org.eclipse.esmf.samm:characteristic:2.1.0#> .
+@prefix unit: <urn:samm:org.eclipse.esmf.samm:unit:2.1.0#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:A a samm:Aspect ;
+    samm:events () ;
+    samm:operations () ;
+    samm:preferredName "A"@en ;
+    samm:properties ( :a ) .
+
+:a a samm:Property ;
+    samm:characteristic :ACharacteristic ;
+    samm:preferredName "A"@en .
+
+:double a samm:Property ;
+    samm:characteristic :DoubleCharacteristic ;
+    samm:preferredName "Double"@en .
+
+:float a samm:Property ;
+    samm:characteristic :FloatCharacteristic ;
+    samm:preferredName "Float"@en .
+
+:int16 a samm:Property ;
+    samm:characteristic :Int16Characteristic ;
+    samm:preferredName "Int16"@en .
+
+:int32 a samm:Property ;
+    samm:characteristic :Int32Characteristic ;
+    samm:preferredName "Int32"@en .
+
+:int64 a samm:Property ;
+    samm:characteristic :Int64Characteristic ;
+    samm:preferredName "Int64"@en .
+
+:int8 a samm:Property ;
+    samm:characteristic :Int8Characteristic ;
+    samm:preferredName "Int8"@en .
+
+:isBoolean a samm:Property ;
+    samm:characteristic :IsBooleanCharacteristic ;
+    samm:preferredName "Is Boolean"@en .
+
+:uInt16 a samm:Property ;
+    samm:characteristic :UInt16Characteristic ;
+    samm:preferredName "U Int16"@en .
+
+:uInt32 a samm:Property ;
+    samm:characteristic :UInt32Characteristic ;
+    samm:preferredName "U Int32"@en .
+
+:uInt64 a samm:Property ;
+    samm:characteristic :UInt64Characteristic ;
+    samm:preferredName "U Int64"@en .
+
+:uInt8 a samm:Property ;
+    samm:characteristic :UInt8Characteristic ;
+    samm:preferredName "U Int8"@en .
+
+:ACharacteristic a samm:Characteristic ;
+    samm:dataType :AEntity ;
+    samm:description """
+VSS path    : A
+
+Description: Branch A."""@en ;
+    samm:name "ACharacteristic" .
+
+:AEntity a samm:Entity ;
+    samm:properties ( [ samm:property :uInt8; samm:payloadName "uInt8" ] [ samm:property :int8; samm:payloadName "int8" ] [ samm:property :uInt16; samm:payloadName "uInt16" ] [ samm:property :int16; samm:payloadName "int16" ] [ samm:property :uInt32; samm:payloadName "uInt32" ] [ samm:property :int32; samm:payloadName "int32" ] [ samm:property :uInt64; samm:payloadName "uInt64" ] [ samm:property :int64; samm:payloadName "int64" ] [ samm:property :isBoolean; samm:payloadName "isBoolean" ] [ samm:property :float; samm:payloadName "float" ] [ samm:property :double; samm:payloadName "double" ] ) .
+
+:DoubleCharacteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:double ;
+    samm:description """
+VSS path    : A.Double
+
+Description: A double.
+
+Unit             : km"""@en .
+
+:FloatCharacteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:float ;
+    samm:description """
+VSS path    : A.Float
+
+Description: A float.
+
+Unit             : km"""@en .
+
+:Int16Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:short ;
+    samm:description """
+VSS path    : A.Int16
+
+Description: An int16.
+
+Unit             : km"""@en .
+
+:Int32Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:int ;
+    samm:description """
+VSS path    : A.Int32
+
+Description: An int32
+
+Unit             : km"""@en .
+
+:Int64Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:long ;
+    samm:description """
+VSS path    : A.Int64
+
+Description: An int64
+
+Unit             : km"""@en .
+
+:Int8Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.Int8
+
+Description: An int8.
+
+Unit             : km"""@en .
+
+:IsBooleanCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:boolean ;
+    samm:description """
+VSS path    : A.IsBoolean
+
+Description: A boolean"""@en .
+
+:UInt16Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:unsignedShort ;
+    samm:description """
+VSS path    : A.UInt16
+
+Description: A uint16.
+
+Unit             : km"""@en .
+
+:UInt32Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:unsignedShort ;
+    samm:description """
+VSS path    : A.UInt32
+
+Description: A uint32.
+
+Unit             : km"""@en .
+
+:UInt64Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:unsignedLong ;
+    samm:description """
+VSS path    : A.UInt64
+
+Description: A uint64.
+
+Unit             : km"""@en .
+
+:UInt8Characteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:unsignedByte ;
+    samm:description """
+VSS path    : A.UInt8
+
+Description: A uint8.
+
+Unit             : km"""@en .
+
+

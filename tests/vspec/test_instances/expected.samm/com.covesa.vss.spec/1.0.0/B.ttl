@@ -1,0 +1,78 @@
+@prefix : <urn:samm:com.covesa.vss.spec:1.0.0#> .
+@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> .
+@prefix samm-c: <urn:samm:org.eclipse.esmf.samm:characteristic:2.1.0#> .
+@prefix unit: <urn:samm:org.eclipse.esmf.samm:unit:2.1.0#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:B a samm:Aspect ;
+    samm:events () ;
+    samm:operations () ;
+    samm:preferredName "B"@en ;
+    samm:properties ( :b ) .
+
+:b a samm:Property ;
+    samm:characteristic :BInstanceSingleEntity ;
+    samm:preferredName "B"@en .
+
+:bRow1 a samm:Property ;
+    samm:characteristic :BRowSingleEntity ;
+    samm:preferredName "B Row1"@en .
+
+:bRow2 a samm:Property ;
+    samm:characteristic :BRowSingleEntity ;
+    samm:preferredName "B Row2"@en .
+
+:bRowLeft a samm:Property ;
+    samm:characteristic :BCharacteristic ;
+    samm:preferredName "B Row Left"@en .
+
+:bRowRight a samm:Property ;
+    samm:characteristic :BCharacteristic ;
+    samm:preferredName "B Row Right"@en .
+
+:c a samm:Property ;
+    samm:characteristic :CCharacteristic ;
+    samm:preferredName "C"@en .
+
+:BEntity a samm:Entity ;
+    samm:properties ( [ samm:property :c; samm:payloadName "c" ] ) .
+
+:BInstanceEntity a samm:Entity ;
+    samm:properties ( [ samm:property :bRow1; samm:optional true; samm:payloadName "row1" ] [ samm:property :bRow2; samm:optional true; samm:payloadName "row2" ] ) .
+
+:BInstanceSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :BInstanceEntity ;
+    samm:name "BInstance" ;
+    samm:preferredName "B Instance"@en .
+
+:BRowEntity a samm:Entity ;
+    samm:properties ( [ samm:property :bRowLeft; samm:optional true; samm:payloadName "left" ] [ samm:property :bRowRight; samm:optional true; samm:payloadName "right" ] ) .
+
+:CCharacteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.B.C
+
+Description: This description will also exist multiple times.
+
+Comment   : As well as this comment.
+
+Unit             : km"""@en .
+
+:BCharacteristic a samm:Characteristic ;
+    samm:dataType :BEntity ;
+    samm:description """
+VSS path    : A.B
+
+Description: This description will be duplicated.
+
+Comment   : This comment will be duplicated"""@en ;
+    samm:name "BCharacteristic" .
+
+:BRowSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :BRowEntity ;
+    samm:name "BRow" ;
+    samm:preferredName "B Row"@en .
+
+
