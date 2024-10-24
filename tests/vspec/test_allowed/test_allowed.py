@@ -18,13 +18,14 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 def run_exporter(exporter, argument, tmp_path):
     spec = HERE / "test.vspec"
     output = tmp_path / f"out.{exporter}"
-    cmd = f"vspec export {exporter}{argument} --vspec {spec} "
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export {exporter}{argument} --vspec {spec} "
     if exporter in ["apigear"]:
         cmd += f"--output-dir {output}"
     else:
         cmd += f"--output {output}"
 
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    process = subprocess.run(cmd.split())
     assert process.returncode == 0
     expected = HERE / f"expected.{exporter}"
     if exporter in ["apigear"]:
@@ -37,7 +38,7 @@ def run_exporter(exporter, argument, tmp_path):
     # ddsidl can not handle float and integer
     # Some other tools ignore "allowed" all together
     if exporter in ["ddsidl"]:
-        assert "can only handle allowed values for string type" in process.stdout
+        assert "can only handle allowed values for string type" in log.read_text()
 
 
 def test_allowed(tmp_path):

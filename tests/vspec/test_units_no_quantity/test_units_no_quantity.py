@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 import filecmp
-import os
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -26,11 +25,10 @@ def run_unit(
     fails: bool = False,
 ):
     out = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty --vspec {vspec_file}"
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export json --pretty --vspec {vspec_file}"
     cmd += f" {unit_argument} {quantity_argument} --output {out}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE)
     print(process.stdout)
     if fails:
         assert process.returncode != 0
@@ -39,7 +37,7 @@ def run_unit(
         assert filecmp.cmp(out, HERE / expected_file)
 
     if grep_string and grep_present:
-        assert grep_string in process.stdout or grep_string in process.stderr
+        assert grep_string in log.read_text() or grep_string in process.stderr
 
 
 def test_default_unit_no_quantity_warning(tmp_path):
