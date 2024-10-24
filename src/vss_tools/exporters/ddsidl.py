@@ -226,8 +226,8 @@ def export_node(node: VSSNode, generate_all_idl_features: bool) -> None:
                 idl_file_buffer.append("};")
                 allowed_values = str(allowed)
             else:
-                print(
-                    f"Warning: VSS2IDL can only handle allowed values for string type, "
+                log.warning(
+                    f"VSS2IDL can only handle allowed values for string type, "
                     f"signal {node.name} has type {datatype}"
                 )
 

@@ -30,8 +30,9 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 def test_description_error(vspec_file: str, types_file, types_out_file, overlay_file, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
 
-    cmd = f"vspec export json --pretty -u {TEST_UNITS} -q {TEST_QUANT}"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS} -q {TEST_QUANT}"
     if types_file:
         cmd += f" --types {HERE / types_file}"
     if types_out_file:
@@ -40,21 +41,22 @@ def test_description_error(vspec_file: str, types_file, types_out_file, overlay_
         cmd += f" -l {HERE / overlay_file}"
     cmd += f" --vspec {vspec_file} --output {out}"
 
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    process = subprocess.run(cmd.split())
     assert process.returncode != 0
-    print(process.stdout)
-    assert "has 1 model" in process.stdout
-    assert "CRITICAL" in process.stdout
+    log_content = log.read_text()
+    assert "has 1 model" in log_content
+    assert "CRITICAL" in log_content
 
 
 @pytest.mark.parametrize("vspec_file", [("branch_wrong_case.vspec"), ("sensor_wrong_case.vspec")])
 def type_case_sensitive(vspec_file: str, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty --vspec {vspec_file} --output {out}"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export json --pretty --vspec {vspec_file} --output {out}"
+    process = subprocess.run(cmd.split())
     assert process.returncode != 0
-    assert "Unknown type" in process.stdout
+    assert "Unknown type" in log.read_text()
 
 
 @pytest.mark.parametrize(
@@ -66,9 +68,11 @@ def type_case_sensitive(vspec_file: str, tmp_path):
 def test_scope_error(vspec_file: str, tmp_path):
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS}"
     cmd += f" -q {TEST_QUANT} --vspec {vspec_file} --output {out}"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    process = subprocess.run(cmd.split())
     assert process.returncode != 0
-    assert "Invalid nodes=1" in process.stdout
-    assert "A.UInt8.CCC" in process.stdout
+    log_content = log.read_text()
+    assert "Invalid nodes=1" in log_content
+    assert "A.UInt8.CCC" in log_content
