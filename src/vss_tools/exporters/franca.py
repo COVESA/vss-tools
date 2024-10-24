@@ -48,7 +48,7 @@ const SignalSpec[] signal_spec = [
 
 
 # Write the data lines
-def print_franca_content(file: TextIOWrapper, root: VSSNode, with_uuid: bool) -> None:
+def print_franca_content(file: TextIOWrapper, root: VSSNode) -> None:
     output = ""
     node: VSSNode
     for node in PreOrderIter(root):
@@ -64,8 +64,6 @@ def print_franca_content(file: TextIOWrapper, root: VSSNode, with_uuid: bool) ->
             datatype = getattr(data, "datatype", None)
             if datatype:
                 output += f',\n\tdatatype: "{datatype}"'
-            if with_uuid:
-                output += f',\n\tuuid: "{node.uuid}"'
             unit = getattr(data, "unit", None)
             if unit:
                 output += f',\n\tunit: "{unit}"'
@@ -89,7 +87,6 @@ def print_franca_content(file: TextIOWrapper, root: VSSNode, with_uuid: bool) ->
 @clo.extended_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
-@clo.uuid_opt
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
@@ -101,7 +98,6 @@ def cli(
     extended_attributes: tuple[str],
     strict: bool,
     aborts: tuple[str],
-    uuid: bool,
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
@@ -117,12 +113,11 @@ def cli(
         aborts=aborts,
         strict=strict,
         extended_attributes=extended_attributes,
-        uuid=uuid,
         quantities=quantities,
         units=units,
         overlays=overlays,
     )
     with open(output, "w") as f:
         print_franca_header(f, franca_vss_version)
-        print_franca_content(f, tree, uuid)
+        print_franca_content(f, tree)
         f.write("\n]")

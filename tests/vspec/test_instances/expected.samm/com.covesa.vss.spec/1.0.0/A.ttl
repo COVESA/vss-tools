@@ -1,0 +1,25 @@
+@prefix : <urn:samm:com.covesa.vss.spec:1.0.0#> .
+@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> .
+
+:A a samm:Aspect ;
+    samm:events () ;
+    samm:operations () ;
+    samm:preferredName "A"@en ;
+    samm:properties ( :a ) .
+
+:a a samm:Property ;
+    samm:characteristic :ACharacteristic ;
+    samm:preferredName "A"@en .
+
+:ACharacteristic a samm:Characteristic ;
+    samm:dataType :AEntity ;
+    samm:description """
+VSS path    : A
+
+Description: Branch A."""@en ;
+    samm:name "ACharacteristic" .
+
+:AEntity a samm:Entity ;
+    samm:properties ( [ samm:property :b; samm:payloadName "b" ] ) .
+
+
