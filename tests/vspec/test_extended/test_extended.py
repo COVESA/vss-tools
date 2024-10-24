@@ -52,9 +52,10 @@ def test_extended_ok(
     cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
 
     # Make sure there is no line break that affects compare
-    os.environ["COLUMNS"] = "120"
+    env = os.environ.copy()
+    env["COLUMNS"] = "120"
 
-    process = subprocess.run(cmd.split(), capture_output=True, check=True, text=True)
+    process = subprocess.run(cmd.split(), capture_output=True, check=True, text=True, env=env)
 
     if known_extended is not None:
         print(process.stdout)
@@ -84,8 +85,9 @@ def test_extended_error(extended_args: str, tmp_path):
     cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
 
     # Make sure there is no line break that affects compare
-    os.environ["COLUMNS"] = "120"
+    env = os.environ.copy()
+    env["COLUMNS"] = "120"
 
-    process = subprocess.run(cmd.split(), stdout=subprocess.PIPE, text=True, stderr=subprocess.STDOUT)
+    process = subprocess.run(cmd.split(), stdout=subprocess.PIPE, text=True, stderr=subprocess.STDOUT, env=env)
     assert process.returncode != 0
     assert "not allowed" in process.stdout

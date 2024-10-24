@@ -10,7 +10,6 @@
 # Convert vspec files to various other formats
 #
 
-import os
 import shlex
 import subprocess
 from pathlib import Path
@@ -197,77 +196,84 @@ def test_full_script(caplog: pytest.LogCaptureFixture, tmp_path):
 def test_semantic(caplog: pytest.LogCaptureFixture, validation_file: str, tmp_path):
     spec = HERE / "test_vspecs/test.vspec"
     output = tmp_path / "out.vspec"
+    log = tmp_path / "log.txt"
     validation = HERE / validation_file
-    args = f"vspec export id --vspec {spec} --output {output}"
+    args = f"vspec --log-file {log} export id --vspec {spec} --output {output}"
     args += f" --validate-static-uid {validation} -q {TEST_QUANT}"
-    process = subprocess.run(args.split(), capture_output=True, text=True)
-    assert "SEMANTIC NAME CHANGE" in process.stdout
+    subprocess.run(args.split())
+    assert "SEMANTIC NAME CHANGE" in log.read_text()
 
 
 def test_vss_path(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_vss_path.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd, capture_output=True, text=True, env=env)
-    assert "PATH CHANGE" in process.stdout
+    subprocess.run(cmd)
+    assert "PATH CHANGE" in log.read_text()
 
 
 def test_unit(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_unit.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    assert "BREAKING CHANGE" in process.stdout
+    subprocess.run(cmd, capture_output=True, text=True)
+    assert "BREAKING CHANGE" in log.read_text()
 
 
 def test_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_datatype.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    assert "BREAKING CHANGE" in process.stdout
+    subprocess.run(cmd)
+    assert "BREAKING CHANGE" in log.read_text()
 
 
 def test_name_datatype(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_name_datatype.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    assert "ADDED ATTRIBUTE" in process.stdout
-    assert "DELETED ATTRIBUTE" in process.stdout
+    subprocess.run(cmd)
+    log_content = log.read_text()
+    assert "ADDED ATTRIBUTE" in log_content
+    assert "DELETED ATTRIBUTE" in log_content
 
 
 def test_deprecation(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_deprecation.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    assert "DEPRECATION MSG CHANGE" in process.stdout
+    subprocess.run(cmd)
+    assert "DEPRECATION MSG CHANGE" in log.read_text()
 
 
 def test_description(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_description.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    assert "DESCRIPTION MISMATCH" in process.stdout
+    subprocess.run(cmd)
+    assert "DESCRIPTION MISMATCH" in log.read_text()
 
 
 def test_added_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_added_attribute.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    assert "ADDED ATTRIBUTE" in process.stdout
+    subprocess.run(cmd)
+    assert "ADDED ATTRIBUTE" in log.read_text()
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -277,11 +283,12 @@ def test_added_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
 
 def test_deleted_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test_deleted_attribute.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    assert "DELETED ATTRIBUTE" in process.stdout
+    subprocess.run(cmd)
+    assert "DELETED ATTRIBUTE" in log.read_text()
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -292,12 +299,12 @@ def test_deleted_attribute(caplog: pytest.LogCaptureFixture, tmp_path):
 def test_overlay(caplog: pytest.LogCaptureFixture, tmp_path):
     spec = HERE / "test_vspecs/test.vspec"
     overlay = HERE / "test_vspecs/test_overlay.vspec"
-    cmd = "vspec export id".split()
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
     cmd += clas
-    process = subprocess.run(cmd, capture_output=True, text=True)
-    print(process.stdout)
-    assert "ADDED ATTRIBUTE" in process.stdout
+    subprocess.run(cmd)
+    assert "ADDED ATTRIBUTE" in log.read_text()
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -312,7 +319,7 @@ def test_const_id(caplog: pytest.LogCaptureFixture, tmp_path):
     cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path, overlay))
     cmd += clas
-    subprocess.run(cmd, capture_output=True, text=True)
+    subprocess.run(cmd)
 
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
@@ -326,13 +333,13 @@ def test_iterated_file(caplog: pytest.LogCaptureFixture, tmp_path):
     cmd = "vspec export id".split()
     clas = shlex.split(get_cla_test(spec, tmp_path))
     cmd += clas
-    subprocess.run(cmd, capture_output=True, text=True)
+    subprocess.run(cmd)
     output = tmp_path / "out.vspec"
     result = yaml.load(open(output), Loader=yaml.FullLoader)
 
     # run again on out.vspec to check if it all hashed attributes were exported correctly
     clas = shlex.split(get_cla_test(output, tmp_path))
-    subprocess.run(cmd, capture_output=True, text=True)
+    subprocess.run(cmd)
 
     output = tmp_path / "out.vspec"
     result_iteration = yaml.load(open(output), Loader=yaml.FullLoader)

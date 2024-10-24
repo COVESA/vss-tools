@@ -24,10 +24,11 @@ def run_unit(vspec_file, unit_argument, expected_file, tmp_path):
 
 def run_unit_error(vspec_file, unit_argument, check_message, tmp_path):
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty --vspec {vspec_file} {unit_argument} --output {output}"
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export json --pretty --vspec {vspec_file} {unit_argument} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
-    assert check_message in process.stdout
+    assert check_message in log.read_text()
 
 
 def test_default_ok(tmp_path):
