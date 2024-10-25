@@ -15,12 +15,13 @@ from anytree import Node, PreOrderIter, find, findall
 from pydantic import ValidationError
 
 from vss_tools import log
-from vss_tools.datatypes import Datatypes, dynamic_datatypes
+from vss_tools.datatypes import Datatypes, dynamic_datatypes, dynamic_struct_schemas, is_array
 from vss_tools.model import (
     ModelValidationException,
     VSSData,
     VSSDataBranch,
     VSSDataDatatype,
+    VSSDataProperty,
     VSSDataStruct,
     VSSRaw,
     get_vss_raw,
@@ -530,3 +531,60 @@ def expand_string(s: str) -> list[str]:
     for i in range(int(match.group(2)), int(match.group(3)) + 1):
         expanded.append(s.replace(match.group(1), str(i)))
     return expanded
+
+
+def add_struct_schemas(types_root: VSSNode):
+    for node in PreOrderIter(types_root, filter_=lambda n: isinstance(n.data, VSSDataStruct)):
+        log.info(node)
+        schema = {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+        }
+        add_node_schema(types_root, node.get_fqn(), schema)
+        dynamic_struct_schemas[node.get_fqn()] = schema
+
+
+def add_node_schema(root: VSSNode, fqn: str, schema: dict[str, Any]) -> None:
+    datatype_map = {
+        Datatypes.UINT8[0]: "number",
+        Datatypes.INT8[0]: "number",
+        Datatypes.UINT16[0]: "number",
+        Datatypes.INT16[0]: "number",
+        Datatypes.UINT32[0]: "number",
+        Datatypes.INT32[0]: "number",
+        Datatypes.UINT64[0]: "number",
+        Datatypes.INT64[0]: "number",
+        Datatypes.FLOAT[0]: "number",
+        Datatypes.DOUBLE[0]: "number",
+        Datatypes.NUMERIC[0]: "number",
+        Datatypes.BOOLEAN[0]: "boolean",
+    }
+
+    node = root.get_node_with_fqn(fqn)
+    if node:
+        properties: dict[str, Any] = {}
+        child: VSSNode
+        for child in node.children:
+            if isinstance(child.data, VSSDataProperty):
+                array = is_array(child.data.datatype)
+                input_datatype = child.data.datatype.strip("[]")
+                datatype: str | None = None
+                if input_datatype in datatype_map:
+                    datatype = datatype_map[input_datatype]
+                else:
+                    d = Datatypes.get_type(input_datatype)
+                    if d:
+                        datatype = d[0]
+                if datatype:
+                    log.debug(f"Datatype: {datatype}")
+                    if array:
+                        properties[child.name] = {"type": "array", "items": {"type": datatype}}
+                    else:
+                        properties[child.name] = {"type": datatype}
+                # A referenced struct
+                else:
+                    properties[child.name] = {"type": "object"}
+                    add_node_schema(root, input_datatype, properties[child.name])
+
+        schema["required"] = list(properties.keys())
+        schema["properties"] = properties

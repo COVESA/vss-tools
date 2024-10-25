@@ -9,6 +9,7 @@ import re
 from enum import Enum
 from typing import Any
 
+import jsonschema
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -23,7 +24,9 @@ from typing_extensions import Self
 from vss_tools import log
 from vss_tools.datatypes import (
     Datatypes,
+    DatatypesException,
     dynamic_quantities,
+    dynamic_struct_schemas,
     dynamic_units,
     get_all_datatypes,
     is_array,
@@ -48,7 +51,7 @@ class ModelValidationException(Exception):
         self.ve = ve
 
     def __str__(self) -> str:
-        errors = self.ve.errors(include_url=False)
+        errors = self.ve.errors(include_url=False, include_context=False)
         return f"'{self.element}' has {len(errors)} model error(s):\n{pretty_repr(errors)}"
 
 
@@ -140,7 +143,7 @@ class VSSDataBranch(VSSData):
         if v is None:
             return []
         if not (isinstance(v, str) or isinstance(v, list)):
-            assert False, f"'{v}' is not a valid 'instances' content"
+            raise ValueError(f"'{v}' is not a valid 'instances' content")
         if isinstance(v, str):
             return [v]
         return v
@@ -180,7 +183,7 @@ class VSSDataDatatype(VSSData):
     max: int | float | None = None
     unit: str | None = None
     allowed: list[str | int | float | bool] | None = None
-    default: list[str | int | float | bool] | str | int | float | bool | None = None
+    default: Any = None
 
     @model_validator(mode="after")
     def check_type_arraysize_consistency(self) -> Self:
@@ -192,30 +195,57 @@ class VSSDataDatatype(VSSData):
             assert is_array(self.datatype), f"'arraysize' set on a non array datatype: '{self.datatype}'"
         return self
 
+    def check_min_max_valid_datatype(self) -> Self:
+        if self.min or self.max:
+            try:
+                Datatypes.is_subtype_of(self.datatype, Datatypes.NUMERIC[0])
+            except DatatypesException:
+                raise ValueError(f"Cannot define min/max for datatype '{self.datatype}'")
+            if is_array(self.datatype):
+                raise ValueError("Cannot define min/max for array datatypes")
+        return self
+
+    def check_default_min_max(self) -> Self:
+        if self.default:
+            if self.min and self.default < self.min:
+                raise ValueError(f"'default' smaller than 'min': {self.default}<{self.min}")
+            if self.max and self.default > self.max:
+                raise ValueError(f"'default' greater than 'max': {self.default}>{self.min}")
+        return self
+
     def check_type_default_consistency(self) -> Self:
         """
         Checks that the default value
         is consistent with the given datatype
         """
         if self.default is not None:
-            if is_array(self.datatype):
+            array = is_array(self.datatype)
+            if array:
                 assert isinstance(
                     self.default, list
                 ), f"'default' with type '{type(self.default)}' does not match datatype '{self.datatype}'"
                 if self.arraysize:
                     assert len(self.default) == self.arraysize, "'default' array size does not match 'arraysize'"
-                for v in self.default:
-                    assert Datatypes.is_datatype(v, self.datatype), f"'{v}' is not of type '{self.datatype}'"
             else:
                 assert not isinstance(
                     self.default, list
                 ), f"'default' with type '{type(self.default)}' does not match datatype '{self.datatype}'"
-                assert Datatypes.is_datatype(
-                    self.default, self.datatype
-                ), f"'{self.default}' is not of type '{self.datatype}'"
+
+            check_values = [self.default]
+            if array:
+                check_values = self.default
+
+            if Datatypes.get_type(self.datatype) is None:
+                for check_value in check_values:
+                    try:
+                        jsonschema.validate(check_value, dynamic_struct_schemas[self.datatype.strip("[]")])
+                    except jsonschema.ValidationError as e:
+                        raise ValueError(f"invalid 'default' format for datatype '{self.datatype}': {e.message}")
+            else:
+                for v in check_values:
+                    assert Datatypes.is_datatype(v, self.datatype), f"'{v}' is not of type '{self.datatype}'"
         return self
 
-    @model_validator(mode="after")
     def check_default_values_allowed(self) -> Self:
         """
         Checks that the given default values
@@ -235,6 +265,7 @@ class VSSDataDatatype(VSSData):
         datatypes
         """
         if self.allowed:
+            assert Datatypes.get_type(self.datatype), "'allowed' cannot be used with struct datatype"
             for v in self.allowed:
                 assert Datatypes.is_datatype(v, self.datatype), f"'{v}' is not of type '{self.datatype}'"
         return self
@@ -252,8 +283,11 @@ class VSSDataDatatype(VSSData):
     def check_datatype(self) -> Self:
         assert self.datatype in get_all_datatypes(self.fqn), f"'{self.datatype}' is not a valid datatype"
         self.datatype = resolve_datatype(self.datatype, self.fqn)
-        self.check_type_default_consistency()
-        self.check_allowed_datatype_consistency()
+        self = self.check_type_default_consistency()
+        self = self.check_allowed_datatype_consistency()
+        self = self.check_default_values_allowed()
+        self = self.check_min_max_valid_datatype()
+        self = self.check_default_min_max()
         return self
 
     @field_validator("unit")
@@ -271,7 +305,7 @@ class VSSDataDatatype(VSSData):
         referenced in the unit if given
         """
         if self.unit:
-            assert Datatypes.get_type(self.datatype), f"Cannot use 'unit' with complex datatype: '{self.datatype}'"
+            assert Datatypes.get_type(self.datatype), f"Cannot use 'unit' with struct datatype: '{self.datatype}'"
             assert any(
                 Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in dynamic_units[self.unit]
             ), f"'{self.datatype}' is not allowed for unit '{self.unit}'"

@@ -22,7 +22,7 @@ from vss_tools.model import (
     VSSDataStruct,
     get_all_model_fields,
 )
-from vss_tools.tree import ModelValidationException, VSSNode, build_tree
+from vss_tools.tree import ModelValidationException, VSSNode, add_struct_schemas, build_tree
 from vss_tools.units_quantities import load_quantities, load_units
 from vss_tools.vspec import InvalidSpecDuplicatedEntryException, InvalidSpecException, load_vspec
 
@@ -126,10 +126,6 @@ def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode
         else:
             types_root = root
 
-    if dynamic_datatypes:
-        log.info(f"Dynamic datatypes added={len(dynamic_datatypes)}")
-        log.debug(f"Dynamic datatypes:\n{dynamic_datatypes}")
-
     # Checking whether user defined root types e.g 'MyType'
     # instead of 'Types.MyType'
     if not all(["." in t for t in dynamic_datatypes]):
@@ -141,6 +137,11 @@ def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode
         except ModelValidationException as e:
             log.critical(e)
             exit(1)
+
+        if dynamic_datatypes:
+            log.info(f"Dynamic datatypes added={len(dynamic_datatypes)}")
+            log.debug(f"Dynamic datatypes:\n{dynamic_datatypes}")
+            add_struct_schemas(types_root)
 
     return types_root
 
