@@ -26,7 +26,8 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 def test_error(tmp_path, filename, error):
     spec = HERE / filename
     output = tmp_path / "out.json"
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
-    assert error in process.stdout
+    assert error in log.read_text() or error in process.stderr

@@ -364,18 +364,17 @@ def test_error_default_for_struct(tmp_path, file):
     vspec = HERE / file
     types_file = HERE / "VehicleDataTypes.vspec"
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
     cmd = (
-        f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} "
+        f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} "
         f"--output {out} --types {types_file}"
     )
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
 
     # Only checking first of type name to be able to handle both test cases
     error_msg = "Default values not allowed for user defined type 'VehicleDataTypes.TestBranch1.ParentStruct"
-    assert error_msg in process.stdout
+    assert error_msg in log.read_text() or error_msg in process.stderr
 
 
 def test_error_default_for_struct_array_empty(tmp_path):
@@ -385,11 +384,10 @@ def test_error_default_for_struct_array_empty(tmp_path):
     vspec = HERE / "test_struct_default_array_empty.vspec"
     types_file = HERE / "VehicleDataTypes.vspec"
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
     cmd = (
-        f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} "
+        f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} "
         + f"--output {out} --types {types_file}"
     )
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode == 0
