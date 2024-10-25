@@ -11,9 +11,9 @@ from vss_tools import log
 
 # Global objects to be extended by other code parts
 dynamic_datatypes: Set[str] = set()
+dynamic_struct_schemas: dict[str, dict[str, Any]] = {}
 dynamic_quantities: list[str] = []
-# This one contains the unit name as well as the list of allowed-datatypes
-dynamic_units: dict[str, list] = {}
+dynamic_units: dict[str, list] = {}  # unit name -> allowed datatypes
 
 
 class DatatypesException(Exception):

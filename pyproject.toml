@@ -19,6 +19,7 @@ importlib-metadata = "^7.0"
 click = "^8.1.7"
 rich-click = "^1.8.3"
 pydantic = "^2.8.2"
+jsonschema = "^4.23.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
