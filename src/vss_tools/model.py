@@ -178,6 +178,10 @@ class VSSDataDatatype(VSSData):
     arraysize: int | None = None
     min: int | float | None = None
     max: int | float | None = None
+    # Field, used to allow definition of Regular Expression constraints
+    # for string based property nodes.
+    # Example: VSS - VehicleIdentification.VIN property
+    pattern: str | None = None
     unit: str | None = None
     allowed: list[str | int | float | bool] | None = None
     default: list[str | int | float | bool] | str | int | float | bool | None = None
@@ -275,6 +279,42 @@ class VSSDataDatatype(VSSData):
             assert any(
                 Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in dynamic_units[self.unit]
             ), f"'{self.datatype}' is not allowed for unit '{self.unit}'"
+        return self
+
+    @model_validator(mode="after")
+    def check_datatype_pattern(self) -> Self:
+        """
+        Checks that regular expression datatype 'pattern' field is:
+
+        1. defined only for string typed nodes i.e., STRING and STRING_ARRAY
+        2. if default value(s) is provided, each default matching the specified pattern
+        3. if allowed value(s) is provided, each allowed matching the specified pattern
+        """
+        if self.pattern:
+            # Datatypes.TUPLE[0] is the string name of the type.
+            allowed_for = f"Allowed types: {[Datatypes.STRING[0], Datatypes.STRING_ARRAY[0]]}"
+            assert Datatypes.get_type(self.datatype) in [
+                Datatypes.STRING,
+                Datatypes.STRING_ARRAY,
+            ], f"Field 'pattern' is not allowed for type: '{self.datatype}'. {allowed_for}"
+
+            def check_value_match(value_to_check: Any, value_type: str, reg_exp: str) -> None:
+                check_values = [value_to_check]
+
+                if type(value_to_check) is list:
+                    check_values = value_to_check
+
+                for def_val in check_values:
+                    assert re.match(
+                        reg_exp, def_val
+                    ), f"Specified '{value_type}' value: '{def_val}' must match defined pattern: '{self.pattern}'"
+
+            if self.default:
+                check_value_match(self.default, "default", self.pattern)
+
+            if self.allowed:
+                check_value_match(self.allowed, "allowed", self.pattern)
+
         return self
 
 

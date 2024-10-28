@@ -1,0 +1,12 @@
+#
+A:
+  type: branch
+  description: Branch A - used to test no match of 'default' values with specified 'pattern' field.
+
+A.Colors:
+  datatype: string[]
+  type: attribute
+  description: Simple Label for colors, which should be a simple collection of all lower case strings.
+    Should fail on the 'Red' color label.
+  pattern: ^[a-z]+$
+  default: [white, green, Red]

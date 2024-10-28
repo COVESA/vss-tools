@@ -1,0 +1,19 @@
+#
+A:
+  type: branch
+  description: Branch A - used to test correct attribute (property) with defined 'pattern' field.
+
+A.Label:
+  datatype: string
+  type: attribute
+  description: Simple Label, which should be a simple all lower case string with a number.
+  pattern: ^[a-z0-9]+$
+  default: label1
+
+A.Colors:
+  datatype: string[]
+  type: attribute
+  description: Simple collection with colors, where each color should be a simple lower case string.
+  pattern: ^[a-z]+$
+  allowed: [white, green, red, black, yellow, blue]
+  default: [white, green, red]
