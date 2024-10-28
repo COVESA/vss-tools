@@ -330,7 +330,14 @@ def add_node_leaf_constraint(graph: Graph, node_char_name: str, node_char_uri: U
     constraint_name = str_to_uc_first_camel_case(vss_node.ttl_name + "Constraint")
     constraint_node_uri = get_vspec_uri(constraint_name)
 
-    __add_node_tuple(graph, constraint_node_uri, RDF.type, SammCConcepts.RANGE_CONSTRAINT.uri)
+    # Default Constraint URI is for Range (min/max) constraints
+    constraint_uri = SammCConcepts.RANGE_CONSTRAINT.uri
+
+    if hasattr(vss_node.data, "pattern") and vss_node.data.pattern is not None:
+        # Pattern property is used for Regular Expression constraints of STRING based data nodes
+        constraint_uri = SammCConcepts.REG_EXP_CONSTRAINT.uri
+
+    __add_node_tuple(graph, constraint_node_uri, RDF.type, constraint_uri)
     __add_node_tuple(graph, constraint_node_uri, SammConcepts.NAME.uri, Literal(constraint_name))
 
     # Workaround since doubles are serialized as scientific numbers
@@ -353,6 +360,16 @@ def add_node_leaf_constraint(graph: Graph, node_char_name: str, node_char_uri: U
             SammCConcepts.MIN_VALUE.uri,
             Literal(vss_node.data.min, datatype=data_type),  # type: ignore
         )
+
+    if vss_node.data.pattern is not None:  # type: ignore
+        __add_node_tuple(
+            graph,
+            constraint_node_uri,
+            SammConcepts.VALUE.uri,
+            Literal(vss_node.data.pattern, datatype=data_type),  # type: ignore
+        )
+
+        # Set the RegExp value for constraint_node_uri
 
     base_c_name = str_to_uc_first_camel_case(vss_node.ttl_name + "BaseCharacteristic")
     base_c_uri = get_vspec_uri(base_c_name)

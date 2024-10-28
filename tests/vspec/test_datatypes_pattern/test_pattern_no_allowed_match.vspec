@@ -1,0 +1,12 @@
+#
+A:
+  type: branch
+  description: Branch A - used to test no match of 'allowed' value with specified 'pattern' field.
+
+A.ErrorColors:
+  datatype: string[]
+  type: attribute
+  description: Simple Label for ErrorColors, which should be a simple all lower case string.
+    Should fail on the 'allowed' (only) 'Red' color label.
+  pattern: ^[a-z]+$
+  allowed: [Red]

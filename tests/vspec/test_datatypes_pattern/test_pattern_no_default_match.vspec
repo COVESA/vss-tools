@@ -1,0 +1,11 @@
+#
+A:
+  type: branch
+  description: Branch A - used to test no match of 'default' value with specified 'pattern' field.
+
+A.Label:
+  datatype: string
+  type: attribute
+  description: Simple Label, which should be a simple all lower case string.
+  pattern: ^[a-z]+$
+  default: WrongLabel1

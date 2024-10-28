@@ -13,7 +13,7 @@ from typing import Any
 from rdflib import URIRef
 from vss_tools import log
 from vss_tools.datatypes import Datatypes
-from vss_tools.model import NodeType, VSSDataBranch
+from vss_tools.model import NodeType, VSSDataBranch, VSSDataDatatype
 from vss_tools.tree import VSSNode
 
 from ..config import config as cfg
@@ -260,15 +260,9 @@ def get_node_description(vss_node: VSSNode) -> str:
 
 
 def has_constraints(vss_node: VSSNode) -> bool:
-    return (
-        hasattr(vss_node.data, "type")
-        and vss_node.data.type in [NodeType.ACTUATOR, NodeType.SENSOR]
-        and (
-            hasattr(vss_node.data, "max")
-            and vss_node.data.max is not None
-            or hasattr(vss_node.data, "min")
-            and vss_node.data.min is not None
-        )
+    return bool(
+        isinstance(vss_node.data, VSSDataDatatype)
+        and (vss_node.data.max is not None or vss_node.data.min is not None or vss_node.data.pattern is not None)
     )
 
 
