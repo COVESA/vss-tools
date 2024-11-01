@@ -1,6 +1,6 @@
 # Binary Toolset
 The binary toolset consists of a tool that translates the VSS YAML specification to the binary file format (see below),
-and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go.<br>
+and two libraries that provides methods that are likely to be needed by a server that manages the VSS tree, one written in C, and one in Go.
 
 ## Binary Parser Usage
 
@@ -70,35 +70,36 @@ and assuming a binary tree file has been created in the VSS parent directory:
 
 ## Encoding
 
-The binary node file format is as follows:<br>
-    Name        | Datatype  | #bytes<br>
-    ---------------------------------------<br>
-    NameLen     | uint8     | 1<br>
-    Name        | chararray | NameLen<br>
-    NodeTypeLen | uint8     | 1<br>
-    NodeType    | chararray | NodeTypeLen<br>
-    UuidLen     | uint8     | 1<br>
-    Uuid        | chararray | UuidLen<br>
-    DescrLen    | uint8     | 1<br>
-    Description | chararray | DescrLen<br>
-    DatatypeLen | uint8     | 1<br>
-    Datatype    | chararray | DatatypeLen<br>
-    MinLen      | uint8     | 1<br>
-    Min         | chararray | MinLen<br>
-    MaxLen      | uint8     | 1<br>
-    Max         | chararray | MaxLen<br>
-    UnitLen     | uint8     | 1<br>
-    Unit        | chararray | UnitLen<br>
-    AllowedLen  | uint8     | 1<br>
-    Allowed     | chararray | AllowedLen<br>
-    DefaultLen  | uint8     | 1<br>
-    Default     | chararray | AllowedLen<br>
-    ValidateLen | uint8     | 1<br>
-    Validate    | chararray | ValidateLen<br>
-    Children    | uint8     | 1<br><br>
+The binary node file format is as follows:
+
+Name        | Datatype  | #bytes
+------------|-----------|--------------
+NameLen     | uint8     | 1
+Name        | chararray | NameLen
+NodeTypeLen | uint8     | 1
+NodeType    | chararray | NodeTypeLen
+UuidLen     | uint8     | 1
+Uuid        | chararray | UuidLen
+DescrLen    | uint8     | 1
+Description | chararray | DescrLen
+DatatypeLen | uint8     | 1
+Datatype    | chararray | DatatypeLen
+MinLen      | uint8     | 1
+Min         | chararray | MinLen
+MaxLen      | uint8     | 1
+Max         | chararray | MaxLen
+UnitLen     | uint8     | 1
+Unit        | chararray | UnitLen
+AllowedLen  | uint8     | 1
+Allowed     | chararray | AllowedLen
+DefaultLen  | uint8     | 1
+Default     | chararray | AllowedLen
+ValidateLen | uint8     | 1
+Validate    | chararray | ValidateLen
+Children    | uint8     | 1
 
 The Allowed string contains an array of allowed, each Allowed is preceeded by two characters holding the size of the Allowed sub-string.
-The size is in hex format, with values from "01" to "FF". An example is "03abc0A012345678902cd" which contains the three Alloweds "abc", "0123456789", and "cd".<br><br>
+The size is in hex format, with values from "01" to "FF". An example is "03abc0A012345678902cd" which contains the three Alloweds "abc", "0123456789", and "cd".
 
 The nodes are written into the file in the order given by a recursive method as shown in the following pseudocode:
 
