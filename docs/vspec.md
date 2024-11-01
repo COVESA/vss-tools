@@ -43,16 +43,17 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
            INFO     Serializing compact JSON...                                                json.py:148
 
 ```
-## Exporter docs
+## Exporter Specific Documentation
 
 - [apigear](./apigear.md)
-- [tree](./tree.md)
+- [binary](../binary/README.md)
 - [ddsidl](./ddsidl.md)
+- [go](./go.md)
 - [graphql](./graphql.md)
 - [id](./id.md)
 - [protobuf](./protobuf.md)
 - [samm](./samm.md)
-- [go](./go.md)
+- [tree](./tree.md)
 
 ## Argument Explanations
 
