@@ -111,6 +111,8 @@ def export_node(node: VSSNode, f: BinaryIO):
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
+@clo.types_opt
+@clo.types_output_opt
 def cli(
     vspec: Path,
     output: Path,
@@ -121,22 +123,32 @@ def cli(
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
+    types: tuple[Path],
+    types_output: Path | None,
 ):
     """
     Export to Binary.
     """
 
-    tree, _ = get_trees(
+    tree, datatype_tree = get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
         aborts=aborts,
         strict=strict,
-        extended_attributes=extended_attributes,
         quantities=quantities,
         units=units,
+        types=types,
         overlays=overlays,
     )
+
     log.info("Generating binary output...")
+    if datatype_tree:
+        if types_output:
+            with open(str(types_output), "wb") as f:
+                export_node(datatype_tree, f)
+            log.info("Binary datatype tree output generated in %s", types_output)
+        else:
+            log.warning("Ignoring type tree generation as no file name specified")
     with open(str(output), "wb") as f:
         export_node(tree, f)
-    log.info("Binary output generated in %s", output)
+    log.info("Binary main tree output generated in %s", output)
