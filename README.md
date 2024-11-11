@@ -19,11 +19,13 @@ source .venv/bin/activate
 ```
 
 pypi
+
 ```bash
 pip install vss-tools
 ```
 
 from source:
+
 ```bash
 # default branch
 pip install git+https://github.com/COVESA/vss-tools.git
@@ -50,9 +52,8 @@ vspec export --help
 vspec export json --help
 ```
 
-Please check [here](./docs/vspec.md) for generic infos about exporters and their arguments
+Please check [here](./docs/vspec.md) for generic info about exporters and their arguments
 as well as [here](./docs/vspec_arch.md) for design decision, architecture and limitations.
-
 
 ## Compatibility with VSS
 
@@ -62,89 +63,81 @@ It is not guaranteed that newer or older versions of vss-tools can successfully 
 The table below gives an overview of basic version support for e.g. `vspec export json`.
 Other exporters may have stricter requirements.
 
-VSS-tools version | Supported VSS catalog versions | Comments
------------------|------------------------|----------------
-`v3.0`| `v3.0` - `v3.1.1`
-`v3.1`| `v3.0` -`v4.0`
-`v4.0`| `v4.0`
-`v4.1`| `v4.0` -
-`4.2`| `v4.0` -
-`5.0`| `v5.0` -
-`<latest source>`| `v5.0` -
+| VSS-tools version | Supported VSS catalog versions | Comments |
+| ----------------- | ------------------------------ | -------- |
+| `v3.0`            | `v3.0` - `v3.1.1`              |
+| `v3.1`            | `v3.0` -`v4.0`                 |
+| `v4.0`            | `v4.0`                         |
+| `v4.1`            | `v4.0` -                       |
+| `4.2`             | `v4.0` -                       |
+| `5.0`             | `v5.0` -                       |
+| `<latest source>` | `v5.0` -                       |
 
 ### Changes affecting compatibility
 
 Examples on changes affecting compatibility
 
-* Somewhat stricter control in VSS-tools 5.0 onwards,
+- Somewhat stricter control in VSS-tools 5.0 onwards,
   minor changes required in VSS 4.X catalogs to make it pass the control.
-* VSS version `v4.1` introduced a new syntax for the unit files that cannot be handled by `vss-tools < v4.1`
-* From `v4.0` vss-tools expects unit file to be explicitly specified or provided in the same directory as the VSS input.
+- VSS version `v4.1` introduced a new syntax for the unit files that cannot be handled by `vss-tools < v4.1`
+- From `v4.0` vss-tools expects unit file to be explicitly specified or provided in the same directory as the VSS input.
   VSS `v3.1` is the first VSS version including a unit file in the VSS repository.
   This means vss-tools from `v4.0` onwards cannot handle VSS-versions prior to VSS `v3.1`
-* VSS-tools `v3.1` only supported `default` for attributes, resulting in that newer VSS-versions is not supported.
-* VSS-tools `v4.0` requires case-sensitive for type, resulting in that VSS versions `v3.1` and earlier is not supported.
+- VSS-tools `v3.1` only supported `default` for attributes, resulting in that newer VSS-versions is not supported.
+- VSS-tools `v4.0` requires case-sensitive for type, resulting in that VSS versions `v3.1` and earlier is not supported.
 
 ## Contributing
 
-### Poetry
+### UV
 
-We are using [poetry](https://python-poetry.org/docs/) or a package and venv handling system.
-Therefore a requirement to develop a tool is to install poetry on your host machine.
-Check [here](https://python-poetry.org/docs/#installation) for official installation instructions. The recommended one is the following, however installing it through pip/pipx works aswell:
+We are using [uv](https://docs.astral.sh/uv/) as a python package and project manager.
+Therefore, a requirement to develop is to install `uv` on your host machine.
+Check [here](https://docs.astral.sh/uv/#getting-started) for official installation instructions. The recommended one is the following, however installing it through pip/pipx works as well:
 
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 You can then use the following command in the root directory of `vss-tools` to install all dependencies:
 
 ```bash
-poetry install
+uv sync
 ```
 
-Due to our [poetry.toml](./poetry.toml) the call will create a `.venv` directory but does not automatically activate it.
+It will create a `.venv` in the root of the project.
 
-You can use that venv in several ways, with or without the help of `poetry`:
-- `poetry shell`: Spawns a new subshell with the appropriate environment activated. After that you can directly call tools
-- `poetry run <tool>`: Runs the given tool in the virtual environment but does return to the current environment after that
-- `. $(poetry env info --path)/bin/activate`: Enables the virtual environment. Since we do store virtual envs directly with the tool the command can be simplified to `. .venv/bin/activate`. See [here](https://python-poetry.org/docs/basic-usage/#using-poetry-run) for more detailed information how to run poetry e.g. for Windows and how to exit/deactivate it.
-- We also have an `.envrc` that automatically sources the `.venv` when available. Check [direnv](https://direnv.net/) for how to set it up.
+You can use the `venv` like you would without the usage of `uv`:
 
-Examples (all from vss-tools root and after running `poetry install`):
-
-venv activation:
 ```bash
 source .venv/bin/activate
 vspec --help
 ```
-poetry shell:
+
+Alternatively you can use `uv` to run the `vspec` tool:
+
 ```bash
-poetry shell
-vspec --help
+uv run vspec --help
 ```
 
-poetry run:
-```bash
-poetry run vspec --help
-```
+If you have a working setup of [direnv](https://direnv.net/), just navigating into the directory
+if enough (after an initial `uv sync`)
 
-direnv:
 ```bash
 vspec --help
 ```
-
 
 ### Pre-commit
 
 This project uses [pre-commit](https://pre-commit.com/) which helps formatting the source code in a streamlined way.
 It is very recommended to use it.
-To install hooks you can do `pre-commit install` from an [activated environment](#poetry).
+To install hooks you can do `pre-commit install` from an [activated environment](#uv).
 Hooks will then run every time you do a `git commit` on changed files.
 If you would like to run all hooks on all files you can do `pre-commit run --all`.
 Since `pre-commit` dependencies are installed in the virtual environment, it needs
 to be activated to be able to run them on a commit.
-
 
 ### Installing additional tools
 
