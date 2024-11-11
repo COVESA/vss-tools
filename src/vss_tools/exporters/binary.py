@@ -147,8 +147,8 @@ def cli(
             with open(str(types_output), "wb") as f:
                 export_node(datatype_tree, f)
             log.info("Binary datatype tree output generated in %s", types_output)
-
+	else:
+		log.warning("Ignoring type tree generation as no file name specified")
     with open(str(output), "wb") as f:
         export_node(tree, f)
     log.info("Binary main tree output generated in %s", output)
-
