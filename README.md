@@ -39,7 +39,7 @@ See [usage](#usage) for how to start using it.
 
 ## Usage
 
-General CLI help should be used for up to date info of how to use the tools.
+General CLI help should be used for up-to-date info of how to use the tools.
 
 ```bash
 # Help for toplevel options and lists sub commands
@@ -108,7 +108,6 @@ uv sync
 ```
 
 It will create a `.venv` in the root of the project.
-
 You can use the `venv` like you would without the usage of `uv`:
 
 ```bash
@@ -122,16 +121,30 @@ Alternatively you can use `uv` to run the `vspec` tool:
 uv run vspec --help
 ```
 
-If you have a working setup of [direnv](https://direnv.net/), just navigating into the directory
-if enough (after an initial `uv sync`)
+If you have a working setup of [direnv](https://direnv.net/), navigating into the directory
+activates the `venv` (after an initial `uv sync` and `direnv allow`)
 
 ```bash
 vspec --help
 ```
 
+`uv` can manage independent python versions.
+If you would like to use a specific python version (e.g. `python3.12`):
+
+```bash
+# Python 3.12
+uv sync -p python3.12
+# From the activated env:
+python --version # --> Python 3.12.7
+
+# Python 3.13
+uv sync -p python3.13
+python --version # --> Python 3.13.0
+```
+
 ### Pre-commit
 
-This project uses [pre-commit](https://pre-commit.com/) which helps formatting the source code in a streamlined way.
+This project uses [pre-commit](https://pre-commit.com/) which helps to format the source code in a streamlined way.
 It is very recommended to use it.
 To install hooks you can do `pre-commit install` from an [activated environment](#uv).
 Hooks will then run every time you do a `git commit` on changed files.

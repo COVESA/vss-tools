@@ -25,10 +25,17 @@ authors = [
 license = {text = "Mozilla Public License 2.0"}
 
 [project.urls]
-homepage="https://github.com/COVESA/vss-tools"
+Homepage="https://github.com/COVESA/vss-tools"
+Issues = "https://github.com/COVESA/vss-tools/issues"
+Changelog = "https://github.com/COVESA/vss-tools/blob/master/CHANGELOG.md"
 
 [project.scripts]
 vspec = "vss_tools.cli:cli"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.mypy]
 disable_error_code = "import-untyped"
@@ -44,8 +51,8 @@ select = ["E", "F", "I"]
 
 [dependency-groups]
 dev = [
-    "flake8>=7.1.1",
     "mypy>=1.13.0",
+    "nox>=2024.10.9",
     "pre-commit>=4.0.1",
     "pytest-cov>=6.0.0",
     "pytest>=8.3.3",
