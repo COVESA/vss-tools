@@ -31,12 +31,8 @@ jobs:
         uses: astral-sh/setup-uv@v3
       - name: Mypy
         run: uv run mypy src
-      - name: flake8
-        run: |
-          uv run flake8 src tests contrib
       - name: Run tests
-        run: |
-          uv run pytest --cov=vss_tools --cov-report=term-missing --cov-fail-under=88
+        run: uv run nox
       - name: Test Binary Go Parser
         run: |
           cd binary/go_parser
