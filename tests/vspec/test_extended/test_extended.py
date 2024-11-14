@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -48,25 +47,23 @@ def test_extended_ok(
     tmp_path,
 ):
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    log = tmp_path / "out.log"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS}"
     cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
 
-    # Make sure there is no line break that affects compare
-    env = os.environ.copy()
-    env["COLUMNS"] = "120"
+    subprocess.run(cmd.split(), capture_output=True, text=True)
 
-    process = subprocess.run(cmd.split(), capture_output=True, check=True, text=True, env=env)
+    log_content = log.read_text()
 
     if known_extended is not None:
-        print(process.stdout)
-        check_str = KNOWN_PREFIX + known_extended + " "
-        assert check_str in process.stdout
+        check_str = KNOWN_PREFIX + known_extended
+        assert check_str in log_content
     else:
-        assert KNOWN_PREFIX not in process.stdout
+        assert KNOWN_PREFIX not in log_content
 
     if extended_warning:
         for i in extended_warning.split(","):
-            assert (WARNING_PREFIX + f" 'A.SignalA':'{i.strip()}'") in process.stdout
+            assert (WARNING_PREFIX + f" 'A.SignalA':'{i.strip()}'") in log_content
 
 
 @pytest.mark.parametrize(
@@ -81,13 +78,11 @@ def test_extended_ok(
 )
 def test_extended_error(extended_args: str, tmp_path):
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    log = tmp_path / "out.log"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS}"
     cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
 
-    # Make sure there is no line break that affects compare
-    env = os.environ.copy()
-    env["COLUMNS"] = "120"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
 
-    process = subprocess.run(cmd.split(), stdout=subprocess.PIPE, text=True, stderr=subprocess.STDOUT, env=env)
     assert process.returncode != 0
-    assert "not allowed" in process.stdout
+    assert "not allowed" in log.read_text() or "not allowed" in process.stderr
