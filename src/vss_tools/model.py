@@ -309,9 +309,12 @@ class VSSDataDatatype(VSSData):
         referenced in the unit if given
         """
         if self.unit:
-            assert Datatypes.get_type(self.datatype), f"Cannot use 'unit' with struct datatype: '{self.datatype}'"
+            assert Datatypes.get_type(self.datatype), f"Cannot use 'unit' with complex datatype: '{self.datatype}'"
+            allowed_datatypes = dynamic_units[self.unit].allowed_datatypes
+            if allowed_datatypes is None:
+                allowed_datatypes = []
             assert any(
-                Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in dynamic_units[self.unit]
+                Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in allowed_datatypes
             ), f"'{self.datatype}' is not allowed for unit '{self.unit}'"
         return self
 

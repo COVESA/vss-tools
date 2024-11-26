@@ -1,164 +1,75 @@
 type Query {
-  vehicle(
-    """VIN of the vehicle that you want to request data for."""
-    id: String!
-
-    """
-    Filter data to only provide information that was sent from the vehicle after that timestamp.
-    """
-    after: String
-  ): A
+  vehicle: A
 }
+
+scalar Int8
+
+scalar UInt8
+
+scalar Int16
+
+scalar UInt16
+
+scalar UInt32
+
+scalar Int64
+
+scalar UInt64
 
 """Branch A."""
 type A {
   """A sensor."""
-  singleLineNotQuoted: A_SingleLineNotQuoted
+  multiLineCommaNotQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  singleLineInternalQuotes: A_SingleLineInternalQuotes
+  multiLineCommaQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  singleLineQuoted: A_SingleLineQuoted
+  multiLineLiteralStyleQuote(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  singleLineQuotedInternalQuotes: A_SingleLineQuotedInternalQuotes
+  multiLineStyleInitialBreak(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  singleLineComma: A_SingleLineComma
+  singleLineComma(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  singleLineCommaQuoted: A_SingleLineCommaQuoted
+  singleLineCommaQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  multiLineCommaNotQuoted: A_MultiLineCommaNotQuoted
+  singleLineInternalQuotes(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  multiLineCommaQuoted: A_MultiLineCommaQuoted
+  singleLineNotQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  multiLineStyleInitialBreak: A_MultiLineStyleInitialBreak
+  singleLineQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
   """A sensor."""
-  multiLineLiteralStyleQuote: A_MultiLineLiteralStyleQuote
+  singleLineQuotedInternalQuotes(unit: Length_Unit_Enum = KILOMETER): Float
 }
 
-"""A sensor."""
-type A_SingleLineNotQuoted {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
+enum Angularspeed_Unit_Enum {
+  DEGREE_PER_SECOND
 }
 
-"""A sensor."""
-type A_SingleLineInternalQuotes {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
+enum Distance_Unit_Enum {
+  METER
+  MILLIMETER
 }
 
-"""A sensor."""
-type A_SingleLineQuoted {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
+enum Length_Unit_Enum {
+  KILOMETER
 }
 
-"""A sensor."""
-type A_SingleLineQuotedInternalQuotes {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
+enum Relation_Unit_Enum {
+  PERCENT
 }
 
-"""A sensor."""
-type A_SingleLineComma {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
+enum Rotationalspeed_Unit_Enum {
+  REVOLUTIONS_PER_MINUTE
 }
 
-"""A sensor."""
-type A_SingleLineCommaQuoted {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
-}
-
-"""A sensor."""
-type A_MultiLineCommaNotQuoted {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
-}
-
-"""A sensor."""
-type A_MultiLineCommaQuoted {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
-}
-
-"""A sensor."""
-type A_MultiLineStyleInitialBreak {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
-}
-
-"""A sensor."""
-type A_MultiLineLiteralStyleQuote {
-  """Value: A sensor."""
-  value: Float
-
-  """Timestamp: A sensor."""
-  timestamp: String
-
-  """Unit of A sensor."""
-  unit: String
+enum Temperature_Unit_Enum {
+  DEGREE_CELSIUS
 }
