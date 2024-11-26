@@ -5,15 +5,21 @@
 # https://www.mozilla.org/en-US/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
-from typing import Any, Callable, Set
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Callable, Set
 
 from vss_tools import log
+
+if TYPE_CHECKING:
+    from vss_tools.model import VSSUnit
 
 # Global objects to be extended by other code parts
 dynamic_datatypes: Set[str] = set()
 dynamic_struct_schemas: dict[str, dict[str, Any]] = {}
 dynamic_quantities: list[str] = []
-dynamic_units: dict[str, list] = {}  # unit name -> allowed datatypes
+# Map of unit name and VSSUnit
+dynamic_units: dict[str, VSSUnit] = {}
 
 
 class DatatypesException(Exception):
