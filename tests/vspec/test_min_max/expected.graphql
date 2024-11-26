@@ -1,182 +1,107 @@
 type Query {
-  vehicle(
-    """VIN of the vehicle that you want to request data for."""
-    id: String!
-
-    """
-    Filter data to only provide information that was sent from the vehicle after that timestamp.
-    """
-    after: String
-  ): A
+  vehicle: A
 }
+
+scalar Int8
+
+scalar UInt8
+
+scalar Int16
+
+scalar UInt16
+
+scalar UInt32
+
+scalar Int64
+
+scalar UInt64
 
 """Branch A."""
 type A {
+  """Max Zero."""
+  floatMaxZero: Float
+
+  """Max Zero."""
+  floatMaxZeroInt: Float
+
+  """
+  Min & Max.
+  @min: -165.56323
+  @max: 236723.4
+  """
+  floatMinMax: Float
+
+  """Min Zero."""
+  floatMinZero: Float
+
+  """Min Zero."""
+  floatMinZeroInt: Float
+
   """No Min Max."""
-  intNoMinMax: A_IntNoMinMax
+  floatNoMinMax: Float
 
-  """Only Max."""
-  intOnlyMax: A_IntOnlyMax
+  """
+  Only Max.
+  @max: 32.3
+  """
+  floatOnlyMax: Float
 
-  """Only Min."""
-  intOnlyMin: A_IntOnlyMin
-
-  """Min & Max."""
-  intMinMax: A_IntMinMax
+  """
+  Only Min.
+  @min: -2.5
+  """
+  floatOnlyMin: Float
 
   """Max Zero."""
-  intMaxZero: A_IntMaxZero
+  intMaxZero: Int8
+
+  """
+  Min & Max.
+  @min: 3
+  @max: 6
+  """
+  intMinMax: Int8
 
   """Min Zero."""
-  intMinZero: A_IntMinZero
+  intMinZero: Int8
 
   """No Min Max."""
-  floatNoMinMax: A_FloatNoMinMax
+  intNoMinMax: Int8
 
-  """Only Max."""
-  floatOnlyMax: A_FloatOnlyMax
+  """
+  Only Max.
+  @max: 32
+  """
+  intOnlyMax: Int8
 
-  """Only Min."""
-  floatOnlyMin: A_FloatOnlyMin
-
-  """Min & Max."""
-  floatMinMax: A_FloatMinMax
-
-  """Max Zero."""
-  floatMaxZero: A_FloatMaxZero
-
-  """Min Zero."""
-  floatMinZero: A_FloatMinZero
-
-  """Max Zero."""
-  floatMaxZeroInt: A_FloatMaxZeroInt
-
-  """Min Zero."""
-  floatMinZeroInt: A_FloatMinZeroInt
+  """
+  Only Min.
+  @min: 3
+  """
+  intOnlyMin: Int8
 }
 
-"""No Min Max."""
-type A_IntNoMinMax {
-  """Value: No Min Max."""
-  value: Int
-
-  """Timestamp: No Min Max."""
-  timestamp: String
+enum Angularspeed_Unit_Enum {
+  DEGREE_PER_SECOND
 }
 
-"""Only Max."""
-type A_IntOnlyMax {
-  """Value: Only Max."""
-  value: Int
-
-  """Timestamp: Only Max."""
-  timestamp: String
+enum Distance_Unit_Enum {
+  METER
+  MILLIMETER
 }
 
-"""Only Min."""
-type A_IntOnlyMin {
-  """Value: Only Min."""
-  value: Int
-
-  """Timestamp: Only Min."""
-  timestamp: String
+enum Length_Unit_Enum {
+  KILOMETER
 }
 
-"""Min & Max."""
-type A_IntMinMax {
-  """Value: Min & Max."""
-  value: Int
-
-  """Timestamp: Min & Max."""
-  timestamp: String
+enum Relation_Unit_Enum {
+  PERCENT
 }
 
-"""Max Zero."""
-type A_IntMaxZero {
-  """Value: Max Zero."""
-  value: Int
-
-  """Timestamp: Max Zero."""
-  timestamp: String
+enum Rotationalspeed_Unit_Enum {
+  REVOLUTIONS_PER_MINUTE
 }
 
-"""Min Zero."""
-type A_IntMinZero {
-  """Value: Min Zero."""
-  value: Int
-
-  """Timestamp: Min Zero."""
-  timestamp: String
-}
-
-"""No Min Max."""
-type A_FloatNoMinMax {
-  """Value: No Min Max."""
-  value: Float
-
-  """Timestamp: No Min Max."""
-  timestamp: String
-}
-
-"""Only Max."""
-type A_FloatOnlyMax {
-  """Value: Only Max."""
-  value: Float
-
-  """Timestamp: Only Max."""
-  timestamp: String
-}
-
-"""Only Min."""
-type A_FloatOnlyMin {
-  """Value: Only Min."""
-  value: Float
-
-  """Timestamp: Only Min."""
-  timestamp: String
-}
-
-"""Min & Max."""
-type A_FloatMinMax {
-  """Value: Min & Max."""
-  value: Float
-
-  """Timestamp: Min & Max."""
-  timestamp: String
-}
-
-"""Max Zero."""
-type A_FloatMaxZero {
-  """Value: Max Zero."""
-  value: Float
-
-  """Timestamp: Max Zero."""
-  timestamp: String
-}
-
-"""Min Zero."""
-type A_FloatMinZero {
-  """Value: Min Zero."""
-  value: Float
-
-  """Timestamp: Min Zero."""
-  timestamp: String
-}
-
-"""Max Zero."""
-type A_FloatMaxZeroInt {
-  """Value: Max Zero."""
-  value: Float
-
-  """Timestamp: Max Zero."""
-  timestamp: String
-}
-
-"""Min Zero."""
-type A_FloatMinZeroInt {
-  """Value: Min Zero."""
-  value: Float
-
-  """Timestamp: Min Zero."""
-  timestamp: String
+enum Temperature_Unit_Enum {
+  DEGREE_CELSIUS
 }
