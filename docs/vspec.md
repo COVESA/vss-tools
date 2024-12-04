@@ -8,23 +8,24 @@ For the most up do date usage information, please call the tool help via:
 vspec export --help
 
  Usage: vspec export [OPTIONS] COMMAND [ARGS]...
-╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --help                                              Show this message and exit.                        │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────╮
-│ apigear                           Export to ApiGear.                                                   │
-│ binary                            Export to Binary.                                                    │
-│ csv                               Export as CSV.                                                       │
-│ ddsidl                            Export as DDSIDL.                                                    │
-│ franca                            Export as Franca.                                                    │
-│ graphql                           Export as GraphQL.                                                   │
-│ id                                Export as IDs.                                                       │
-│ json                              Export as JSON.                                                      │
-│ jsonschema                        Export as a jsonschema.                                              │
-│ protobuf                          Export as protobuf.                                                  │
-│ yaml                              Export as YAML.                                                      │
-│ tree                              Export as Tree.                                                      │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help                                              Show this message and exit.                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ apigear       Export to ApiGear.                                                                                     │
+│ binary        Export to Binary.                                                                                      │
+│ csv           Export as CSV.                                                                                         │
+│ ddsidl        Export as DDSIDL.                                                                                      │
+│ franca        Export as Franca.                                                                                      │
+│ graphql       Export as GraphQL.                                                                                     │
+│ id            Export as IDs.                                                                                         │
+│ json          Export as JSON.                                                                                        │
+│ jsonschema    Export as a jsonschema.                                                                                │
+│ protobuf      Export as protobuf.                                                                                    │
+| samm          Export as Eclipse Semantic Modeling Framework (ESMF) - Semantic Aspect Meta Model (SAMM) - .ttl files. |
+│ yaml          Export as YAML.                                                                                        │
+│ tree          Export as Tree.                                                                                        │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 
