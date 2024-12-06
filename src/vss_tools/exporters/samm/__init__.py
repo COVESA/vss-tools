@@ -176,7 +176,7 @@ def cli(
     split_depth,
 ) -> None:
     """
-    Export COVESA VSS to Eclipse Semantic Modeling Framework (ESMF) - Semantic Aspect Meta Model (SAMM) - .ttl files.
+    Export as Eclipse Semantic Modeling Framework (ESMF) - Semantic Aspect Meta Model (SAMM) - .ttl files.
     """
 
     log.info("Loading VSS Tree...\n")
