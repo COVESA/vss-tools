@@ -1,116 +1,62 @@
 type Query {
-  vehicle(
-    """VIN of the vehicle that you want to request data for."""
-    id: String!
-
-    """
-    Filter data to only provide information that was sent from the vehicle after that timestamp.
-    """
-    after: String
-  ): A
+  vehicle: A
 }
+
+scalar Int8
+
+scalar UInt8
+
+scalar Int16
+
+scalar UInt16
+
+scalar UInt32
+
+scalar Int64
+
+scalar UInt64
 
 """Branch A."""
 type A {
-  """This description will be duplicated."""
-  b: A_B
+  b_s: [A_B]
 }
 
 """This description will be duplicated."""
 type A_B {
-  """This description will be duplicated."""
-  row1: A_B_Row1
+  instance: A_B_Instance_Enum
 
-  """This description will be duplicated."""
-  row2: A_B_Row2
-}
-
-"""This description will be duplicated."""
-type A_B_Row1 {
-  """This description will be duplicated."""
-  left: A_B_Row1_Left
-
-  """This description will be duplicated."""
-  right: A_B_Row1_Right
-}
-
-"""This description will be duplicated."""
-type A_B_Row1_Left {
   """This description will also exist multiple times."""
-  c: A_B_Row1_Left_C
+  c(unit: Length_Unit_Enum = KILOMETER): Int8
 }
 
-"""This description will also exist multiple times."""
-type A_B_Row1_Left_C {
-  """Value: This description will also exist multiple times."""
-  value: Int
-
-  """Timestamp: This description will also exist multiple times."""
-  timestamp: String
-
-  """Unit of This description will also exist multiple times."""
-  unit: String
+enum Angularspeed_Unit_Enum {
+  DEGREE_PER_SECOND
 }
 
-"""This description will be duplicated."""
-type A_B_Row1_Right {
-  """This description will also exist multiple times."""
-  c: A_B_Row1_Right_C
+enum Distance_Unit_Enum {
+  METER
+  MILLIMETER
 }
 
-"""This description will also exist multiple times."""
-type A_B_Row1_Right_C {
-  """Value: This description will also exist multiple times."""
-  value: Int
-
-  """Timestamp: This description will also exist multiple times."""
-  timestamp: String
-
-  """Unit of This description will also exist multiple times."""
-  unit: String
+enum Length_Unit_Enum {
+  KILOMETER
 }
 
-"""This description will be duplicated."""
-type A_B_Row2 {
-  """This description will be duplicated."""
-  left: A_B_Row2_Left
-
-  """This description will be duplicated."""
-  right: A_B_Row2_Right
+enum Relation_Unit_Enum {
+  PERCENT
 }
 
-"""This description will be duplicated."""
-type A_B_Row2_Left {
-  """This description will also exist multiple times."""
-  c: A_B_Row2_Left_C
+enum Rotationalspeed_Unit_Enum {
+  REVOLUTIONS_PER_MINUTE
 }
 
-"""This description will also exist multiple times."""
-type A_B_Row2_Left_C {
-  """Value: This description will also exist multiple times."""
-  value: Int
-
-  """Timestamp: This description will also exist multiple times."""
-  timestamp: String
-
-  """Unit of This description will also exist multiple times."""
-  unit: String
+enum Temperature_Unit_Enum {
+  DEGREE_CELSIUS
 }
 
-"""This description will be duplicated."""
-type A_B_Row2_Right {
-  """This description will also exist multiple times."""
-  c: A_B_Row2_Right_C
-}
-
-"""This description will also exist multiple times."""
-type A_B_Row2_Right_C {
-  """Value: This description will also exist multiple times."""
-  value: Int
-
-  """Timestamp: This description will also exist multiple times."""
-  timestamp: String
-
-  """Unit of This description will also exist multiple times."""
-  unit: String
+enum A_B_Instance_Enum {
+  ROW1_LEFT
+  ROW1_RIGHT
+  ROW2_LEFT
+  ROW2_RIGHT
 }
