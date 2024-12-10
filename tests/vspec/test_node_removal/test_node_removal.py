@@ -94,9 +94,24 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str], tmp_
         remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
         for node in remaining_nodes:
             assert node in result
-    if exporter == "vspec export graphql":
-        assert "A.B.Int32".replace(".", "_") not in result
-        remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
+    if exporter in ["vspec export graphql"]:
+        remaining_nodes = [
+            "float",
+            "int16",
+            "string",
+            "stringArray",
+            "A_B",
+            "newName",
+            "isLeaf",
+            "min",
+            "max",
+            "A_C",
+            "A_C_Instance_Enum",
+            "test",
+        ]
+
+        assert "int32:" not in result
+        print(result)
         for node in remaining_nodes:
             assert node in result
     else:
@@ -166,6 +181,17 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tm
         for node in remaining_nodes:
             assert node in result_file
     elif exporter == "vspec export graphql":
+        remaining_nodes = [
+            "float",
+            "int16",
+            "string",
+            "stringArray",
+            "A_C",
+            "INSTANCE1",
+            "test",
+            "INSTANCE2",
+            "A_C_Instance_Enum",
+        ]
         assert "A.B".replace(".", "_") not in result_file
         remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
         for node in remaining_nodes:
@@ -246,8 +272,22 @@ def test_deleted_instance(
             for node in remaining_nodes:
                 assert node in result_file
         elif exporter == "vspec export graphql":
-            assert "A.C.Instance2".replace(".", "_") not in result_file
-            remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
+            print(result_file)
+            remaining_nodes = [
+                "float",
+                "int16",
+                "string",
+                "stringArray",
+                "A_B",
+                "newName",
+                "isLeaf",
+                "min",
+                "max",
+                "A_C",
+                "INSTANCE1",
+                "test",
+            ]
+            assert "Instance2" not in result_file
             for node in remaining_nodes:
                 assert node in result_file
         else:
