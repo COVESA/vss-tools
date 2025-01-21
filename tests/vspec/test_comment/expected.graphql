@@ -18,34 +18,58 @@ scalar UInt64
 
 """Branch A."""
 type A {
-  """A sensor."""
+  """
+  A sensor.
+  @comment: July, is a great month!
+  """
   multiLineCommaNotQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  """
+  A sensor.
+  @comment: August, is a great month!
+  """
   multiLineCommaQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  "A sensor.\n@comment: November,\nis a \"great\" month!\n"
   multiLineLiteralStyleQuote(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  "A sensor.\n@comment: October,\nis a great month!\n"
   multiLineStyleInitialBreak(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  """
+  A sensor.
+  @comment: May, is a great month!
+  """
   singleLineComma(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  """
+  A sensor.
+  @comment: June, is a great month!
+  """
   singleLineCommaQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  """
+  A sensor.
+  @comment: February is a "great" month!
+  """
   singleLineInternalQuotes(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  """
+  A sensor.
+  @comment: January is a great month!
+  """
   singleLineNotQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  """
+  A sensor.
+  @comment: March is a great month!
+  """
   singleLineQuoted(unit: Length_Unit_Enum = KILOMETER): Float
 
-  """A sensor."""
+  """
+  A sensor.
+  @comment: April is a "great" month!
+  """
   singleLineQuotedInternalQuotes(unit: Length_Unit_Enum = KILOMETER): Float
 }
 

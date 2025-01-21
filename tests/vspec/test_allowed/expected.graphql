@@ -31,6 +31,29 @@ type A {
   stringArray: [A_StringArray_Enum]
 }
 
+enum A_Float_Enum {
+  _1_1
+  _2_54
+  _3
+}
+
+enum A_Int_Enum {
+  _1
+  _2
+  _3
+}
+
+enum A_String_Enum {
+  JANUARY
+  FEBRUARY
+}
+
+enum A_StringArray_Enum {
+  JANUARY
+  FEBRUARY
+  MARCH
+}
+
 enum Angularspeed_Unit_Enum {
   DEGREE_PER_SECOND
 }
@@ -54,27 +77,4 @@ enum Rotationalspeed_Unit_Enum {
 
 enum Temperature_Unit_Enum {
   DEGREE_CELSIUS
-}
-
-enum A_Float_Enum {
-  _1_1
-  _2_54
-  _3
-}
-
-enum A_Int_Enum {
-  _1
-  _2
-  _3
-}
-
-enum A_String_Enum {
-  JANUARY
-  FEBRUARY
-}
-
-enum A_StringArray_Enum {
-  JANUARY
-  FEBRUARY
-  MARCH
 }

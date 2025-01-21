@@ -21,11 +21,18 @@ type A {
   b_s: [A_B]
 }
 
-"""This description will be duplicated."""
+"""
+This description will be duplicated.
+@comment: This comment will be duplicated
+"""
 type A_B {
-  instance: A_B_Instance_Enum
+  id: ID!
+  instanceLabel: String
 
-  """This description will also exist multiple times."""
+  """
+  This description will also exist multiple times.
+  @comment: As well as this comment.
+  """
   c(unit: Length_Unit_Enum = KILOMETER): Int8
 }
 
@@ -54,6 +61,9 @@ enum Temperature_Unit_Enum {
   DEGREE_CELSIUS
 }
 
+"""
+Specified reference instance names (informative only) for the type A_B.
+"""
 enum A_B_Instance_Enum {
   ROW1_LEFT
   ROW1_RIGHT
