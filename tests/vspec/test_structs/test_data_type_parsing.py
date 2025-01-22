@@ -316,7 +316,7 @@ def test_error_when_no_user_defined_data_types_are_provided(tmp_path):
         (
             "test_with_unit_on_struct_signal.vspec",
             "VehicleDataTypes.vspec",
-            "Cannot use 'unit' with struct datatype: 'VehicleDataTypes.TestBranch1.ParentStruct'",
+            "Cannot use 'unit' with complex datatype: 'VehicleDataTypes.TestBranch1.ParentStruct'",
         ),
     ],
 )

@@ -69,12 +69,9 @@ def load_quantities_and_units(quantities: tuple[Path, ...], units: tuple[Path, .
     dynamic_quantities.extend(list(quantity_data.keys()))
     unit_data = load_units(list(units))
     for k, v in unit_data.items():
-        allowed_datatypes = []
-        if v.allowed_datatypes is not None:
-            allowed_datatypes = v.allowed_datatypes
         if v.unit is not None:
-            dynamic_units[v.unit] = allowed_datatypes
-        dynamic_units[k] = allowed_datatypes
+            dynamic_units[v.unit] = v
+        dynamic_units[k] = v
 
 
 def check_name_violations(root: VSSNode, strict: bool, aborts: tuple[str, ...]) -> None:
