@@ -48,8 +48,8 @@ def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attribu
 def cli(
     ctx,
     vspec: Path,
-    outputradial: Path,
-    outputsankey: Path,
+    output: Path,
+
     include_dirs: tuple[Path],
     extended_attributes: tuple[str],
     strict: bool,
@@ -64,7 +64,7 @@ def cli(
     extend_all_attributes: bool,
 ):
     """
-    Export Stats.
+    Export JSON Stats.
     """
     tree, datatype_tree = get_trees(
         vspec=vspec,
@@ -116,7 +116,7 @@ def cli(
         'children': build_json_structure(signals_data['Vehicle']['children'])
     }
 
-    with open(outputradial, "w") as f:
+    with open(output, "w") as f:
         json.dump(new_data, f, indent=2)
 
 # import pandas as pd
