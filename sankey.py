@@ -2,7 +2,7 @@ import pandas as pd
 
 # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand    
 # Load the data into a DataFrame
-data_metadata = pd.read_csv('vss-6-metadata.csv')
+data_metadata = pd.read_csv('somestats.csv')
 
 # Filter out rows containing 'branch'
 data_metadata = data_metadata[~data_metadata.isin(['branch']).any(axis=1)]
@@ -44,14 +44,14 @@ print_unique_values(data_metadata)
 # Save the modified data into a new CSV file
 data_metadata.to_csv('sankey.csv', index=False)
 
-# # Compare the new CSV file with the previous one
-# def compare_csv_files(file1, file2):
-#     df1 = pd.read_csv(file1)
-#     df2 = pd.read_csv(file2)
-#     if df1.equals(df2):
-#         print("The two CSV files are the same.")
-#     else:
-#         print("The two CSV files are different.")
+# Compare the new CSV file with the previous one
+def compare_csv_files(file1, file2):
+    df1 = pd.read_csv(file1)
+    df2 = pd.read_csv(file2)
+    if df1.equals(df2):
+        print("The two CSV files are the same.")
+    else:
+        print("The two CSV files are different.")
 
-# # Compare 'enginar.csv' with 'modified_vss_compact_metadata_test.csv'
-# compare_csv_files('sankey.csv', 'modified_vss_compact_metadata_test.csv')
+# Compare 'enginar.csv' with 'modified_vss_compact_metadata_test.csv'
+compare_csv_files('csvstats.csv', 'sankey.csv')
