@@ -51,6 +51,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "go": "vss_tools.exporters.go:cli",
         "statisticsradial": "vss_tools.exporters.statisticsradial:cli",
         "statisticssankey": "vss_tools.exporters.statisticssankey:cli",
+        "statisticspiechart": "vss_tools.exporters.statisticspiechart:cli",
     },
 )
 @click.pass_context
