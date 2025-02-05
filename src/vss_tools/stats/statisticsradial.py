@@ -64,7 +64,7 @@ def cli(
     extend_all_attributes: bool,
 ):
     """
-    Export JSON Stats.
+    Export JSON Data for Radial Tree.
     """
     tree, datatype_tree = get_trees(
         vspec=vspec,
