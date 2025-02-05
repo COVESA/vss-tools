@@ -21,7 +21,6 @@ from vss_tools import log
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
-from collections import Counter
 
 
 def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
@@ -99,7 +98,7 @@ def cli(
     types_output: Path,
 ):
     """
-    Export CSV Stats for Pie Chart.
+    Export CSV Stats for Sankey Diagram.
     """
     tree, datatype_tree = get_trees(
         vspec=vspec,
@@ -131,53 +130,36 @@ def cli(
         rows = [get_header("Node", with_instance_column)]
         add_rows(rows, datatype_tree, with_instance_column)
 
-    data_metadata = pd.DataFrame(rows[1:], columns=rows[0])    
-
+    data_metadata = pd.DataFrame(rows[1:], columns=rows[0])
+        
     # Now you generated:
-    # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand
-    #
-    # The actual data of first 5 version for fallbacks
-    # template_data = {
-    #     'Type': ['Attribute', 'Branches', 'Sensors', 'Actuators'],
-    #     'V2': [78, 117, 203, 101],
-    #     'V3': [86, 117, 263, 128],
-    #     'V4': [97, 147, 286, 179],
-    #     'V5': [110, 131, 313, 195]
-    # }
+    # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand    
 
-    latest = pd.read_csv('../vehicle_signal_specification/docs-gen/static/data/piechartnotexpanded.csv')
+    data_metadata = data_metadata[~data_metadata.isin(['branch']).any(axis=1)]
 
-    metadata = data_metadata
+    column_names = data_metadata.columns.tolist()
+    print(column_names)
 
-    metadata['Default'] = pd.to_numeric(metadata['Default'], errors='coerce')
+    data_metadata['Property'] = data_metadata['Type'].apply(
+        lambda x: "dynamic" if x in ["sensor", "actuator"] else "static"
+    )
 
-    major_version = None
-    for index, row in metadata.iterrows():
-        if 'Vehicle.VersionVSS.Major' in row['Signal'] and row['Default'] > 5:
-            major_version = int(row['Default'])
-            break
+    columns_to_drop = ['Signal', 'Desc', 'Deprecated', 
+                    'Unit', 'Min', 'Max', 'Allowed','Comment',
+                    'Default']
+    data_metadata.drop(columns=columns_to_drop, inplace=True)
+    data_metadata['Dummy'] = 0
 
-    if (major_version is not None):
-        
-        type_counts = Counter(metadata['Type'])
-        counts = {
-            'Branches': type_counts.get('branch', 0),
-            'Sensors': type_counts.get('sensor', 0),
-            'Actuators': type_counts.get('actuator', 0),
-            'Attributes': type_counts.get('attribute', 0),
-        }
-        
-        column_name = f'V{major_version}'
-        if column_name not in latest.columns:
-            latest[column_name] = pd.Series([counts['Attributes'], counts['Branches'], counts['Sensors'], counts['Actuators']])
-        version_cols = [col for col in latest.columns if col.startswith('V')]
-        for i in range(len(version_cols) - 1):
-            v1 = int(version_cols[i][1])
-            v2 = int(version_cols[i+1][1])
-            if v2 != v1 + 1:
-                print(f"MISSING VERSION: V{v1+1}")
+    def print_unique_values(data):
+        for column in data.columns:
+            unique_values = data[column].unique()
+            print(f"Unique values in column '{column}':")
+            print(unique_values)
+            print("-" * 50)
 
-    latest.to_csv(output, index=False)
+    columns_order = [ 'Property', 'Type', 'DataType', 'Dummy']
+    data_metadata = data_metadata[columns_order]
 
+    print_unique_values(data_metadata)
 
-
+    data_metadata.to_csv(output, index=False)
