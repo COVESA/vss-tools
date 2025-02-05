@@ -1,7 +1,7 @@
 import json
-# vspec export json -s VehicleSignalSpecification.vspec -o Data.json  
+# vspec export json -s VehicleSignalSpecification.vspec -o JSONData.json  
 # Load the input JSON data
-with open('Data.json', 'r') as file:
+with open('JSONData.json', 'r') as file:
     data = json.load(file)
 
 # Define a function to recursively build the new JSON structure
