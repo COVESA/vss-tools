@@ -22,6 +22,7 @@ from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
 
+DEFAULT_OUTPUT_PATH = Path("../vehicle_signal_specification/docs-gen/static/data/sankey.csv")
 
 def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
     row = [
@@ -72,7 +73,7 @@ def write_csv(rows: list[list[Any]], output: Path):
 
 @click.command()
 @clo.vspec_opt
-@clo.output_required_opt
+@clo.output_opt
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -100,6 +101,9 @@ def cli(
     """
     Export CSV Stats for Sankey Diagram.
     """
+    if not output:
+        output = DEFAULT_OUTPUT_PATH
+
     tree, datatype_tree = get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
@@ -138,28 +142,17 @@ def cli(
     data_metadata = data_metadata[~data_metadata.isin(['branch']).any(axis=1)]
 
     column_names = data_metadata.columns.tolist()
-    print(column_names)
 
     data_metadata['Property'] = data_metadata['Type'].apply(
         lambda x: "dynamic" if x in ["sensor", "actuator"] else "static"
     )
 
-    columns_to_drop = ['Signal', 'Desc', 'Deprecated', 
-                    'Unit', 'Min', 'Max', 'Allowed','Comment',
-                    'Default']
-    data_metadata.drop(columns=columns_to_drop, inplace=True)
-    data_metadata['Dummy'] = 0
+    if 'Dummy' not in data_metadata.columns:
+        data_metadata['Dummy'] = 0
+    columns_order = ['Property', 'Type', 'DataType', 'Dummy']
 
-    def print_unique_values(data):
-        for column in data.columns:
-            unique_values = data[column].unique()
-            print(f"Unique values in column '{column}':")
-            print(unique_values)
-            print("-" * 50)
+    data_metadata = data_metadata.loc[:, columns_order]
 
-    columns_order = [ 'Property', 'Type', 'DataType', 'Dummy']
     data_metadata = data_metadata[columns_order]
-
-    print_unique_values(data_metadata)
 
     data_metadata.to_csv(output, index=False)

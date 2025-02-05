@@ -62,9 +62,9 @@ def export(ctx: click.Context):
 @cli.group(
     cls=LazyGroup,
     lazy_subcommands={
-        "radial": "vss_tools.stats.statisticsradial:cli",
-        "sankey": "vss_tools.stats.statisticssankey:cli",
-        "piechart": "vss_tools.stats.statisticspiechart:cli",
+        "radial": "vss_tools.stats.radial:cli",
+        "sankey": "vss_tools.stats.sankey:cli",
+        "piechart": "vss_tools.stats.piechart:cli",
     },
 )
 @click.pass_context
