@@ -133,37 +133,32 @@ def cli(
 
     data_metadata = pd.DataFrame(rows[1:], columns=rows[0])    
 
-# vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand
+    # Now you generated:
+    # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand
+    #
+    # The actual data of first 5 version for fallbacks
+    # template_data = {
+    #     'Type': ['Attribute', 'Branches', 'Sensors', 'Actuators'],
+    #     'V2': [78, 117, 203, 101],
+    #     'V3': [86, 117, 263, 128],
+    #     'V4': [97, 147, 286, 179],
+    #     'V5': [110, 131, 313, 195]
+    # }
 
-    # The actual data for fallbacks
-    template_data = {
-        'Type': ['Attribute', 'Branches', 'Sensors', 'Actuators'],
-        'V2': [78, 117, 203, 101],
-        'V3': [86, 117, 263, 128],
-        'V4': [97, 147, 286, 179],
-        'V5': [110, 131, 313, 195]
-    }
+    latest = pd.read_csv('../vehicle_signal_specification/docs-gen/static/data/piechartnotexpanded.csv')
 
-    # Load the output DataFrame from the piechart.csv file
-    template = pd.read_csv('../vehicle_signal_specification/docs-gen/static/data/piechartnotexpanded.csv')
-
-    # Load the metadata
     metadata = data_metadata
 
-    # Convert the 'default' column to integers
     metadata['Default'] = pd.to_numeric(metadata['Default'], errors='coerce')
 
-    # Extract the major version number
     major_version = None
     for index, row in metadata.iterrows():
         if 'Vehicle.VersionVSS.Major' in row['Signal'] and row['Default'] > 5:
             major_version = int(row['Default'])
             break
 
-    # Check the conditions and count the types
     if (major_version is not None):
         
-        # Count the types
         type_counts = Counter(metadata['Type'])
         counts = {
             'Branches': type_counts.get('branch', 0),
@@ -172,18 +167,17 @@ def cli(
             'Attributes': type_counts.get('attribute', 0),
         }
         
-        # Add a new column if it does not already exist
         column_name = f'V{major_version}'
-        if column_name not in template.columns:
-            template[column_name] = pd.Series([counts['Attributes'], counts['Branches'], counts['Sensors'], counts['Actuators']])
-        version_cols = [col for col in template.columns if col.startswith('V')]
+        if column_name not in latest.columns:
+            latest[column_name] = pd.Series([counts['Attributes'], counts['Branches'], counts['Sensors'], counts['Actuators']])
+        version_cols = [col for col in latest.columns if col.startswith('V')]
         for i in range(len(version_cols) - 1):
             v1 = int(version_cols[i][1])
             v2 = int(version_cols[i+1][1])
             if v2 != v1 + 1:
                 print(f"MISSING VERSION: V{v1+1}")
-    # Save the modified data into a new CSV file
-    template.to_csv(output, index=False)
+
+    latest.to_csv(output, index=False)
 
 
 

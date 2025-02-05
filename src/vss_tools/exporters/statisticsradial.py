@@ -92,7 +92,6 @@ def cli(
                 json.dump(types_data, f, indent=2, sort_keys=True)
 
 
-    # Define a function to recursively build the new JSON structure
     def build_json_structure(obj, parent_name=None):
         result = []
         for key, value in obj.items():
@@ -105,11 +104,9 @@ def cli(
                         item[prop] = prop_value
             result.append(item)
         
-        # Sort nodes with children to the top
         result.sort(key=lambda x: (not ('children' in x), x.get('type', '')))
         return result
 
-    # Build the new JSON structure
     new_data = {
         'name': 'Vehicle',
         'type': 'Vehicle',
@@ -118,103 +115,3 @@ def cli(
 
     with open(output, "w") as f:
         json.dump(new_data, f, indent=2)
-
-# import pandas as pd
-
-# # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand    
-# # Load the data into a DataFrame
-# data_metadata = pd.read_csv('vss-6-metadata.csv')
-
-# # Filter out rows containing 'branch'
-# data_metadata = data_metadata[~data_metadata.isin(['branch']).any(axis=1)]
-
-# # Get the list of remaining column names
-# column_names = data_metadata.columns.tolist()
-# print(column_names)
-
-# # Extract the substring between the first and second delimiter "."
-# data_metadata['Property'] = data_metadata['Type'].apply(
-#     lambda x: "dynamic" if x in ["sensor", "actuator"] else "static"
-# )
-
-
-
-# # Define the column names to be dropped
-# columns_to_drop = ['Signal', 'Desc', 'Deprecated', 
-#                    'Unit', 'Min', 'Max', 'Allowed','Comment',
-#                    'Default', 'Instances']
-# data_metadata.drop(columns=columns_to_drop, inplace=True)
-# data_metadata['Dummy'] = 0
-
-
-# # Function to print unique values in each column
-# def print_unique_values(data):
-#     for column in data.columns:
-#         unique_values = data[column].unique()
-#         print(f"Unique values in column '{column}':")
-#         print(unique_values)
-#         print("-" * 50)
-
-# # Rearrange columns by specifying the correct order
-# columns_order = [ 'Property', 'Type', 'DataType', 'Dummy']
-# data_metadata = data_metadata[columns_order]
-
-# # Call the function
-# print_unique_values(data_metadata)
-
-# # Save the modified data into a new CSV file
-# data_metadata.to_csv('sankey.csv', index=False)
-
-
-# import pandas as pd
-# from collections import Counter
-
-# # The actual data for fallbacks
-# template_data = {
-#     'Type': ['Attribute', 'Branches', 'Sensors', 'Actuators'],
-#     'V2': [78, 117, 203, 101],
-#     'V3': [86, 117, 263, 128],
-#     'V4': [97, 147, 286, 179],
-#     'V5': [110, 131, 313, 195]
-# }
-
-# # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand    
-
-# # Load the output DataFrame from the piechart.csv file
-# output = pd.read_csv('piechartversions.csv')
-
-# # Load the metadata
-# metadata = pd.read_csv('vss-6-metadata.csv')
-
-# # Convert the 'default' column to integers
-# metadata['Default'] = pd.to_numeric(metadata['Default'], errors='coerce')
-
-# # Extract the major version number
-# major_version = None
-# for index, row in metadata.iterrows():
-#     if 'Vehicle.VersionVSS.Major' in row['Signal'] and row['Default'] > 5:
-#         major_version = int(row['Default'])
-#         break
-
-# # Check the conditions and count the types
-# if (major_version is not None):
-    
-#     # Count the types
-#     type_counts = Counter(metadata['Type'])
-#     counts = {
-#         'Branches': type_counts.get('branch', 0),
-#         'Sensors': type_counts.get('sensor', 0),
-#         'Actuators': type_counts.get('actuator', 0),
-#         'Attributes': type_counts.get('attribute', 0),
-#     }
-    
-#     # Add a new column if it does not already exist
-#     column_name = f'V{major_version}'
-#     if column_name not in output.columns:
-#         output[column_name] = pd.Series([counts['Attributes'], counts['Branches'], counts['Sensors'], counts['Actuators']])
-
-# # Save the updated DataFrame back to piechart.csv
-# output.to_csv('piechartversions.csv', index=False)
-
-# print(output)
-
