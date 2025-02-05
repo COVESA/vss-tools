@@ -70,7 +70,7 @@ def export(ctx: click.Context):
 @click.pass_context
 def stats(ctx: click.Context):
     """
-    Export statistics to a chosen format
+    Generate statistical data for the documentation
     """
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
