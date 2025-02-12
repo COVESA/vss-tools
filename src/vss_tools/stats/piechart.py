@@ -149,7 +149,7 @@ def cli(
     #     'V5': [110, 131, 313, 195]
     # }
 
-    latest = pd.read_csv('../../../docs-gen/static/data/piechart.csv')
+    latest = pd.read_csv('../docs-gen/static/data/piechart.csv')
 
     metadata = data_metadata
 
