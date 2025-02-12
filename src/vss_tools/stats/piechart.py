@@ -23,7 +23,7 @@ from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
 from collections import Counter
 
-DEFAULT_OUTPUT_PATH = Path("../vehicle_signal_specification/docs-gen/static/data/piechart.csv")
+DEFAULT_OUTPUT_PATH = Path("../docs-gen/static/data/piechart.csv")
 
 def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
     row = [
