@@ -9,10 +9,11 @@
 # Convert vspec tree to CSV
 
 import csv
-import pandas as pd
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import rich_click as click
 from anytree import PreOrderIter  # type: ignore[import]
 
@@ -21,7 +22,7 @@ from vss_tools import log
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
-from collections import Counter
+
 
 def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
     row = [
@@ -124,14 +125,11 @@ def cli(
     if generic_entry and datatype_tree:
         add_rows(rows, datatype_tree, with_instance_column)
 
-
-
-
     if not generic_entry and datatype_tree:
         rows = [get_header("Node", with_instance_column)]
         add_rows(rows, datatype_tree, with_instance_column)
 
-    data_metadata = pd.DataFrame(rows[1:], columns=rows[0])    
+    data_metadata = pd.DataFrame(rows[1:], columns=rows[0])
 
     # Now you generated:
     # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand
@@ -145,39 +143,37 @@ def cli(
     #     'V5': [110, 131, 313, 195]
     # }
 
-    latest = pd.read_csv('docs-gen/static/data/piechart.csv')
+    latest = pd.read_csv("docs-gen/static/data/piechart.csv")
 
     metadata = data_metadata
 
-    metadata['Default'] = pd.to_numeric(metadata['Default'], errors='coerce')
+    metadata["Default"] = pd.to_numeric(metadata["Default"], errors="coerce")
 
     major_version = None
     for index, row in metadata.iterrows():
-        if 'Vehicle.VersionVSS.Major' in row['Signal'] and row['Default'] > 5:
-            major_version = int(row['Default'])
+        if "Vehicle.VersionVSS.Major" in row["Signal"] and row["Default"] > 5:
+            major_version = int(row["Default"])
             break
 
-    if (major_version is not None):
-        
-        type_counts = Counter(metadata['Type'])
+    if major_version is not None:
+        type_counts = Counter(metadata["Type"])
         counts = {
-            'Branches': type_counts.get('branch', 0),
-            'Sensors': type_counts.get('sensor', 0),
-            'Actuators': type_counts.get('actuator', 0),
-            'Attributes': type_counts.get('attribute', 0),
+            "Branches": type_counts.get("branch", 0),
+            "Sensors": type_counts.get("sensor", 0),
+            "Actuators": type_counts.get("actuator", 0),
+            "Attributes": type_counts.get("attribute", 0),
         }
-        
-        column_name = f'V{major_version}'
+
+        column_name = f"V{major_version}"
         if column_name not in latest.columns:
-            latest[column_name] = pd.Series([counts['Attributes'], counts['Branches'], counts['Sensors'], counts['Actuators']])
-        version_cols = [col for col in latest.columns if col.startswith('V')]
+            latest[column_name] = pd.Series(
+                [counts["Attributes"], counts["Branches"], counts["Sensors"], counts["Actuators"]]
+            )
+        version_cols = [col for col in latest.columns if col.startswith("V")]
         for i in range(len(version_cols) - 1):
             v1 = int(version_cols[i][1])
-            v2 = int(version_cols[i+1][1])
+            v2 = int(version_cols[i + 1][1])
             if v2 != v1 + 1:
                 print(f"MISSING VERSION: V{v1+1}")
 
     latest.to_csv(output, index=False)
-
-
-
