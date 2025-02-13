@@ -19,6 +19,7 @@ from vss_tools import log
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 
+
 def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attributes: tuple[str, ...] = ()):
     data = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
     if len(node.children) > 0:
@@ -48,7 +49,6 @@ def cli(
     ctx,
     vspec: Path,
     output: Path,
-
     include_dirs: tuple[Path],
     extended_attributes: tuple[str],
     strict: bool,
@@ -65,7 +65,7 @@ def cli(
     """
     Export JSON Data for Radial Tree.
     """
-        
+
     tree, datatype_tree = get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
@@ -91,26 +91,25 @@ def cli(
             with open(types_output, "w") as f:
                 json.dump(types_data, f, indent=2, sort_keys=True)
 
-
     def build_json_structure(obj, parent_name=None):
         result = []
         for key, value in obj.items():
-            item = {'name': key}
-            if 'children' in value:
-                item['children'] = build_json_structure(value['children'], key)
+            item = {"name": key}
+            if "children" in value:
+                item["children"] = build_json_structure(value["children"], key)
             else:
                 for prop, prop_value in value.items():
-                    if prop != 'children':
+                    if prop != "children":
                         item[prop] = prop_value
             result.append(item)
-        
-        result.sort(key=lambda x: (not ('children' in x), x.get('type', '')))
+
+        result.sort(key=lambda x: ("children" not in x, x.get("type", "")))
         return result
 
     new_data = {
-        'name': 'Vehicle',
-        'type': 'Vehicle',
-        'children': build_json_structure(signals_data['Vehicle']['children'])
+        "name": "Vehicle",
+        "type": "Vehicle",
+        "children": build_json_structure(signals_data["Vehicle"]["children"]),
     }
 
     with open(output, "w") as f:

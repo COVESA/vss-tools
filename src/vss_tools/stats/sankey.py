@@ -9,10 +9,10 @@
 # Convert vspec tree to CSV
 
 import csv
-import pandas as pd
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import rich_click as click
 from anytree import PreOrderIter  # type: ignore[import]
 
@@ -21,6 +21,7 @@ from vss_tools import log
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
+
 
 def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
     row = [
@@ -99,8 +100,6 @@ def cli(
     """
     Export CSV Stats for Sankey Diagram.
     """
-    if not output:
-        output = DEFAULT_OUTPUT_PATH
 
     tree, datatype_tree = get_trees(
         vspec=vspec,
@@ -125,29 +124,26 @@ def cli(
     if generic_entry and datatype_tree:
         add_rows(rows, datatype_tree, with_instance_column)
 
-
-
-
     if not generic_entry and datatype_tree:
         rows = [get_header("Node", with_instance_column)]
         add_rows(rows, datatype_tree, with_instance_column)
 
     data_metadata = pd.DataFrame(rows[1:], columns=rows[0])
-        
+
     # Now you generated:
-    # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand    
+    # vspec export csv -s VehicleSignalSpecification.vspec -o VSS_TableData.csv --no-expand
 
-    data_metadata = data_metadata[~data_metadata.isin(['branch']).any(axis=1)]
+    data_metadata = data_metadata[~data_metadata.isin(["branch"]).any(axis=1)]
 
-    column_names = data_metadata.columns.tolist()
+    data_metadata.columns.tolist()
 
-    data_metadata['Property'] = data_metadata['Type'].apply(
+    data_metadata["Property"] = data_metadata["Type"].apply(
         lambda x: "dynamic" if x in ["sensor", "actuator"] else "static"
     )
 
-    if 'Dummy' not in data_metadata.columns:
-        data_metadata['Dummy'] = 0
-    columns_order = ['Property', 'Type', 'DataType', 'Dummy']
+    if "Dummy" not in data_metadata.columns:
+        data_metadata["Dummy"] = 0
+    columns_order = ["Property", "Type", "DataType", "Dummy"]
 
     data_metadata = data_metadata.loc[:, columns_order]
 
