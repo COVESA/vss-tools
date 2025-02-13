@@ -23,8 +23,6 @@ from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
 from collections import Counter
 
-DEFAULT_OUTPUT_PATH = Path("../vehicle_signal_specification/docs-gen/static/data/piechart.csv")
-
 def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
     row = [
         entry_type,
@@ -74,7 +72,7 @@ def write_csv(rows: list[list[Any]], output: Path):
 
 @click.command()
 @clo.vspec_opt
-@clo.output_opt
+@clo.output_required_opt
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -102,8 +100,6 @@ def cli(
     """
     Export CSV Statistics for Pie Chart.
     """
-    if not output:
-        output = DEFAULT_OUTPUT_PATH
 
     tree, datatype_tree = get_trees(
         vspec=vspec,
@@ -149,7 +145,7 @@ def cli(
     #     'V5': [110, 131, 313, 195]
     # }
 
-    latest = pd.read_csv('../docs-gen/static/data/piechart.csv')
+    latest = pd.read_csv('docs-gen/static/data/piechart.csv')
 
     metadata = data_metadata
 
