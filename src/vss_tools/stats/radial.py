@@ -19,8 +19,6 @@ from vss_tools import log
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 
-DEFAULT_OUTPUT_PATH = Path("../vehicle_signal_specification/docs-gen/static/data/radial.json")
-
 def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attributes: tuple[str, ...] = ()):
     data = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
     if len(node.children) > 0:
@@ -32,7 +30,7 @@ def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attribu
 
 @click.command()
 @clo.vspec_opt
-@clo.output_opt
+@clo.output_required_opt
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -67,8 +65,6 @@ def cli(
     """
     Export JSON Data for Radial Tree.
     """
-    if not output:
-        output = DEFAULT_OUTPUT_PATH
         
     tree, datatype_tree = get_trees(
         vspec=vspec,
