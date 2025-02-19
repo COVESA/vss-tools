@@ -17,6 +17,7 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 TEST_FILE = HERE / "test.vspec"
 KNOWN_PREFIX = "User defined extra attributes: "
 WARNING_PREFIX = "Unknown extra attribute:"
+EXPECTED_CSV = "expected.csv"
 
 
 @pytest.mark.parametrize(
@@ -86,3 +87,34 @@ def test_extended_error(extended_args: str, tmp_path):
 
     assert process.returncode != 0
     assert "not allowed" in log.read_text() or "not allowed" in process.stderr
+
+
+@pytest.mark.parametrize(
+    "extended_args",
+    [
+        ("-e e1 -e e2 -e e3"),
+    ],
+)
+def test_export_csv(extended_args, tmp_path):
+    output = tmp_path / "out.csv"
+    log = tmp_path / "out.log"
+    cmd = f"vspec --log-file {log} export csv -u {TEST_UNITS}"
+    cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
+
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+
+    # Assert that the process completed successfully
+    assert process.returncode == 0, f"Command failed with return code {process.returncode}"
+
+    # Assert that the output CSV file was created
+    assert output.exists(), "Output CSV file was not created"
+
+    # Check the content of the CSV file
+    expected = ""
+    with open(HERE / EXPECTED_CSV, "r") as f:
+        expected = f.read()
+
+    with open(output, "r") as f:
+        created = f.read()
+
+    assert created == expected, "CSV file content is not as expected"
