@@ -1,0 +1,3 @@
+Signal,Type,DataType,Deprecated,Unit,Min,Max,Desc,Comment,Allowed,Default,e1,e2,e3
+A,branch,,,,,,Branch A.,,,,,,
+A.SignalA,sensor,int8,,km,,,This is the first signal.,,,,First extension,Second extension,Third extension
