@@ -126,17 +126,13 @@ class VSSData(VSSRaw):
         assert bool(re.match(pattern, v)), f"'{v}' is not a valid 'constUID'"
         return v
 
-    @field_validator("description", mode="before")
-    @classmethod
-    def ensure_description(cls, value: Any) -> Any:
+    @model_validator(mode="after")
+    def ensure_description(self) -> Self:
         """Give better explanation for empty description."""
-
-        if value == "":
-            raise ValueError(
-                "all nodes in the final tree must have a description. "
-                "Implicit branches are not allowed in final tree!"
-            )
-        return value
+        assert (
+            self.description != ""
+        ), "All nodes in the final tree must have a description. Implicit branches are not allowed in final tree!"
+        return self
 
 
 class VSSDataBranch(VSSData):

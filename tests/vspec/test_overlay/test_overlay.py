@@ -71,5 +71,5 @@ def test_overlay_branch_error(tmp_path):
     assert process.returncode != 0
     log_content = log.read_text()
     assert "'A.AB' has 1 model error(s)" in log_content
-    assert "'type': 'value_error'" in log_content
+    assert "'type': 'assertion_error'" in log_content
     assert "description" in log_content
