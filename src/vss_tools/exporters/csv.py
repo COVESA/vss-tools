@@ -22,7 +22,7 @@ from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
 
 
-def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
+def get_header(entry_type: str, with_instance_column: bool, extended_attributes: tuple[str, ...] = ()) -> list[str]:
     row = [
         entry_type,
         "Type",
@@ -38,10 +38,15 @@ def get_header(entry_type: str, with_instance_column: bool) -> list[str]:
     ]
     if with_instance_column:
         row.append("Instances")
+
+    row.extend(extended_attributes)
+
     return row
 
 
-def add_rows(rows: list[list[Any]], root: VSSNode, with_instance_column: bool) -> None:
+def add_rows(
+    rows: list[list[Any]], root: VSSNode, with_instance_column: bool, extended_attributes: tuple[str, ...] = ()
+) -> None:
     node: VSSNode
     for node in PreOrderIter(root):
         data = node.get_vss_data()
@@ -60,6 +65,9 @@ def add_rows(rows: list[list[Any]], root: VSSNode, with_instance_column: bool) -
         ]
         if with_instance_column:
             row.append(getattr_nn(data, "instances", ""))
+
+        for attr in extended_attributes:
+            row.append(getattr_nn(data, attr, ""))
         rows.append(row)
 
 
@@ -117,8 +125,8 @@ def cli(
     with_instance_column = not expand
 
     entry_type = "Node" if generic_entry else "Signal"
-    rows = [get_header(entry_type, with_instance_column)]
-    add_rows(rows, tree, with_instance_column)
+    rows = [get_header(entry_type, with_instance_column, extended_attributes)]
+    add_rows(rows, tree, with_instance_column, extended_attributes)
     if generic_entry and datatype_tree:
         add_rows(rows, datatype_tree, with_instance_column)
     write_csv(rows, output)
