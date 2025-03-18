@@ -11,7 +11,6 @@ import logging
 import re
 import sys
 import textwrap
-from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -104,15 +103,15 @@ class VhalMapper:
         total = 0
         valid = 0
         for item in mapping:
-            if item.vhalGroup != self.__group:
+            if item.vhal_group != self.__group:
                 logging.error(
-                    f"Invalid group {item.vhalGroup} of VSS leaf {item.source}! "
+                    f"Invalid group {item.vhal_group} of VSS leaf {item.source}! "
                     f"Group must be in {[self.__group]}! You are probably regenerating a configuration "
                     f"originally generated with a different group."
                 )
-            if item.vhalId < self.__min_vhal_id or item.vhalId > VhalMapper.MAX_VHAL_ID:
+            if item.vhal_id < self.__min_vhal_id or item.vhal_id > VhalMapper.MAX_VHAL_ID:
                 logging.error(
-                    f"Invalid unique ID {item.vhalId} of VSS leaf {item.source}! "
+                    f"Invalid unique ID {item.vhal_id} of VSS leaf {item.source}! "
                     f"ID must be in range {[self.__min_vhal_id, VhalMapper.MAX_VHAL_ID]}"
                 )
             else:
@@ -120,8 +119,7 @@ class VhalMapper:
             total += 1
 
         if total != valid:
-            logging.error(f"Number of valid IDs {valid} of {total} in total.")
-            sys.exit()
+            raise Exception(f"Number of valid IDs {valid} of {total} in total.")
         return True
 
     def load_continuous_list(self, file_path: Path):
@@ -158,8 +156,8 @@ class VhalMapper:
         :returns: List of mapping items.
         """
         with open(file_path) as file:
-            data = [VehicleMappingItem(**item) for item in json.load(file)]
-            self.__next_vhal_id = max(list(map(lambda item: item.vhalId + 1, data)) + [self.__next_vhal_id])
+            data = VehicleMappingItem.schema().loads(file.read(), many=True)  # type: ignore
+            self.__next_vhal_id = max(list(map(lambda item: item.vhal_id + 1, data)) + [self.__next_vhal_id])
             if (
                 VhalPropertyGroup.get(self.__group) == VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_SYSTEM
                 and self.__next_vhal_id < 1000
@@ -194,17 +192,17 @@ class VhalMapper:
                     else re.sub(
                         r"([a-z])([A-Z])", r"\1_\2", node_name_flat.replace("Vehicle.", "").replace(".", "_")
                     ).upper(),
-                    propertyId=mapping.propertyId if mapping else self.__get_next_vhal_property_id(node),
-                    areaId=mapping.areaId if mapping else VhalMapper.__get_vhal_vehicle_area_id(node),
+                    property_id=mapping.property_id if mapping else self.__get_next_vhal_property_id(node),
+                    area_id=mapping.area_id if mapping else VhalMapper.__get_vhal_vehicle_area_id(node),
                     access=mapping.access if mapping else VhalMapper.__get_vhal_access(node),
-                    changeMode=mapping.changeMode if mapping else self.__get_vhal_change_mode(node),
+                    change_mode=mapping.change_mode if mapping else self.__get_vhal_change_mode(node),
                     unit=mapping.unit
                     if mapping and not self.__override_units
                     else getattr_nn(node_data, "unit", mapping.unit if mapping else ""),
                     source=node_name_flat,
                     formula=mapping.formula if mapping and mapping.formula else None,
                     comment=getattr_nn(node_data, "comment", mapping.comment if mapping and mapping.comment else None),
-                    configString=mapping.configString if mapping and mapping.configString else node_data.description,
+                    config_string=mapping.config_string if mapping and mapping.config_string else node_data.description,
                     datatype=mapping.datatype
                     if mapping and mapping.datatype and not self.__override_datatype
                     else getattr_nn(node_data, "datatype", None),
@@ -240,11 +238,8 @@ class VhalMapper:
         """
         result = self.get()
         with open(file_path, "w") as file:
-            json.dump(
-                [{key: value for key, value in asdict(mapping).items() if value is not None} for mapping in result],
-                file,
-                indent=indent,
-            )
+            json_data = VehicleMappingItem.schema().dumps(result, many=True, indent=indent)  # type: ignore
+            file.write(json_data)
 
     def generate_java_files(self, output_file_path, permissions_file_path):
         """
@@ -262,7 +257,7 @@ class VhalMapper:
         java_variables = []
 
         for item in mapping:
-            if item.vhalId > self.__min_vhal_id:
+            if item.vhal_id > self.__min_vhal_id:
                 annotations = []
 
                 if item.access in (VehiclePropertyAccess.READ.value, VehiclePropertyAccess.READ_WRITE.value):
@@ -276,7 +271,7 @@ class VhalMapper:
                 annotations = "\n".join(annotations)
 
                 # JavaDoc
-                config_string = item.configString
+                config_string = item.config_string
                 lines = textwrap.wrap(config_string, width=120)
                 comment_body = (
                     "\n".join(f"\t * {line}" for line in lines)
@@ -289,7 +284,7 @@ class VhalMapper:
 
                 annotation_line = "\n\t".join(("\t" + annotations).split("\n")) if annotations else ""
                 java_variable = (
-                    f"{javadoc}{annotation_line}\n\tpublic static final int {item.name} = {item.propertyId};\n"
+                    f"{javadoc}{annotation_line}\n\tpublic static final int {item.name} = {item.property_id};\n"
                 )
                 java_variables.append(java_variable)
 
@@ -301,7 +296,7 @@ class VhalMapper:
         # Permissions
         permissions = []
         for item in mapping:
-            if item.vhalId > self.__min_vhal_id:
+            if item.vhal_id > self.__min_vhal_id:
                 if item.access in (VehiclePropertyAccess.READ.value, VehiclePropertyAccess.READ_WRITE.value):
                     permissions.append(
                         f"\tpublic static final String PERMISSION_VSS_{item.name}_READ = "
@@ -334,17 +329,17 @@ class VhalMapper:
         aidl_variables = []
 
         for item in mapping:
-            if item.vhalId > self.__min_vhal_id:
+            if item.vhal_id > self.__min_vhal_id:
                 vhal_property_group_str = str(VhalPropertyGroup.get(self.__group))
                 vhal_area_type_str = str(VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL_AIDL)
-                vhal_property_type_str = VSSDatatypesToVhal.get_property_type_repr(item.vhalType << 16)
+                vhal_property_type_str = VSSDatatypesToVhal.get_property_type_repr(item.vhal_type << 16)
 
                 aidl_variable = (
                     f"\t{item.name} = "
-                    f"{(item.vhalId << 0):#0{6}x} + "
-                    f"{(item.vhalGroup << 28):#0{10}x} + "
-                    f"{(item.vhalArea << 24):#0{10}x} + \n\t\t\t"
-                    f"{(item.vhalType << 16):#0{10}x} "
+                    f"{(item.vhal_id << 0):#0{6}x} + "
+                    f"{(item.vhal_group << 28):#0{10}x} + "
+                    f"{(item.vhal_area << 24):#0{10}x} + \n\t\t\t"
+                    f"{(item.vhal_type << 16):#0{10}x} "
                     f"// {vhal_property_group_str}, {vhal_area_type_str}, {vhal_property_type_str}"
                 )
                 aidl_variables.append(aidl_variable)
