@@ -67,11 +67,11 @@ def vss_properties() -> List[VehicleMappingItem]:
 
 @pytest.mark.skip
 def test_uniqueness(vss_properties: List[VehicleMappingItem]):
-    unique_ids = {leaf.propertyId for leaf in vss_properties}
+    unique_ids = {leaf.property_id for leaf in vss_properties}
     assert len(vss_properties) == len(unique_ids)
 
 
 @pytest.mark.skip
 def test_determinism(validation_dict, vss_properties: List[VehicleMappingItem]):
-    test_dict = {leaf.source: leaf.propertyId for leaf in vss_properties}
+    test_dict = {leaf.source: leaf.property_id for leaf in vss_properties}
     assert test_dict == validation_dict
