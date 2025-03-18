@@ -26,13 +26,12 @@ class VhalAreaType(Enum):
     VEHICLE_AREA_TYPE_VENDOR = 7  # VehicleAreaType.VENDOR java
     VEHICLE_AREA_TYPE_VENDOR_AIDL = int(0x08000000)  # VehicleArea.VENDOR aidl
 
-    def __str__(self):
-        if self.name == VhalAreaType.VEHICLE_AREA_TYPE_VENDOR_AIDL.name:
-            return "VehicleArea.VENDOR"
-        elif self.name == VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL_AIDL.name:
-            return "VehicleArea.GLOBAL"
-        else:
-            return f"VehicleAreaType.{self.name}"
+    def __str__(self) -> str:
+        d = {
+            VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL: "VehicleArea.GLOBAL",
+            VhalAreaType.VEHICLE_AREA_TYPE_VENDOR: "VehicleArea.VENDOR",
+        }
+        return d.get(self, f"VehicleAreaType.{self.name}")
 
 
 class VhalPropertyGroup(Enum):
@@ -61,16 +60,13 @@ class VhalPropertyGroup(Enum):
             sys.exit(1)
 
     def __str__(self):
-        if self.name == VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_SYSTEM.name:
-            return "VehiclePropertyGroup.SYSTEM"
-        if self.name == VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_VENDOR.name:
-            return "VehiclePropertyGroup.VENDOR"
-        if self.name == VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_BACKPORTED.name:
-            return "VehiclePropertyGroup.BACKPORTED"
-        if self.name == VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_VSS.name:
-            return "VehiclePropertyGroup.VSS"
-        else:
-            return "VehiclePropertyGroup.SYSTEM"
+        d = {
+            self.VEHICLE_PROPERTY_GROUP_SYSTEM: "VehiclePropertyGroup.SYSTEM",
+            self.VEHICLE_PROPERTY_GROUP_VENDOR: "VehiclePropertyGroup.VENDOR",
+            self.VEHICLE_PROPERTY_GROUP_BACKPORTED: "VehiclePropertyGroup.BACKPORTED",
+            self.VEHICLE_PROPERTY_GROUP_VSS: "VehiclePropertyGroup.VSS",
+        }
+        return d.get(self, "VehiclePropertyGroup.SYSTEM")
 
 
 class VSSDatatypesToVhal:
@@ -135,8 +131,7 @@ class VSSDatatypesToVhal:
         """
         datatype_name = VSSDatatypesToVhal.VHAL_TO_VSS_TYPE_MAP.get(datatype_id)
         if not datatype_name:
-            logging.error(f"Invalid property type id {datatype_id}, must be one of IDs listed in VSSDataTypeToVhal")
-            sys.exit()
+            raise Exception(f"Invalid property type id {datatype_id}, must be one of IDs listed in VSSDataTypeToVhal")
 
         return f"VehiclePropertyType.{datatype_name}"
 
