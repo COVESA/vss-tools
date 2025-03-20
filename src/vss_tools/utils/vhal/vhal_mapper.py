@@ -79,8 +79,7 @@ class VhalMapper:
         datatype = getattr_nn(node_data, "datatype", None)
 
         if not datatype:
-            logging.error(f"Datatype not given for the VSS leaf {node.get_fqn()}")
-            sys.exit()
+            raise Exception(f"Datatype not given for the VSS leaf {node.get_fqn()}")
 
         node_uid = self.__next_vhal_id
         self.__next_vhal_id += 1
@@ -241,38 +240,35 @@ class VhalMapper:
             json_data = VehicleMappingItem.schema().dumps(result, many=True, indent=indent)  # type: ignore
             file.write(json_data)
 
-    def generate_java_files(self, output_file_path, permissions_file_path):
+    def generate_java_files(self, output_file_path=None, permissions_file_path=None) -> Tuple[str, str]:
         """
         Generates two Java files. First, file with the list of VHAL property IDs and the corresponding constants.
         Second, file with the list of corresponding permissions both read and write.
 
         :param output_file_path: Output file path.
         :param permissions_file_path: Permissions file path.
+        :returns: tuple containing the java code with properties and java code with permissions.
         """
-        if not output_file_path or not permissions_file_path:
-            logging.warning("No Java output file specified. Java properties and permissions are not generated.")
-            return
-
         mapping = self.get()
         java_variables = []
 
         for item in mapping:
             if item.vhal_id > self.__min_vhal_id:
-                annotations = []
+                annotations_list = []
 
                 if item.access in (VehiclePropertyAccess.READ.value, VehiclePropertyAccess.READ_WRITE.value):
-                    annotations.append(
+                    annotations_list.append(
                         f"@RequiresPermission.Read(@RequiresPermission(VssPermissions.PERMISSION_VSS_{item.name}_READ))"
                     )
                 if item.access in (VehiclePropertyAccess.WRITE.value, VehiclePropertyAccess.READ_WRITE.value):
-                    annotations.append(
+                    annotations_list.append(
                         f"@RequiresPermission.Write(@RequiresPermission(VssPermissions.PERMISSION_VSS_{item.name}_WRITE))"
                     )
-                annotations = "\n".join(annotations)
+                annotations = "\n".join(annotations_list)
 
                 # JavaDoc
                 config_string = item.config_string
-                lines = textwrap.wrap(config_string, width=120)
+                lines = textwrap.wrap(config_string, width=120) if config_string else ""
                 comment_body = (
                     "\n".join(f"\t * {line}" for line in lines)
                     if len(lines) > 1
@@ -290,8 +286,9 @@ class VhalMapper:
 
         java_class = "public final class VehiclePropertyIdsVss {\n\n" + "\n".join(java_variables) + "\n}"
 
-        with open(output_file_path, "w") as file:
-            file.write(java_class)
+        if output_file_path is not None:
+            with open(output_file_path, "w") as file:
+                file.write(java_class)
 
         # Permissions
         permissions = []
@@ -312,19 +309,19 @@ class VhalMapper:
         java_permissions = "\n\n".join(permissions)
         java_permissions_class = f"public final class VssPermissions {{\n\n{java_permissions}\n}}"
 
-        with open(permissions_file_path, "w") as file:
-            file.write(java_permissions_class)
+        if permissions_file_path is not None:
+            with open(permissions_file_path, "w") as file:
+                file.write(java_permissions_class)
 
-    def generate_aidl_file(self, output_filename):
+        return java_class, java_permissions_class
+
+    def generate_aidl_file(self, output_filename=None) -> str:
         """
         Generates AIDL file with list of VHAL property IDs.
 
         :param output_filename: Output file path.
+        :returns: AIDL code.
         """
-        if not output_filename:
-            logging.warning("No AIDL output file specified. AIDL class is not generated.")
-            return
-
         mapping = self.get()
         aidl_variables = []
 
@@ -338,7 +335,7 @@ class VhalMapper:
                     f"\t{item.name} = "
                     f"{(item.vhal_id << 0):#0{6}x} + "
                     f"{(item.vhal_group << 28):#0{10}x} + "
-                    f"{(item.vhal_area << 24):#0{10}x} + \n\t\t\t"
+                    f"{(item.vhal_area << 24):#0{10}x} +\n\t\t\t"
                     f"{(item.vhal_type << 16):#0{10}x} "
                     f"// {vhal_property_group_str}, {vhal_area_type_str}, {vhal_property_type_str}"
                 )
@@ -346,8 +343,10 @@ class VhalMapper:
 
         aidl_class = "enum VehiclePropertyVss {\n\n" + "\n".join(aidl_variables) + "\n}"
 
-        with open(output_filename, "w") as file:
-            file.write(aidl_class)
+        if output_filename is not None:
+            with open(output_filename, "w") as file:
+                file.write(aidl_class)
+        return aidl_class
 
     @staticmethod
     def __get_vhal_vehicle_area_id(node: VSSNode) -> int:
