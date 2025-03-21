@@ -74,6 +74,7 @@ class VSSDatatypesToVhal:
     Mapping of vss datatypes corresponding to standard VHAL property type IDs. For those VSS datatypes, which don't
     correspond to standard VHAL properties, vendor type IDs were defined. See
     https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehiclePropertyType.aidl
+    and https://source.android.com/docs/automotive/vhal/property-configuration#property-types
     """
 
     VSS_TO_VHAL_TYPE_MAP = {

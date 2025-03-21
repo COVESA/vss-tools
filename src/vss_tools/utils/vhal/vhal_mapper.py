@@ -72,6 +72,9 @@ class VhalMapper:
             286277632 (0x11104000) = UniqueID (0x00004000) | VehiclePropertyType.STRING (0x00100000) |
                   VehicleArea.GLOBAL (0x01000000) | VehiclePropertyGroup.SYSTEM (0x10000000)
 
+        The ID - vspec static UID generator (https://github.com/COVESA/vss-tools/blob/master/docs/id.md) cannot be used
+        since it needs 4-bytes.
+
         :param node: VSS node that we want to generate a unique VHAL property ID for.
         :returns: 2 bytes unique ID value for the VSS node.
         """
@@ -192,7 +195,7 @@ class VhalMapper:
                         r"([a-z])([A-Z])", r"\1_\2", node_name_flat.replace("Vehicle.", "").replace(".", "_")
                     ).upper(),
                     property_id=mapping.property_id if mapping else self.__get_next_vhal_property_id(node),
-                    area_id=mapping.area_id if mapping else VhalMapper.__get_vhal_vehicle_area_id(node),
+                    area_id=mapping.area_id if mapping else self.__get_vhal_vehicle_area_id(node),
                     access=mapping.access if mapping else VhalMapper.__get_vhal_access(node),
                     change_mode=mapping.change_mode if mapping else self.__get_vhal_change_mode(node),
                     unit=mapping.unit
@@ -348,20 +351,36 @@ class VhalMapper:
                 file.write(aidl_class)
         return aidl_class
 
-    @staticmethod
-    def __get_vhal_vehicle_area_id(node: VSSNode) -> int:
+    def __get_vhal_vehicle_area_id(self, node: VSSNode) -> int:
         """
         Android VHAL area ID is described here:
         https://android.googlesource.com/platform/packages/services/Car/+/refs/heads/main/car-lib/src/android/car/VehicleAreaType.java
+        and
+        https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleArea.aidl
+
+        Area type is always generated as GLOBAL. As of now the resulting mapping file needs to be manually edited
+        when GLOBAL is not fitting. Consequent runs will keep those edits.
+
+        A detection of area ID based on VSS tree may be implemented in the future.
+
+        Note that for vendor properties the area type VENDOR should be used.
 
         :returns: VHAL Area ID.
         """
-        return VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL.value
+        return (
+            VhalAreaType.VEHICLE_AREA_TYPE_VENDOR.value
+            if self.__group == 2
+            else VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL.value
+        )
 
     @staticmethod
     def __get_vhal_access(node: VSSNode) -> int:
         """
         Get vendor property access mode as defined in Android and VSS specification
+
+        In VSS documentation attributes and sensors have READ access, actuators have READ_WRITE access. Only WRITE
+        access was not used in VSS documentation. As a result the properties in mapping will have READ access for VSS
+        attributes and sensors, and READ_WRITE for VSS actuators.
 
         :param node: VSS node (sensor, attribute or actuator).
         :returns: Read for sensor or attribute, read/write for actuator.
@@ -383,8 +402,10 @@ class VhalMapper:
 
     def __get_vhal_change_mode(self, node: VSSNode) -> int:
         """
-        Get vendor property change mode as defined in Android specification. Assumption for VSS sensors: numeric
-        datatypes have continuous mode, boolean and string datatypes have on_change mode.
+        Get vendor property change mode as defined in Android specification. VSS attributes and actuators have
+        STATIC change mode. Most VSS sensors also to have STATIC change mode except for those sensors, which could be
+        mapped to Android properties with CONTINUOUS change mode. What properties should have CONTINUOUS change mode
+        must be provided externally.
 
         :param node: sensor, attribute or actuator
         :returns: change mode

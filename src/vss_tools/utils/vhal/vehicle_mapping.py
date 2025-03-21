@@ -17,6 +17,25 @@ from dataclasses_json import LetterCase, dataclass_json
 class VehicleMappingItem:
     """
     Represents a single vehicle mapping item.
+
+    :param name: Android name of the vehicle property
+    :param property_id: Android area ID of the property (https://android.googlesource.com/platform/packages/services/Car/+/refs/heads/main/car-lib/src/android/car/VehicleAreaType.java)
+    :param area_id: See https://source.android.com/docs/automotive/vhal/property-configuration
+    :param access: See https://source.android.com/docs/automotive/vhal/property-configuration
+    :param change_mode: Android change mode for the property (https://developer.android.com/reference/android/car/hardware/CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE)
+    :param unit: Android property unit
+    :param source: Corresponding fully-qualified VSS leaf name.
+    :param formula: For mapping purpose, explains how to map a VSS property to Android property if direct
+                    correspondence wasn't found.
+    :param comment: Internal comment about current mapping.
+    :param config_string: Optional Android string to contain property specific configuration.
+    :param datatype:
+    :param type:
+    :param min:
+    :param max:
+    :param allowed:
+    :param default:
+    :param deprecation:
     """
 
     name: str
@@ -42,6 +61,9 @@ class VehicleMappingItem:
     def vhal_group(self):
         """
         VHAL group component of the property ID.
+        - https://source.android.com/docs/automotive/vhal/property-configuration
+        - https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleProperty.aidl
+        - https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehiclePropertyGroup.aidl
         """
         return (self.property_id & 0xF0000000) >> 28
 
@@ -49,6 +71,10 @@ class VehicleMappingItem:
     def vhal_area(self):
         """
         VHAL area component of the property ID.
+        - https://source.android.com/docs/automotive/vhal/property-configuration
+        - https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleProperty.aidl
+        - https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleArea.aidl
+        - https://cs.android.com/android/platform/superproject/main/+/main:packages/services/Car/car-lib/src/android/car/VehicleAreaType.java?q=vehicleareatype.java&ss=android%2Fplatform%2Fsuperproject%2Fmain
         """
         return (self.property_id & 0x0F000000) >> 24
 
@@ -56,6 +82,8 @@ class VehicleMappingItem:
     def vhal_type(self):
         """
         VHAL type component of the property ID.
+        - https://source.android.com/docs/automotive/vhal/property-configuration
+        - https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleProperty.aidl
         """
         return (self.property_id & 0x00FF0000) >> 16
 
@@ -63,5 +91,7 @@ class VehicleMappingItem:
     def vhal_id(self):
         """
         VHAL unique ID component of the property ID.
+        - https://source.android.com/docs/automotive/vhal/property-configuration
+        - https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleProperty.aidl
         """
         return self.property_id & 0x0000FFFF
