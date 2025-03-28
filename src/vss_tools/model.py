@@ -213,8 +213,6 @@ class VSSDataDatatype(VSSData):
                 Datatypes.is_subtype_of(self.datatype, Datatypes.NUMERIC[0])
             except DatatypesException:
                 raise ValueError(f"Cannot define min/max for datatype '{self.datatype}'")
-            if is_array(self.datatype):
-                raise ValueError("Cannot define min/max for array datatypes")
             if self.min:
                 assert Datatypes.is_datatype(self.min, self.datatype), f"min '{self.min}' is not an '{self.datatype}'"
             if self.max:
@@ -222,11 +220,16 @@ class VSSDataDatatype(VSSData):
         return self
 
     def check_default_min_max(self) -> Self:
-        if self.default:
-            if self.min and self.default < self.min:
-                raise ValueError(f"'default' smaller than 'min': {self.default}<{self.min}")
-            if self.max and self.default > self.max:
-                raise ValueError(f"'default' greater than 'max': {self.default}>{self.min}")
+        if not self.default:
+            return self
+        values = [self.default]
+        if isinstance(self.default, list):
+            values = self.default
+        for v in values:
+            if self.min and v < self.min:
+                raise ValueError(f"'default' smaller than 'min': {v}<{self.min}")
+            if self.max and v > self.max:
+                raise ValueError(f"'default' greater than 'max': {v}>{self.min}")
         return self
 
     def check_type_default_consistency(self) -> Self:
