@@ -109,7 +109,7 @@ class VSSRaw(BaseModel):
 class VSSData(VSSRaw):
     model_config = ConfigDict(extra="allow")
     type: NodeType
-    description: str
+    description: str = ""
     comment: str | None = None
     delete: bool = False
     deprecation: str | None = None
@@ -125,6 +125,14 @@ class VSSData(VSSRaw):
         pattern = r"^0x[0-9A-Fa-f]{8}$"
         assert bool(re.match(pattern, v)), f"'{v}' is not a valid 'constUID'"
         return v
+
+    @model_validator(mode="after")
+    def ensure_description(self) -> Self:
+        """Give better explanation for empty description."""
+        assert (
+            self.description != ""
+        ), "All nodes in the final tree must have a description. Implicit branches are not allowed in final tree!"
+        return self
 
 
 class VSSDataBranch(VSSData):

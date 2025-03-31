@@ -634,7 +634,6 @@ long VSSReadTree(const char* filePath) {
 	}
 	initReadMetadata();
 	intptr_t root = (intptr_t)traverseAndReadNode(NULL);
-	printReadMetadata();
 	fclose(treeFp);
 	return (long)root;
 }
