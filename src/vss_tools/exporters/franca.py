@@ -86,6 +86,7 @@ def print_franca_content(file: TextIOWrapper, root: VSSNode) -> None:
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
+@clo.types_opt
 @clo.aborts_opt
 @clo.overlays_opt
 @clo.quantities_opt
@@ -101,19 +102,21 @@ def cli(
     overlays: tuple[Path],
     quantities: tuple[Path],
     units: tuple[Path],
+    types: tuple[Path],
     franca_vss_version: str,
 ):
     """
     Export as Franca.
     """
     log.info("Generating Franca output...")
-    tree, datatype_tree = get_trees(
+    tree, _ = get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
         aborts=aborts,
         strict=strict,
         extended_attributes=extended_attributes,
         quantities=quantities,
+        types=types,
         units=units,
         overlays=overlays,
     )
