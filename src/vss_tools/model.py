@@ -225,11 +225,15 @@ class VSSDataDatatype(VSSData):
         values = [self.default]
         if isinstance(self.default, list):
             values = self.default
+
+        epsilon = 1e-6
         for v in values:
-            if self.min and v < self.min:
+            if self.min or self.max:
+                v = round(v, 6)
+            if self.min and v < self.min - epsilon:
                 raise ValueError(f"'default' smaller than 'min': {v}<{self.min}")
-            if self.max and v > self.max:
-                raise ValueError(f"'default' greater than 'max': {v}>{self.min}")
+            if self.max and v > self.max + epsilon:
+                raise ValueError(f"'default' greater than 'max': {v}>{self.max}")
         return self
 
     def check_type_default_consistency(self) -> Self:
