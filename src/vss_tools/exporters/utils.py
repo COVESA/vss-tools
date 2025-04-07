@@ -12,58 +12,6 @@ from vss_tools.model import VSSDataBranch, VSSDataDatatype
 from vss_tools.tree import VSSNode
 
 
-class NoInstanceRootException(Exception):
-    pass
-
-
-def get_instance_root(root: VSSNode, depth: int = 1) -> tuple[VSSNode, int]:
-    """
-    Getting the root node of a given instance node.
-    Going the tree upwards
-    """
-    if root.parent is None:
-        raise NoInstanceRootException()
-    if isinstance(root.parent.data, VSSDataBranch):
-        if root.parent.data.is_instance:  # Is the inmmediate parent node also a VSS instance branch?
-            return get_instance_root(root.parent, depth + 1)
-        else:
-            return root.parent, depth
-    else:
-        raise NoInstanceRootException()
-
-
-def add_children_map_entries(root: VSSNode, fqn: str, replace: str, map: dict[str, str]) -> None:
-    """
-    Adding rename map entries for children of a given node
-    """
-    child: VSSNode
-    for child in root.children:
-        child_fqn = child.get_fqn()
-        new_name = child_fqn.replace(fqn, replace)
-        map[child_fqn] = new_name
-        add_children_map_entries(child, fqn, replace, map)
-
-
-def get_instance_mapping(root: VSSNode | None) -> dict[str, str]:
-    """
-    Constructing a rename map of fqn->new_name.
-    The new name has instances stripped and appending "I<N>" instead
-    where N is the depth of the instance
-    """
-    if root is None:
-        return {}
-    instance_map: dict[str, str] = {}
-    for node in PreOrderIter(root):
-        if isinstance(node.data, VSSDataBranch):
-            if node.data.is_instance:
-                instance_root, depth = get_instance_root(node)
-                new_name = instance_root.get_fqn() + "." + "I" + str(depth)
-                fqn = node.get_fqn()
-                instance_map[fqn] = new_name
-                add_children_map_entries(node, fqn, instance_root.get_fqn(), instance_map)
-    return instance_map
-
-
 def get_instances_meta(root: VSSNode) -> dict[str, list[str]]:
     """
     Constructing metadata of instance root nodes fqns and a list of generated nodes
@@ -72,7 +20,7 @@ def get_instances_meta(root: VSSNode) -> dict[str, list[str]]:
     for node in PreOrderIter(root, filter_=lambda n: isinstance(n.data, VSSDataBranch) and n.data.is_instance):
         if any(c.data.is_instance for c in node.children if isinstance(c.data, VSSDataBranch)):
             continue
-        instance_root, _ = get_instance_root(node)
+        instance_root, _ = node.get_instance_root()
         instance_root_fqn = instance_root.get_fqn()
 
         instance_name = node.get_fqn().removeprefix(instance_root_fqn + ".")
