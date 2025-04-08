@@ -80,7 +80,7 @@ class VSSRaw(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def get_extra_attributes(self) -> list[str]:
-        defined_fields = self.model_fields.keys()
+        defined_fields = self.__class__.model_fields
         additional_fields = set(self.model_dump().keys()) - set(defined_fields)
         return list(additional_fields)
 

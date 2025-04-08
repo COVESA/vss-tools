@@ -32,6 +32,10 @@ from vss_tools.vspec import deep_update
 SEPARATOR = "."
 
 
+class NoInstanceRootException(Exception):
+    pass
+
+
 class NotMergeableException(Exception):
     pass
 
@@ -310,6 +314,33 @@ class VSSNode(Node):  # type: ignore[misc]
             key = node.get_fqn()
             data[key] = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
         return data
+
+    def get_instance_root(self, depth: int = 0) -> tuple[VSSNode, int]:
+        """
+        Getting the next instance root and how many hops we need
+        """
+        if not isinstance(self.data, VSSDataBranch):
+            raise NoInstanceRootException()
+
+        # This not is not an instance. So we are technically the instance root
+        if not self.data.is_instance:
+            return self, depth
+
+        # Having `is_instance` but not parent is clearly a problem
+        if self.parent is None:
+            raise NoInstanceRootException()
+
+        return self.parent.get_instance_root(depth + 1)
+
+    def count_instance_children_depth(self) -> int:
+        """
+        Count how many levels of instance branches will be embedded
+        """
+        for child in self.children:
+            if isinstance(child.data, VSSDataBranch):
+                if child.data.is_instance:
+                    return 1 + child.count_instance_children_depth()
+        return 0
 
 
 def get_expected_parent(name: str) -> str | None:

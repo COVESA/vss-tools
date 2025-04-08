@@ -43,26 +43,6 @@ datatype_map = {
 }
 
 
-class NoInstanceRootException(Exception):
-    pass
-
-
-def get_instance_root(root: VSSNode, depth: int = 1) -> tuple[VSSNode, int]:
-    """
-    Getting the root node of a given instance node.
-    Going the tree upwards
-    """
-    if root.parent is None:
-        raise NoInstanceRootException()
-    if isinstance(root.parent.data, VSSDataBranch):
-        if root.parent.data.is_instance:
-            return get_instance_root(root.parent, depth + 1)
-        else:
-            return root.parent, depth
-    else:
-        raise NoInstanceRootException()
-
-
 def add_children_map_entries(root: VSSNode, fqn: str, replace: str, map: dict[str, str]) -> None:
     """
     Adding rename map entries for children of a given node
@@ -78,20 +58,44 @@ def add_children_map_entries(root: VSSNode, fqn: str, replace: str, map: dict[st
 def get_instance_mapping(root: VSSNode | None) -> dict[str, str]:
     """
     Constructing a rename map of fqn->new_name.
-    The new name has instances stripped and appending "I<N>" instead
-    where N is the depth of the instance
+    The last instance of the node will have the concept name of the node (e.g. Door)
+    All intances of it will be named <concept>.I<N> ("I" for instance)
+
+    E.g. "Vehicle.Cabin.Door.Row1.DriverSide.Window"
+    will result in pseudo code types:
+
+    Cabin
+        Door DoorI2
+
+    DoorR2
+        Row1 DoorI1
+        Row2 DoorI1
+
+    DoorR1
+        DriverSide Door
+        PassengerSide Door
     """
+
     if root is None:
         return {}
     instance_map: dict[str, str] = {}
     for node in PreOrderIter(root):
         if isinstance(node.data, VSSDataBranch):
-            if node.data.is_instance:
-                instance_root, depth = get_instance_root(node)
-                new_name = instance_root.get_fqn() + "." + "I" + str(depth)
-                fqn = node.get_fqn()
-                instance_map[fqn] = new_name
-                add_children_map_entries(node, fqn, instance_root.get_fqn(), instance_map)
+            instance_children_depth = node.count_instance_children_depth()
+
+            if instance_children_depth == 0:
+                if not node.data.is_instance:
+                    continue
+
+            instance_root, _ = node.get_instance_root()
+            fqn = node.get_fqn()
+
+            if instance_children_depth > 0:
+                instance_map[fqn] = f"{instance_root.get_fqn()}.I{instance_children_depth}"
+            else:
+                instance_map[fqn] = instance_root.get_fqn()
+            add_children_map_entries(node, fqn, instance_map[fqn], instance_map)
+
     return instance_map
 
 
