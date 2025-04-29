@@ -74,6 +74,7 @@ def write_csv(rows: list[list[Any]], output: Path):
 @click.command()
 @clo.vspec_opt
 @clo.output_required_opt
+@clo.old_chart_opt
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -87,6 +88,7 @@ def write_csv(rows: list[list[Any]], output: Path):
 def cli(
     vspec: Path,
     output: Path,
+    old_chart: Path,
     include_dirs: tuple[Path],
     extended_attributes: tuple[str],
     strict: bool,
@@ -143,7 +145,7 @@ def cli(
     #     'V5': [110, 131, 313, 195]
     # }
 
-    latest = pd.read_csv("docs-gen/static/data/piechart.csv")
+    latest = pd.read_csv(old_chart)
 
     metadata = data_metadata
 
@@ -174,6 +176,6 @@ def cli(
             v1 = int(version_cols[i][1])
             v2 = int(version_cols[i + 1][1])
             if v2 != v1 + 1:
-                print(f"MISSING VERSION: V{v1+1}")
+                log.warning(f"MISSING VERSION: V{v1+1}")
 
     latest.to_csv(output, index=False)

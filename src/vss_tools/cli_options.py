@@ -119,6 +119,14 @@ output_required_opt = option(
     required=True,
 )
 
+old_chart_opt = option(
+    "--old-chart",
+    "-old",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Output file.",
+    required=True,
+)
+
 output_opt = option(
     "--output",
     "-o",
