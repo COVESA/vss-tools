@@ -80,7 +80,7 @@ class VSSRaw(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def get_extra_attributes(self) -> list[str]:
-        defined_fields = self.model_fields.keys()
+        defined_fields = self.__class__.model_fields
         additional_fields = set(self.model_dump().keys()) - set(defined_fields)
         return list(additional_fields)
 
@@ -213,8 +213,6 @@ class VSSDataDatatype(VSSData):
                 Datatypes.is_subtype_of(self.datatype, Datatypes.NUMERIC[0])
             except DatatypesException:
                 raise ValueError(f"Cannot define min/max for datatype '{self.datatype}'")
-            if is_array(self.datatype):
-                raise ValueError("Cannot define min/max for array datatypes")
             if self.min:
                 assert Datatypes.is_datatype(self.min, self.datatype), f"min '{self.min}' is not an '{self.datatype}'"
             if self.max:
@@ -222,11 +220,20 @@ class VSSDataDatatype(VSSData):
         return self
 
     def check_default_min_max(self) -> Self:
-        if self.default:
-            if self.min and self.default < self.min:
-                raise ValueError(f"'default' smaller than 'min': {self.default}<{self.min}")
-            if self.max and self.default > self.max:
-                raise ValueError(f"'default' greater than 'max': {self.default}>{self.min}")
+        if not self.default:
+            return self
+        values = [self.default]
+        if isinstance(self.default, list):
+            values = self.default
+
+        epsilon = 1e-6
+        for v in values:
+            if self.min or self.max:
+                v = round(v, 6)
+            if self.min and v < self.min - epsilon:
+                raise ValueError(f"'default' smaller than 'min': {v}<{self.min}")
+            if self.max and v > self.max + epsilon:
+                raise ValueError(f"'default' greater than 'max': {v}>{self.max}")
         return self
 
     def check_type_default_consistency(self) -> Self:
