@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import re
 from enum import Enum
-from typing import Any
+from typing import Any, TypeAlias
 
 import jsonschema
 from pydantic import (
@@ -184,17 +184,23 @@ class VSSQuantity(BaseModel):
     remark: str | None = None
 
 
+Number: TypeAlias = int | float
+Value: TypeAlias = str | int | float | bool
+ValueList: TypeAlias = list[Value]
+ValueListOrScalar: TypeAlias = ValueList | Value
+
+
 class VSSDataDatatype(VSSData):
     datatype: str
     arraysize: int | None = None
-    min: int | float | None = None
-    max: int | float | None = None
+    min: Number | None = None
+    max: Number | None = None
     # Field, used to allow definition of Regular Expression constraints
     # for string based property nodes.
     # Example: VSS - VehicleIdentification.VIN property
     pattern: str | None = None
     unit: str | None = None
-    allowed: list[str | int | float | bool] | None = None
+    allowed: ValueList | None = None
     default: Any = None
 
     @model_validator(mode="after")
