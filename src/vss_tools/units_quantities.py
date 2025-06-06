@@ -14,10 +14,6 @@ from vss_tools import log
 from vss_tools.model import ModelValidationException, VSSQuantity, VSSUnit
 
 
-class UnitQuantityRedefinitionException(Exception):
-    pass
-
-
 class MalformedDictException(Exception):
     pass
 
@@ -25,7 +21,7 @@ class MalformedDictException(Exception):
 def load_units_or_quantities(
     files: list[Path], class_type: type[VSSUnit | VSSQuantity]
 ) -> dict[str, VSSUnit | VSSQuantity]:
-    data = {}
+    data: dict[str, VSSUnit | VSSQuantity] = {}
     for file in files:
         content = yaml.safe_load(file.read_text())
         if not content:
@@ -36,11 +32,16 @@ def load_units_or_quantities(
             if v is None:
                 log.error(f"'{class_type.__name__}', '{k}' is 'None'")
                 raise MalformedDictException()
+            overwrite = False
             if k in data:
-                log.error(f"'{class_type.__name__}', redefinition of '{k}'")
-                raise UnitQuantityRedefinitionException()
+                overwrite = True
             try:
-                data[k] = class_type(**v)
+                val = class_type(**v)
+                if overwrite:
+                    log.warning(
+                        f"'{class_type.__name__}', overwriting definition of '{k}'. old: '{data[k]}', new: '{val}'"
+                    )
+                data[k] = val
             except ValidationError as e:
                 raise ModelValidationException(k, e) from None
     return data
