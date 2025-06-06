@@ -92,8 +92,8 @@ def test_multiple_duplication(tmp_path):
         "expected_special.json",
         None,
         True,
-        "redefinition of 'puncheon'",
-        True,
+        "overwriting definition of 'puncheon'",
+        False,
     )
 
 
@@ -215,7 +215,7 @@ def test_quantity_redefinition(tmp_path):
         "expected_special.json",
         ["quantity_volym.yaml", "quantity_volym.yaml"],
         True,
-        "redefinition of 'volym'",
+        "overwriting definition of 'volym'",
         True,
     )
 
