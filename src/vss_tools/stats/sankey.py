@@ -67,3 +67,4 @@ def cli(
         log.info(f"Interim file removed: {interim_file}")
     except OSError as e:
         log.error(f"Error removing interim file: {e}")
+
