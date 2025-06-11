@@ -2,115 +2,94 @@
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License 2.0 which is available at
-# https://www.mozilla.org/en-US/MPL/2.0/
+# https://www.mozilla.org/MPL/2.0/
 #
 # SPDX-License-Identifier: MPL-2.0
 
-# Convert vspec tree to JSON
+# Export JSON Data for Radial Tree.
 
+import os
 import json
+import subprocess
 from pathlib import Path
-from typing import Any
 
 import rich_click as click
 
 import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.main import get_trees
-from vss_tools.tree import VSSNode
-
-
-def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attributes: tuple[str, ...] = ()):
-    data = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
-    if len(node.children) > 0:
-        data["children"] = {}
-    for child in node.children:
-        data["children"][child.name] = get_data(child)
-    return data
 
 
 @click.command()
 @clo.vspec_opt
 @clo.output_required_opt
-@clo.include_dirs_opt
-@clo.extended_attributes_opt
-@clo.strict_opt
-@clo.aborts_opt
-@clo.expand_opt
-@clo.overlays_opt
-@clo.quantities_opt
-@clo.units_opt
-@clo.types_opt
-@clo.types_output_opt
-@clo.pretty_print_opt
-@clo.extend_all_attributes_opt
-@click.pass_context
 def cli(
-    ctx,
     vspec: Path,
     output: Path,
-    include_dirs: tuple[Path],
-    extended_attributes: tuple[str],
-    strict: bool,
-    aborts: tuple[str],
-    expand: bool,
-    overlays: tuple[Path],
-    quantities: tuple[Path],
-    units: tuple[Path],
-    types: tuple[Path],
-    types_output: Path | None,
-    pretty: bool,
-    extend_all_attributes: bool,
 ):
     """
     Export JSON Data for Radial Tree.
     """
 
-    tree, datatype_tree = get_trees(
-        vspec=vspec,
-        include_dirs=include_dirs,
-        aborts=aborts,
-        strict=strict,
-        extended_attributes=extended_attributes,
-        quantities=quantities,
-        units=units,
-        types=types,
-        overlays=overlays,
-        expand=expand,
+    interim_file = output.parent / "interim_vss_data.json"
+    subprocess.run(
+        [
+            "vspec",
+            "export",
+            "json",
+            "-s", str(vspec),
+            "-o", str(interim_file),
+        ],
+        check=True
     )
-    log.info("Generating JSON output...")
+    log.info(f"Interim JSON file generated: {interim_file}")
 
-    signals_data = {tree.name: get_data(tree, extend_all_attributes, extended_attributes)}
+    with open(interim_file, "r") as f:
+        signals_data = json.load(f)
 
-    if datatype_tree:
-        types_data: dict[str, Any] = {datatype_tree.name: get_data(datatype_tree, extend_all_attributes)}
-        if not types_output:
-            log.info("Adding custom data types to signal dictionary")
-            signals_data["ComplexDataTypes"] = types_data
+    children = []
+    stack = [{"key": key, "value": value, "parent": None} for key, value in signals_data["Vehicle"]["children"].items()]
+
+    while stack:
+        current = stack.pop()
+        key, value, parent = current["key"], current["value"], current["parent"]
+
+        item = {"name": key}
+        if "children" in value:
+            item["children"] = []
+            stack.extend(
+                {"key": child_key, "value": child_value, "parent": item["children"]}
+                for child_key, child_value in value["children"].items()
+            )
         else:
-            with open(types_output, "w") as f:
-                json.dump(types_data, f, indent=2, sort_keys=True)
+            for prop, prop_value in value.items():
+                if prop != "children":
+                    item[prop] = prop_value
 
-    def build_json_structure(obj, parent_name=None):
-        result = []
-        for key, value in obj.items():
-            item = {"name": key}
-            if "children" in value:
-                item["children"] = build_json_structure(value["children"], key)
-            else:
-                for prop, prop_value in value.items():
-                    if prop != "children":
-                        item[prop] = prop_value
-            result.append(item)
+        if parent is not None:
+            parent.append(item)
+        else:
+            children.append(item)
 
-        result.sort(key=lambda x: ("children" not in x, x.get("type", "")))
-        return result
+    stack = [{"children": children}]
+    
+    while stack:
+        current = stack.pop()
+        if "children" in current:
+            current["children"].sort(key=lambda x: (x.get("type", ""), x.get("name", "")))
+            stack.extend(child for child in current["children"] if "children" in child)
 
-    new_data = {
+    radial_tree_data = {
         "name": "Vehicle",
         "type": "Vehicle",
-        "children": build_json_structure(signals_data["Vehicle"]["children"]),
+        "children": children,
     }
 
     with open(output, "w") as f:
-        json.dump(new_data, f, indent=2)
+        json.dump(radial_tree_data, f, indent=2)
+    log.info(f"Final JSON file saved: {output}")
+
+    try:
+        os.remove(interim_file)
+        log.info(f"Interim file removed: {interim_file}")
+    except OSError as e:
+        log.error(f"Error removing interim file: {e}")
