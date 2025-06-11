@@ -22,6 +22,7 @@ from vss_tools import log
 @click.command()
 @clo.vspec_opt
 @clo.output_required_opt
+
 def cli(
     vspec: Path,
     output: Path,
@@ -35,13 +36,11 @@ def cli(
             "vspec",
             "export",
             "csv",
-            "-s",
-            str(vspec),
-            "-o",
-            str(interim_file),
-            "--no-expand",
+            "-s", str(vspec),
+            "-o", str(interim_file),
+            "--no-expand"
         ],
-        check=True,
+        check=True
     )
     log.info(f"Interim CSV file generated: {interim_file}")
 
@@ -67,4 +66,3 @@ def cli(
         log.info(f"Interim file removed: {interim_file}")
     except OSError as e:
         log.error(f"Error removing interim file: {e}")
-
