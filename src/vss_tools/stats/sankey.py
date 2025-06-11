@@ -22,7 +22,6 @@ from vss_tools import log
 @click.command()
 @clo.vspec_opt
 @clo.output_required_opt
-
 def cli(
     vspec: Path,
     output: Path,
@@ -31,17 +30,7 @@ def cli(
     Export CSV Stats for Sankey Diagram.
     """
     interim_file = output.parent / "interim_vss_data.csv"
-    subprocess.run(
-        [
-            "vspec",
-            "export",
-            "csv",
-            "-s", str(vspec),
-            "-o", str(interim_file),
-            "--no-expand"
-        ],
-        check=True
-    )
+    subprocess.run(["vspec", "export", "csv", "-s", str(vspec), "-o", str(interim_file), "--no-expand"], check=True)
     log.info(f"Interim CSV file generated: {interim_file}")
 
     data_metadata = pd.read_csv(interim_file)

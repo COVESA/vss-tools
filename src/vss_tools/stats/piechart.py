@@ -9,21 +9,21 @@
 # Export CSV Statistics for Pie Chart.
 
 import os
+import subprocess
 from collections import Counter
 from pathlib import Path
-from click.testing import CliRunner
+
 import pandas as pd
 import rich_click as click
 
 import vss_tools.cli_options as clo
 from vss_tools import log
-import subprocess
+
 
 @click.command()
 @clo.vspec_opt
 @clo.output_required_opt
 @clo.old_chart_opt
-
 def cli(
     vspec: Path,
     output: Path,
@@ -34,17 +34,7 @@ def cli(
     """
 
     interim_file = output.parent / "interim_vss_data.csv"
-    subprocess.run(
-        [
-            "vspec",
-            "export",
-            "csv",
-            "-s", str(vspec),
-            "-o", str(interim_file),
-            "--no-expand"
-        ],
-        check=True
-    )
+    subprocess.run(["vspec", "export", "csv", "-s", str(vspec), "-o", str(interim_file), "--no-expand"], check=True)
     log.info(f"Interim CSV file generated: {interim_file}")
 
     data_metadata = pd.read_csv(interim_file)
