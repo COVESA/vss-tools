@@ -8,8 +8,8 @@
 
 # Export JSON Data for Radial Tree.
 
-import os
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -36,10 +36,12 @@ def cli(
             "vspec",
             "export",
             "json",
-            "-s", str(vspec),
-            "-o", str(interim_file),
+            "-s",
+            str(vspec),
+            "-o",
+            str(interim_file),
         ],
-        check=True
+        check=True,
     )
     log.info(f"Interim JSON file generated: {interim_file}")
 
@@ -71,7 +73,7 @@ def cli(
             children.append(item)
 
     stack = [{"children": children}]
-    
+
     while stack:
         current = stack.pop()
         if "children" in current:
