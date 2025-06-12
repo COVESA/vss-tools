@@ -58,3 +58,20 @@ def export(ctx: click.Context):
     """
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
+
+@cli.group(
+    cls=LazyGroup,
+    lazy_subcommands={
+        "radial": "vss_tools.stats.radial:cli",
+        "sankey": "vss_tools.stats.sankey:cli",
+        "piechart": "vss_tools.stats.piechart:cli",
+    },
+)
+@click.pass_context
+def stats(ctx: click.Context):
+    """
+    Generate statistical data for the documentation
+    """
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
