@@ -19,7 +19,7 @@ fqns: set[str] = {}
 
 
 # make first character lowercase
-def lc_first(s):
+def lc_first(s) -> str:
     if len(s) == 0:
         return s
     else:
@@ -33,7 +33,7 @@ def get_fqn2(node: VSSNode) -> str:
         if node.is_leaf or (not data.is_instance):
             # generated classes are in a package carrying their own name, but enumerations are not
             if not getattr(data, "allowed", None):
-                fqn = "P" + node.name + "." + fqn 
+                fqn = "P" + node.name + "." + fqn
         node = node.parent
     return fqn
 
@@ -42,6 +42,7 @@ def get_name(node: VSSNode, qualify: bool) -> str:
         return get_fqn2(node)
     else:
         return node.name
+
 
 # get the class name of a node that is not an instance going up.
 # adds postfix IS
@@ -61,7 +62,7 @@ def get_classname(node: VSSNode, qualify: bool) -> str:
         if parent.get_vss_data().is_instance:
             parent = parent.parent
         if has_instance_child(node):
-            # node is already instance, implies nested one 
+            # node is already instance, implies nested one
             return get_name(parent, qualify) + "_IS1"
         else:
             return get_name(parent, qualify)
@@ -111,7 +112,7 @@ def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
                     tree_content_lines.append("%spackage P%s {" % (fill, node.name))
                     tree_content_lines.append(result)
                     tree_content_lines.append("%s}" % (fill))
-                    
+
     return "\n".join(tree_content_lines)
 
 
