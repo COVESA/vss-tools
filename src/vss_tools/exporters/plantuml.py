@@ -25,6 +25,7 @@ def lc_first(s) -> str:
     else:
         return s[0].lower() + s[1:]
 
+
 # variant of get_fqn that skips instance nodes (and the top-level one)
 def get_fqn2(node: VSSNode) -> str:
     fqn = node.name
@@ -36,6 +37,7 @@ def get_fqn2(node: VSSNode) -> str:
                 fqn = "P" + node.name + "." + fqn
         node = node.parent
     return fqn
+
 
 def get_name(node: VSSNode, qualify: bool) -> str:
     if qualify:
@@ -66,6 +68,7 @@ def get_classname(node: VSSNode, qualify: bool) -> str:
             return get_name(parent, qualify) + "_IS1"
         else:
             return get_name(parent, qualify)
+
 
 # convenience function wrapping count_instance_children_depth
 def has_instance_child(node: VSSNode) -> bool:
