@@ -9,16 +9,13 @@
 from pathlib import Path
 
 import rich_click as click
-from anytree import RenderTree
-from anytree import AbstractStyle
-from anytree import AsciiStyle
 
 import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 
-fqns: set[str] = {} 
+fqns: set[str] = {}
 
 
 # make first character lowercase
@@ -73,9 +70,11 @@ def get_classname(node: VSSNode, qualify: bool) -> str:
 def has_instance_child(node: VSSNode) -> bool:
     return node.count_instance_children_depth() > 0
 
+
 # convenience function wrapping count_instance_children_depth
 def has_nested_instance_child(node: VSSNode) -> bool:
     return node.count_instance_children_depth() > 1
+
 
 def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
     tree_content_lines = []
@@ -97,15 +96,15 @@ def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
         else:
             if not node.parent:
                 # top level package, recurse only
-                result =  get_enums(node, fill + "\t", attributes)
+                result = get_enums(node, fill + "\t", attributes)
                 tree_content_lines.append(result)
             elif data.is_instance:
                 # instance node, recurse only (no package, no indent)
-                result =  get_enums(node, fill, attributes)
+                result = get_enums(node, fill, attributes)
                 if result:
                     tree_content_lines.append(result)
             else:
-                result =  get_enums(node, fill + "\t", attributes)
+                result = get_enums(node, fill + "\t", attributes)
                 # only add package, if it contains an enumeration
                 if result:
                     tree_content_lines.append("")
@@ -114,6 +113,7 @@ def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
                     tree_content_lines.append("%s}" % (fill))
                     
     return "\n".join(tree_content_lines)
+
 
 def get_rendered_class(tree: VSSNode, fill, attributes: tuple[str]) -> str:
     tree_content_lines = []
@@ -144,6 +144,7 @@ def get_rendered_class(tree: VSSNode, fill, attributes: tuple[str]) -> str:
 
     return "\n".join(tree_content_lines)
 
+
 def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
     tree_content_lines = []
     data = node.get_vss_data()
@@ -173,6 +174,7 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
         tree_content_lines.append("%s}" % (fill))
 
     return "\n".join(tree_content_lines)
+
 
 @click.command()
 @clo.vspec_opt
