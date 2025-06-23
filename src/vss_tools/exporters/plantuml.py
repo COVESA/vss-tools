@@ -18,10 +18,11 @@ from vss_tools import log
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 
-dict = {} 
+fqns: set[str] = {} 
+
 
 # make first character lowercase
-def lcFirst(s):
+def lc_first(s):
     if len(s) == 0:
         return s
     else:
@@ -33,14 +34,13 @@ def get_fqn2(node: VSSNode) -> str:
     while node.parent:
         data = node.get_vss_data()
         if node.is_leaf or (not data.is_instance):
-            allowed = getattr(data, "allowed", None)
             # generated classes are in a package carrying their own name, but enumerations are not
-            if not allowed:
-                fqn = 'P' + node.name + '.' + fqn 
+            if not getattr(data, "allowed", None):
+                fqn = "P" + node.name + "." + fqn 
         node = node.parent
     return fqn
 
-def getName(node: VSSNode, qualify: bool) -> str:
+def get_name(node: VSSNode, qualify: bool) -> str:
     if qualify:
         return get_fqn2(node)
     else:
@@ -51,70 +51,63 @@ def getName(node: VSSNode, qualify: bool) -> str:
 def get_classname(node: VSSNode, qualify: bool) -> str:
     data = node.get_vss_data()
     if node.is_leaf:
-        return getName(node, qualify)
+        return get_name(node, qualify)
     elif not data.is_instance:
-        if hasNestedInstanceChild(node):
-            return getName(node, qualify) + 'IS0'
-        elif hasInstanceChild(node):
-            return getName(node, qualify) + 'IS'
+        if has_nested_instance_child(node):
+            return get_name(node, qualify) + "IS0"
+        elif has_instance_child(node):
+            return get_name(node, qualify) + "IS"
         else:
-            return getName(node, qualify)
+            return get_name(node, qualify)
     else:
-        parent = node.parent;
+        parent = node.parent
         if parent.get_vss_data().is_instance:
             parent = parent.parent
-        if hasInstanceChild(node):
+        if has_instance_child(node):
             # node is already instance, implies nested one 
-            return getName(parent, qualify) + '_IS1'
+            return get_name(parent, qualify) + "_IS1"
         else:
-            return getName(parent, qualify)
+            return get_name(parent, qualify)
 
-def hasInstanceChild(node: VSSNode) -> bool:
-    for child in node.children:
-        data = child.get_vss_data()
-        if not child.is_leaf and data.is_instance:
-            return True
-    return False
+# convenience function wrapping count_instance_children_depth
+def has_instance_child(node: VSSNode) -> bool:
+    return node.count_instance_children_depth() > 0
 
-def hasNestedInstanceChild(node: VSSNode) -> bool:
-    for child in node.children:
-        data = child.get_vss_data()
-        if not child.is_leaf and data.is_instance:
-            return hasInstanceChild(child);
-    return False
+# convenience function wrapping count_instance_children_depth
+def has_nested_instance_child(node: VSSNode) -> bool:
+    return node.count_instance_children_depth() > 1
 
-def get_enums(tree: VSSNode, fill, attributes: tuple[str]) -> str:
+def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
     tree_content_lines = []
     for node in tree.children:
         data = node.get_vss_data()
         if node.is_leaf:
             allowed = getattr(data, "allowed", None)
             fqn = get_fqn2(node)
-            if allowed and (fqn not in dict):
+            if allowed and (fqn not in fqns):
                 # use enumeration instead of datatype, use 2nd level package name
-                dict[fqn] = True
+                fqns[fqn] = True
                 # create Enumeration
                 tree_content_lines.append("")
                 tree_content_lines.append("%s' %s" % (fill, data.description))
                 tree_content_lines.append("%senum %s {" % (fill, node.name))
-                datatype = node.name
                 for a in allowed:
                     tree_content_lines.append("%s\t%s," % (fill, a))
                 tree_content_lines.append("%s}" % (fill))
         else:
-            if node.parent == None:
+            if not node.parent:
                 # top level package, recurse only
-                result =  get_enums(node, fill + '\t', attributes)
+                result =  get_enums(node, fill + "\t", attributes)
                 tree_content_lines.append(result)
             elif data.is_instance:
                 # instance node, recurse only (no package, no indent)
                 result =  get_enums(node, fill, attributes)
-                if (result != ""):
+                if result:
                     tree_content_lines.append(result)
             else:
-                result =  get_enums(node, fill + '\t', attributes)
+                result =  get_enums(node, fill + "\t", attributes)
                 # only add package, if it contains an enumeration
-                if (result != ""):
+                if result:
                     tree_content_lines.append("")
                     tree_content_lines.append("%spackage P%s {" % (fill, node.name))
                     tree_content_lines.append(result)
@@ -142,13 +135,12 @@ def get_rendered_class(tree: VSSNode, fill, attributes: tuple[str]) -> str:
                 tree_content_lines.append("%s' interval [%s..)" % (fill, min))
             elif max is not None:
                 tree_content_lines.append("%s' interval (..%s]" % (fill, max))
-            allowed = getattr(data, "allowed", None)
-            if allowed:
+            if getattr(data, "allowed", None):
                 # use qualified name of enumeration as datatype
                 datatype = get_fqn2(node)
-            tree_content_lines.append("%s%s : %s" % (fill, lcFirst(node.name), datatype))
+            tree_content_lines.append("%s%s : %s" % (fill, lc_first(node.name), datatype))
         else:
-            tree_content_lines.append("%s%s : %s" % (fill, lcFirst(node.name), get_classname(node, True)))
+            tree_content_lines.append("%s%s : %s" % (fill, lc_first(node.name), get_classname(node, True)))
 
     return "\n".join(tree_content_lines)
 
@@ -159,12 +151,12 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
     if needPkg:
         tree_content_lines.append("%s' %s" % (fill, data.description))
         tree_content_lines.append("%spackage P%s {" % (fill, node.name))
-        nFill = fill + '\t'
+        nFill = fill + "\t"
     else:
         nFill = fill
     tree_content_lines.append("%sclass %s {" % (nFill, get_classname(node, False)))
     # if the node has child instances, enter into first one (skip current child node)
-    result = get_rendered_class(node, nFill + '\t', attributes)
+    result = get_rendered_class(node, nFill + "\t", attributes)
     tree_content_lines.append(result)
     tree_content_lines.append("%s}" % (nFill))
     for node in node.children:
@@ -181,7 +173,6 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
         tree_content_lines.append("%s}" % (fill))
 
     return "\n".join(tree_content_lines)
-
 
 @click.command()
 @clo.vspec_opt
@@ -227,9 +218,9 @@ def cli(
     )
 
     rendered_tree = get_enums(tree, "", attr)
-    rendered_tree += "\n# --- end of enums\n\n" + get_rendered_tree(tree, "", attr)
+    rendered_tree += "\n' --- end of enums\n\n" + get_rendered_tree(tree, "", attr)
     if datatype_tree:
-        rendered_tree += "\ndatatype tree:\n" + get_rendered_tree(datatype_tree, "", attr)
+        rendered_tree += "\n'datatype tree:\n" + get_rendered_tree(datatype_tree, "", attr)
 
     if output:
         log.info(f"Writing tree to: {output.absolute()}")

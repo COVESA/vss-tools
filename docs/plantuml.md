@@ -5,7 +5,7 @@
 This vspec exporter is used to export a VSS file to PlantUML
 
 ## Why?
-- Link with OMG standard, access from tools used in automotive
+- Link with OMG standard [UML](https://www.omg.org/spec/UML/), access from tools used in automotive
 - UML models (architecture, etc.) can access VSS definitions
 - Use of PlantUML as simple exchange format (even if not fully compliant)
 
@@ -78,6 +78,8 @@ class Windshield {
 }
 ```
 
+The current PlantUML export implements the second option
+
 ## Mapping of allowed values => Enumerations
 
 Some values have fixed set of allowed values, can be mapped to enumerations (as done for instance already by DDS-IDL export)
@@ -91,3 +93,9 @@ Some values have fixed set of allowed values, can be mapped to enumerations (as 
 => Accept limited duplication for the moment (8x Switch)
 
 => Identify identical enumerations via literal comparison?
+
+## Usage
+
+```
+vspec export plantuml --vspec <VSS specification> --output <output file>
+```
