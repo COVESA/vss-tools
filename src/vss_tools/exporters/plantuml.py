@@ -13,9 +13,10 @@ import rich_click as click
 import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.main import get_trees
+from vss_tools.model import VSSDataBranch
 from vss_tools.tree import VSSNode
 
-fqns: set[str] = {}
+fqns: set[str] = set()
 
 
 # make first character lowercase
@@ -31,7 +32,7 @@ def get_fqn2(node: VSSNode) -> str:
     fqn = node.name
     while node.parent:
         data = node.get_vss_data()
-        if node.is_leaf or (not data.is_instance):
+        if node.is_leaf or not (isinstance(data, VSSDataBranch) and data.is_instance):
             # generated classes are in a package carrying their own name, but enumerations are not
             if not getattr(data, "allowed", None):
                 fqn = "P" + node.name + "." + fqn
@@ -52,7 +53,7 @@ def get_classname(node: VSSNode, qualify: bool) -> str:
     data = node.get_vss_data()
     if node.is_leaf:
         return get_name(node, qualify)
-    elif not data.is_instance:
+    elif not (isinstance(data, VSSDataBranch) and data.is_instance):
         if has_nested_instance_child(node):
             return get_name(node, qualify) + "IS0"
         elif has_instance_child(node):
@@ -89,7 +90,7 @@ def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
             fqn = get_fqn2(node)
             if allowed and (fqn not in fqns):
                 # use enumeration instead of datatype, use 2nd level package name
-                fqns[fqn] = True
+                fqns.add(fqn)
                 # create Enumeration
                 tree_content_lines.append("")
                 tree_content_lines.append("%s' %s" % (fill, data.description))
@@ -152,7 +153,7 @@ def get_rendered_class(tree: VSSNode, fill, attributes: tuple[str]) -> str:
 def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
     tree_content_lines = []
     data = node.get_vss_data()
-    needPkg = node.parent and (node.is_leaf or (not data.is_instance))
+    needPkg = node.parent and (node.is_leaf or not (isinstance(data, VSSDataBranch) and data.is_instance))
     if needPkg:
         tree_content_lines.append("%s' %s" % (fill, data.description))
         tree_content_lines.append("%spackage P%s {" % (fill, node.name))
@@ -171,7 +172,7 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
         else:
             result = get_rendered_tree(node, nFill, attributes)
             tree_content_lines.append(result)
-            if data.is_instance:
+            if isinstance(data, VSSDataBranch) and data.is_instance:
                 break
 
     if needPkg:
