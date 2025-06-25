@@ -76,7 +76,7 @@ def test_exporters(directory, tmp_path):
         "franca",
         "graphql",
         "go",
-        "samm"
+        "samm",
     ]
 
     for exporter in exporters:
