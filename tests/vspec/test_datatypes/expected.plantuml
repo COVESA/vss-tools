@@ -1,0 +1,45 @@
+class A {
+
+	' sensor: A uint8.
+	' unit: km
+	uInt8 : uint8
+
+	' sensor: An int8.
+	' unit: km
+	int8 : int8
+
+	' sensor: A uint16.
+	' unit: km
+	uInt16 : uint16
+
+	' sensor: An int16.
+	' unit: km
+	int16 : int16
+
+	' sensor: A uint32.
+	' unit: km
+	uInt32 : uint16
+
+	' sensor: An int32
+	' unit: km
+	int32 : int32
+
+	' sensor: A uint64.
+	' unit: km
+	uInt64 : uint64
+
+	' sensor: An int64
+	' unit: km
+	int64 : int64
+
+	' sensor: A boolean
+	isBoolean : boolean
+
+	' sensor: A float.
+	' unit: km
+	float : float
+
+	' sensor: A double.
+	' unit: km
+	double : double
+}

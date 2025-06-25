@@ -1,0 +1,6 @@
+class A {
+
+	' sensor: This is the first signal.
+	' unit: km
+	signalA : int8
+}

@@ -103,7 +103,7 @@ def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
                 # top level package, recurse only
                 result = get_enums(node, fill + "\t", attributes)
                 tree_content_lines.append(result)
-            elif data.is_instance:
+            elif isinstance(data, VSSDataBranch) and data.is_instance:
                 # instance node, recurse only (no package, no indent)
                 result = get_enums(node, fill, attributes)
                 if result:
@@ -224,14 +224,17 @@ def cli(
         expand=expand,
     )
 
-    rendered_tree = get_enums(tree, "", attr)
-    rendered_tree += "\n' --- end of enums\n\n" + get_rendered_tree(tree, "", attr)
+    plant_code = get_enums(tree, "", attr)
+    if len(fqns) > 0:
+        plant_code += "\n' --- end of enums\n\n"
+
+    plant_code += get_rendered_tree(tree, "", attr) + "\n"
     if datatype_tree:
-        rendered_tree += "\n'datatype tree:\n" + get_rendered_tree(datatype_tree, "", attr)
+        plant_code += "\n'datatype tree:\n" + get_rendered_tree(datatype_tree, "", attr)
 
     if output:
         log.info(f"Writing tree to: {output.absolute()}")
         with open(output, "w") as f:
-            f.write(rendered_tree)
+            f.write(plant_code)
     else:
-        log.info(rendered_tree)
+        log.info(plant_code)

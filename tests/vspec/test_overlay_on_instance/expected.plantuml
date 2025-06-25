@@ -1,0 +1,63 @@
+class A {
+	b : PB.BIS0
+	s : PS.SIS
+}
+' Branch A.B, instances defined in list
+package PB {
+	class BIS0 {
+		row1 : PB.B_IS1
+		row2 : PB.B_IS1
+	}
+	class B_IS1 {
+		left : PB.B
+		right : PB.B
+	}
+	class B {
+
+		' sensor: Signal A.B.C.
+		' unit: km
+		c : int8
+	}
+}
+' Branch with instances, not in list
+package PS {
+	class SIS {
+		front : PS.S
+		rear : PS.S
+	}
+	class S {
+
+		' sensor: Signal A.S.T
+		' unit: km
+		t : int8
+		tT : PS.PTT.TTIS
+	}
+	' Second level instance
+	package PTT {
+		class TTIS {
+			left : PS.PTT.TT
+			right : PS.PTT.TT
+		}
+		class TT {
+			tTT : PS.PTT.PTTT.TTT
+		}
+		' Another branch level
+		package PTTT {
+			class TTT {
+
+				' sensor: Some temperature.
+				' unit: celsius
+				tTTT : float
+				t4 : PS.PTT.PTTT.PT4.T4
+			}
+			' A very nasty branchzhs
+			package PT4 {
+				class T4 {
+
+					' sensor: A very nasty sensor
+					tTTTR : float
+				}
+			}
+		}
+	}
+}
