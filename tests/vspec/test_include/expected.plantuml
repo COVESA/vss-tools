@@ -1,0 +1,24 @@
+class A {
+
+	' sensor: A sensor.
+	' unit: km
+	s1 : float
+	b : PB.B
+
+	' sensor: A sensor.
+	' unit: km
+	s2 : float
+}
+' Branch A.B.
+package PB {
+	class B {
+
+		' sensor: A sensor.
+		' unit: km
+		s3 : float
+
+		' sensor: A sensor.
+		' unit: km
+		s4 : float
+	}
+}

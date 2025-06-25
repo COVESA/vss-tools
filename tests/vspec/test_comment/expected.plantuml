@@ -1,0 +1,42 @@
+class A {
+
+	' sensor: A sensor.
+	' unit: km
+	singleLineNotQuoted : float
+
+	' sensor: A sensor.
+	' unit: km
+	singleLineInternalQuotes : float
+
+	' sensor: A sensor.
+	' unit: km
+	singleLineQuoted : float
+
+	' sensor: A sensor.
+	' unit: km
+	singleLineQuotedInternalQuotes : float
+
+	' sensor: A sensor.
+	' unit: km
+	singleLineComma : float
+
+	' sensor: A sensor.
+	' unit: km
+	singleLineCommaQuoted : float
+
+	' sensor: A sensor.
+	' unit: km
+	multiLineCommaNotQuoted : float
+
+	' sensor: A sensor.
+	' unit: km
+	multiLineCommaQuoted : float
+
+	' sensor: A sensor.
+	' unit: km
+	multiLineStyleInitialBreak : float
+
+	' sensor: A sensor.
+	' unit: km
+	multiLineLiteralStyleQuote : float
+}

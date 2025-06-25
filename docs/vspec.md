@@ -16,6 +16,7 @@ vspec export --help
 │ binary        Export to Binary.                                                                                      │
 │ csv           Export as CSV.                                                                                         │
 │ ddsidl        Export as DDSIDL.                                                                                      │
+│ plantuml      Export as PlantUML.                                                                                    │
 │ franca        Export as Franca.                                                                                      │
 │ graphql       Export as GraphQL.                                                                                     │
 │ id            Export as IDs.                                                                                         │
@@ -49,6 +50,7 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
 - [apigear](./apigear.md)
 - [binary](../binary/README.md)
 - [ddsidl](./ddsidl.md)
+- [plantuml](./plantuml.md)
 - [go](./go.md)
 - [graphql](./graphql.md)
 - [id](./id.md)

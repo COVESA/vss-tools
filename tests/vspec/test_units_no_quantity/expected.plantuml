@@ -1,0 +1,6 @@
+class A {
+
+	' sensor: Something in km.
+	' unit: km
+	km : float
+}
