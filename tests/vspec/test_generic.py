@@ -65,7 +65,19 @@ def run_exporter(directory, exporter, tmp_path):
 def test_exporters(directory, tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["apigear", "json", "jsonschema", "ddsidl", "plantuml", "csv", "yaml", "franca", "graphql", "go", "samm"]
+    exporters = [
+        "apigear",
+        "json",
+        "jsonschema",
+        "ddsidl",
+        "plantuml",
+        "csv",
+        "yaml",
+        "franca",
+        "graphql",
+        "go",
+        "samm"
+    ]
 
     for exporter in exporters:
         run_exporter(directory, exporter, tmp_path)
