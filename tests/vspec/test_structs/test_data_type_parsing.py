@@ -7,7 +7,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import filecmp
-import os
 import subprocess
 from pathlib import Path
 
@@ -232,13 +231,12 @@ def test_data_types_invalid_reference_in_data_type_tree(types_file, error_msg, t
     output_types = tmp_path / "VehicleDataTypes.vspec"
     vspec = HERE / "test.vspec"
     output = tmp_path / "out.json"
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {output_types} --vspec {vspec} --output {output}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
-    assert error_msg in process.stdout
+    assert error_msg in log.read_text()
 
 
 @pytest.mark.parametrize(
@@ -258,14 +256,13 @@ def test_data_types_orphan_properties(types_file, error_msg, tmp_path):
     types_out = tmp_path / "VehicleDataTypes.vspec"
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
 
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
+    cmd = f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split())
     assert process.returncode != 0
-    assert error_msg in process.stdout
+    assert error_msg in log.read_text()
 
 
 def test_data_types_invalid_reference_in_signal_tree(tmp_path):
@@ -276,16 +273,15 @@ def test_data_types_invalid_reference_in_signal_tree(tmp_path):
     types_out = tmp_path / "VehicleDataTypes.json"
     vspec = HERE / "test-invalid-datatypes.vspec"
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
 
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
+    cmd = f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {types_out} --vspec {vspec} --output {out}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split())
     assert process.returncode != 0
 
     error_msg = "'VehicleDataTypes.TestBranch1.ParentStruct1' is not a valid datatype"
-    assert error_msg in process.stdout
+    assert error_msg in log.read_text()
 
 
 def test_error_when_no_user_defined_data_types_are_provided(tmp_path):
@@ -295,14 +291,13 @@ def test_error_when_no_user_defined_data_types_are_provided(tmp_path):
     """
     vspec = HERE / "test.vspec"
     out = tmp_path / "out.json"
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} --output {out}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    log = tmp_path / "log.txt"
+    cmd = f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {vspec} --output {out}"
+    process = subprocess.run(cmd.split())
     assert process.returncode != 0
 
     error_msg = "'VehicleDataTypes.TestBranch1.ParentStruct' is not a valid datatype"
-    assert error_msg in process.stdout
+    assert error_msg in log.read_text()
 
 
 @pytest.mark.parametrize(
@@ -333,16 +328,13 @@ def test_faulty_use_of_standard_attributes(vspec_file, types_file, error_msg, tm
     types_out = tmp_path / "VehicleDataTypes.json"
     vspec_file = HERE / vspec_file
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
 
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
+    cmd = f"vspec --log-file {log} export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --types {types_file}"
     cmd += f" --types-output {types_out} --vspec {vspec_file} --output {out}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
-    print(process.stderr)
-    print(process.stdout)
-    assert error_msg in process.stdout or error_msg in process.stderr
+    assert error_msg in log.read_text() or error_msg in process.stderr
 
 
 def test_data_types_for_multiple_apigear_templates(tmp_path):

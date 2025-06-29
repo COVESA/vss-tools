@@ -8,23 +8,24 @@ For the most up do date usage information, please call the tool help via:
 vspec export --help
 
  Usage: vspec export [OPTIONS] COMMAND [ARGS]...
-╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────╮
-│ --help                                              Show this message and exit.                        │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ─────────────────────────────────────────────────────────────────────────────────────────────╮
-│ apigear                           Export to ApiGear.                                                   │
-│ binary                            Export to Binary.                                                    │
-│ csv                               Export as CSV.                                                       │
-│ ddsidl                            Export as DDSIDL.                                                    │
-│ franca                            Export as Franca.                                                    │
-│ graphql                           Export as GraphQL.                                                   │
-│ id                                Export as IDs.                                                       │
-│ json                              Export as JSON.                                                      │
-│ jsonschema                        Export as a jsonschema.                                              │
-│ protobuf                          Export as protobuf.                                                  │
-│ yaml                              Export as YAML.                                                      │
-│ tree                              Export as Tree.                                                      │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help                                              Show this message and exit.                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ apigear       Export to ApiGear.                                                                                     │
+│ binary        Export to Binary.                                                                                      │
+│ csv           Export as CSV.                                                                                         │
+│ ddsidl        Export as DDSIDL.                                                                                      │
+│ franca        Export as Franca.                                                                                      │
+│ graphql       Export as GraphQL.                                                                                     │
+│ id            Export as IDs.                                                                                         │
+│ json          Export as JSON.                                                                                        │
+│ jsonschema    Export as a jsonschema.                                                                                │
+│ protobuf      Export as protobuf.                                                                                    │
+| samm          Export as Eclipse Semantic Modeling Framework (ESMF) - Semantic Aspect Meta Model (SAMM) - .ttl files. |
+│ yaml          Export as YAML.                                                                                        │
+│ tree          Export as Tree.                                                                                        │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 
@@ -39,19 +40,21 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
                     /Users/Bar/workspace/vehicle_signal_specification/spec/units.yaml
            INFO     Loading vspec from spec/VehicleSignalSpecification.vspec...                utils.py:81
 [16:40:04] INFO     Check type usage                                                       __init__.py:117
-           INFO     Generating JSON output...                                              vss2json.py:142
-           INFO     Serializing compact JSON...                                            vss2json.py:148
+           INFO     Generating JSON output...                                                  json.py:142
+           INFO     Serializing compact JSON...                                                json.py:148
 
 ```
-## Exporter docs
+## Exporter Specific Documentation
 
 - [apigear](./apigear.md)
-- [tree](./tree.md)
+- [binary](../binary/README.md)
 - [ddsidl](./ddsidl.md)
+- [go](./go.md)
 - [graphql](./graphql.md)
 - [id](./id.md)
 - [protobuf](./protobuf.md)
 - [samm](./samm.md)
+- [tree](./tree.md)
 
 ## Argument Explanations
 
@@ -79,16 +82,6 @@ Terminates parsing, when the name of a signal does not follow [VSS Naming Conven
 
 ### --strict/--no-strict
 Enables `--aborts unknown-attribute` and `--aborts name-style`
-
-### --uuid/--no-uuid
-Request the exporter to output UUIDs. The UUID generated is an RFC 4122 Version 5 UUID created from the qualified name
-of the node and the UUID of the namespace `vehicle_signal_specification`.
-
-Note that not all exporters support that arugment
-
-> [!WARNING]
-> The UUID feature is deprecated and will be removed in VSS-tools 6.0.
-> If you need identifiers consider using [vspec id exporter](id.md)
 
 ### --expand/--no-expand
 
@@ -336,7 +329,7 @@ In this case the expectation is, that the generated output will contain the whit
 
 > [!WARNING]
 > Not all exporters (need to) support (all) extended metadata attributes!
-> Currently, the `yaml` and `json` exporters support arbitrary metadata.
+> Currently, the `yaml`, `csv`, and `json` exporters support arbitrary metadata.
 
 ## JSON exporter notes
 
@@ -358,7 +351,6 @@ Lets the exporter generate _all_ extended metadata attributes found in the model
 | deprecation   | x-deprecation |
 | aggregate     | x-aggregate   |
 | comment       | x-comment     |
-| uuid          | x-uuid        |
 
 Not that strict JSON schema validators might not accept jsonschemas with such extra, non-standard entries.
 
@@ -380,12 +372,6 @@ If the paramter is set it will pretty-print the JSON output, otherwise you will 
 
 ### --extended-all-attributes
 Lets the exporter generate _all_ extended metadata attributes found in the model. By default the exporter is generating only those given by the `-e`/`--extended-attributes` parameter.
-
-## DDS-IDL exporter notes
-The DDS-IDL exporter never generates uuid, i.e. the `--uuid` option has no effect.
-
-## Graphql exporter notes
-The Graphql exporter never generates uuid, i.e. the `--uuid` option has no effect.
 
 ### --all-idl-features
 Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out because at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](ddsidl.md).

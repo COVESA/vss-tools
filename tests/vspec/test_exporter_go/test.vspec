@@ -1,0 +1,148 @@
+Vehicle:
+  type: branch
+  description: Vehicle
+
+Vehicle.Struct:
+  type: attribute
+  datatype: Types.Struct
+  description: Type X
+
+Vehicle.StructA:
+  type: attribute
+  datatype: Types.Struct[]
+  description: Type X
+
+Vehicle.AllTypes:
+  type: branch
+  description: All Types
+
+Vehicle.AllTypes.Uint8:
+  type: attribute
+  datatype: uint8
+  description: Type X
+
+Vehicle.AllTypes.Uint8A:
+  type: attribute
+  datatype: uint8[]
+  description: Type X
+
+Vehicle.AllTypes.Uint16:
+  type: attribute
+  datatype: uint16
+  description: Type X
+
+Vehicle.AllTypes.Uint16A:
+  type: attribute
+  datatype: uint16[]
+  description: Type X
+
+Vehicle.AllTypes.Uint32:
+  type: attribute
+  datatype: uint32
+  description: Type X
+
+Vehicle.AllTypes.Uint32A:
+  type: attribute
+  datatype: uint32[]
+  description: Type X
+
+Vehicle.AllTypes.Uint64:
+  type: attribute
+  datatype: uint64
+  description: Type X
+
+Vehicle.AllTypes.Uint64A:
+  type: attribute
+  datatype: uint64[]
+  description: Type X
+
+Vehicle.AllTypes.Int8:
+  type: attribute
+  datatype: int8
+  description: Type X
+
+Vehicle.AllTypes.Int8A:
+  type: attribute
+  datatype: int8[]
+  description: Type X
+
+Vehicle.AllTypes.Int16:
+  type: attribute
+  datatype: int16
+  description: Type X
+
+Vehicle.AllTypes.Int16A:
+  type: attribute
+  datatype: int16[]
+  description: Type X
+
+
+Vehicle.AllTypes.Int32:
+  type: attribute
+  datatype: int32
+  description: Type X
+
+Vehicle.AllTypes.Int32A:
+  type: attribute
+  datatype: int32[]
+  description: Type X
+
+Vehicle.AllTypes.Int64:
+  type: attribute
+  datatype: int64
+  description: Type X
+
+Vehicle.AllTypes.Int64A:
+  type: attribute
+  datatype: int64[]
+  description: Type X
+
+Vehicle.AllTypes.Bool:
+  type: attribute
+  datatype: boolean
+  description: Type X
+
+Vehicle.AllTypes.BoolA:
+  type: attribute
+  datatype: boolean[]
+  description: Type X
+
+Vehicle.AllTypes.Float:
+  type: attribute
+  datatype: float
+  description: Type X
+
+Vehicle.AllTypes.FloatA:
+  type: attribute
+  datatype: float[]
+  description: Type X
+
+Vehicle.AllTypes.Double:
+  type: attribute
+  datatype: double
+  description: Type X
+
+Vehicle.AllTypes.DoubleA:
+  type: attribute
+  datatype: double[]
+  description: Type X
+
+Vehicle.AllTypes.String:
+  type: attribute
+  datatype: string
+  description: Type X
+
+Vehicle.AllTypes.StringA:
+  type: attribute
+  datatype: string[]
+  description: Type X
+
+Vehicle.AllTypes.Numeric:
+  type: attribute
+  datatype: numeric
+  description: Type X
+
+Vehicle.AllTypes.NumericA:
+  type: attribute
+  datatype: numeric[]
+  description: Type X

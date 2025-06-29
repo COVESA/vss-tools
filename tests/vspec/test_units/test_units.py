@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 import filecmp
-import os
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -31,14 +30,12 @@ def run_unit(
         units = []
     spec = HERE / vspec_file
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
     unit_argument = " ".join([f"-u {HERE / unit}" for unit in units])
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
-    cmd = f"vspec export json --pretty --vspec {spec}"
+    cmd = f"vspec --log-file {log} export json --pretty --vspec {spec}"
     cmd += f" {unit_argument} {quantity_argument} --output {out}"
-    env = os.environ.copy()
-    # Long line needed as file name printed in some error messages
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE)
 
     if fails:
         assert process.returncode != 0
@@ -47,7 +44,7 @@ def run_unit(
         assert filecmp.cmp(HERE / expected_file, out)
 
     if grep_present and grep_string:
-        assert grep_string in process.stdout or grep_string in process.stderr
+        assert grep_string in log.read_text() or grep_string in process.stderr
 
 
 def run_unit_error(tmp_path, vspec_file, units, grep_error, quantities=None):
@@ -56,17 +53,15 @@ def run_unit_error(tmp_path, vspec_file, units, grep_error, quantities=None):
     if not units:
         units = []
     out = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
     unit_argument = " ".join([f"-u {HERE / unit}" for unit in units])
     quantity_argument = " ".join([f"-q {HERE / quantity}" for quantity in quantities])
-    cmd = f"vspec export json --pretty --vspec {vspec_file}"
+    cmd = f"vspec --log-file {log} export json --pretty --vspec {vspec_file}"
     cmd += f" {unit_argument} {quantity_argument} --output {out}"
-    env = os.environ.copy()
-    # Long line needed as file name printed in some error messages
-    env["COLUMNS"] = "300"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE, env=env)
+    process = subprocess.run(cmd.split(), capture_output=True, text=True, cwd=HERE)
     assert process.returncode != 0
     if grep_error:
-        assert grep_error in process.stdout or grep_error in process.stderr
+        assert grep_error in log.read_text() or grep_error in process.stderr
 
 
 def test_single_u(tmp_path):
@@ -97,8 +92,8 @@ def test_multiple_duplication(tmp_path):
         "expected_special.json",
         None,
         True,
-        "redefinition of 'puncheon'",
-        True,
+        "overwriting definition of 'puncheon'",
+        False,
     )
 
 
@@ -220,7 +215,7 @@ def test_quantity_redefinition(tmp_path):
         "expected_special.json",
         ["quantity_volym.yaml", "quantity_volym.yaml"],
         True,
-        "redefinition of 'volym'",
+        "overwriting definition of 'volym'",
         True,
     )
 

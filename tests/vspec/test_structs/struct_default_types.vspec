@@ -1,0 +1,26 @@
+Types:
+  type: branch
+  description: Types
+
+Types.T:
+  type: struct
+  description: T
+
+Types.T.m:
+  type: property
+  description: Tx
+  datatype: uint8
+
+Types.T.complex:
+  type: property
+  description: TComplex
+  datatype: Z
+
+Types.Z:
+  type: struct
+  description: Z
+
+Types.Z.m:
+  type: property
+  description: Zm
+  datatype: boolean[]

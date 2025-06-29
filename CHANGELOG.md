@@ -7,7 +7,7 @@ It includes changes that are included in released version, but also changes plan
 *This document only contain changes introduced in VSS-Tools 3.0 or later!*
 
 
-## Planned changes for VSS-Tools 6.0
+## Implemented changes for VSS-Tools 6.0
 
 ### Change in UUID handling.
 
@@ -16,6 +16,8 @@ the legacy uuid functionality.
 
 * The parameters `--uuid`/`--no-uuid` are now removed.
 
+Columns (or similar) for UUID in generated output has also been removed.
+An exception is binary output which still contain a byte for UUID, however always 0.
 
 ## VSS-Tools 5.0
 

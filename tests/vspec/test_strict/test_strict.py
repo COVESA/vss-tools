@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -30,11 +29,7 @@ def test_not_strict(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
     cmd = f"vspec export json --pretty -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
-    print(vspec_file)
-    print(process.stdout)
+    process = subprocess.run(cmd.split())
     assert process.returncode == 0
 
 
@@ -43,10 +38,7 @@ def test_strict_ok(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
     cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
-    print(process.stdout)
+    process = subprocess.run(cmd.split())
     assert process.returncode == 0
 
 
@@ -55,7 +47,5 @@ def test_strict_error(vspec_file: str, tmp_path):
     spec = HERE / vspec_file
     output = tmp_path / "out.json"
     cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
-    env = os.environ.copy()
-    env["COLUMNS"] = "200"
-    process = subprocess.run(cmd.split(), capture_output=True, text=True, env=env)
+    process = subprocess.run(cmd.split())
     assert process.returncode != 0

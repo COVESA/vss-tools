@@ -1,0 +1,25 @@
+A:
+  type: branch
+  description: A
+
+A.B:
+  type: sensor
+  description: B
+  datatype: Types.T
+  default:
+    m: 10
+    complex:
+      m:
+      - true
+      - false
+
+A.C:
+  type: sensor
+  description: C
+  datatype: Types.T[]
+  default:
+  - m: 10
+    complex:
+      m:
+      - true
+      - false

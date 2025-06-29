@@ -1,41 +1,43 @@
-[tool.poetry]
+[project]
 name = "vss-tools"
-homepage="https://github.com/COVESA/vss-tools"
+version = "5.1rc0"
 description='COVESA Vehicle Signal Specification tooling.'
-authors = ["COVESA VSS <covesa-dev@covesa.global>"]
-version = "5.1.dev0"
-license = "Mozilla Public License 2.0"
-readme = ["README.md", "README-PYPI.md"]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "anytree>=2.12.1",
+    "bump2version>=1.0.1",
+    "click>=8.1.7",
+    "deprecation>=2.1.0",
+    "graphql-core>=3.2.5",
+    "importlib-metadata>=8.5.0",
+    "jsonschema>=4.23.0",
+    "pydantic>=2.9.2",
+    "pyyaml>=6.0.2",
+    "rdflib>=7.1.1",
+    "rich-click>=1.8.3",
+    "rich>=13.9.4",
+    "ruff>=0.7.3",
+    "graphene>=3.4.3",
+    "pandas>=2.2.3",
+]
+authors = [
+{name="COVESA VSS", email="covesa-dev@covesa.global"}
+]
+license = {text = "Mozilla Public License 2.0"}
 
-[tool.poetry.dependencies]
-python = "^3.10"
-rich = "^13.7.1"
-pyyaml = "^6.0.1"
-anytree = "^2.9.0"
-deprecation = "^2.1.0"
-graphql-core = "*"
-rdflib = "^6.0.0"
-importlib-metadata = "^7.0"
-click = "^8.1.7"
-rich-click = "^1.8.3"
-pydantic = "^2.8.2"
+[project.urls]
+Homepage="https://github.com/COVESA/vss-tools"
+Issues = "https://github.com/COVESA/vss-tools/issues"
+Changelog = "https://github.com/COVESA/vss-tools/blob/master/CHANGELOG.md"
 
-[tool.poetry.group.dev.dependencies]
-mypy = "*"
-pytest = "*"
-pytest-cov = "*"
-types-setuptools = "*"
-types-PyYAML = "*"
-flake8 = "^6.0.0"
-pre-commit = "*"
+[project.scripts]
+vspec = "vss_tools.cli:cli"
 
-
-[tool.poetry.scripts]
-vspec = "vss_tools.vspec.cli:cli"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.mypy]
 disable_error_code = "import-untyped"
@@ -43,5 +45,19 @@ disable_error_code = "import-untyped"
 [tool.ruff]
 line-length = 120
 
+[tool.uv]
+package = true
+
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13.0",
+    "nox>=2024.10.9",
+    "pre-commit>=4.0.1",
+    "pytest-cov>=6.0.0",
+    "pytest>=8.3.3",
+    "types-pyyaml>=6.0.12.20240917",
+    "types-setuptools>=75.3.0.20241107",
+]

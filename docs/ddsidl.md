@@ -48,12 +48,12 @@ Below elements are considered only if the switch `--all-idl-features` is supplie
 ### Input VSS block with "arraysize" attribute
 | VSS    | DDS-IDL         |
 |--------|----------------|
-| <pre>Safety.SpeedLimit:<br>    datatype : float[]<br>    arraysize: 5<br>    type: actuator<br>    unit: m/s<br>    description: Maximum allowed speed of the vehicle</pre>  | <pre>struct SpeedLimit{<br>string uuid;<br>sequence&lt;float&gt; value;<br>}<br></pre>          |
+| <pre>Safety.SpeedLimit:<br>    datatype : float[]<br>    arraysize: 5<br>    type: actuator<br>    unit: m/s<br>    description: Maximum allowed speed of the vehicle</pre>  | <pre>struct SpeedLimit{<br>sequence&lt;float&gt; value;<br>}<br></pre>          |
 ### Input VSS block with "allowed" attribute
 
 | VSS    | DDS-IDL         |
 |--------|----------------|
-| <pre>Direction:<br> datatype:string<br> type: actuator<br> allowed: ['FORWARD','BACKWARD']<br> description: Driving direction of the vehicle</pre>  | <pre>module Direction_M {<br>enum DirectionValues{FORWARD,BACKWARD};<br>};<br>struct Direction<br>{<br>string uuid;<br>DirectionValues value;<br>};</pre>
+| <pre>Direction:<br> datatype:string<br> type: actuator<br> allowed: ['FORWARD','BACKWARD']<br> description: Driving direction of the vehicle</pre>  | <pre>module Direction_M {<br>enum DirectionValues{FORWARD,BACKWARD};<br>};<br>struct Direction<br>{<br>DirectionValues value;<br>};</pre>
 
 To comply with DDS-IDL rules and limitations in IDL compilers VSS string literals that start with a digit will get a `d` as prefix.
 

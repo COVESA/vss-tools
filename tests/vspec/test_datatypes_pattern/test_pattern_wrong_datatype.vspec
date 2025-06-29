@@ -1,0 +1,11 @@
+#
+A:
+  type: branch
+  description: Branch A - used to test wrong usage of 'pattern' property for other than a string datatype.
+
+A.Year:
+  datatype: uint16
+  type: attribute
+  description: Unsigned Integer (number) for an Year attribute.
+    Should fail for defined 'pattern' field because 'pattern' is allowed only for string types.
+  pattern: ^[0-9]+$

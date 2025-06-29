@@ -6,7 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -18,6 +17,7 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 TEST_FILE = HERE / "test.vspec"
 KNOWN_PREFIX = "User defined extra attributes: "
 WARNING_PREFIX = "Unknown extra attribute:"
+EXPECTED_CSV = "expected.csv"
 
 
 @pytest.mark.parametrize(
@@ -48,24 +48,23 @@ def test_extended_ok(
     tmp_path,
 ):
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    log = tmp_path / "out.log"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS}"
     cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
 
-    # Make sure there is no line break that affects compare
-    os.environ["COLUMNS"] = "120"
+    subprocess.run(cmd.split(), capture_output=True, text=True)
 
-    process = subprocess.run(cmd.split(), capture_output=True, check=True, text=True)
+    log_content = log.read_text()
 
     if known_extended is not None:
-        print(process.stdout)
-        check_str = KNOWN_PREFIX + known_extended + " "
-        assert check_str in process.stdout
+        check_str = KNOWN_PREFIX + known_extended
+        assert check_str in log_content
     else:
-        assert KNOWN_PREFIX not in process.stdout
+        assert KNOWN_PREFIX not in log_content
 
     if extended_warning:
         for i in extended_warning.split(","):
-            assert (WARNING_PREFIX + f" 'A.SignalA':'{i.strip()}'") in process.stdout
+            assert (WARNING_PREFIX + f" 'A.SignalA':'{i.strip()}'") in log_content
 
 
 @pytest.mark.parametrize(
@@ -80,12 +79,42 @@ def test_extended_ok(
 )
 def test_extended_error(extended_args: str, tmp_path):
     output = tmp_path / "out.json"
-    cmd = f"vspec export json --pretty -u {TEST_UNITS}"
+    log = tmp_path / "out.log"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS}"
     cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
 
-    # Make sure there is no line break that affects compare
-    os.environ["COLUMNS"] = "120"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
 
-    process = subprocess.run(cmd.split(), stdout=subprocess.PIPE, text=True, stderr=subprocess.STDOUT)
     assert process.returncode != 0
-    assert "not allowed" in process.stdout
+    assert "not allowed" in log.read_text() or "not allowed" in process.stderr
+
+
+@pytest.mark.parametrize(
+    "extended_args",
+    [
+        ("-e e1 -e e2 -e e3"),
+    ],
+)
+def test_export_csv(extended_args, tmp_path):
+    output = tmp_path / "out.csv"
+    log = tmp_path / "out.log"
+    cmd = f"vspec --log-file {log} export csv -u {TEST_UNITS}"
+    cmd += f" -q {TEST_QUANT} {extended_args} -s {TEST_FILE} -o {output}"
+
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+
+    # Assert that the process completed successfully
+    assert process.returncode == 0, f"Command failed with return code {process.returncode}"
+
+    # Assert that the output CSV file was created
+    assert output.exists(), "Output CSV file was not created"
+
+    # Check the content of the CSV file
+    expected = ""
+    with open(HERE / EXPECTED_CSV, "r") as f:
+        expected = f.read()
+
+    with open(output, "r") as f:
+        created = f.read()
+
+    assert created == expected, "CSV file content is not as expected"
