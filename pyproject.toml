@@ -1,23 +1,19 @@
 [project]
 name = "vss-tools"
-version = "6.0a0"
+version = "6.0.0"
 description='COVESA Vehicle Signal Specification tooling.'
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "anytree>=2.12.1",
-    "bump2version>=1.0.1",
     "click>=8.1.7",
-    "deprecation>=2.1.0",
     "graphql-core>=3.2.5",
-    "importlib-metadata>=8.5.0",
     "jsonschema>=4.23.0",
     "pydantic>=2.9.2",
     "pyyaml>=6.0.2",
     "rdflib>=7.1.1",
     "rich-click>=1.8.3",
     "rich>=13.9.4",
-    "ruff>=0.7.3",
     "graphene>=3.4.3",
     "pandas>=2.2.3",
 ]
@@ -33,7 +29,6 @@ Changelog = "https://github.com/COVESA/vss-tools/blob/master/CHANGELOG.md"
 
 [project.scripts]
 vspec = "vss_tools.cli:cli"
-
 
 [build-system]
 requires = ["hatchling"]
@@ -53,11 +48,14 @@ select = ["E", "F", "I"]
 
 [dependency-groups]
 dev = [
+    "bump-my-version>=1.2.0",
     "mypy>=1.13.0",
     "nox>=2024.10.9",
     "pre-commit>=4.0.1",
     "pytest-cov>=6.0.0",
     "pytest>=8.3.3",
+    "ruff>=0.12.3",
+    "twine>=6.1.0",
     "types-pyyaml>=6.0.12.20240917",
     "types-setuptools>=75.3.0.20241107",
 ]

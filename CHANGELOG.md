@@ -1,25 +1,23 @@
-# VSS-Tools Changelog
+# Changelog
 
-The intention of this document is to highlight major changes in VSS-Tools.
-It shall include all changes that affect backward compatibility or may be important to know when upgrading from one version to another.
-It includes changes that are included in released version, but also changes planned for upcoming releases.
+All notable changes to this project will be documented in this file.
 
-*This document only contain changes introduced in VSS-Tools 3.0 or later!*
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> [!IMPORTANT]
+> This document only contain changes introduced in VSS-Tools 3.0 or later
 
-## Implemented changes for VSS-Tools 6.0
+## Unreleased (major)
 
-### Change in UUID handling.
+### Changed
 
-As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
-the legacy uuid functionality.
+- `uuid` handling. As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
+  the legacy `uuid` functionality.
+- The parameters `--uuid`/`--no-uuid` are now removed.
+- Columns (or similar) for UUID in generated output has also been removed. An exception is binary output which still contain a byte for UUID, however always 0.
 
-* The parameters `--uuid`/`--no-uuid` are now removed.
-
-Columns (or similar) for UUID in generated output has also been removed.
-An exception is binary output which still contain a byte for UUID, however always 0.
-
-## VSS-Tools 5.0
+## 5.0
 
 ### Major restructure of repository structure and CLI
 
@@ -31,9 +29,9 @@ For more information see [vspec documentation](docs/vspec.md)
 As the tool [vspec2id](docs/id.md) has been added the VSS-project has agreed that there no longer is a need to support
 the legacy uuid functionality.
 
-* The parameter `--uuid` is now deprecated and a warning is given if used.
+- The parameter `--uuid` is now deprecated and a warning is given if used.
 
-*No warning given any longer if `--no-uuid` is used due to refactored cli interface*
+_No warning given any longer if `--no-uuid` is used due to refactored cli interface_
 
 ### Tools installed as binaries without `.py` extension
 
@@ -51,12 +49,11 @@ See [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/samm.md
 
 See [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/apigear.md)
 
-## VSS-Tools 4.2
+## 4.2
 
 No significant changes in vss-tools
 
-
-## VSS-Tools 4.1
+## 4.1
 
 ### Struct support in vspec2ddsidl
 
@@ -77,17 +74,16 @@ Domains have now been renamed to Quantities.
 In addition to this a quantity file format has been defined, and the tool will inform
 if units refer to a quantity that has not been defined an information message will be printed.
 
-
-## VSS-Tools 4.0
+## 4.0
 
 ### Struct support feature
 
 In VSS-Tools 4.0 structs are supported in the following exporters:
 
-* JSON
-* Yaml
-* CSV
-* Protobuf
+- JSON
+- Yaml
+- CSV
+- Protobuf
 
 Other exporters do not support structs.
 
@@ -98,10 +94,10 @@ For more information see [vspec documentation](docs/vspec.md)
 
 For VSS-Tools 4.0 the following behavior is implemented:
 
-* By default no UUIDs are generated.
-* The parameter `--no-uuid` is now considered deprecated, and a warning is given if `--no-uuid` is used.
-* No warning is given if neither `--uuid` nor `--no-uuid` is used.
-* If both `--uuid` and `--no-uuid` is used an error is given.
+- By default no UUIDs are generated.
+- The parameter `--no-uuid` is now considered deprecated, and a warning is given if `--no-uuid` is used.
+- No warning is given if neither `--uuid` nor `--no-uuid` is used.
+- If both `--uuid` and `--no-uuid` is used an error is given.
 
 ### Default unit file removed from vss-tools
 
@@ -111,8 +107,7 @@ file must exist, or a unit file must be specified by `-u`.
 From now on, if new units are needed for the VSS catalog they shall be added to the
 [VSS catalog file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml).
 
-
-## VSS-Tools 3.1
+## 3.1
 
 [Complete release notes including VSS-Tools changes](https://github.com/COVESA/vehicle_signal_specification/releases/tag/v3.1)
 
@@ -130,10 +125,10 @@ The change will be gradually introduced over multiple releases.
 
 For VSS-Tools 3.1 the following behavior is implemented:
 
-* Generation of UUIDs is still default.
-* A new parameter `--uuid` has been introduced to explicitly request that UUIDs shall be generated.
-* If neither `--uuid` nor `--no-uuid` is used a warning will be given informing that default behavior will change in the future.
-* If both `--uuid` and `--no-uuid` is used an error will be given.
+- Generation of UUIDs is still default.
+- A new parameter `--uuid` has been introduced to explicitly request that UUIDs shall be generated.
+- If neither `--uuid` nor `--no-uuid` is used a warning will be given informing that default behavior will change in the future.
+- If both `--uuid` and `--no-uuid` is used an error will be given.
 
 ### The tools vspec2c and vspec2ocf are now obsolete
 
@@ -149,7 +144,7 @@ allowing VSS tooling to control their own units rather than relying on units in 
 Default behavior for units have changed, if there is a file `units.yaml` in the same directory as the `*.vspec`
 file it will be used, only if not existing `config.yaml` in vss-tools will be used.
 
-## VSS-Tools 3.0
+## 3.0
 
 [Complete release notes including VSS-Tools changes](https://github.com/COVESA/vehicle_signal_specification/releases/tag/v3.0)
 
