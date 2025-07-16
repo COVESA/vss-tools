@@ -1,0 +1,20 @@
+class A {
+	b : PB.BIS0
+}
+' This description will be duplicated.
+package PB {
+	class BIS0 {
+		row1 : PB.B_IS1
+		row2 : PB.B_IS1
+	}
+	class B_IS1 {
+		left : PB.B
+		right : PB.B
+	}
+	class B {
+
+		' sensor: This description will also exist multiple times.
+		' unit: km
+		c : int8
+	}
+}

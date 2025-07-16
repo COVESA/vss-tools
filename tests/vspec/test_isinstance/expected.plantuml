@@ -1,0 +1,17 @@
+class Vehicle {
+	door : PDoor.DoorIS
+}
+' Door
+package PDoor {
+	class DoorIS {
+		row1 : PDoor.Door
+
+		' branch: Door
+		row2 : None
+	}
+	class Door {
+
+		' branch: Special
+		special : None
+	}
+}

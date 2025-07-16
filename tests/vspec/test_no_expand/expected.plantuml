@@ -1,0 +1,74 @@
+class A {
+	b : PB.BIS
+	c : PC.CIS
+	d : PD.DIS0
+	e : PE.E
+}
+' Branch with explicit instances.
+package PB {
+	class BIS {
+		test1 : PB.B
+		test2 : PB.B
+		test3 : PB.B
+	}
+	class B {
+
+		' sensor: Signal A.B.S.
+		' unit: km
+		s : int8
+	}
+}
+' Branch with instance range.
+package PC {
+	class CIS {
+		test1 : PC.C
+		test2 : PC.C
+		test3 : PC.C
+		test4 : PC.C
+	}
+	class C {
+
+		' sensor: Signal A.C.S.
+		' unit: km
+		s : int8
+	}
+}
+' Branch with complex instance combination.
+package PD {
+	class DIS0 {
+		test1 : PD.D_IS1
+	}
+	class D_IS1 {
+		test2 : PD.D_IS1
+		test3 : PD.D_IS1
+	}
+	class D_IS1 {
+		test4 : PD.Test1_IS1
+		test5 : PD.Test1_IS1
+		test6 : PD.Test1_IS1
+	}
+	class Test1_IS1 {
+		test7 : PD.Test2_IS1
+		test8 : PD.Test2_IS1
+		test9 : PD.Test2_IS1
+		test10 : PD.Test2_IS1
+	}
+	class Test2_IS1 {
+		test11 : PD.Test4
+	}
+	class Test4 {
+
+		' sensor: Signal A.D.S.
+		' unit: km
+		s : int8
+	}
+}
+' Branch without instances for reference.
+package PE {
+	class E {
+
+		' sensor: Signal A.E.S.
+		' unit: km
+		s : int8
+	}
+}
