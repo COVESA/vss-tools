@@ -168,25 +168,22 @@ protoc --version  # Ensure compiler version is 3+
 Things to do for maintainers:
 
 - Change `## Unreleased` in [CHANGELOG](CHANGELOG.md) to the desired version
-- Bump the version using `bump-my-version` which is in the dev dependencies:
-  ```bash
-  # patch (1.0.0 -> 1.0.1)
-  bump-my-version bump patch
-  # minor (1.0.5 -> 1.1.0)
-  bump-my-version bump minor
-  # major (1.2.3 -> 2.0.0)
-  bump-my-version bump major
-  ```
+- Bump the version using `bump-my-version` which is in the dev dependencies with `pre_l`
 - Commit and push the changes
 - Tag the commit with the new version
+
   ```bash
   TAG=$(grep 'current_version' .bumpversion.toml | sed 's/.*current_version = "\(.*\)"/\1/') && git tag -f v$TAG && git push origin v$TAG
   ```
+
 - Build the artifacts
+
   ```bash
   uv build
   ```
-- Upload the artifacts
+
+  - Upload the artifacts
+
   ```bash
   twine upload dist/*
   ```

@@ -1,5 +1,25 @@
 [tool.bumpversion]
-current_version = "6.0.0"
+current_version = "6.0.0-dev0"
+parse = """(?x)
+    (?P<major>0|[1-9]\\d*)\\.
+    (?P<minor>0|[1-9]\\d*)\\.
+    (?P<patch>0|[1-9]\\d*)
+    (?:
+        -
+        (?P<pre_l>[a-zA-Z-]+)
+        (?P<pre_n>0|[1-9]\\d*)
+    )?
+"""
+serialize = [
+    "{major}.{minor}.{patch}-{pre_l}{pre_n}",
+    "{major}.{minor}.{patch}",
+]
 
 [[tool.bumpversion.files]]
 filename = "./pyproject.toml"
+search = "version = \"{current_version}\""
+replace = "version = \"{new_version}\""
+
+[tool.bumpversion.parts.pre_l]
+values = ["dev", "rc", "final"]
+optional_value = "final"
