@@ -12,11 +12,13 @@ import csv
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import rich_click as click
 from anytree import PreOrderIter  # type: ignore[import]
 
 import vss_tools.cli_options as clo
 from vss_tools import log
+from vss_tools.exporters.stats_utils import process_piechart_stats, process_sankey_stats
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
@@ -79,7 +81,12 @@ def write_csv(rows: list[list[Any]], output: Path):
 
 @click.command()
 @clo.vspec_opt
-@clo.output_required_opt
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Output file (optional when using stats options).",
+)
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -90,9 +97,24 @@ def write_csv(rows: list[list[Any]], output: Path):
 @clo.units_opt
 @clo.types_opt
 @clo.types_output_opt
+@click.option(
+    "--stats-sankey",
+    type=click.Path(path_type=Path),
+    help="Generate Sankey diagram statistics into following CSV file (automatically applies --no-expand)",
+)
+@click.option(
+    "--stats-piechart",
+    type=click.Path(path_type=Path),
+    help="Generate pie chart statistics into following CSV file (automatically applies --no-expand)",
+)
+@click.option(
+    "--stats-old-piechart",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to existing chart data for pie chart stats",
+)
 def cli(
     vspec: Path,
-    output: Path,
+    output: Path | None,
     include_dirs: tuple[Path],
     extended_attributes: tuple[str],
     strict: bool,
@@ -103,10 +125,29 @@ def cli(
     units: tuple[Path],
     types: tuple[Path],
     types_output: Path,
+    stats_sankey: Path | None,
+    stats_piechart: Path | None,
+    stats_old_piechart: Path | None,
 ):
     """
     Export as CSV.
     """
+    # Validate that either output or stats options are provided
+    stats_requested = stats_sankey or stats_piechart
+    if not output and not stats_requested:
+        raise click.ClickException(
+            "Either --output or one of the stats options (--stats-sankey, --stats-piechart) must be provided"
+        )
+
+    if stats_piechart and not stats_old_piechart:
+        raise click.ClickException("--stats-old-piechart is required when using --stats-piechart")
+
+    if stats_requested and expand:
+        log.warning(
+            "Stats processing requires --no-expand option. Automatically setting expand=False for stats generation."
+        )
+        expand = False
+
     tree, datatype_tree = get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
@@ -129,9 +170,24 @@ def cli(
     add_rows(rows, tree, with_instance_column, extended_attributes)
     if generic_entry and datatype_tree:
         add_rows(rows, datatype_tree, with_instance_column)
-    write_csv(rows, output)
 
-    if not generic_entry and datatype_tree:
-        rows = [get_header("Node", with_instance_column)]
-        add_rows(rows, datatype_tree, with_instance_column)
-        write_csv(rows, types_output)
+    # Only write main CSV output if output path is provided
+    if output:
+        write_csv(rows, output)
+
+    if not generic_entry and datatype_tree and types_output:
+        types_rows = [get_header("Node", with_instance_column)]
+        add_rows(types_rows, datatype_tree, with_instance_column)
+        write_csv(types_rows, types_output)
+
+    if stats_requested:
+        df = pd.DataFrame(rows[1:], columns=rows[0])
+
+        if stats_sankey:
+            log.info("Processing Sankey statistics...")
+            process_sankey_stats(df.copy(), stats_sankey)
+
+        if stats_piechart:
+            log.info("Processing pie chart statistics...")
+            assert stats_old_piechart is not None
+            process_piechart_stats(df.copy(), stats_piechart, stats_old_piechart)
