@@ -88,8 +88,13 @@ class VSSNode(Node):  # type: ignore[misc]
         Updating the data fqn when getting reattached.
         We need the fqn in the data for validation purposes.
         """
-        log.debug(f"Got attached to parent='{parent.get_fqn()}', new fqn='{self.get_fqn()}'")
+        log.debug(f"Got attached to parent='{parent.get_fqn()}'")
+        self._update_fqn()
+
+    def _update_fqn(self) -> None:
         self.data.fqn = self.get_fqn(SEPARATOR)
+        for child in self.children:
+            child._update_fqn()
 
     def _post_detach(self, parent: VSSNode):
         log.debug(f"'{self.get_fqn()}', detached from parent='{parent.get_fqn()}'")
