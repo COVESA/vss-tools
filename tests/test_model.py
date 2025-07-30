@@ -20,6 +20,8 @@ from vss_tools.model import VSSDataDatatype
         ({"datatype": "int8", "arraysize": 1}, False),
         ({"datatype": "int8[]", "arraysize": 1}, True),
         ({"datatype": "int8", "min": -300}, False),
+        ({"datatype": "int8", "min": 0.0}, False),
+        ({"datatype": "int8", "max": 0.0}, False),
         ({"datatype": "int8", "min": "foo"}, False),
         ({"datatype": "int8", "min": -100}, True),
         ({"datatype": "uint8", "max": -2}, False),

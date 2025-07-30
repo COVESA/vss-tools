@@ -214,14 +214,14 @@ class VSSDataDatatype(VSSData):
         return self
 
     def check_min_max_valid_datatype(self) -> Self:
-        if self.min or self.max:
+        if self.min is not None or self.max is not None:
             try:
                 Datatypes.is_subtype_of(self.datatype, Datatypes.NUMERIC[0])
             except DatatypesException:
                 raise ValueError(f"Cannot define min/max for datatype '{self.datatype}'")
-            if self.min:
+            if self.min is not None:
                 assert Datatypes.is_datatype(self.min, self.datatype), f"min '{self.min}' is not an '{self.datatype}'"
-            if self.max:
+            if self.max is not None:
                 assert Datatypes.is_datatype(self.max, self.datatype), f"max '{self.max}' is not an '{self.datatype}'"
         return self
 
@@ -234,11 +234,11 @@ class VSSDataDatatype(VSSData):
 
         epsilon = 1e-6
         for v in values:
-            if self.min or self.max:
+            if self.min is not None or self.max is not None:
                 v = round(v, 6)
-            if self.min and v < self.min - epsilon:
+            if self.min is not None and v < self.min - epsilon:
                 raise ValueError(f"'default' smaller than 'min': {v}<{self.min}")
-            if self.max and v > self.max + epsilon:
+            if self.max is not None and v > self.max + epsilon:
                 raise ValueError(f"'default' greater than 'max': {v}>{self.max}")
         return self
 
