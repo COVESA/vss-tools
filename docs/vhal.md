@@ -76,7 +76,7 @@ with existing ones in the platform, therefore the use of `--min-property-id` is 
 for the first time:
 
 ```bash
-vspec export jsonvhal \
+vspec export vhal \
  --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
  --min-property-id 32768 \
  --vhal-map vss_to_android_property_map.json \
@@ -87,7 +87,7 @@ vspec export jsonvhal \
 To only update SYSTEM properties, i.e. ignore all newly added VSS nodes to the spec add `--no-extend-new` argument:
 
 ```bash
-vspec export jsonvhal \
+vspec export vhal \
  --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
  --vhal-map vss_to_android_property_map.json \
  --continuous-change-mode vss_continuous.json \
@@ -98,7 +98,7 @@ vspec export jsonvhal \
 To generate VENDOR properties use the argument `--property-group 2`:
 
 ```bash
-vspec export jsonvhal \
+vspec export vhal \
  --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
  --property-group 2 \
  --vhal-map vss_to_android_property_map.json \
@@ -109,7 +109,7 @@ vspec export jsonvhal \
 To generate VHAL properties in custom VSS group use the argument `--property-group 4`:
 
 ```bash
-vspec export jsonvhal \
+vspec export vhal \
  --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
  --property-group 4 \
  --vhal-map vss_to_android_property_map.json \
