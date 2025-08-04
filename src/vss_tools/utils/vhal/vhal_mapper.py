@@ -411,11 +411,13 @@ class VhalMapper:
         :returns: change mode
         """
         node_data = node.get_vss_data()
-        if node_data.type == NodeType.ATTRIBUTE or node_data.type == NodeType.ACTUATOR:
+        if node_data.type == NodeType.ATTRIBUTE:
             return VehiclePropertyChangeMode.STATIC.value
-        elif node_data.type == NodeType.SENSOR and node.get_fqn() in self.__properties_with_continuous_change_mode:
+        elif (
+            node_data.type == NodeType.ACTUATOR or node_data.type == NodeType.SENSOR
+        ) and node.get_fqn() in self.__properties_with_continuous_change_mode:
             return VehiclePropertyChangeMode.CONTINUOUS.value
-        elif node_data.type == NodeType.SENSOR:
+        elif node_data.type == NodeType.ACTUATOR or node_data.type == NodeType.SENSOR:
             return VehiclePropertyChangeMode.ON_CHANGE.value
         else:
             logging.error(
