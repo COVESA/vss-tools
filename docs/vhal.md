@@ -19,13 +19,13 @@ and one additional we call VSS to demonstrate the possibility of a VSS specific 
 Each VHAL property has one of the following change modes:
 
 STATIC
-: used to VSS node types ATTRIBUTE and ACTUATOR.
+: used to VSS node types ATTRIBUTE.
 
 ON_CHANGE
-: used for VSS node type SENSOR.
+: used for VSS node types ACTUATOR and SENSOR.
 
 CONTINUOUS
-: used for VSS node type SENSOR if the path of that VSS node is present in JSON file provided by `--continuous-change-mode`.
+: used for VSS node types ACTUATOR and SENSOR if the path of that VSS node is present in JSON file provided by `--continuous-change-mode`.
 
 ### Continuous Change Mode List Example
 
