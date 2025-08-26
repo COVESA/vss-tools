@@ -135,6 +135,7 @@ def cli(
         include_dirs=include_dirs,
         aborts=aborts,
         strict=strict,
+        extended_attributes=extended_attributes,
         quantities=quantities,
         units=units,
         types=types,
