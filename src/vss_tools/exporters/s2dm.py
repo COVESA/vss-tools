@@ -16,6 +16,7 @@ from pathlib import Path
 import pandas as pd
 import rich_click as click
 from anytree import PreOrderIter
+from caseconverter import camelcase, macrocase, pascalcase
 from graphql import (
     DirectiveLocation,
     GraphQLArgument,
@@ -42,8 +43,6 @@ from vss_tools.datatypes import Datatypes, dynamic_units
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode, get_expected_parent
 from vss_tools.utils.misc import getattr_nn
-
-from .samm.helpers.string_helper import str_to_uc_first
 
 
 class S2DMExporterException(Exception):
@@ -117,46 +116,27 @@ DATATYPE_MAP = {
 }
 
 
-def convert_name_to_pascal_case(name: str) -> str:
-    """Convert a name to PascalCase for GraphQL types."""
-    # Replace dots and hyphens with underscores, preserve underscores in type names
-    return name.replace(".", "_").replace("-", "_")
+# Case conversion functions using case-converter library
+# These handle GraphQL naming conventions while preserving certain structure
+
+def convert_to_graphql_type_name(name: str) -> str:
+    """Convert a VSS path to GraphQL type name (PascalCase with underscores preserved)."""
+    # Split by dots and convert each part to PascalCase, then join with underscores
+    parts = name.split('.')
+    converted_parts = [pascalcase(part) for part in parts if part]
+    return '_'.join(converted_parts)
 
 
-def convert_name_to_camel_case(name: str) -> str:
-    """Convert a name to camelCase for GraphQL fields."""
-    # Handle simple case where there are no dots or underscores
-    if "." not in name and "_" not in name:
-        return name[0].lower() + name[1:] if name else name
-    
-    # Replace dots with underscores, split by underscores, and camelCase
-    name = name.replace(".", "_")
-    parts = name.split("_")
-    if not parts:
-        return name
-    
-    # First part stays lowercase, rest get capitalized
-    result = parts[0].lower()
-    for part in parts[1:]:
-        if part:
-            result += str_to_uc_first(part)
-    
-    return result
+def convert_to_graphql_field_name(name: str) -> str:
+    """Convert a VSS name to GraphQL field name (camelCase)."""
+    # For field names, we want pure camelCase without underscores
+    return camelcase(name)
 
 
-def convert_name_to_screaming_case(name: str) -> str:
-    """Convert a name to SCREAMING_CASE for GraphQL enum values."""
-    # Replace dots, spaces, hyphens, slashes, and other special characters with underscores
-    name = (name.replace(".", "_").replace(" ", "_").replace("-", "_")
-            .replace("/", "_").replace("(", "_").replace(")", "_"))
-    # Split by underscores and convert to uppercase, filtering out empty parts
-    parts = [part.upper() for part in name.split("_") if part]
-    return "_".join(parts)
-
-
-def convert_unit_name_to_enum_value(unit_name: str) -> str:
-    """Convert a unit name to GraphQL enum value format (SCREAMING_CASE)."""
-    return convert_name_to_screaming_case(unit_name)
+def convert_to_graphql_enum_value(name: str) -> str:
+    """Convert a name to GraphQL enum value (SCREAMING_CASE)."""
+    # For enum values, we want SCREAMING_CASE which macrocase provides
+    return macrocase(name)
 
 
 def get_metadata_df(root: VSSNode) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -355,7 +335,7 @@ def create_object_type(
         GraphQLObjectType: The created GraphQL object type
     """
     branch_row = branches_df.loc[fqn]
-    type_name = convert_name_to_pascal_case(fqn)
+    type_name = convert_to_graphql_type_name(fqn)
     description = branch_row.get("description", "")
     
     # Store type-level comment if available
@@ -387,7 +367,7 @@ def create_object_type(
         # Add fields for child leaves (attributes, sensors, actuators)
         child_leaves = leaves_df[leaves_df["parent"] == fqn]
         for child_fqn, leaf_row in child_leaves.iterrows():
-            field_name = convert_name_to_camel_case(leaf_row["name"])
+            field_name = convert_to_graphql_field_name(leaf_row["name"])
             field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
             field_description = leaf_row.get("description", "")
             
@@ -439,7 +419,7 @@ def create_object_type(
         # Add fields for child branches
         child_branches = branches_df[branches_df["parent"] == fqn]
         for child_fqn, child_branch_row in child_branches.iterrows():
-            field_name = convert_name_to_camel_case(child_branch_row["name"])
+            field_name = convert_to_graphql_field_name(child_branch_row["name"])
             
             # If child has instances, make it a list
             if child_branch_row.get("instances"):
@@ -500,14 +480,14 @@ def create_unit_enums() -> dict[str, GraphQLEnumType]:
     
     for quantity, units_data in quantity_units.items():
         # Create enum name: length -> LengthUnitEnum, angular-speed -> AngularSpeedUnitEnum
-        enum_name = f"{convert_name_to_pascal_case(quantity)}UnitEnum"
+        enum_name = f"{convert_to_graphql_type_name(quantity)}UnitEnum"
         
         # Create enum values  
         enum_values = {}
         for unit_key, unit_info in units_data.items():
             # Use the unit name for enum value name (kilometer -> KILOMETER)
             unit_name = unit_info['name']
-            enum_value_name = convert_name_to_screaming_case(unit_name)
+            enum_value_name = convert_to_graphql_enum_value(unit_name)
             
             # The GraphQL enum value should represent the original unit key
             # This is what will be used in schema serialization
@@ -568,7 +548,7 @@ def print_schema_with_vspec_directives(schema: GraphQLSchema, unit_enums_metadat
 def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, processed_enum_values: set) -> list[str]:
     """Process unit enum directives - extracted from original logic."""
     for quantity, units_data in unit_enums_metadata.items():
-        enum_name = f"{convert_name_to_pascal_case(quantity)}UnitEnum"
+        enum_name = f"{convert_to_graphql_type_name(quantity)}UnitEnum"
         
         in_target_enum = False
         for i, line in enumerate(lines):
@@ -589,7 +569,7 @@ def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, p
                 
                 for unit_key, unit_info in units_data.items():
                     unit_name = unit_info['name']
-                    enum_value_name = convert_name_to_screaming_case(unit_name)
+                    enum_value_name = convert_to_graphql_enum_value(unit_name)
                     
                     enum_value_key = f"{enum_name}.{enum_value_name}"
                     if (stripped_line.startswith(enum_value_name) and 
@@ -771,7 +751,7 @@ def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry=None):
                 # Create enum type name based on the leaf's fully qualified path
                 # Use the index as the FQN since qualified_name might not be available
                 fqn = leaf_row.name if hasattr(leaf_row, 'name') else leaf_row.get('qualified_name', 'unknown')
-                enum_type_name = f"{convert_name_to_pascal_case(fqn)}_Enum"
+                enum_type_name = f"{convert_to_graphql_type_name(fqn)}_Enum"
                 
                 # Return the enum type if it exists in registry
                 if enum_type_name in types_registry:
@@ -878,7 +858,7 @@ def generate_instance_types_and_enums(branches_df, vspec_comments):
     for fqn, branch_row in branches_with_instances.iterrows():
         instances = branch_row['instances']
         if instances:
-            base_type_name = convert_name_to_pascal_case(fqn)
+            base_type_name = convert_to_graphql_type_name(fqn)
             instance_tag_type_name = f"{base_type_name}_InstanceTag"
             
             dimensions = parse_instance_dimensions(instances)
@@ -943,7 +923,7 @@ def generate_allowed_value_enums(leaves_df):
         allowed_values = leaf_row['allowed']
         if allowed_values and isinstance(allowed_values, list):
             # Generate enum name from FQN
-            enum_name = f"{convert_name_to_pascal_case(fqn)}_Enum"
+            enum_name = f"{convert_to_graphql_type_name(fqn)}_Enum"
             
             # Create GraphQL enum values
             graphql_values = {}
