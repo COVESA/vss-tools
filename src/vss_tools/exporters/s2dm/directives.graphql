@@ -1,0 +1,5 @@
+directive @vspec(comment: String, quantityKindKey: String, unitKey: String, unitName: String) on FIELD_DEFINITION | OBJECT | ENUM | ENUM_VALUE
+
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+directive @instanceTag on OBJECT
