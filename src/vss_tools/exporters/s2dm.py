@@ -457,18 +457,40 @@ def get_quantity_kinds_and_units() -> dict[str, dict[str, dict[str, str]]]:
     """Get the quantity kinds and their units from the VSS dynamic units."""
     quantity_units: dict[str, dict[str, dict[str, str]]] = {}
     
+    # Process each unit only once to avoid duplicates
+    # The dynamic_units dict contains both unit keys and unit display names pointing to the same VSSUnit
+    # We want to process only the actual unit keys, not the display names
+    processed_units = set()
+    
     for unit_key, unit_data in dynamic_units.items():
+        # Skip if we've already processed this VSSUnit object via its display name
+        unit_id = id(unit_data)
+        if unit_id in processed_units:
+            continue
+            
         quantity = unit_data.quantity
-        unit_name = unit_data.unit  # Use 'unit' field, not 'definition'
+        unit_display_name = unit_data.unit  # This is the display name like "millimeter", "degree"
         
-        if quantity:
+        if quantity and unit_display_name:
             if quantity not in quantity_units:
                 quantity_units[quantity] = {}
             
-            quantity_units[quantity][unit_key] = {
-                'name': unit_name,
-                'key': unit_key
+            # Use the key that's NOT the display name
+            # If unit_key equals the display name, find the actual key
+            actual_unit_key = unit_key
+            if unit_key == unit_display_name:
+                # Find the actual key by looking for the other entry with same VSSUnit
+                for other_key, other_data in dynamic_units.items():
+                    if id(other_data) == unit_id and other_key != unit_display_name:
+                        actual_unit_key = other_key
+                        break
+            
+            quantity_units[quantity][actual_unit_key] = {
+                'name': unit_display_name,
+                'key': actual_unit_key
             }
+            
+            processed_units.add(unit_id)
     
     return quantity_units
 
@@ -486,7 +508,7 @@ def create_unit_enums() -> dict[str, GraphQLEnumType]:
         enum_values = {}
         for unit_key, unit_info in units_data.items():
             # Use the unit name for enum value name (kilometer -> KILOMETER)
-            unit_name = unit_info['name']
+            unit_name = unit_info['name']  # Use the display name from VSS unit data
             enum_value_name = convert_to_graphql_enum_value(unit_name)
             
             # The GraphQL enum value should represent the original unit key
@@ -568,7 +590,7 @@ def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, p
                 stripped_line = line.strip()
                 
                 for unit_key, unit_info in units_data.items():
-                    unit_name = unit_info['name']
+                    unit_name = unit_info['name']  # Display name from VSS unit data
                     enum_value_name = convert_to_graphql_enum_value(unit_name)
                     
                     enum_value_key = f"{enum_name}.{enum_value_name}"
