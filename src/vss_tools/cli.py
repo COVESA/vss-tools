@@ -51,6 +51,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "samm": "vss_tools.exporters.samm:cli",
         "go": "vss_tools.exporters.go:cli",
         "ros2interface": "vss_tools.exporters.ros2interface:cli",
+        "s2dm": "vss_tools.exporters.s2dm:cli",
     },
 )
 @click.pass_context
