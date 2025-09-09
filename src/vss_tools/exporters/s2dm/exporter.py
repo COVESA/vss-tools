@@ -34,6 +34,7 @@ from graphql import (
     GraphQLScalarType,
     GraphQLSchema,
     GraphQLString,
+    build_schema,
     print_schema,
 )
 
@@ -50,6 +51,41 @@ class S2DMExporterException(Exception):
     pass
 
 
+def load_directives_from_sdl() -> dict[str, GraphQLDirective]:
+    """
+    Load custom GraphQL directives from SDL file.
+    
+    Returns:
+        Dictionary mapping directive names to GraphQLDirective objects
+    """
+    # Get the path to the directives file relative to this module
+    directives_file = Path(__file__).parent / "directives.graphql"
+    
+    if not directives_file.exists():
+        raise S2DMExporterException(f"Directives file not found: {directives_file}")
+    
+    # Read the SDL content
+    sdl_content = directives_file.read_text()
+    
+    # Build a temporary schema to extract the directives
+    try:
+        temp_schema = build_schema(sdl_content + "\ntype Query { dummy: String }")
+        directives = {}
+        
+        for directive in temp_schema.directives:
+            # Skip built-in GraphQL directives
+            if directive.name not in ['skip', 'include', 'deprecated', 'specifiedBy']:
+                directives[directive.name] = directive
+                
+        return directives
+    except Exception as e:
+        raise S2DMExporterException(f"Failed to parse directives SDL: {e}")
+
+
+# Load custom directives from SDL file
+CUSTOM_DIRECTIVES = load_directives_from_sdl()
+
+
 # Custom scalar types for VSS data types
 Int8 = GraphQLScalarType(name="Int8")
 UInt8 = GraphQLScalarType(name="UInt8")
@@ -59,43 +95,18 @@ UInt32 = GraphQLScalarType(name="UInt32")
 Int64 = GraphQLScalarType(name="Int64")
 UInt64 = GraphQLScalarType(name="UInt64")
 
-# Custom directives
-VSpecDirective = GraphQLDirective(
-    name="vspec",
-    locations=[
-        DirectiveLocation.FIELD_DEFINITION, 
-        DirectiveLocation.OBJECT, 
-        DirectiveLocation.ENUM, 
-        DirectiveLocation.ENUM_VALUE
-    ],
-    args={
-        "comment": GraphQLArgument(GraphQLString),
-        "quantityKindKey": GraphQLArgument(GraphQLString),
-        "unitKey": GraphQLArgument(GraphQLString),
-        "unitName": GraphQLArgument(GraphQLString),
-    },
-)
+# Custom directives loaded from SDL
+VSpecDirective = CUSTOM_DIRECTIVES["vspec"]
+RangeDirective = CUSTOM_DIRECTIVES["range"]
+InstanceTagDirective = CUSTOM_DIRECTIVES["instanceTag"]
 
-RangeDirective = GraphQLDirective(
-    name="range",
-    locations=[DirectiveLocation.FIELD_DEFINITION],
-    args={
-        "min": GraphQLArgument(GraphQLFloat),
-        "max": GraphQLArgument(GraphQLFloat),
-    },
-)
-
+# Note: We keep the deprecated directive as a Python definition since it's built-in to GraphQL
 DeprecatedDirective = GraphQLDirective(
     name="deprecated",
     locations=[DirectiveLocation.FIELD_DEFINITION],
     args={
         "reason": GraphQLArgument(GraphQLString),
     },
-)
-
-InstanceTagDirective = GraphQLDirective(
-    name="instanceTag",
-    locations=[DirectiveLocation.OBJECT],
 )
 
 
