@@ -1,0 +1,4904 @@
+type Query {
+  vehicle: Vehicle
+}
+
+scalar Int8
+
+scalar UInt8
+
+scalar Int16
+
+scalar UInt16
+
+scalar UInt32
+
+scalar Int64
+
+scalar UInt64
+
+"""High-level vehicle data."""
+type Vehicle {
+  id: ID!
+
+  """
+  Average speed for the current trip.
+  @comment: A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The signal may however keep the value of the last trip until a new trip is started. Calculation of average speed may exclude periods when the vehicle for example is not moving or transmission is in neutral.
+  """
+  averageSpeed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+
+  """
+  The available volume for cargo or luggage. For automobiles, this is usually the trunk volume.
+  """
+  cargoVolume(unit: Volume_Unit_Enum = LITER): Float
+
+  """
+  Vehicle curb weight, including all liquids and full tank of fuel, but no cargo or passengers.
+  """
+  curbWeight(unit: Mass_Unit_Enum = KILOGRAM): UInt16
+
+  """
+  Current overall Vehicle weight. Including passengers, cargo and other load inside the car.
+  """
+  currentOverallWeight(unit: Mass_Unit_Enum = KILOGRAM): UInt16
+
+  """The CO2 emissions."""
+  emissionsco2(unit: Massperdistance_Unit_Enum = GRAMS_PER_KILOMETER): Int16
+
+  """
+  Curb weight of vehicle, including all liquids and full tank of fuel and full load of cargo and passengers.
+  """
+  grossWeight(unit: Mass_Unit_Enum = KILOGRAM): UInt16
+
+  """Overall vehicle height."""
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.
+  """
+  isAutoPowerOptimize: Boolean
+
+  """
+  Vehicle breakdown or any similar event causing vehicle to stop on the road, that might pose a risk to other road users. True = Vehicle broken down on the road, due to e.g. engine problems, flat tire, out of gas, brake problems. False = Vehicle not broken down.
+  @comment: Actual criteria and method used to decide if a vehicle is broken down is implementation specific.
+  """
+  isBrokenDown: Boolean
+
+  """Indicates whether the vehicle is stationary or moving."""
+  isMoving: Boolean
+
+  """Overall vehicle length."""
+  length(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """State of the supply voltage of the control units (usually 12V)."""
+  lowVoltageSystemState: Vehicle_LowVoltageSystemState_Enum
+
+  """Maximum vertical weight on the tow ball of a trailer."""
+  maxTowBallWeight(unit: Mass_Unit_Enum = KILOGRAM): UInt16
+
+  """Maximum weight of trailer."""
+  maxTowWeight(unit: Mass_Unit_Enum = KILOGRAM): UInt16
+
+  """
+  Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.
+  @max: 10
+  """
+  powerOptimizeLevel: UInt8
+
+  """
+  The permitted total weight of cargo and installations (e.g. a roof rack) on top of the vehicle.
+  """
+  roofLoad(unit: Mass_Unit_Enum = KILOGRAM): Int16
+
+  """Vehicle speed."""
+  speed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+
+  """
+  Start time of current or latest trip, formatted according to ISO 8601 with UTC time zone.
+  @comment: This signal is supposed to be set whenever a new trip starts. A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The default value indicates that the vehicle never has been started, or that latest start time is unknown.
+  @default: 0000-01-01T00:00Z
+  """
+  startTime(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """
+  Odometer reading, total distance traveled during the lifetime of the vehicle.
+  """
+  traveledDistance(unit: Length_Unit_Enum = KILOMETER): Float
+
+  """
+  Distance traveled since start of current trip.
+  @comment: A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The signal may however keep the value of the last trip until a new trip is started.
+  """
+  traveledDistanceSinceStart(unit: Length_Unit_Enum = KILOMETER): Float
+
+  """
+  Duration of latest trip.
+  @comment: This signal is not assumed to be continuously updated, but instead set to 0 when a trip starts and set to the actual duration of the trip when a trip ends. A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled.
+  """
+  tripDuration(unit: Duration_Unit_Enum = SECOND): Float
+
+  """
+  Trip meter reading.
+  @comment: The trip meter is an odometer that can be manually reset by the driver
+  """
+  tripMeterReading(unit: Length_Unit_Enum = KILOMETER): Float
+
+  """
+  Minimum turning diameter, Wall-to-Wall, as defined by SAE J1100-2009 D102.
+  """
+  turningDiameter(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Overall vehicle width excluding mirrors, as defined by SAE J1100-2009 W103.
+  """
+  widthExcludingMirrors(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Overall vehicle width with mirrors folded, as defined by SAE J1100-2009 W145.
+  """
+  widthFoldedMirrors(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Overall vehicle width including mirrors, as defined by SAE J1100-2009 W144.
+  """
+  widthIncludingMirrors(unit: Length_Unit_Enum = MILLIMETER): UInt16
+  adas: Vehicle_ADAS
+  acceleration: Vehicle_Acceleration
+  angularVelocity: Vehicle_AngularVelocity
+  body: Vehicle_Body
+  cabin: Vehicle_Cabin
+  chassis: Vehicle_Chassis
+  connectivity: Vehicle_Connectivity
+  currentLocation: Vehicle_CurrentLocation
+  diagnostics: Vehicle_Diagnostics
+  driver: Vehicle_Driver
+  exterior: Vehicle_Exterior
+  lowVoltageBattery: Vehicle_LowVoltageBattery
+  motionManagement: Vehicle_MotionManagement
+  obd: Vehicle_OBD
+  occupant_s: [Vehicle_Occupant]
+  powertrain: Vehicle_Powertrain
+  service: Vehicle_Service
+  trailer: Vehicle_Trailer
+  vehicleIdentification: Vehicle_VehicleIdentification
+  versionvss: Vehicle_VersionVSS
+}
+
+"""All Advanced Driver Assist Systems data."""
+type Vehicle_ADAS {
+  """
+  Indicates the currently active level of driving automation according to the SAE J3016 (Taxonomy and Definitions for Terms Related to Driving Automation Systems for On-Road Motor Vehicles).
+  @comment: Complies with https://www.sae.org/standards/content/j3016_202104/ and https://www.sae.org/blog/sae-j3016-update. Level 5 and 4 ADS (Automated driving system) disengage, if appropriate, only after it achieves a minimal risk condition or a driver is performing the DDT. Level 3 ADS disengages either an appropriate time after issuing a request to intervene or immediately upon user request. Level 2 DAS (Driving automation system) disengages immediately upon driver request. However, since many Level 2 DAS, often termed "Level 2.5", warn the driver shortly before reaching their operational limits, the VSS also supports the DISENGAGING state for SAE_2. Nevertheless, it should be noted that the SAE J3016 states that it is incorrect to describe driving automation features using fractional levels.
+  """
+  activeAutonomyLevel: Vehicle_ADAS_ActiveAutonomyLevel_Enum
+
+  """
+  Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.
+  """
+  isAutoPowerOptimize: Boolean
+
+  """
+  Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.
+  @max: 10
+  """
+  powerOptimizeLevel: UInt8
+
+  """
+  Indicates the highest level of driving automation according to the SAE J3016 taxonomy the vehicle is capable of.
+  """
+  supportedAutonomyLevel: Vehicle_ADAS_SupportedAutonomyLevel_Enum
+  abs: Vehicle_ADAS_ABS
+  cruiseControl: Vehicle_ADAS_CruiseControl
+  dms: Vehicle_ADAS_DMS
+  eba: Vehicle_ADAS_EBA
+  ebd: Vehicle_ADAS_EBD
+  esc: Vehicle_ADAS_ESC
+  laneDepartureDetection: Vehicle_ADAS_LaneDepartureDetection
+  obstacleDetection_s: [Vehicle_ADAS_ObstacleDetection]
+  tcs: Vehicle_ADAS_TCS
+}
+
+"""Antilock Braking System signals."""
+type Vehicle_ADAS_ABS {
+  """Indicates if ABS is enabled. True = Enabled. False = Disabled."""
+  isEnabled: Boolean
+
+  """
+  Indicates if ABS is currently regulating brake pressure. True = Engaged. False = Not Engaged.
+  """
+  isEngaged: Boolean
+
+  """
+  Indicates if ABS incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+}
+
+"""Signals from Cruise Control system."""
+type Vehicle_ADAS_CruiseControl {
+  """Distance in meters to keep from lead vehicle"""
+  adaptiveDistanceSet(unit: Length_Unit_Enum = METER): Float
+
+  """Follow distance setting, commonly 1-5 with 1 being closest."""
+  adaptiveIntervalSet: UInt8
+
+  """
+  Indicates if cruise control system is active (i.e. actively controls speed). True = Active. False = Inactive.
+  """
+  isActive: Boolean
+
+  """
+  Indicates if cruise control system is adaptive (i.e. actively controls speed).
+  """
+  isAdaptive: Boolean
+
+  """
+  Indicates if cruise control system is enabled (e.g. ready to receive configurations and settings) True = Enabled. False = Disabled.
+  """
+  isEnabled: Boolean
+
+  """
+  Indicates if cruise control system incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+
+  """Set cruise control speed in kilometers per hour."""
+  speedSet(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+}
+
+"""Driver Monitoring System signals."""
+type Vehicle_ADAS_DMS {
+  """Indicates if DMS is enabled. True = Enabled. False = Disabled."""
+  isEnabled: Boolean
+
+  """
+  Indicates if DMS incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+
+  """Indicates if DMS has registered a driver alert condition."""
+  isWarning: Boolean
+}
+
+"""Emergency Brake Assist (EBA) System signals."""
+type Vehicle_ADAS_EBA {
+  """Indicates if EBA is enabled. True = Enabled. False = Disabled."""
+  isEnabled: Boolean
+
+  """
+  Indicates if EBA is currently regulating brake pressure. True = Engaged. False = Not Engaged.
+  """
+  isEngaged: Boolean
+
+  """
+  Indicates if EBA incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+}
+
+"""Electronic Brakeforce Distribution (EBD) System signals."""
+type Vehicle_ADAS_EBD {
+  """Indicates if EBD is enabled. True = Enabled. False = Disabled."""
+  isEnabled: Boolean
+
+  """
+  Indicates if EBD is currently regulating vehicle brakeforce distribution. True = Engaged. False = Not Engaged.
+  """
+  isEngaged: Boolean
+
+  """
+  Indicates if EBD incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+}
+
+"""Electronic Stability Control System signals."""
+type Vehicle_ADAS_ESC {
+  """Indicates if ESC is enabled. True = Enabled. False = Disabled."""
+  isEnabled: Boolean
+
+  """
+  Indicates if ESC is currently regulating vehicle stability. True = Engaged. False = Not Engaged.
+  """
+  isEngaged: Boolean
+
+  """
+  Indicates if ESC incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+
+  """
+  Indicates if the ESC system is detecting strong cross winds. True = Strong cross winds detected. False = No strong cross winds detected.
+  """
+  isStrongCrossWindDetected: Boolean
+  roadFriction: Vehicle_ADAS_ESC_RoadFriction
+}
+
+"""Road friction values reported by the ESC system."""
+type Vehicle_ADAS_ESC_RoadFriction {
+  """
+  Lower bound road friction, as calculated by the ESC system. 5% possibility that road friction is below this value. 0 = no friction, 100 = maximum friction.
+  @max: 100
+  """
+  lowerBound(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Most probable road friction, as calculated by the ESC system. Exact meaning of most probable is implementation specific. 0 = no friction, 100 = maximum friction.
+  @max: 100
+  """
+  mostProbable(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Upper bound road friction, as calculated by the ESC system. 95% possibility that road friction is below this value. 0 = no friction, 100 = maximum friction.
+  @max: 100
+  """
+  upperBound(unit: Relation_Unit_Enum = PERCENT): Float
+}
+
+"""Signals from Lane Departure Detection System."""
+type Vehicle_ADAS_LaneDepartureDetection {
+  """
+  Indicates if lane departure detection system is enabled. True = Enabled. False = Disabled.
+  """
+  isEnabled: Boolean
+
+  """
+  Indicates if lane departure system incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+
+  """Indicates if lane departure detection registered a lane departure."""
+  isWarning: Boolean
+}
+
+"""Signals form Obstacle Sensor System."""
+type Vehicle_ADAS_ObstacleDetection {
+  id: ID!
+  instanceLabel: String
+
+  """Distance in meters to detected object"""
+  distance(unit: Length_Unit_Enum = METER): Float
+
+  """
+  Indicates if obstacle sensor system is enabled (i.e. monitoring for obstacles). True = Enabled. False = Disabled.
+  """
+  isEnabled: Boolean
+
+  """
+  Indicates if obstacle sensor system incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+
+  """Indicates if obstacle sensor system registered an obstacle."""
+  isWarning: Boolean
+
+  """Time in milliseconds before potential impact object"""
+  timeGap(unit: Duration_Unit_Enum = MILLISECOND): UInt32
+
+  """
+  Indicates the type of obstacle warning detected as some track not only the presence of an obstacle but potential intercepting trajectory or other characteristics.
+  @comment: Undefined obstacle warning type would merely alert of presence of obstacle and may measure distance.
+  """
+  warningType: Vehicle_ADAS_ObstacleDetection_WarningType_Enum
+}
+
+"""Traction Control System signals."""
+type Vehicle_ADAS_TCS {
+  """Indicates if TCS is enabled. True = Enabled. False = Disabled."""
+  isEnabled: Boolean
+
+  """
+  Indicates if TCS is currently regulating traction. True = Engaged. False = Not Engaged.
+  """
+  isEngaged: Boolean
+
+  """
+  Indicates if TCS incurred an error condition. True = Error. False = No Error.
+  """
+  isError: Boolean
+}
+
+"""Spatial acceleration. Axis definitions according to ISO 8855."""
+type Vehicle_Acceleration {
+  """Vehicle acceleration in Y (lateral acceleration)."""
+  lateral(unit: Acceleration_Unit_Enum = METERS_PER_SECOND_SQUARED): Float
+
+  """Vehicle acceleration in X (longitudinal acceleration)."""
+  longitudinal(unit: Acceleration_Unit_Enum = METERS_PER_SECOND_SQUARED): Float
+
+  """Vehicle acceleration in Z (vertical acceleration)."""
+  vertical(unit: Acceleration_Unit_Enum = METERS_PER_SECOND_SQUARED): Float
+}
+
+"""Spatial rotation. Axis definitions according to ISO 8855."""
+type Vehicle_AngularVelocity {
+  """Vehicle rotation rate along Y (lateral)."""
+  pitch(unit: Angularspeed_Unit_Enum = DEGREE_PER_SECOND): Float
+
+  """Vehicle rotation rate along X (longitudinal)."""
+  roll(unit: Angularspeed_Unit_Enum = DEGREE_PER_SECOND): Float
+
+  """Vehicle rotation rate along Z (vertical)."""
+  yaw(unit: Angularspeed_Unit_Enum = DEGREE_PER_SECOND): Float
+}
+
+"""All body components."""
+type Vehicle_Body {
+  """Body type code as defined by ISO 3779."""
+  bodyType: String
+
+  """
+  Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.
+  """
+  isAutoPowerOptimize: Boolean
+
+  """
+  Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.
+  @max: 10
+  """
+  powerOptimizeLevel: UInt8
+
+  """
+  Rear spoiler position, 0% = Spoiler fully stowed. 100% = Spoiler fully exposed.
+  @max: 100
+  """
+  rearMainSpoilerPosition(unit: Relation_Unit_Enum = PERCENT): Float
+  hood: Vehicle_Body_Hood
+  horn: Vehicle_Body_Horn
+  lights: Vehicle_Body_Lights
+  mirrors_s: [Vehicle_Body_Mirrors]
+  raindetection: Vehicle_Body_Raindetection
+  trunk_s: [Vehicle_Body_Trunk]
+  windshield_s: [Vehicle_Body_Windshield]
+}
+
+"""
+Hood status. Start position for Hood is Closed.
+@comment: The hood is the hinged cover over the engine compartment of a motor vehicles. Depending on vehicle, it can be either in the front or back of the vehicle. Luggage compartments are in VSS called trunks, even if they are located at the front of the vehicle.
+"""
+type Vehicle_Body_Hood {
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Body_Hood_Switch_Enum
+}
+
+"""Horn signals."""
+type Vehicle_Body_Horn {
+  """Horn active or inactive. True = Active. False = Inactive."""
+  isActive: Boolean
+}
+
+"""Exterior lights."""
+type Vehicle_Body_Lights {
+  """
+  Status of the high beam switch. True = high beam enabled. False = high beam not enabled.
+  @comment: This signal indicates the status of the switch and does not indicate if low or high beam actually are on. That typically depends on vehicle logic and other signals like Lights.LightSwitch and Vehicle.LowVoltageSystemState.
+  """
+  isHighBeamSwitchOn: Boolean
+
+  """
+  Status of the vehicle main light switch.
+  @comment: A vehicle typically does not support all alternatives. Which lights that actually are lit may vary according to vehicle configuration and local legislation. OFF is typically indicated by 0. POSITION is typically indicated by ISO 7000 symbol 0456. DAYTIME_RUNNING_LIGHTS (DRL) can be indicated by ISO 7000 symbol 2611. AUTO indicates that vehicle automatically selects suitable lights. BEAM is typically indicated by ISO 7000 symbol 0083.
+  """
+  lightSwitch: Vehicle_Body_Lights_LightSwitch_Enum
+  backup: Vehicle_Body_Lights_Backup
+  beam_s: [Vehicle_Body_Lights_Beam]
+  brake: Vehicle_Body_Lights_Brake
+  directionIndicator_s: [Vehicle_Body_Lights_DirectionIndicator]
+  fog_s: [Vehicle_Body_Lights_Fog]
+  hazard: Vehicle_Body_Lights_Hazard
+  licensePlate: Vehicle_Body_Lights_LicensePlate
+  parking: Vehicle_Body_Lights_Parking
+  running: Vehicle_Body_Lights_Running
+}
+
+"""Backup lights."""
+type Vehicle_Body_Lights_Backup {
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is on or off. True = On. False = Off."""
+  isOn: Boolean
+}
+
+"""Beam lights."""
+type Vehicle_Body_Lights_Beam {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is on or off. True = On. False = Off."""
+  isOn: Boolean
+}
+
+"""Brake lights."""
+type Vehicle_Body_Lights_Brake {
+  """
+  Indicates if break-light is active. INACTIVE means lights are off. ACTIVE means lights are on. ADAPTIVE means that break-light is indicating emergency-breaking.
+  """
+  isActive: Vehicle_Body_Lights_Brake_IsActive_Enum
+
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+}
+
+"""Indicator lights."""
+type Vehicle_Body_Lights_DirectionIndicator {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is signaling or off. True = signaling. False = Off."""
+  isSignaling: Boolean
+}
+
+"""Fog lights."""
+type Vehicle_Body_Lights_Fog {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is on or off. True = On. False = Off."""
+  isOn: Boolean
+}
+
+"""Hazard lights."""
+type Vehicle_Body_Lights_Hazard {
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is signaling or off. True = signaling. False = Off."""
+  isSignaling: Boolean
+}
+
+"""License plate lights."""
+type Vehicle_Body_Lights_LicensePlate {
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is on or off. True = On. False = Off."""
+  isOn: Boolean
+}
+
+"""Parking lights."""
+type Vehicle_Body_Lights_Parking {
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is on or off. True = On. False = Off."""
+  isOn: Boolean
+}
+
+"""Daytime running lights (DRL)."""
+type Vehicle_Body_Lights_Running {
+  """
+  Indicates if light is defect. True = Light is defect. False = Light has no defect.
+  """
+  isDefect: Boolean
+
+  """Indicates if light is on or off. True = On. False = Off."""
+  isOn: Boolean
+}
+
+"""All mirrors."""
+type Vehicle_Body_Mirrors {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Is mirror folded? True = Fully or partially folded. False = Fully unfolded.
+  """
+  isFolded: Boolean
+
+  """Mirror Heater on or off. True = Heater On. False = Heater Off."""
+  isHeatingOn: Boolean
+
+  """
+  Is mirror movement locked? True = Locked, mirror will not react to Tilt/Pan change. False = Unlocked.
+  """
+  isLocked: Boolean
+
+  """
+  Mirror pan as a percent. 0 = Center Position. 100 = Fully Left Position. -100 = Fully Right Position.
+  @min: -100
+  @max: 100
+  """
+  pan(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  """
+  Mirror tilt as a percent. 0 = Center Position. 100 = Fully Upward Position. -100 = Fully Downward Position.
+  @min: -100
+  @max: 100
+  """
+  tilt(unit: Relation_Unit_Enum = PERCENT): Int8
+}
+
+"""Rain sensor signals."""
+type Vehicle_Body_Raindetection {
+  """
+  Rain intensity. 0 = Dry, No Rain. 100 = Covered.
+  @max: 100
+  """
+  intensity(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""
+Trunk status. Start position for Trunk is Closed.
+@comment: A trunk is a luggage compartment in a vehicle. Depending on vehicle, it can be either in the front or back of the vehicle. Some vehicles may have trunks both at the front and at the rear of the vehicle.
+"""
+type Vehicle_Body_Trunk {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Is trunk light on
+  @comment: V4.0 Moved from Vehicle.Cabin.Lights.IsTrunkOn because Trunk is not defined as part of the Cabin.
+  """
+  isLightOn: Boolean
+
+  """Is item locked or unlocked. True = Locked. False = Unlocked."""
+  isLocked: Boolean
+
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Body_Trunk_Switch_Enum
+}
+
+"""Windshield signals."""
+type Vehicle_Body_Windshield {
+  id: ID!
+  instanceLabel: String
+
+  """Windshield heater status. False - off, True - on."""
+  isHeatingOn: Boolean
+  washerFluid: Vehicle_Body_Windshield_WasherFluid
+  wiping: Vehicle_Body_Windshield_Wiping
+}
+
+"""Windshield washer fluid signals"""
+type Vehicle_Body_Windshield_WasherFluid {
+  """
+  Low level indication for washer fluid. True = Level Low. False = Level OK.
+  """
+  isLevelLow: Boolean
+
+  """
+  Washer fluid level as a percent. 0 = Empty. 100 = Full.
+  @max: 100
+  """
+  level(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""Windshield wiper signals."""
+type Vehicle_Body_Windshield_Wiping {
+  """
+  Relative intensity/sensitivity for interval and rain sensor mode as requested by user/driver. Has no significance if Windshield.Wiping.Mode is OFF/SLOW/MEDIUM/FAST 0 - wipers inactive. 1 - minimum intensity (lowest frequency/sensitivity, longest interval). 2/3/4/... - higher intensity (higher frequency/sensitivity, shorter interval). Maximum value supported is vehicle specific.
+  """
+  intensity: UInt8
+
+  """
+  Wiper wear status. True = Worn, Replacement recommended or required. False = Not Worn.
+  """
+  isWipersWorn: Boolean
+
+  """
+  Wiper mode requested by user/driver. INTERVAL indicates intermittent wiping, with fixed time interval between each wipe. RAIN_SENSOR indicates intermittent wiping based on rain intensity.
+  """
+  mode: Vehicle_Body_Windshield_Wiping_Mode_Enum
+
+  """
+  Wiper wear as percent. 0 = No Wear. 100 = Worn. Replacement required. Method for calculating or estimating wiper wear is vehicle specific. For windshields with multiple wipers the wear reported shall correspond to the most worn wiper.
+  @max: 100
+  """
+  wiperWear(unit: Relation_Unit_Enum = PERCENT): UInt8
+  system: Vehicle_Body_Windshield_Wiping_System
+}
+
+"""
+Signals to control behavior of wipers in detail. By default VSS expects only one instance.
+@comment: These signals are typically not directly available to the user/driver of the vehicle. The overlay in overlays/extensions/dual_wiper_systems.vspec can be used to modify this branch to support two instances; Primary and Secondary.
+"""
+type Vehicle_Body_Windshield_Wiping_System {
+  """
+  Actual position of main wiper blade for the wiper system relative to reference position. Location of reference position (0 degrees) and direction of positive/negative degrees is vehicle specific.
+  @comment: Default parking position might be used as reference position.
+  """
+  actualPosition(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Actual current used by wiper drive.
+  @comment: May be negative in special situations.
+  """
+  driveCurrent(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Wiping frequency/speed, measured in cycles per minute. The signal concerns the actual speed of the wiper blades when moving. Intervals/pauses are excluded, i.e. the value corresponds to the number of cycles that would be completed in 1 minute if wiping permanently over default range.
+  @comment: Examples - 0 = Wipers stopped, 80 = Wipers doing 80 cycles per minute (in WIPE mode).
+  """
+  frequency(unit: Frequency_Unit_Enum = CYCLES_PER_MINUTE): UInt8
+
+  """
+  Indicates if wiper movement is blocked. True = Movement blocked. False = Movement not blocked.
+  """
+  isBlocked: Boolean
+
+  """
+  Indicates if current wipe movement is completed or near completion. True = Movement is completed or near completion. Changes to RequestedPosition will be executed first after reaching previous RequestedPosition, if it has not already been reached. False = Movement is not near completion. Any change to RequestedPosition will be executed immediately. Change of direction may not be allowed.
+  @comment: In continuous wiping between A and B this sensor can be used a trigger to update TargetPosition.
+  """
+  isEndingWipeCycle: Boolean
+
+  """
+  Indicates if wiper system is overheated. True = Wiper system overheated. False = Wiper system not overheated.
+  """
+  isOverheated: Boolean
+
+  """
+  Indicates if a requested position has been reached. IsPositionReached refers to the previous position in case the TargetPosition is updated while IsEndingWipeCycle=True. True = Current or Previous TargetPosition reached. False = Position not (yet) reached, or wipers have moved away from the reached position.
+  """
+  isPositionReached: Boolean
+
+  """
+  Indicates system failure. True if wiping is disabled due to system failure.
+  """
+  isWiperError: Boolean
+
+  """
+  Indicates wiper movement. True if wiper blades are moving. Change of direction shall be considered as IsWiping if wipers will continue to move directly after the change of direction.
+  """
+  isWiping: Boolean
+
+  """
+  Requested mode of wiper system. STOP_HOLD means that the wipers shall move to position given by TargetPosition and then hold the position. WIPE means that wipers shall move to the position given by TargetPosition and then hold the position if no new TargetPosition is requested. PLANT_MODE means that wiping is disabled. Exact behavior is vehicle specific. EMERGENCY_STOP means that wiping shall be immediately stopped without holding the position.
+  """
+  mode: Vehicle_Body_Windshield_Wiping_System_Mode_Enum
+
+  """
+  Requested position of main wiper blade for the wiper system relative to reference position. Location of reference position (0 degrees) and direction of positive/negative degrees is vehicle specific. System behavior when receiving TargetPosition depends on Mode and IsEndingWipeCycle. Supported values are vehicle specific and might be dynamically corrected. If IsEndingWipeCycle=True then wipers will complete current movement before actuating new TargetPosition. If IsEndingWipeCycle=False then wipers will directly change destination if the TargetPosition is changed.
+  @comment: Default parking position might be used as reference position.
+  """
+  targetPosition(unit: Angle_Unit_Enum = DEGREE): Float
+}
+
+"""All in-cabin components, including doors."""
+type Vehicle_Cabin {
+  """
+  Number of doors in vehicle.
+  @default: 4
+  """
+  doorCount: UInt8
+
+  """
+  The position of the driver seat in row 1.
+  @comment: Some signals use DriverSide and PassengerSide as instances. If this signal specifies that DriverPosition is LEFT or MIDDLE, then DriverSide refers to left side and PassengerSide to right side. If this signal specifies that DriverPosition is RIGHT, then DriverSide refers to right side and PassengerSide to left side.
+  """
+  driverPosition: Vehicle_Cabin_DriverPosition_Enum
+
+  """
+  Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.
+  """
+  isAutoPowerOptimize: Boolean
+
+  """
+  Is window child lock engaged. True = Engaged. False = Disengaged.
+  @comment: Window child lock refers to the functionality to disable the move window button next to most windows, so that they only can be operated by the driver.
+  """
+  isWindowChildLockEngaged: Boolean
+
+  """
+  Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.
+  @max: 10
+  """
+  powerOptimizeLevel: UInt8
+
+  """
+  Number of seats across each row from the front to the rear.
+  @comment: Default value corresponds to two seats in front row and 3 seats in second row.
+  @default: [2, 3]
+  """
+  seatPosCount: [UInt8]
+
+  """
+  Number of seat rows in vehicle.
+  @comment: Default value corresponds to two rows of seats.
+  @default: 2
+  """
+  seatRowCount: UInt8
+  convertible: Vehicle_Cabin_Convertible
+  door_s: [Vehicle_Cabin_Door]
+  hvac: Vehicle_Cabin_HVAC
+  infotainment: Vehicle_Cabin_Infotainment
+  light: Vehicle_Cabin_Light
+  rearShade: Vehicle_Cabin_RearShade
+  rearviewMirror: Vehicle_Cabin_RearviewMirror
+  seat_s: [Vehicle_Cabin_Seat]
+  sunroof: Vehicle_Cabin_Sunroof
+}
+
+"""Convertible roof."""
+type Vehicle_Cabin_Convertible {
+  """Roof status on convertible vehicles."""
+  status: Vehicle_Cabin_Convertible_Status_Enum
+}
+
+"""All doors, including windows and switches."""
+type Vehicle_Cabin_Door {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Is door child lock active. True = Door cannot be opened from inside. False = Door can be opened from inside.
+  """
+  isChildLockActive: Boolean
+
+  """Is item locked or unlocked. True = Locked. False = Unlocked."""
+  isLocked: Boolean
+
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_Door_Switch_Enum
+  shade: Vehicle_Cabin_Door_Shade
+  window: Vehicle_Cabin_Door_Window
+}
+
+"""
+Side window shade. Open = Retracted, Closed = Deployed. Start position for Shade is Open/Retracted.
+"""
+type Vehicle_Cabin_Door_Shade {
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_Door_Shade_Switch_Enum
+}
+
+"""Door window status. Start position for Window is Closed."""
+type Vehicle_Cabin_Door_Window {
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_Door_Window_Switch_Enum
+}
+
+"""Climate control"""
+type Vehicle_Cabin_HVAC {
+  """Ambient air temperature inside the vehicle."""
+  ambientAirTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """Is Air conditioning active."""
+  isAirConditioningActive: Boolean
+
+  """
+  Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.
+  """
+  isAutoPowerOptimize: Boolean
+
+  """Is front defroster active."""
+  isFrontDefrosterActive: Boolean
+
+  """Is rear defroster active."""
+  isRearDefrosterActive: Boolean
+
+  """Is recirculation active."""
+  isRecirculationActive: Boolean
+
+  """
+  Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.
+  @max: 10
+  """
+  powerOptimizeLevel: UInt8
+  station_s: [Vehicle_Cabin_HVAC_Station]
+}
+
+"""HVAC for single station in the vehicle"""
+type Vehicle_Cabin_HVAC_Station {
+  id: ID!
+  instanceLabel: String
+
+  """Direction of airstream"""
+  airDistribution: Vehicle_Cabin_HVAC_Station_AirDistribution_Enum
+
+  """
+  Fan Speed, 0 = off. 100 = max
+  @max: 100
+  """
+  fanSpeed(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Temperature"""
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""Infotainment system."""
+type Vehicle_Cabin_Infotainment {
+  """
+  Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.
+  """
+  isAutoPowerOptimize: Boolean
+
+  """
+  Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.
+  @max: 10
+  """
+  powerOptimizeLevel: UInt8
+  hmi: Vehicle_Cabin_Infotainment_HMI
+  media: Vehicle_Cabin_Infotainment_Media
+  navigation: Vehicle_Cabin_Infotainment_Navigation
+  smartphoneProjection: Vehicle_Cabin_Infotainment_SmartphoneProjection
+  smartphoneScreenMirroring: Vehicle_Cabin_Infotainment_SmartphoneScreenMirroring
+}
+
+"""HMI related signals"""
+type Vehicle_Cabin_Infotainment_HMI {
+  """
+  Brightness of the HMI, relative to supported range. 0 = Lowest brightness possible. 100 = Maximum Brightness possible.
+  @comment: The value 0 does not necessarily correspond to a turned off HMI, as it may not be allowed/supported to turn off the HMI completely.
+  @max: 100
+  """
+  brightness(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """ISO 639-1 standard language code for the current HMI"""
+  currentLanguage: String
+
+  """Date format used in the current HMI"""
+  dateFormat: Vehicle_Cabin_Infotainment_HMI_DateFormat_Enum
+
+  """Current display theme"""
+  dayNightMode: Vehicle_Cabin_Infotainment_HMI_DayNightMode_Enum
+
+  """
+  Duration in seconds before the display is turned off. Value shall be 0 if screen never shall turn off.
+  @comment: Display shall be turned off at HMI.LastActionTime + HMI.DisplayOffDuration, unless HMI.IsScreenAlwaysOn==True.
+  """
+  displayOffDuration(unit: Duration_Unit_Enum = SECOND): UInt16
+
+  """Distance unit used in the current HMI"""
+  distanceUnit: Vehicle_Cabin_Infotainment_HMI_DistanceUnit_Enum
+
+  """EV fuel economy unit used in the current HMI"""
+  evEconomyUnits: Vehicle_Cabin_Infotainment_HMI_EVEconomyUnits_Enum
+
+  """
+  EV energy unit used in the current HMI
+  @comment: Ampere hours is by definition not an energy unit, but can be used as a measurement of energy if the voltage, like nominal voltage of the battery, is known.
+  """
+  evEnergyUnits: Vehicle_Cabin_Infotainment_HMI_EVEnergyUnits_Enum
+
+  """Font size used in the current HMI"""
+  fontSize: Vehicle_Cabin_Infotainment_HMI_FontSize_Enum
+
+  """Fuel economy unit used in the current HMI"""
+  fuelEconomyUnits: Vehicle_Cabin_Infotainment_HMI_FuelEconomyUnits_Enum
+
+  """Fuel volume unit used in the current HMI"""
+  fuelVolumeUnit: Vehicle_Cabin_Infotainment_HMI_FuelVolumeUnit_Enum
+
+  """Used to prevent the screen going black if no action placed."""
+  isScreenAlwaysOn: Boolean
+
+  """
+  Time for last hmi action, formatted according to ISO 8601 with UTC time zone.
+  """
+  lastActionTime(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """Speed unit used in the current HMI"""
+  speedUnit: Vehicle_Cabin_Infotainment_HMI_SpeedUnit_Enum
+
+  """Temperature unit used in the current HMI"""
+  temperatureUnit: Vehicle_Cabin_Infotainment_HMI_TemperatureUnit_Enum
+
+  """Time format used in the current HMI"""
+  timeFormat: Vehicle_Cabin_Infotainment_HMI_TimeFormat_Enum
+
+  """Tire pressure unit used in the current HMI"""
+  tirePressureUnit: Vehicle_Cabin_Infotainment_HMI_TirePressureUnit_Enum
+}
+
+"""All Media actions"""
+type Vehicle_Cabin_Infotainment_Media {
+  """Tells if the media was"""
+  action: Vehicle_Cabin_Infotainment_Media_Action_Enum
+
+  """URI of suggested media that was declined"""
+  declineduri: String
+
+  """URI of suggested media that was selected"""
+  selecteduri: String
+
+  """
+  Current Media Volume
+  @max: 100
+  """
+  volume(unit: Relation_Unit_Enum = PERCENT): UInt8
+  played: Vehicle_Cabin_Infotainment_Media_Played
+}
+
+"""Collection of signals updated in concert when a new media is played"""
+type Vehicle_Cabin_Infotainment_Media_Played {
+  """Name of album being played"""
+  album: String
+
+  """Name of artist being played"""
+  artist: String
+
+  """Name of genre being played"""
+  genre: String
+
+  """
+  Current playback rate of media being played.
+  @comment: The normal playback rate is multiplied by this value to obtain the current rate, so a value of 1.0 indicates normal speed. Values of lower than 1.0 make the media play slower than normal. Values of higher than 1.0 make the media play faster than normal.
+  """
+  playbackRate: Float
+
+  """Media selected for playback"""
+  source: Vehicle_Cabin_Infotainment_Media_Played_Source_Enum
+
+  """Name of track being played"""
+  track: String
+
+  """User Resource associated with the media"""
+  uri: String
+}
+
+"""All navigation actions"""
+type Vehicle_Cabin_Infotainment_Navigation {
+  """
+  Navigation guidance state that was selected.
+  @comment: ETC indicates a voice alternative not covered by the explicitly listed alternatives.
+  """
+  guidanceVoice: Vehicle_Cabin_Infotainment_Navigation_GuidanceVoice_Enum
+
+  """Navigation mute state that was selected."""
+  mute: Vehicle_Cabin_Infotainment_Navigation_Mute_Enum
+
+  """
+  Current navigation volume
+  @max: 100
+  """
+  volume(unit: Relation_Unit_Enum = PERCENT): UInt8
+  destinationSet: Vehicle_Cabin_Infotainment_Navigation_DestinationSet
+  map: Vehicle_Cabin_Infotainment_Navigation_Map
+}
+
+"""A navigation has been selected."""
+type Vehicle_Cabin_Infotainment_Navigation_DestinationSet {
+  """
+  Latitude of destination in WGS 84 geodetic coordinates.
+  @min: -90
+  @max: 90
+  """
+  latitude(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Longitude of destination in WGS 84 geodetic coordinates.
+  @min: -180
+  @max: 180
+  """
+  longitude(unit: Angle_Unit_Enum = DEGREE): Float
+}
+
+"""All map actions"""
+type Vehicle_Cabin_Infotainment_Navigation_Map {
+  """
+  Used to select auto-scaling mode. This feature dynamically adjusts the zoom level of the map to provide an optimal view based on the current speed of the vehicle
+  @comment: If true, then auto-scaling mode is used. If false, then manual-scaling mode is used.
+  """
+  isAutoScaleModeUsed: Boolean
+}
+
+"""
+All smartphone projection actions.
+@comment: Smartphone projection exposes or controls specific applications on the Smartphone on the vehicle infotainment system.
+"""
+type Vehicle_Cabin_Infotainment_SmartphoneProjection {
+  """
+  Projection activation info.
+  @comment: NONE indicates that projection is not supported.
+  """
+  active: Vehicle_Cabin_Infotainment_SmartphoneProjection_Active_Enum
+
+  """
+  Connectivity source selected for projection.
+  @comment: Smartphone projection exposes or controls specific applications on the Smartphone on the vehicle infotainment system.
+  """
+  source: Vehicle_Cabin_Infotainment_SmartphoneProjection_Source_Enum
+
+  """Supportable list for projection."""
+  supportedMode: [Vehicle_Cabin_Infotainment_SmartphoneProjection_SupportedMode_Enum]
+}
+
+"""
+All smartphone screen mirroring actions.
+@comment: Smartphone screen mirroring mirrors the whole screen of the Smartphone on the vehicle infotainment system.
+"""
+type Vehicle_Cabin_Infotainment_SmartphoneScreenMirroring {
+  """
+  Mirroring activation info.
+  @comment: NONE indicates that mirroring is not supported.
+  """
+  active: Vehicle_Cabin_Infotainment_SmartphoneScreenMirroring_Active_Enum
+
+  """Connectivity source selected for mirroring."""
+  source: Vehicle_Cabin_Infotainment_SmartphoneScreenMirroring_Source_Enum
+}
+
+"""
+Light that is part of the Cabin.
+@comment: V4.0 branch renamed from "Lights" to "Light" to comply with singular naming of entities. Use SingleConfigurableLight.vspec to describe interior lights that can be configured.
+"""
+type Vehicle_Cabin_Light {
+  """Is central dome light on"""
+  isDomeOn: Boolean
+
+  """Is glove box light on"""
+  isGloveBoxOn: Boolean
+
+  """
+  The percentage of ambient light that is measured (e.g., by a sensor) inside the cabin. 0 = No ambient light. 100 = Full brightness.
+  @comment: V4.0 named changed from "AmbientLight" to "PerceivedAmbientLight". This is a read-only property that refers to the pre-existing light (e.g., natural light). If you are looking for the in-cabin decorative lights that sometimes are also called "AmbientLights", please refer to the branch Vehicle.Cabin.Light.AmbientLight.
+  @max: 100
+  """
+  perceivedAmbientLight(unit: Relation_Unit_Enum = PERCENT): UInt8
+  ambientLight_s: [Vehicle_Cabin_Light_AmbientLight]
+  interactiveLightBar: Vehicle_Cabin_Light_InteractiveLightBar
+  spotlight_s: [Vehicle_Cabin_Light_Spotlight]
+}
+
+"""
+Decorative coloured light inside the cabin, usually mounted on the door, ceiling, etc.
+"""
+type Vehicle_Cabin_Light_AmbientLight {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Hexadecimal color code represented as a 3-byte RGB (i.e. Red, Green, and Blue) value preceded by a hash symbol "#". Allowed range "#000000" to "#FFFFFF".
+  @comment: For example; "#C0C0C0" = Silver, "#FFD700" = Gold, "#000000" = Black, "#FFFFFF" = White, etc.
+  """
+  color: String
+
+  """
+  How much of the maximum possible brightness of the light is used. 1 = Maximum attenuation, 100 = No attenuation (i.e. full brightness).
+  @comment: Minimum value cannot be zero as on/off is controlled by the actuator IsLightOn. V4.0 moved from Cabin.Lights.AmbientLight.Intensity to enable individual control of lights via the SingleConfigurableLight.vspec.
+  @min: 1
+  @max: 100
+  """
+  intensity(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Indicates whether the light is turned on. True = On, False = Off."""
+  isLightOn: Boolean
+}
+
+"""
+Decorative coloured light bar that supports effects, usually mounted on the dashboard (e.g. BMW i7 Interactive bar).
+"""
+type Vehicle_Cabin_Light_InteractiveLightBar {
+  """
+  Hexadecimal color code represented as a 3-byte RGB (i.e. Red, Green, and Blue) value preceded by a hash symbol "#". Allowed range "#000000" to "#FFFFFF".
+  @comment: For example; "#C0C0C0" = Silver, "#FFD700" = Gold, "#000000" = Black, "#FFFFFF" = White, etc.
+  """
+  color: String
+
+  """
+  Light effect selection from a predefined set of allowed values.
+  @comment: Default and allowed values are OEM-specific and should be defined accordingly (e.g. with the use of overlays).
+  """
+  effect: String
+
+  """
+  How much of the maximum possible brightness of the light is used. 1 = Maximum attenuation, 100 = No attenuation (i.e. full brightness).
+  @comment: Minimum value cannot be zero as on/off is controlled by the actuator IsLightOn. V4.0 moved from Cabin.Lights.AmbientLight.Intensity to enable individual control of lights via the SingleConfigurableLight.vspec.
+  @min: 1
+  @max: 100
+  """
+  intensity(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Indicates whether the light is turned on. True = On, False = Off."""
+  isLightOn: Boolean
+}
+
+"""Spotlight for a specific area in the vehicle."""
+type Vehicle_Cabin_Light_Spotlight {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Hexadecimal color code represented as a 3-byte RGB (i.e. Red, Green, and Blue) value preceded by a hash symbol "#". Allowed range "#000000" to "#FFFFFF".
+  @comment: For example; "#C0C0C0" = Silver, "#FFD700" = Gold, "#000000" = Black, "#FFFFFF" = White, etc.
+  """
+  color: String
+
+  """
+  How much of the maximum possible brightness of the light is used. 1 = Maximum attenuation, 100 = No attenuation (i.e. full brightness).
+  @comment: Minimum value cannot be zero as on/off is controlled by the actuator IsLightOn. V4.0 moved from Cabin.Lights.AmbientLight.Intensity to enable individual control of lights via the SingleConfigurableLight.vspec.
+  @min: 1
+  @max: 100
+  """
+  intensity(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Indicates whether the light is turned on. True = On, False = Off."""
+  isLightOn: Boolean
+}
+
+"""
+Rear window shade. Open = Retracted, Closed = Deployed. Start position for RearShade is Open/Retracted.
+"""
+type Vehicle_Cabin_RearShade {
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_RearShade_Switch_Enum
+}
+
+"""Rear-view mirror."""
+type Vehicle_Cabin_RearviewMirror {
+  """
+  Dimming level of rear-view mirror. 0 = Undimmed. 100 = Fully dimmed.
+  @max: 100
+  """
+  dimmingLevel(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""All seats."""
+type Vehicle_Cabin_Seat {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
+  @min: -100
+  @max: 100
+  """
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  """
+  Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported.
+  """
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Seat backward switch engaged.
+  @comment: Affects the property (SingleSeat.Position).
+  """
+  isBackwardSwitchEngaged: Boolean
+
+  """Is the belt engaged."""
+  isBelted: Boolean
+
+  """
+  Cooler switch for Seat heater.
+  @comment: Affects the property (SingleSeat.Heating).
+  """
+  isCoolerSwitchEngaged: Boolean
+
+  """
+  Decrease massage level switch engaged.
+  @comment: Affects the property (SingleSeat.MassageLevel).
+  """
+  isDecreaseMassageLevelSwitchEngaged: Boolean
+
+  """
+  Seat down switch engaged.
+  @comment: Affects the property (SingleSeat.Height).
+  """
+  isDownSwitchEngaged: Boolean
+
+  """
+  Seat forward switch engaged.
+  @comment: Affects the property (SingleSeat.Position).
+  """
+  isForwardSwitchEngaged: Boolean
+
+  """
+  Increase massage level switch engaged.
+  @comment: Affects the property (SingleSeat.MassageLevel).
+  """
+  isIncreaseMassageLevelSwitchEngaged: Boolean
+
+  """
+  Tilt backward switch engaged.
+  @comment: Affects the property (SingleSeat.Tilt).
+  """
+  isTiltBackwardSwitchEngaged: Boolean
+
+  """
+  Tilt forward switch engaged.
+  @comment: Affects the property (SingleSeat.Tilt).
+  """
+  isTiltForwardSwitchEngaged: Boolean
+
+  """
+  Seat up switch engaged.
+  @comment: Affects the property (SingleSeat.Height).
+  """
+  isUpSwitchEngaged: Boolean
+
+  """
+  Warmer switch for Seat heater.
+  @comment: Affects the property (SingleSeat.Heating).
+  """
+  isWarmerSwitchEngaged: Boolean
+
+  """Occupancy status of the seat."""
+  occupancyStatus: Vehicle_Cabin_Seat_OccupancyStatus_Enum
+
+  """
+  Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported.
+  """
+  position(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Seat belt position on vehicle z-axis. Position is relative within available movable range of the seat belt. 0 = Lowermost position supported.
+  """
+  seatBeltHeight(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward.
+  @comment: In VSS it is assumed that tilting a seat affects both seating (seat bottom) and backrest, i.e. the angle between seating and backrest will not be affected when changing Tilt.
+  """
+  tilt(unit: Angle_Unit_Enum = DEGREE): Float
+  airbag: Vehicle_Cabin_Seat_Airbag
+  backrest: Vehicle_Cabin_Seat_Backrest
+  headrest: Vehicle_Cabin_Seat_Headrest
+  massage: Vehicle_Cabin_Seat_Massage
+  neckScarf: Vehicle_Cabin_Seat_NeckScarf
+  occupant: Vehicle_Cabin_Seat_Occupant
+  seating: Vehicle_Cabin_Seat_Seating
+  switch: Vehicle_Cabin_Seat_Switch
+}
+
+"""Airbag signals."""
+type Vehicle_Cabin_Seat_Airbag {
+  """
+  Airbag deployment status. True = Airbag deployed. False = Airbag not deployed.
+  """
+  isDeployed: Boolean
+
+  """
+  Airbag enabled status. True = Airbag enabled. False = Airbag not enabled.
+  """
+  isEnabled: Boolean
+}
+
+"""Describes signals related to the backrest of the seat."""
+type Vehicle_Cabin_Seat_Backrest {
+  """
+  Bottom lumbar bsupport (in/out position). 0 = Innermost position. 100 = Outermost position.
+  @max: 100
+  """
+  bottomLumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
+  @min: -100
+  @max: 100
+  """
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  """
+  Is switch for less lumbar support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isLessLumbarSupportSwitchEngaged: Boolean
+
+  """
+  Is switch for less side bolster support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport).
+  """
+  isLessSideBolsterSupportSwitchEngaged: Boolean
+
+  """
+  Lumbar down switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isLumbarDownSwitchEngaged: Boolean
+
+  """
+  Lumbar up switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isLumbarUpSwitchEngaged: Boolean
+
+  """
+  Is switch for more lumbar support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isMoreLumbarSupportSwitchEngaged: Boolean
+
+  """
+  Is switch for more side bolster support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport).
+  """
+  isMoreSideBolsterSupportSwitchEngaged: Boolean
+
+  """
+  Backrest recline backward switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.Recline).
+  """
+  isReclineBackwardSwitchEngaged: Boolean
+
+  """
+  Backrest recline forward switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.Recline).
+  """
+  isReclineForwardSwitchEngaged: Boolean
+
+  """
+  Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported.
+  """
+  lumbarHeight(unit: Length_Unit_Enum = MILLIMETER): UInt8
+
+  """
+  Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
+  @comment: A vehicle should typically either use this generic lumbar signal or the more specified top/mid/bottom signals.
+  @max: 100
+  """
+  lumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Mid lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
+  @max: 100
+  """
+  midLumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees for backward recline.
+  @comment: Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.
+  """
+  recline(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  sideBolsterSupport(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Side bolster support left. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  sideBolsterSupportLeft(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Side bolster support right. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  sideBolsterSupportRight(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Top lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
+  @max: 100
+  """
+  topLumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Upper shoulder support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  upperShoulderSupport(unit: Relation_Unit_Enum = PERCENT): Float
+  lumbar: Vehicle_Cabin_Seat_Backrest_Lumbar
+  sideBolster: Vehicle_Cabin_Seat_Backrest_SideBolster
+}
+
+"""
+Adjustable lumbar support mechanisms in seats allow the user to change the seat back shape.
+@deprecated(reason: "v5.0 - nested properties moved to Seat.Backrest.<Property>.")
+"""
+type Vehicle_Cabin_Seat_Backrest_Lumbar {
+  """
+  Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported.
+  """
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt8 @deprecated(reason: "v5.0 - refactored to Seat.Backrest.LumbarHeight")
+
+  """
+  Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
+  @max: 100
+  """
+  support(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 - refactored to Seat.Backrest.LumbarSupport")
+}
+
+"""
+Backrest side bolster (lumbar side support) settings.
+@deprecated(reason: "v5.0 - nested properties moved to Seat.Backrest.<Property>.")
+"""
+type Vehicle_Cabin_Seat_Backrest_SideBolster {
+  """
+  Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  support(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 - refactored to Seat.Backrest.SideBolsterSupport")
+}
+
+"""Headrest settings."""
+type Vehicle_Cabin_Seat_Headrest {
+  """
+  Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.
+  """
+  angle(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.
+  """
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt8
+
+  """
+  Head rest backward switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Angle).
+  """
+  isBackwardSwitchEngaged: Boolean
+
+  """
+  Head rest down switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Height).
+  """
+  isDownSwitchEngaged: Boolean
+
+  """
+  Head rest forward switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Angle).
+  """
+  isForwardSwitchEngaged: Boolean
+
+  """
+  Head rest up switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Height).
+  """
+  isUpSwitchEngaged: Boolean
+}
+
+"""Massage related information for the seat."""
+type Vehicle_Cabin_Seat_Massage {
+  """True if the seat have the massage capability"""
+  isAvailable: Boolean
+
+  """
+  Seat massage level. 0 = off. 100 = max massage.
+  @max: 100
+  """
+  level(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Massage status."""
+  status: Vehicle_Cabin_Seat_Massage_Status_Enum
+
+  """
+  Type of massage.
+  @comment: OEMs may define a list of identifiers for supported massage types using the allowed keyword
+  """
+  supportedTypes: [String]
+
+  """
+  Type of massage active.
+  @comment: OEMs may define a list of identifiers for supported massage types using the allowed keyword
+  """
+  typeActive: String
+}
+
+"""NeckScarf settings."""
+type Vehicle_Cabin_Seat_NeckScarf {
+  """
+  Speed of the fan.
+  @max: 100
+  """
+  fanSpeed(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """
+  Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
+  @min: -100
+  @max: 100
+  """
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+}
+
+"""
+Occupant data.
+@deprecated(reason: "v5.0 - use data from Vehicle.Occupant.")
+"""
+type Vehicle_Cabin_Seat_Occupant {
+  identifier: Vehicle_Cabin_Seat_Occupant_Identifier
+}
+
+"""
+Identifier attributes based on OAuth 2.0.
+@deprecated(reason: "v5.0 - use data from Vehicle.Occupant.*.*.Identifier.")
+"""
+type Vehicle_Cabin_Seat_Occupant_Identifier {
+  """
+  Unique Issuer for the authentication of the occupant e.g. https://accounts.funcorp.com.
+  """
+  issuer: String @deprecated(reason: "v5.0 - use data from Vehicle.Occupant.*.*.Identifier.")
+
+  """Subject for the authentication of the occupant e.g. UserID 7331677."""
+  subject: String @deprecated(reason: "v5.0 - use data from Vehicle.Occupant.*.*.Identifier.")
+}
+
+"""
+Describes signals related to the seat bottom of the seat.
+@comment: Seating is here considered as the part of the seat that supports the thighs. Additional cushions (if any) for support of lower legs is not covered by this branch.
+"""
+type Vehicle_Cabin_Seat_Seating {
+  """
+  Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
+  @min: -100
+  @max: 100
+  """
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  """
+  Is switch to decrease seating length engaged.
+  @comment: Affects the property (SingleSeat.Seating.Length).
+  """
+  isBackwardSwitchEngaged: Boolean
+
+  """Is switch to increase seating length engaged."""
+  isForwardSwitchEngaged: Boolean
+
+  """
+  Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating).
+  """
+  length(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Seat bottom side bolster support left. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  sideBolsterSupportLeft(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Seat bottom side bolster support right. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  sideBolsterSupportRight(unit: Relation_Unit_Enum = PERCENT): Float
+}
+
+"""
+Seat switch signals
+@deprecated(reason: "v5.0 - nested properties moved to Seat.<Property>.")
+"""
+type Vehicle_Cabin_Seat_Switch {
+  """Seat backward switch engaged (SingleSeat.Position)."""
+  isBackwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsBackwardSwitchEngaged")
+
+  """Cooler switch for Seat heater (SingleSeat.Heating)."""
+  isCoolerEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsCoolerSwitchEngaged")
+
+  """Seat down switch engaged (SingleSeat.Height)."""
+  isDownEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsDownSwitchEngaged")
+
+  """Seat forward switch engaged (SingleSeat.Position)."""
+  isForwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsForwardSwitchEngaged")
+
+  """Tilt backward switch engaged (SingleSeat.Tilt)."""
+  isTiltBackwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsTiltBackwardSwitchEngaged")
+
+  """Tilt forward switch engaged (SingleSeat.Tilt)."""
+  isTiltForwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsTiltForwardSwitchEngaged")
+
+  """Seat up switch engaged (SingleSeat.Height)."""
+  isUpEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsUpSwitchEngaged")
+
+  """Warmer switch for Seat heater (SingleSeat.Heating)."""
+  isWarmerEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsWarmerSwitchEngaged")
+  backrest: Vehicle_Cabin_Seat_Switch_Backrest
+  headrest: Vehicle_Cabin_Seat_Switch_Headrest
+  massage: Vehicle_Cabin_Seat_Switch_Massage
+  seating: Vehicle_Cabin_Seat_Switch_Seating
+}
+
+"""
+Describes switches related to the backrest of the seat.
+@deprecated(reason: "v5.0 - nested properties refactored to Seat.Backrest.<Property>")
+"""
+type Vehicle_Cabin_Seat_Switch_Backrest {
+  """
+  Backrest recline backward switch engaged (SingleSeat.Backrest.Recline).
+  """
+  isReclineBackwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsReclineBackwardSwitchEngaged")
+
+  """Backrest recline forward switch engaged (SingleSeat.Backrest.Recline)."""
+  isReclineForwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsReclineForwardSwitchEngaged")
+  lumbar: Vehicle_Cabin_Seat_Switch_Backrest_Lumbar
+  sideBolster: Vehicle_Cabin_Seat_Switch_Backrest_SideBolster
+}
+
+"""
+Switches for SingleSeat.Backrest.Lumbar.
+@deprecated(reason: "v5.0 - nested properties refactored to Seat.Backrest.<Property>")
+"""
+type Vehicle_Cabin_Seat_Switch_Backrest_Lumbar {
+  """Lumbar down switch engaged (SingleSeat.Backrest.Lumbar.Support)."""
+  isDownEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsLumbarDownSwitchEngaged")
+
+  """
+  Is switch for less lumbar support engaged (SingleSeat.Backrest.Lumbar.Support).
+  """
+  isLessSupportEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsLessLumbarSupportSwitchEngaged")
+
+  """
+  Is switch for more lumbar support engaged (SingleSeat.Backrest.Lumbar.Support).
+  """
+  isMoreSupportEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsMoreLumbarSupportSwitchEngaged")
+
+  """Lumbar up switch engaged (SingleSeat.Backrest.Lumbar.Support)."""
+  isUpEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsLumbarUpSwitchEngaged")
+}
+
+"""
+Switches for SingleSeat.Backrest.SideBolster.
+@deprecated(reason: "v5.0 - nested properties refactored to Seat.Backrest.<Property>")
+"""
+type Vehicle_Cabin_Seat_Switch_Backrest_SideBolster {
+  """
+  Is switch for less side bolster support engaged (SingleSeat.Backrest.SideBolster.Support).
+  """
+  isLessSupportEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsLessSideBolsterSupportSwitchEngaged")
+
+  """
+  Is switch for more side bolster support engaged (SingleSeat.Backrest.SideBolster.Support).
+  """
+  isMoreSupportEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Backrest.IsMoreSideBolsterSupportSwitchEngaged")
+}
+
+"""
+Switches for SingleSeat.Headrest.
+@deprecated(reason: "v5.0 - nested properties moved to to Seat.Headrest.<Property>")
+"""
+type Vehicle_Cabin_Seat_Switch_Headrest {
+  """Head rest backward switch engaged (SingleSeat.Headrest.Angle)."""
+  isBackwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to to Seat.Headrest.IsBackwardSwitchEngaged")
+
+  """Head rest down switch engaged (SingleSeat.Headrest.Height)."""
+  isDownEngaged: Boolean @deprecated(reason: "v5.0 - refactored to to Seat.Headrest.IsDownSwitchEngaged")
+
+  """Head rest forward switch engaged (SingleSeat.Headrest.Angle)."""
+  isForwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to to Seat.Headrest.IsForwardSwitchEngaged")
+
+  """Head rest up switch engaged (SingleSeat.Headrest.Height)."""
+  isUpEngaged: Boolean @deprecated(reason: "v5.0 - refactored to to Seat.Headrest.IsUpSwitchEngaged")
+}
+
+"""
+Switches for SingleSeat.Massage.
+@deprecated(reason: "v5.0 - nested properties moved to Seat.<Property>")
+"""
+type Vehicle_Cabin_Seat_Switch_Massage {
+  """Decrease massage level switch engaged (SingleSeat.Massage)."""
+  isDecreaseEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsDecreaseMassageLevelSwitchEngaged")
+
+  """Increase massage level switch engaged (SingleSeat.Massage)."""
+  isIncreaseEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.IsIncreaseMassageLevelSwitchEngaged")
+}
+
+"""
+Describes switches related to the seating of the seat.
+@deprecated(reason: "v5.0 - nested properties moved to Seat.Seating.<Property>.")
+"""
+type Vehicle_Cabin_Seat_Switch_Seating {
+  """
+  Is switch to decrease seating length engaged (SingleSeat.Seating.Length).
+  """
+  isBackwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Seating.IsBackwardSwitchEngaged")
+
+  """
+  Is switch to increase seating length engaged (SingleSeat.Seating.Length).
+  """
+  isForwardEngaged: Boolean @deprecated(reason: "v5.0 - refactored to Seat.Seating.IsForwardSwitchEngaged")
+}
+
+"""Sun roof status."""
+type Vehicle_Cabin_Sunroof {
+  """
+  Sunroof position. 0 = Fully closed 100 = Fully opened. -100 = Fully tilted.
+  @min: -100
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  """Switch controlling sliding action such as window, sunroof, or shade."""
+  switch: Vehicle_Cabin_Sunroof_Switch_Enum
+  shade: Vehicle_Cabin_Sunroof_Shade
+}
+
+"""
+Sun roof shade status. Open = Retracted, Closed = Deployed. Start position for Sunroof.Shade is Open/Retracted.
+"""
+type Vehicle_Cabin_Sunroof_Shade {
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_Sunroof_Shade_Switch_Enum
+}
+
+"""All data concerning steering, suspension, wheels, and brakes."""
+type Vehicle_Chassis {
+  """
+  Number of axles on the vehicle
+  @default: 2
+  """
+  axleCount: UInt8
+
+  """Overall wheelbase, in mm."""
+  wheelbase(unit: Length_Unit_Enum = MILLIMETER): UInt16
+  accelerator: Vehicle_Chassis_Accelerator
+  axle_s: [Vehicle_Chassis_Axle]
+  brake: Vehicle_Chassis_Brake
+  parkingBrake: Vehicle_Chassis_ParkingBrake
+  steeringWheel: Vehicle_Chassis_SteeringWheel
+}
+
+"""Accelerator signals"""
+type Vehicle_Chassis_Accelerator {
+  """
+  Accelerator pedal position as percent. 0 = Not depressed. 100 = Fully depressed.
+  @max: 100
+  """
+  pedalPosition(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""Axle signals"""
+type Vehicle_Chassis_Axle {
+  id: ID!
+  instanceLabel: String
+
+  """
+  The lateral distance between the wheel mounting faces, measured along the spindle axis.
+  @comment: Corresponds to SAE J1100-2009 W113.
+  """
+  axleWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Single track two-axle model steering angle. Angle according to ISO 8855. Positive = degrees to the left. Negative = degrees to the right.
+  @comment: Single track two-axle model steering angle refers to the angle that a centrally mounted wheel would have.
+  """
+  steeringAngle(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Aspect ratio between tire section height and tire section width, as per ETRTO / TRA standard.
+  """
+  tireAspectRatio(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Outer diameter of tires, in inches, as per ETRTO / TRA standard."""
+  tireDiameter(unit: Length_Unit_Enum = INCH): Float
+
+  """Nominal section width of tires, in mm, as per ETRTO / TRA standard."""
+  tireWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  The lateral distance between the centers of the wheels, measured along the spindle, or axle axis. If there are dual rear wheels, measure from the midway points between the inner and outer tires.
+  @comment: Corresponds to SAE J1100-2009 W102.
+  """
+  trackWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  The lateral distance between the centerlines of the base tires at ground, including camber angle. If there are dual rear wheels, measure from the midway points between the inner and outer tires.
+  @comment: Corresponds to SAE J1100-2009 W101.
+  """
+  treadWidth(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """Number of wheels on the axle"""
+  wheelCount: UInt8
+
+  """
+  Diameter of wheels (rims without tires), in inches, as per ETRTO / TRA standard.
+  """
+  wheelDiameter(unit: Length_Unit_Enum = INCH): Float
+
+  """
+  Width of wheels (rims without tires), in inches, as per ETRTO / TRA standard.
+  """
+  wheelWidth(unit: Length_Unit_Enum = INCH): Float
+  wheel_s: [Vehicle_Chassis_Axle_Wheel]
+}
+
+"""Wheel signals for axle"""
+type Vehicle_Chassis_Axle_Wheel {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Angular (Rotational) speed of a vehicle's wheel.
+  @comment: Positive if wheel is trying to drive vehicle forward. Negative if wheel is trying to drive vehicle backward.
+  """
+  angularSpeed(unit: Angularspeed_Unit_Enum = DEGREE_PER_SECOND): Float
+
+  """Linear speed of a vehicle's wheel."""
+  speed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+  brake: Vehicle_Chassis_Axle_Wheel_Brake
+  tire: Vehicle_Chassis_Axle_Wheel_Tire
+}
+
+"""Brake signals for wheel"""
+type Vehicle_Chassis_Axle_Wheel_Brake {
+  """
+  Brake fluid level as percent. 0 = Empty. 100 = Full.
+  @max: 100
+  """
+  fluidLevel(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Brake pad wear status. True = Worn. False = Not Worn."""
+  isBrakesWorn: Boolean
+
+  """
+  Brake fluid level status. True = Brake fluid level low. False = Brake fluid level OK.
+  """
+  isFluidLevelLow: Boolean
+
+  """
+  Brake pad wear as percent. 0 = No Wear. 100 = Worn.
+  @max: 100
+  """
+  padWear(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""Tire signals for wheel."""
+type Vehicle_Chassis_Axle_Wheel_Tire {
+  """
+  Tire Pressure Status. True = Low tire pressure. False = Good tire pressure.
+  """
+  isPressureLow: Boolean
+
+  """Tire pressure in kilo-Pascal."""
+  pressure(unit: Pressure_Unit_Enum = KILOPASCAL): UInt16
+
+  """Tire temperature in Celsius."""
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""Brake system signals"""
+type Vehicle_Chassis_Brake {
+  """
+  Indicates if emergency braking initiated by driver is detected. True = Emergency braking detected. False = Emergency braking not detected.
+  @comment: Detection of emergency braking can trigger Emergency Brake Assist (EBA) to engage.
+  """
+  isDriverEmergencyBrakingDetected: Boolean
+
+  """
+  Brake pedal position as percent. 0 = Not depressed. 100 = Fully depressed.
+  @max: 100
+  """
+  pedalPosition(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""Parking brake signals"""
+type Vehicle_Chassis_ParkingBrake {
+  """
+  Indicates if parking brake will be automatically engaged when the vehicle engine is turned off.
+  """
+  isAutoApplyEnabled: Boolean
+
+  """
+  Parking brake status. True = Parking Brake is Engaged. False = Parking Brake is not Engaged.
+  """
+  isEngaged: Boolean
+}
+
+"""Steering wheel signals"""
+type Vehicle_Chassis_SteeringWheel {
+  """
+  Steering wheel angle. Positive = degrees to the left. Negative = degrees to the right.
+  """
+  angle(unit: Angle_Unit_Enum = DEGREE): Int16
+
+  """
+  Steering wheel column extension from dashboard. 0 = Closest to dashboard. 100 = Furthest from dashboard.
+  @max: 100
+  """
+  extension(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """
+  Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
+  @min: -100
+  @max: 100
+  """
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  """
+  Steering wheel column tilt. 0 = Lowest position. 100 = Highest position.
+  @max: 100
+  """
+  tilt(unit: Relation_Unit_Enum = PERCENT): UInt8
+}
+
+"""Connectivity data."""
+type Vehicle_Connectivity {
+  """
+  Indicates if connectivity between vehicle and cloud is available. True = Connectivity is available. False = Connectivity is not available.
+  @comment: This signal can be used by onboard vehicle services to decide what features that shall be offered to the driver, for example disable the 'check for update' button if vehicle does not have connectivity.
+  """
+  isConnectivityAvailable: Boolean
+}
+
+"""The current latitude and longitude of the vehicle."""
+type Vehicle_CurrentLocation {
+  """
+  Current altitude relative to WGS 84 reference ellipsoid, as measured at the position of GNSS receiver antenna.
+  """
+  altitude(unit: Length_Unit_Enum = METER): Float
+
+  """
+  Current heading relative to geographic north. 0 = North, 90 = East, 180 = South, 270 = West.
+  @max: 360
+  """
+  heading(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """Accuracy of the latitude and longitude coordinates."""
+  horizontalAccuracy(unit: Length_Unit_Enum = METER): Float
+
+  """
+  Current latitude of vehicle in WGS 84 geodetic coordinates, as measured at the position of GNSS receiver antenna.
+  @min: -90
+  @max: 90
+  """
+  latitude(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Current longitude of vehicle in WGS 84 geodetic coordinates, as measured at the position of GNSS receiver antenna.
+  @min: -180
+  @max: 180
+  """
+  longitude(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Timestamp from GNSS system for current location, formatted according to ISO 8601 with UTC time zone.
+  """
+  timestamp(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """Accuracy of altitude."""
+  verticalAccuracy(unit: Length_Unit_Enum = METER): Float
+  gnssReceiver: Vehicle_CurrentLocation_GNSSReceiver
+}
+
+"""
+Information on the GNSS receiver used for determining current location.
+"""
+type Vehicle_CurrentLocation_GNSSReceiver {
+  """Fix status of GNSS receiver."""
+  fixType: Vehicle_CurrentLocation_GNSSReceiver_FixType_Enum
+  mountingPosition: Vehicle_CurrentLocation_GNSSReceiver_MountingPosition
+}
+
+"""
+Mounting position of GNSS receiver antenna relative to vehicle coordinate system. Axis definitions according to ISO 8855. Origin at center of (first) rear axle.
+"""
+type Vehicle_CurrentLocation_GNSSReceiver_MountingPosition {
+  """
+  Mounting position of GNSS receiver antenna relative to vehicle coordinate system. Axis definitions according to ISO 8855. Origin at center of (first) rear axle. Positive values = forward of rear axle. Negative values = backward of rear axle.
+  """
+  x(unit: Length_Unit_Enum = MILLIMETER): Int16
+
+  """
+  Mounting position of GNSS receiver antenna relative to vehicle coordinate system. Axis definitions according to ISO 8855. Origin at center of (first) rear axle. Positive values = left of origin. Negative values = right of origin. Left/Right is as seen from driver perspective, i.e. by a person looking forward.
+  """
+  y(unit: Length_Unit_Enum = MILLIMETER): Int16
+
+  """
+  Mounting position of GNSS receiver on Z-axis. Axis definitions according to ISO 8855. Origin at center of (first) rear axle. Positive values = above center of rear axle. Negative values = below center of rear axle.
+  """
+  z(unit: Length_Unit_Enum = MILLIMETER): Int16
+}
+
+"""Diagnostics data."""
+type Vehicle_Diagnostics {
+  """Number of Diagnostic Trouble Codes (DTC)"""
+  dtcCount: UInt8
+
+  """
+  List of currently active DTCs formatted according OBD II (SAE-J2012DA_201812) standard ([P|C|B|U]XXXXX )
+  """
+  dtcList: [String]
+}
+
+"""Driver data."""
+type Vehicle_Driver {
+  """
+  Probability of attentiveness of the driver.
+  @max: 100
+  """
+  attentiveProbability(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Distraction level of the driver, which can be evaluated by multiple factors e.g. driving situation, acoustical or optical signals inside the cockpit, ongoing phone calls.
+  @max: 100
+  """
+  distractionLevel(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Fatigue level of the driver, which can be evaluated by multiple factors e.g. trip time, behaviour of steering, eye status.
+  @max: 100
+  """
+  fatigueLevel(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """Heart rate of the driver."""
+  heartRate(unit: Frequency_Unit_Enum = BEATS_PER_MINUTE): UInt16
+
+  """Has driver the eyes on road or not?"""
+  isEyesOnRoad: Boolean
+
+  """Are the driver's hands on the steering wheel or not?"""
+  isHandsOnWheel: Boolean
+  identifier: Vehicle_Driver_Identifier
+}
+
+"""
+Identifier attributes based on OAuth 2.0.
+@deprecated(reason: "v5.0 - use data from Vehicle.Occupant.*.*.Identifier.")
+"""
+type Vehicle_Driver_Identifier {
+  """
+  Unique Issuer for the authentication of the occupant e.g. https://accounts.funcorp.com.
+  """
+  issuer: String @deprecated(reason: "v5.0 - use data from Vehicle.Occupant.*.*.Identifier.")
+
+  """Subject for the authentication of the occupant e.g. UserID 7331677."""
+  subject: String @deprecated(reason: "v5.0 - use data from Vehicle.Occupant.*.*.Identifier.")
+}
+
+"""Information about exterior measured by vehicle."""
+type Vehicle_Exterior {
+  """Air temperature outside the vehicle."""
+  airTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """
+  Relative humidity outside the vehicle. 0 = Dry, 100 = Air fully saturated.
+  @max: 100
+  """
+  humidity(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Light intensity outside the vehicle. 0 = No light detected, 100 = Fully lit.
+  @comment: Mapping to physical units and calculation method is sensor specific.
+  @max: 100
+  """
+  lightIntensity(unit: Relation_Unit_Enum = PERCENT): Float
+}
+
+"""Signals related to low voltage battery."""
+type Vehicle_LowVoltageBattery {
+  """
+  Current current flowing in/out of the low voltage battery. Positive = Current flowing in to battery, e.g. during charging or driving. Negative = Current flowing out of battery, e.g. when using the battery to start a combustion engine.
+  """
+  currentCurrent(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """Current Voltage of the low voltage battery."""
+  currentVoltage(unit: Voltage_Unit_Enum = VOLT): Float
+
+  """Nominal capacity of the low voltage battery."""
+  nominalCapacity(unit: Electriccharge_Unit_Enum = AMPERE_HOURS): UInt16
+
+  """
+  Nominal Voltage of the battery.
+  @comment: Nominal voltage typically refers to voltage of fully charged battery when delivering rated capacity.
+  """
+  nominalVoltage(unit: Voltage_Unit_Enum = VOLT): UInt16
+}
+
+"""Motion Management Information."""
+type Vehicle_MotionManagement {
+  brake: Vehicle_MotionManagement_Brake
+  electricAxle_s: [Vehicle_MotionManagement_ElectricAxle]
+  steering: Vehicle_MotionManagement_Steering
+}
+
+"""
+MotionManagement related to braking (both frictions brakes and contribution from electric axles).
+"""
+type Vehicle_MotionManagement_Brake {
+  """
+  Maximum distribution range request of FxWhlSum to front axle. 0% = Complete longitudinal brake force shall be shifted to rear axle. 50% = At most 50% shall be shifted to front axle. 100%  = Complete longitudinal brake force may be shifted to front axle.
+  @max: 100
+  """
+  vehicleForceDistributionFrontMaximum(unit: Relation_Unit_Enum = PERCENT): UInt16
+
+  """
+  Minimum distribution range request of FxWhlSum to front axle. 0% = Complete longitudinal brake force may be shifted to rear axle. 50% = At least 50% shall be shifted to front axle. 100% = Complete longitudinal brake force shall be shifted to front axle.
+  @max: 100
+  """
+  vehicleForceDistributionFrontMinimum(unit: Relation_Unit_Enum = PERCENT): UInt16
+
+  """
+  Regenerative brake force request (FxWhlSum). Sum of all tyre longitudinal forces. Brake Force < 0N.
+  """
+  vehicleForceElectric(unit: Force_Unit_Enum = NEWTON): Int16
+
+  """
+  Brake system internally calculated regenerative force limit at vehicle level for eAxle actuation. Brake Force < 0N.
+  """
+  vehicleForceElectricMinimumArbitrated(unit: Force_Unit_Enum = NEWTON): Int16
+
+  """
+  Maximum longitudinal brake force request (FxWhlSum). Sum of all tyre longitudinal forces. Brake Force < 0N.
+  """
+  vehicleForceMaximum(unit: Force_Unit_Enum = NEWTON): Int16
+  axle_s: [Vehicle_MotionManagement_Brake_Axle]
+}
+
+"""MotionManagement for brake actuation for a specific electric axle."""
+type Vehicle_MotionManagement_Brake_Axle {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Maximum distribution range of the friction brake request on the axle to the right wheel. 0% = Complete friction torque shall be shifted to the left wheel. 50% = At most 50% friction torque may be shifted to the right wheel. 100% = Complete friction torque may be shifted to the right wheel.
+  @max: 100
+  """
+  torqueDistributionFrictionRightMaximum(unit: Relation_Unit_Enum = PERCENT): UInt16
+
+  """
+  Minimum distribution range of the friction brake request on the axle to the right wheel. 0% = Complete friction torque may be shifted to the left wheel. 50% = At least 50% friction torque shall be shifted to the right wheel. 100% = Complete friction torque shall be shifted to the right wheel.
+  @max: 100
+  """
+  torqueDistributionFrictionRightMinimum(unit: Relation_Unit_Enum = PERCENT): UInt16
+
+  """Limit for regenerative brake torque at given axle. Brake Torque < 0Nm."""
+  torqueElectricMinimum(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Maximum absolute wheel torque difference between left and right wheel for friction brake.
+  """
+  torqueFrictionDifferenceMaximum(unit: Torque_Unit_Enum = NEWTON_METER): UInt16
+  wheel_s: [Vehicle_MotionManagement_Brake_Axle_Wheel]
+}
+
+"""MotionManagement signals for a specific wheel."""
+type Vehicle_MotionManagement_Brake_Axle_Wheel {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Lower wheel speed limit request controlled by friction brake. ISO 8855 wheel-spin velocity.
+  """
+  omegaLower(unit: Angularspeed_Unit_Enum = RADIANS_PER_SECOND): UInt16
+
+  """
+  Upper wheel speed limit request controlled by friction brake. ISO 8855 wheel-spin velocity.
+  """
+  omegaUpper(unit: Angularspeed_Unit_Enum = RADIANS_PER_SECOND): UInt16
+
+  """Estimated friction brake torque. Brake Torque < 0Nm."""
+  torque(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Brake system internally calculated friction brake torque target. Brake Torque < 0Nm.
+  """
+  torqueArbitrated(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """Maximum wheel torque request for friction brake. Brake Torque < 0Nm."""
+  torqueFrictionMaximum(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """Minimum wheel torque request for friction brake. Brake Torque < 0Nm."""
+  torqueFrictionMinimum(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+}
+
+"""MotionManagement for a specific electric axle."""
+type Vehicle_MotionManagement_ElectricAxle {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Rotational speed for the specified axle, positive sign for rotation in forward direction, negative sign for rotation in backward direction.
+  """
+  rotationalSpeed(unit: Rotationalspeed_Unit_Enum = REVOLUTIONS_PER_MINUTE): Int16
+
+  """
+  Maximum allowed axle rotational speed in torque control mode, positive sign for rotation in forward direction, negative sign for rotation in backward direction.
+  """
+  rotationalSpeedMaximumLimit(unit: Rotationalspeed_Unit_Enum = REVOLUTIONS_PER_MINUTE): Int16
+
+  """
+  Minimum allowed axle rotational speed in torque control mode, positive sign for rotation in forward direction, negative sign for rotation in backward direction.
+  """
+  rotationalSpeedMinimumLimit(unit: Rotationalspeed_Unit_Enum = REVOLUTIONS_PER_MINUTE): Int16
+
+  """
+  Target axle rotational speed in rotation speed control mode, positive sign for rotation in forward direction, negative sign for rotation in backward direction.
+  """
+  rotationalSpeedTarget(unit: Rotationalspeed_Unit_Enum = REVOLUTIONS_PER_MINUTE): Int16
+
+  """
+  Axle torque, positive sign for torque in forward direction, negative sign for torque in backward direction.
+  """
+  torque(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Maximum momentarily available eAxle torque, positive sign for torque in forward direction, negative sign for torque in backward direction.
+  """
+  torqueMaximum(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Maximum allowed eAxle torque in rotation speed control mode, positive sign for torque in forward direction, negative sign unused.
+  """
+  torqueMaximumLimit(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Minimum momentarily available eAxle torque, positive sign for torque in forward direction, negative sign for torque in backward direction.
+  """
+  torqueMinimum(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Minimum allowed axle torque in rotation speed control mode, positive sign unused, negative sign for torque in backward direction (ISO8855).
+  """
+  torqueMinimumLimit(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Target axle torque in torque control mode, positive sign for torque in forward direction, negative sign for torque in backward direction (ISO8855).
+  """
+  torqueTarget(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+}
+
+"""MotionManagement related to steering."""
+type Vehicle_MotionManagement_Steering {
+  axle_s: [Vehicle_MotionManagement_Steering_Axle]
+  steeringWheel: Vehicle_MotionManagement_Steering_SteeringWheel
+}
+
+"""
+MotionManagement related to a specific axle.
+@comment: The instantiation only considers axles that are steerable. Row[1,1] indicates that one axle is steerable, but does not indicate which axle.
+"""
+type Vehicle_MotionManagement_Steering_Axle {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Represents the current position of the steering rack on axle steering actuator. Positive values leads to a left turn of the vehicle (based on ISO8855).
+  """
+  rackPosition(unit: Length_Unit_Enum = MILLIMETER): Int16
+
+  """
+  Rack position offset request to the axle steering actuator (for steer-by-wire), added to the actuator internal calculated set-point. Positive values without internal calculated set point change lead to a left movement of the vehicle (based on ISO8855).
+  """
+  rackPositionOffsetTarget(unit: Length_Unit_Enum = MILLIMETER): Int16
+
+  """
+  Mode used for controlling rack position offset interface of axle steering actuator. 0 indicates interface disabled. Other values activate vehicle specific modes.
+  """
+  rackPositionOffsetTargetMode: UInt8
+
+  """
+  Rack position request to the axle steering actuator (external set-point). Positive values lead to a left turn of the vehicle (based on ISO8855).
+  """
+  rackPositionTarget(unit: Length_Unit_Enum = MILLIMETER): Int16
+
+  """
+  Mode used for controlling rack position interface of axle steering actuator. 0 indicates interface disabled. Other values activate vehicle specific modes.
+  """
+  rackPositionTargetMode: UInt8
+}
+
+"""MotionManagement related to steering wheel."""
+type Vehicle_MotionManagement_Steering_SteeringWheel {
+  """
+  Represents the current input angle of the steering system, typically corresponds to angle applied by driver on the steering-wheel. Positive for angle in counterclockwise direction (based on ISO8855).
+  """
+  angle(unit: Angle_Unit_Enum = DEGREE): Int16
+
+  """
+  Steering-wheel angle request to the steering actuator (external set-point for steer-by-wire). Positive sign for angle in counterclockwise direction (based on ISO8855).
+  """
+  angleTarget(unit: Angle_Unit_Enum = DEGREE): Int16
+
+  """
+  Mode used for controlling Steering-wheel angle interface. 0 indicates interface disabled. Other values activate vehicle specific modes.
+  """
+  angleTargetMode: UInt8
+
+  """
+  Represents the current input torque for steering system, typically corresponds to torque applied by driver on the steering wheel. Positive for torque in counterclockwise direction (based on ISO8855).
+  """
+  torque(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Steering-wheel torque offset request to the steering actuator, added to the actuator internal calculated target value. Positive sign for torque in counterclockwise direction (based on ISO8855).
+  """
+  torqueOffsetTarget(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Mode used for controlling steering-wheel torque offset interface. 0 indicates interface disabled. Other values activate vehicle specific modes.
+  """
+  torqueOffsetTargetMode: UInt8
+
+  """
+  Steering-wheel torque request to the steering actuator (external set-point for steer-by-wire). Positive sign for torque in counterclockwise direction (based on ISO8855).
+  """
+  torqueTarget(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+
+  """
+  Mode used for controlling Steering-wheel torque interface. 0 indicates interface disabled. Other values activate vehicle specific modes.
+  """
+  torqueTargetMode: UInt8
+}
+
+"""OBD data."""
+type Vehicle_OBD {
+  """PID 43 - Absolute load value"""
+  absoluteLoad(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 49 - Accelerator pedal position D"""
+  acceleratorPositiond(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 4A - Accelerator pedal position E"""
+  acceleratorPositione(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 4B - Accelerator pedal position F"""
+  acceleratorPositionf(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 12 - Secondary air status"""
+  airStatus: String @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 46 - Ambient air temperature"""
+  ambientAirTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 33 - Barometric pressure"""
+  barometricPressure(unit: Pressure_Unit_Enum = KILOPASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 2C - Commanded exhaust gas recirculation (EGR)"""
+  commandedegr(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 2E - Commanded evaporative purge (EVAP) valve"""
+  commandedevap(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 44 - Commanded equivalence ratio"""
+  commandedEquivalenceRatio(unit: Relation_Unit_Enum = RATIO): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 42 - Control module voltage"""
+  controlModuleVoltage(unit: Voltage_Unit_Enum = VOLT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 05 - Coolant temperature"""
+  coolantTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  List of currently active DTCs formatted according OBD II (SAE-J2012DA_201812) standard ([P|C|B|U]XXXXX )
+  """
+  dtcList: [String] @deprecated(reason: "v5.0 replaced with Vehicle.Diagnostics.DTCList")
+
+  """PID 31 - Distance traveled since codes cleared"""
+  distanceSincedtcClear(unit: Length_Unit_Enum = KILOMETER): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 21 - Distance traveled with MIL on"""
+  distanceWithmil(unit: Length_Unit_Enum = KILOMETER): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 2D - Exhaust gas recirculation (EGR) error"""
+  egrError(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 32 - Evaporative purge (EVAP) system pressure"""
+  evapVaporPressure(unit: Pressure_Unit_Enum = PASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 53 - Absolute evaporative purge (EVAP) system pressure"""
+  evapVaporPressureAbsolute(unit: Pressure_Unit_Enum = KILOPASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 54 - Alternate evaporative purge (EVAP) system pressure"""
+  evapVaporPressureAlternate(unit: Pressure_Unit_Enum = PASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 04 - Engine load in percent - 0 = no load, 100 = full load"""
+  engineLoad(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 0C - Engine speed measured as rotations per minute"""
+  engineSpeed(unit: Rotationalspeed_Unit_Enum = REVOLUTIONS_PER_MINUTE): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 52 - Percentage of ethanol in the fuel"""
+  ethanolPercent(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 02 - DTC that triggered the freeze frame"""
+  freezedtc: String @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 5D - Fuel injection timing"""
+  fuelInjectionTiming(unit: Angle_Unit_Enum = DEGREE): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 2F - Fuel level in the fuel tank"""
+  fuelLevel(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 0A - Fuel pressure"""
+  fuelPressure(unit: Pressure_Unit_Enum = KILOPASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 59 - Absolute fuel rail pressure"""
+  fuelRailPressureAbsolute(unit: Pressure_Unit_Enum = KILOPASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 23 - Fuel rail pressure direct inject"""
+  fuelRailPressureDirect(unit: Pressure_Unit_Enum = KILOPASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 22 - Fuel rail pressure relative to vacuum"""
+  fuelRailPressureVac(unit: Pressure_Unit_Enum = KILOPASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 5E - Engine fuel rate"""
+  fuelRate(unit: Volumeflowrate_Unit_Enum = LITER_PER_HOUR): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 03 - Fuel status"""
+  fuelStatus: String @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 51 - Fuel type
+  @max: 23
+  """
+  fuelType: UInt8 @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 5B - Remaining life of hybrid battery"""
+  hybridBatteryRemaining(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 0F - Intake temperature"""
+  intakeTemp(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 1E - Auxiliary input status (power take off)"""
+  isptoActive: Boolean @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 07 - Long Term (learned) Fuel Trim - Bank 1 - negative percent leaner, positive percent richer
+  """
+  longTermFuelTrim1(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 09 - Long Term (learned) Fuel Trim - Bank 2 - negative percent leaner, positive percent richer
+  """
+  longTermFuelTrim2(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 56 (byte A) - Long term secondary O2 trim - Bank 1"""
+  longTermo2Trim1(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 58 (byte A) - Long term secondary O2 trim - Bank 2"""
+  longTermo2Trim2(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 56 (byte B) - Long term secondary O2 trim - Bank 3"""
+  longTermo2Trim3(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 58 (byte B) - Long term secondary O2 trim - Bank 4"""
+  longTermo2Trim4(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 10 - Grams of air drawn into engine per second"""
+  maf(unit: Masspertime_Unit_Enum = GRAMS_PER_SECOND): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 0B - Intake manifold pressure"""
+  map(unit: Pressure_Unit_Enum = KILOPASCAL): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 50 - Maximum flow for mass air flow sensor"""
+  maxmaf(unit: Masspertime_Unit_Enum = GRAMS_PER_SECOND): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 1C - OBD standards this vehicle conforms to"""
+  obdStandards: UInt8 @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 5C - Engine oil temperature"""
+  oilTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 13 - Presence of oxygen sensors in 2 banks. [A0..A3] == Bank 1, Sensors 1-4. [A4..A7] == Bank 2, Sensors 1-4
+  """
+  oxygenSensorsIn2Banks: UInt8 @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 1D - Presence of oxygen sensors in 4 banks. Similar to PID 13, but [A0..A7] == [B1S1, B1S2, B2S1, B2S2, B3S1, B3S2, B4S1, B4S2]
+  """
+  oxygenSensorsIn4Banks: UInt8 @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 00 - Array of the supported PIDs 01 to 20 in Hexadecimal."""
+  pidsa: [Vehicle_OBD_PidsA_Enum] @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 20 - Array of the supported PIDs 21 to 40 in Hexadecimal."""
+  pidsb: [Vehicle_OBD_PidsB_Enum] @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 40 - Array of the supported PIDs 41 to 60 in Hexadecimal."""
+  pidsc: [Vehicle_OBD_PidsC_Enum] @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 5A - Relative accelerator pedal position"""
+  relativeAcceleratorPosition(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 45 - Relative throttle position"""
+  relativeThrottlePosition(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 1F - Engine run time"""
+  runTime(unit: Duration_Unit_Enum = SECOND): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 4D - Run time with MIL on"""
+  runTimemil(unit: Duration_Unit_Enum = MINUTE): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 06 - Short Term (immediate) Fuel Trim - Bank 1 - negative percent leaner, positive percent richer
+  """
+  shortTermFuelTrim1(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 08 - Short Term (immediate) Fuel Trim - Bank 2 - negative percent leaner, positive percent richer
+  """
+  shortTermFuelTrim2(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 55 (byte A) - Short term secondary O2 trim - Bank 1"""
+  shortTermo2Trim1(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 57 (byte A) - Short term secondary O2 trim - Bank 2"""
+  shortTermo2Trim2(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 55 (byte B) - Short term secondary O2 trim - Bank 3"""
+  shortTermo2Trim3(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 57 (byte B) - Short term secondary O2 trim - Bank 4"""
+  shortTermo2Trim4(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 0D - Vehicle speed"""
+  speed(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 4C - Commanded throttle actuator"""
+  throttleActuator(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 11 - Throttle position - 0 = closed throttle, 100 = open throttle"""
+  throttlePosition(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 47 - Absolute throttle position B"""
+  throttlePositionb(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 48 - Absolute throttle position C"""
+  throttlePositionc(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 4E - Time since trouble codes cleared"""
+  timeSincedtcCleared(unit: Duration_Unit_Enum = MINUTE): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 0E - Time advance"""
+  timingAdvance(unit: Angle_Unit_Enum = DEGREE): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 30 - Number of warm-ups since codes cleared"""
+  warmupsSincedtcClear: UInt8 @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+  catalyst: Vehicle_OBD_Catalyst
+  driveCycleStatus: Vehicle_OBD_DriveCycleStatus
+  o2_s: [Vehicle_OBD_O2]
+  o2wr_s: [Vehicle_OBD_O2WR]
+  status: Vehicle_OBD_Status
+}
+
+"""
+Catalyst signals
+@deprecated(reason: "v5.0 OBD-branch is deprecated.")
+"""
+type Vehicle_OBD_Catalyst {
+  bank1: Vehicle_OBD_Catalyst_Bank1
+  bank2: Vehicle_OBD_Catalyst_Bank2
+}
+
+"""
+Catalyst bank 1 signals
+@deprecated(reason: "v5.0 OBD-branch is deprecated.")
+"""
+type Vehicle_OBD_Catalyst_Bank1 {
+  """PID 3C - Catalyst temperature from bank 1, sensor 1"""
+  temperature1(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 3E - Catalyst temperature from bank 1, sensor 2"""
+  temperature2(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+}
+
+"""
+Catalyst bank 2 signals
+@deprecated(reason: "v5.0 OBD-branch is deprecated.")
+"""
+type Vehicle_OBD_Catalyst_Bank2 {
+  """PID 3D - Catalyst temperature from bank 2, sensor 1"""
+  temperature1(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 3F - Catalyst temperature from bank 2, sensor 2"""
+  temperature2(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+}
+
+"""
+PID 41 - OBD status for the current drive cycle
+@deprecated(reason: "v5.0 OBD-branch is deprecated.")
+"""
+type Vehicle_OBD_DriveCycleStatus {
+  """Number of sensor Trouble Codes (DTC)"""
+  dtcCount: UInt8 @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  Type of the ignition for ICE - spark = spark plug ignition, compression = self-igniting (Diesel engines)
+  """
+  ignitionType: Vehicle_OBD_DriveCycleStatus_IgnitionType_Enum @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """Malfunction Indicator Light (MIL) - False = Off, True = On"""
+  ismilOn: Boolean @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+}
+
+"""
+Oxygen sensors (PID 14 - PID 1B)
+@deprecated(reason: "v5.0 OBD-branch is deprecated.")
+"""
+type Vehicle_OBD_O2 {
+  id: ID!
+  instanceLabel: String
+
+  """PID 1x (byte B) - Short term fuel trim"""
+  shortTermFuelTrim(unit: Relation_Unit_Enum = PERCENT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 1x (byte A) - Sensor voltage"""
+  voltage(unit: Voltage_Unit_Enum = VOLT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+}
+
+"""
+Wide range/band oxygen sensors (PID 24 - 2B and PID 34 - 3B)
+@deprecated(reason: "v5.0 OBD-branch is deprecated.")
+"""
+type Vehicle_OBD_O2WR {
+  id: ID!
+  instanceLabel: String
+
+  """PID 3x (byte CD) - Current for wide range/band oxygen sensor"""
+  current(unit: Electriccurrent_Unit_Enum = AMPERE): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """
+  PID 2x (byte AB) and PID 3x (byte AB) - Lambda for wide range/band oxygen sensor
+  """
+  lambda_: Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """PID 2x (byte CD) - Voltage for wide range/band oxygen sensor"""
+  voltage(unit: Voltage_Unit_Enum = VOLT): Float @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+}
+
+"""
+PID 01 - OBD status
+@deprecated(reason: "v5.0 OBD-branch is deprecated.")
+"""
+type Vehicle_OBD_Status {
+  """Number of Diagnostic Trouble Codes (DTC)"""
+  dtcCount: UInt8 @deprecated(reason: "v5.0 replaced with Vehicle.Diagnostics.DTCCount")
+
+  """
+  Type of the ignition for ICE - spark = spark plug ignition, compression = self-igniting (Diesel engines)
+  """
+  ignitionType: Vehicle_OBD_Status_IgnitionType_Enum @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+
+  """Malfunction Indicator Light (MIL) False = Off, True = On"""
+  ismilOn: Boolean @deprecated(reason: "v5.0 OBD-branch is deprecated.")
+}
+
+"""Occupant (Driver or Passenger) data."""
+type Vehicle_Occupant {
+  id: ID!
+  instanceLabel: String
+  headPosition: Vehicle_Occupant_HeadPosition
+  identifier: Vehicle_Occupant_Identifier
+  midEyeGaze: Vehicle_Occupant_MidEyeGaze
+}
+
+"""
+The current position of the driver head on vehicle axis according to ISO 23150:2023.
+"""
+type Vehicle_Occupant_HeadPosition {
+  """
+  Head pitch angle, measured as angle from vehicle sprung mass XY-plane as defined by ISO 23150:2023 to the head X-axis. 0 = Head in normal position. Positive values = Head leaning up. Negative values = Head leaning down.
+  @min: -90
+  @max: 90
+  """
+  pitch(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Head roll angle about the head X-axis (right-hand rule). 0 = Head in normal position. Positive values = Head leaning to the right. Negative values = Head leaning to the left.
+  @min: -180
+  @max: 180
+  """
+  roll(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Longitudinal position of head center measured as mid eye position on X-axis of the vehicle rear-axle coordinate system as defined by ISO 23150:2023 section 3.7.12 Mid eye position refers to the center of a line drawn between the center of the drivers eyes. Positive values = forward of (first) rear-axle. Negative values = backward of (first) rear-axle.
+  """
+  x(unit: Length_Unit_Enum = MILLIMETER): Int16
+
+  """
+  Lateral position of head center measured as mid eye position on X-axis of the vehicle rear-axle coordinate system as defined by ISO 23150:2023 section 3.7.12 Mid eye position refers to the center of a line drawn between the center of the drivers eyes. Positive values = left of rear-axle center. Negative values = right of rear-axle center.
+  """
+  y(unit: Length_Unit_Enum = MILLIMETER): Int16
+
+  """
+  Head yaw angle, measured from the vehicle sprung mass X-axis as defined by ISO 23150:2023 to the head X-axis, around the vehicle Z-axis (right-hand rule). 0 = Head in normal position. Positive values = Head turned left. Negative values = Head turned right.
+  @min: -180
+  @max: 180
+  """
+  yaw(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Height position of head center measured as mid eye position on X-axis of the vehicle rear-axle coordinate system as defined by ISO 23150:2023 section 3.7.12 Mid eye position refers to the center of a line drawn between the center of the drivers eyes. Positive values = above center of rear-axle reference point. Negative values = below center of rear-axle reference point.
+  """
+  z(unit: Length_Unit_Enum = MILLIMETER): Int16
+}
+
+"""Identifier attributes based on OAuth 2.0."""
+type Vehicle_Occupant_Identifier {
+  """
+  Unique Issuer for the authentication of the occupant e.g. https://accounts.funcorp.com.
+  """
+  issuer: String
+
+  """Subject for the authentication of the occupant e.g. UserID 7331677."""
+  subject: String
+}
+
+"""Direction from mid eye position to object driver is looking at."""
+type Vehicle_Occupant_MidEyeGaze {
+  """
+  Mid eye azimuth gaze (right-hand rule) on vehicle sprung mass Z-axis as defined by ISO 23150:2023 0 = Driver looking forward. Positive values = Driver looking at something on the left side of driver. Negative values = Driver looking at something on the right side of driver.
+  @min: -180
+  @max: 180
+  """
+  azimuth(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Elevation to observed object measured as angle between vehicle sprung mass XY-plane as defined by ISO 23150:2023 at driver mid eye position and object. 0 = Driver looking at something at same height as mid eye position. Positive values = Driver looking at something above mid eye position. Negative values = Driver looking at something below mid eye position.
+  @min: -90
+  @max: 90
+  """
+  elevation(unit: Angle_Unit_Enum = DEGREE): Float
+}
+
+"""Powertrain data for battery management, etc."""
+type Vehicle_Powertrain {
+  """The accumulated energy from regenerative braking over lifetime."""
+  accumulatedBrakingEnergy(unit: Work_Unit_Enum = KILOWATT_HOURS): Float
+
+  """
+  Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.
+  """
+  isAutoPowerOptimize: Boolean
+
+  """
+  Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.
+  @max: 10
+  """
+  powerOptimizeLevel: UInt8
+
+  """
+  Remaining range in meters using all energy sources available in the vehicle.
+  """
+  range(unit: Length_Unit_Enum = METER): UInt32
+
+  """
+  Time remaining in seconds before all energy sources available in the vehicle are empty.
+  """
+  timeRemaining(unit: Duration_Unit_Enum = SECOND): UInt32
+
+  """
+  Defines the powertrain type of the vehicle.
+  @comment: For vehicles with a combustion engine (including hybrids) more detailed information on fuels supported can be found in FuelSystem.SupportedFuelTypes and FuelSystem.SupportedFuels.
+  """
+  type: Vehicle_Powertrain_Type_Enum
+  combustionEngine: Vehicle_Powertrain_CombustionEngine
+  electricMotor: Vehicle_Powertrain_ElectricMotor
+  fuelSystem: Vehicle_Powertrain_FuelSystem
+  tractionBattery: Vehicle_Powertrain_TractionBattery
+  transmission: Vehicle_Powertrain_Transmission
+}
+
+"""Engine-specific data, stopping at the bell housing."""
+type Vehicle_Powertrain_CombustionEngine {
+  """
+  Type of aspiration (natural, turbocharger, supercharger etc).
+  @default: UNKNOWN
+  """
+  aspirationType: Vehicle_Powertrain_CombustionEngine_AspirationType_Enum
+
+  """Bore in millimetres."""
+  bore(unit: Length_Unit_Enum = MILLIMETER): Float
+
+  """Engine compression ratio, specified in the format 'X:1', e.g. '9.2:1'."""
+  compressionRatio: String
+
+  """
+  Engine configuration.
+  @default: UNKNOWN
+  """
+  configuration: Vehicle_Powertrain_CombustionEngine_Configuration_Enum
+
+  """Displacement in cubic centimetres."""
+  displacement(unit: Volume_Unit_Enum = CUBIC_CENTIMETERS): UInt16
+
+  """Engine coolant temperature."""
+  ect(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 moved to EngineCoolant.Temperature")
+
+  """Engine oil pressure."""
+  eop(unit: Pressure_Unit_Enum = KILOPASCAL): UInt16
+
+  """Engine oil temperature."""
+  eot(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 moved to EngineOil.Temperature")
+
+  """
+  Engine code designation, as specified by vehicle manufacturer.
+  @comment: For hybrid vehicles the engine code may refer to the combination of combustion and electric engine.
+  """
+  engineCode: String
+
+  """Engine coolant capacity in liters."""
+  engineCoolantCapacity(unit: Volume_Unit_Enum = LITER): Float @deprecated(reason: "v5.0 moved to EngineCoolant.Capacity")
+
+  """Accumulated time during engine lifetime with 'engine speed (rpm) > 0'."""
+  engineHours(unit: Duration_Unit_Enum = HOUR): Float
+
+  """Engine oil capacity in liters."""
+  engineOilCapacity(unit: Volume_Unit_Enum = LITER): Float @deprecated(reason: "v5.0 moved to EngineOil.Capacity")
+
+  """Engine oil level."""
+  engineOilLevel: Vehicle_Powertrain_CombustionEngine_EngineOilLevel_Enum @deprecated(reason: "v5.0 moved to EngineOil.Level")
+
+  """
+  Accumulated idling time during engine lifetime. Definition of idling is not standardized.
+  @comment: Vehicles may calculate accumulated idle time for an engine. It might be based on engine speed (rpm) below a certain limit or any other mechanism.
+  """
+  idleHours(unit: Duration_Unit_Enum = HOUR): Float
+
+  """Engine Running. True if engine is rotating (Speed > 0)."""
+  isRunning: Boolean
+
+  """Grams of air drawn into engine per second."""
+  maf(unit: Masspertime_Unit_Enum = GRAMS_PER_SECOND): UInt16
+
+  """Manifold absolute pressure possibly boosted using forced induction."""
+  map(unit: Pressure_Unit_Enum = KILOPASCAL): UInt16
+
+  """Peak power, in kilowatts, that engine can generate."""
+  maxPower(unit: Power_Unit_Enum = KILOWATT): UInt16
+
+  """Peak torque, in newton meter, that the engine can generate."""
+  maxTorque(unit: Torque_Unit_Enum = NEWTON_METER): UInt16
+
+  """Number of cylinders."""
+  numberOfCylinders: UInt16
+
+  """Number of valves per cylinder."""
+  numberOfValvesPerCylinder: UInt16
+
+  """
+  Remaining engine oil life in seconds. Negative values can be used to indicate that lifetime has been exceeded.
+  @comment: In addition to this a signal a vehicle can report remaining time to service (including e.g. oil change) by Vehicle.Service.TimeToService.
+  """
+  oilLifeRemaining(unit: Duration_Unit_Enum = SECOND): Int @deprecated(reason: "v5.0 moved to EngineOil.LifeRemaining")
+
+  """
+  Current engine power output. Shall be reported as 0 during engine breaking.
+  """
+  power(unit: Power_Unit_Enum = KILOWATT): UInt16
+
+  """Engine speed measured as rotations per minute."""
+  speed(unit: Rotationalspeed_Unit_Enum = REVOLUTIONS_PER_MINUTE): UInt16
+
+  """Stroke length in millimetres."""
+  strokeLength(unit: Length_Unit_Enum = MILLIMETER): Float
+
+  """
+  Current throttle position.
+  @max: 100
+  """
+  tps(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """
+  Current engine torque. Shall be reported as a negative number during engine breaking.
+  @comment: During engine breaking the engine delivers a negative torque to the transmission.
+  """
+  torque(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+  dieselExhaustFluid: Vehicle_Powertrain_CombustionEngine_DieselExhaustFluid
+  dieselParticulateFilter: Vehicle_Powertrain_CombustionEngine_DieselParticulateFilter
+  engineCoolant: Vehicle_Powertrain_CombustionEngine_EngineCoolant
+  engineOil: Vehicle_Powertrain_CombustionEngine_EngineOil
+}
+
+"""
+Signals related to Diesel Exhaust Fluid (DEF). DEF is called AUS32 in ISO 22241.
+@comment: In retail and marketing other names are typically used for the fluid.
+"""
+type Vehicle_Powertrain_CombustionEngine_DieselExhaustFluid {
+  """Capacity in liters of the Diesel Exhaust Fluid Tank."""
+  capacity(unit: Volume_Unit_Enum = LITER): Float
+
+  """
+  Indicates if the Diesel Exhaust Fluid level is low. True if level is low. Definition of low is vehicle dependent.
+  """
+  isLevelLow: Boolean
+
+  """
+  Level of the Diesel Exhaust Fluid tank as percent of capacity. 0 = empty. 100 = full.
+  @max: 100
+  """
+  level(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """
+  Remaining range in meters of the Diesel Exhaust Fluid present in the vehicle.
+  """
+  range(unit: Length_Unit_Enum = METER): UInt32
+}
+
+"""Diesel Particulate Filter signals."""
+type Vehicle_Powertrain_CombustionEngine_DieselParticulateFilter {
+  """Delta Pressure of Diesel Particulate Filter."""
+  deltaPressure(unit: Pressure_Unit_Enum = PASCAL): Float
+
+  """Inlet temperature of Diesel Particulate Filter."""
+  inletTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """Outlet temperature of Diesel Particulate Filter."""
+  outletTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""Signals related to the engine coolant"""
+type Vehicle_Powertrain_CombustionEngine_EngineCoolant {
+  """Engine coolant capacity in liters."""
+  capacity(unit: Volume_Unit_Enum = LITER): Float
+
+  """Engine coolant level."""
+  level: Vehicle_Powertrain_CombustionEngine_EngineCoolant_Level_Enum
+
+  """
+  Remaining engine coolant life in seconds. Negative values can be used to indicate that lifetime has been exceeded.
+  @comment: In addition to this a signal a vehicle can report remaining time to service (including e.g. coolant change) by Vehicle.Service.TimeToService.
+  """
+  lifeRemaining(unit: Duration_Unit_Enum = SECOND): Int
+
+  """Engine coolant temperature."""
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""Signals related to the engine oil"""
+type Vehicle_Powertrain_CombustionEngine_EngineOil {
+  """Engine oil capacity in liters."""
+  capacity(unit: Volume_Unit_Enum = LITER): Float
+
+  """Engine oil level."""
+  level: Vehicle_Powertrain_CombustionEngine_EngineOil_Level_Enum
+
+  """
+  Remaining engine oil life in seconds. Negative values can be used to indicate that lifetime has been exceeded.
+  @comment: In addition to this a signal a vehicle can report remaining time to service (including e.g. oil change) by Vehicle.Service.TimeToService.
+  """
+  lifeRemaining(unit: Duration_Unit_Enum = SECOND): Int
+
+  """EOT, Engine oil temperature."""
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""Electric Motor specific data."""
+type Vehicle_Powertrain_ElectricMotor {
+  """Motor coolant temperature (if applicable)."""
+  coolantTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float @deprecated(reason: "v5.0 moved to EngineCoolant.Temperature")
+
+  """Engine code designation, as specified by vehicle manufacturer."""
+  engineCode: String
+
+  """Peak power, in kilowatts, that motor(s) can generate."""
+  maxPower(unit: Power_Unit_Enum = KILOWATT): UInt16
+
+  """Peak regen/brake power, in kilowatts, that motor(s) can generate."""
+  maxRegenPower(unit: Power_Unit_Enum = KILOWATT): UInt16
+
+  """
+  Peak regen/brake torque, in newton meter, that the motor(s) can generate.
+  """
+  maxRegenTorque(unit: Torque_Unit_Enum = NEWTON_METER): UInt16
+
+  """Peak power, in newton meter, that the motor(s) can generate."""
+  maxTorque(unit: Torque_Unit_Enum = NEWTON_METER): UInt16
+
+  """Current motor power output. Negative values indicate regen mode."""
+  power(unit: Power_Unit_Enum = KILOWATT): Int16
+
+  """
+  Motor rotational speed measured as rotations per minute. Negative values indicate reverse driving mode.
+  """
+  speed(unit: Rotationalspeed_Unit_Enum = REVOLUTIONS_PER_MINUTE): Int
+
+  """Motor temperature."""
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """
+  Accumulated time during engine lifetime when the vehicule state's is 'READY'.
+  @comment: Vehicles may define their READY state.
+  """
+  timeInUse(unit: Duration_Unit_Enum = HOUR): Float
+
+  """Current motor torque. Negative values indicate regen mode."""
+  torque(unit: Torque_Unit_Enum = NEWTON_METER): Int16
+  engineCoolant: Vehicle_Powertrain_ElectricMotor_EngineCoolant
+}
+
+"""Signals related to the engine coolant (if applicable)."""
+type Vehicle_Powertrain_ElectricMotor_EngineCoolant {
+  """Engine coolant capacity in liters."""
+  capacity(unit: Volume_Unit_Enum = LITER): Float
+
+  """Engine coolant level."""
+  level: Vehicle_Powertrain_ElectricMotor_EngineCoolant_Level_Enum
+
+  """
+  Remaining engine coolant life in seconds. Negative values can be used to indicate that lifetime has been exceeded.
+  @comment: In addition to this a signal a vehicle can report remaining time to service (including e.g. coolant change) by Vehicle.Service.TimeToService.
+  """
+  lifeRemaining(unit: Duration_Unit_Enum = SECOND): Int
+
+  """Engine coolant temperature."""
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""Fuel system data."""
+type Vehicle_Powertrain_FuelSystem {
+  """Current available fuel in the fuel tank expressed in liters."""
+  absoluteLevel(unit: Volume_Unit_Enum = LITER): Float
+
+  """Average consumption in liters per 100 km."""
+  averageConsumption(unit: Volumeperdistance_Unit_Enum = LITER_PER_100_KILOMETERS): Float
+
+  """
+  Fuel consumption since last refueling.
+  @comment: Amount of fuel consumed since last refueling.
+  """
+  consumptionSinceLastRefuel(unit: Volume_Unit_Enum = LITER): Float
+
+  """
+  Fuel amount in liters consumed since start of current trip.
+  @comment: A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The signal may however keep the value of the last trip until a new trip is started.
+  """
+  consumptionSinceStart(unit: Volume_Unit_Enum = LITER): Float
+
+  """
+  Defines the hybrid type of the vehicle.
+  @default: UNKNOWN
+  """
+  hybridType: Vehicle_Powertrain_FuelSystem_HybridType_Enum
+
+  """Current consumption in liters per 100 km."""
+  instantConsumption(unit: Volumeperdistance_Unit_Enum = LITER_PER_100_KILOMETERS): Float
+
+  """Indicates whether eco start stop is currently enabled."""
+  isEngineStopStartEnabled: Boolean
+
+  """Indicates that the fuel level is low (e.g. <50km range)."""
+  isFuelLevelLow: Boolean
+
+  """Status of the fuel port flap(s). True if at least one is open."""
+  isFuelPortFlapOpen: Boolean
+
+  """Remaining range in meters using only liquid fuel."""
+  range(unit: Length_Unit_Enum = METER): UInt32
+
+  """
+  Position of refuel port(s). First part indicates side of vehicle, second part relative position on that side.
+  """
+  refuelPortPosition: [Vehicle_Powertrain_FuelSystem_RefuelPortPosition_Enum]
+
+  """
+  Level in fuel tank as percent of capacity. 0 = empty. 100 = full.
+  @max: 100
+  """
+  relativeLevel(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """
+  Detailed information on fuels supported by the vehicle. Identifiers originating from DIN EN 16942:2021-08, appendix B, with additional suffix for octane (RON) where relevant.
+  @comment: RON 95 is sometimes referred to as Super, RON 98 as Super Plus.
+  """
+  supportedFuel: [Vehicle_Powertrain_FuelSystem_SupportedFuel_Enum]
+
+  """
+  High level information of fuel types supported
+  @comment: If a vehicle also has an electric drivetrain (e.g. hybrid) that will be obvious from the PowerTrain.Type signal.
+  """
+  supportedFuelTypes: [Vehicle_Powertrain_FuelSystem_SupportedFuelTypes_Enum]
+
+  """Capacity of the fuel tank in liters."""
+  tankCapacity(unit: Volume_Unit_Enum = LITER): Float
+
+  """Time remaining in seconds before the fuel tank is empty."""
+  timeRemaining(unit: Duration_Unit_Enum = SECOND): UInt32
+}
+
+"""Battery Management data."""
+type Vehicle_Powertrain_TractionBattery {
+  """
+  The accumulated energy delivered to the battery during charging over lifetime of the battery.
+  """
+  accumulatedChargedEnergy(unit: Work_Unit_Enum = KILOWATT_HOURS): Float
+
+  """
+  The accumulated charge throughput delivered to the battery during charging over lifetime of the battery.
+  """
+  accumulatedChargedThroughput(unit: Electriccharge_Unit_Enum = AMPERE_HOURS): Float
+
+  """
+  The accumulated energy leaving HV battery for propulsion and auxiliary loads over lifetime of the battery.
+  """
+  accumulatedConsumedEnergy(unit: Work_Unit_Enum = KILOWATT_HOURS): Float
+
+  """
+  The accumulated charge throughput leaving HV battery for propulsion and auxiliary loads over lifetime of the battery.
+  """
+  accumulatedConsumedThroughput(unit: Electriccharge_Unit_Enum = AMPERE_HOURS): Float
+
+  """
+  Current current flowing in/out of battery. Positive = Current flowing in to battery, e.g. during charging. Negative = Current flowing out of battery, e.g. during driving.
+  """
+  currentCurrent(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Current electrical energy flowing in/out of battery. Positive = Energy flowing in to battery, e.g. during charging. Negative = Energy flowing out of battery, e.g. during driving.
+  """
+  currentPower(unit: Power_Unit_Enum = WATT): Float
+
+  """Current Voltage of the battery."""
+  currentVoltage(unit: Voltage_Unit_Enum = VOLT): Float
+
+  """
+  Current error codes related to the battery, if any.
+  @comment: Error code format is not defined, it may be DTCs according to OBD II (SAE-J2012DA_201812) standard ([P|C|B|U]XXXXX ) or any other format.
+  """
+  errorCodes: [String]
+
+  """Gross capacity of the battery."""
+  grossCapacity(unit: Work_Unit_Enum = KILOWATT_HOURS): UInt16
+
+  """
+  Battery Identification Number as assigned by OEM.
+  @comment: This could be serial number, part number plus serial number, UUID, or any other identifier that the OEM want to use to uniquely identify the battery individual.
+  """
+  id: String
+
+  """
+  Indicating if the ground (negative terminator) of the traction battery is connected to the powertrain.
+  @comment: It might be possible to disconnect the traction battery used by an electric powertrain. This is achieved by connectors, typically one for plus and one for minus.
+  """
+  isGroundConnected: Boolean
+
+  """
+  Indicating if the power (positive terminator) of the traction battery is connected to the powertrain.
+  @comment: It might be possible to disconnect the traction battery used by an electric powertrain. This is achieved by connectors, typically one for plus and one for minus.
+  """
+  isPowerConnected: Boolean
+
+  """Max allowed voltage of the battery, e.g. during charging."""
+  maxVoltage(unit: Voltage_Unit_Enum = VOLT): UInt16
+
+  """Total net capacity of the battery considering aging."""
+  netCapacity(unit: Work_Unit_Enum = KILOWATT_HOURS): UInt16
+
+  """
+  Nominal Voltage of the battery.
+  @comment: Nominal voltage typically refers to voltage of fully charged battery when delivering rated capacity.
+  """
+  nominalVoltage(unit: Voltage_Unit_Enum = VOLT): UInt16
+
+  """
+  Electrical energy lost by power dissipation to heat inside the battery.
+  """
+  powerLoss(unit: Power_Unit_Enum = WATT): Float
+
+  """Production date of battery in ISO8601 format, e.g. YYYY-MM-DD."""
+  productionDate(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """Remaining range in meters using only battery."""
+  range(unit: Length_Unit_Enum = METER): UInt32
+
+  """
+  Calculated battery state of health at standard conditions.
+  @comment: Exact formula is implementation dependent. Could be e.g. current capacity at 20 degrees Celsius divided with original capacity at the same temperature.
+  @max: 100
+  """
+  stateOfHealth(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """Time remaining in seconds before the battery is empty."""
+  timeRemaining(unit: Duration_Unit_Enum = SECOND): UInt32
+  batteryConditioning: Vehicle_Powertrain_TractionBattery_BatteryConditioning
+  cellVoltage: Vehicle_Powertrain_TractionBattery_CellVoltage
+  charging: Vehicle_Powertrain_TractionBattery_Charging
+  dcdc: Vehicle_Powertrain_TractionBattery_DCDC
+  stateOfCharge: Vehicle_Powertrain_TractionBattery_StateOfCharge
+  temperature: Vehicle_Powertrain_TractionBattery_Temperature
+}
+
+"""
+Properties related to preparing the vehicle battery for charging or driving.
+"""
+type Vehicle_Powertrain_TractionBattery_BatteryConditioning {
+  """
+  Indicates if battery conditioning is active (i.e. actively monitors battery temperature). True = Active. False = Inactive.
+  @comment: This signal is typically true when mode is not INACTIVE and time is within defined start/end times.
+  """
+  isActive: Boolean
+
+  """
+  Indicating if battery conditioning is currently ongoing. Battery conditioning is considered ongoing when the battery conditioning system is actively heating or cooling the battery, or requesting heating or cooling.
+  @comment: When battery conditioning is active, but temperature is already within acceptable range so that no cooling or heating is needed then IsOngoing shall report False.
+  """
+  isOngoing: Boolean
+
+  """
+  Defines requested mode for battery conditioning. INACTIVE - Battery conditioning inactive. FAST_CHARGING_PREPARATION - Battery conditioning for fast charging. DRIVING_PREPARATION - Battery conditioning for driving.
+  @comment: The Mode and TargetTime can be used to calculate TargetTemperature and StartTime
+  """
+  requestedMode: Vehicle_Powertrain_TractionBattery_BatteryConditioning_RequestedMode_Enum
+
+  """
+  Start time for battery conditioning, formatted according to ISO 8601 with UTC time zone.
+  @comment: If the vehicle is asleep, this is the time the vehicle and the battery conditioning system must wake up and start monitoring the battery and if necessary start heating/cooling of the battery.
+  """
+  startTime(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """
+  Target temperature for battery conditioning.
+  @comment: Target temperature possibly differs between different modes as well as other factors. Allowed deviation from target temperature is implementation dependent.
+  """
+  targetTemperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """
+  Target time when conditioning shall be finished, formatted according to ISO 8601 with UTC time zone.
+  @comment: For FAST_CHARGING mode this is typically the time when charging is supposed to start. For DRIVING mode this is typically the expected departure time. Battery conditioning will be deactivated when this time has passed.
+  """
+  targetTime(unit: Datetime_Unit_Enum = ISO_8601): String
+}
+
+"""Voltage information for cells in the battery pack."""
+type Vehicle_Powertrain_TractionBattery_CellVoltage {
+  """
+  Array of cell voltages. Length or array shall correspond to number of cells in vehicle.
+  @comment: Cells are identified by relative position in array.
+  """
+  cellVoltages: [Float]
+
+  """
+  Identifier of the battery cell with highest voltage.
+  @comment: Identifier is supposed to be relative index of the cell, starting with 0 the first cell.
+  """
+  idMax: UInt16
+
+  """
+  Identifier of the battery cell with lowest voltage.
+  @comment: Identifier is supposed to be relative index of the cell, starting with 0 the first cell.
+  """
+  idMin: UInt16
+
+  """Current voltage of the battery cell with highest voltage."""
+  max(unit: Voltage_Unit_Enum = VOLT): Float
+
+  """Current voltage of the battery cell with lowest voltage."""
+  min(unit: Voltage_Unit_Enum = VOLT): Float
+}
+
+"""Properties related to battery charging."""
+type Vehicle_Powertrain_TractionBattery_Charging {
+  """Average charging power of last or current charging event."""
+  averagePower(unit: Power_Unit_Enum = KILOWATT): Float
+
+  """
+  Target charge limit (state of charge) for battery.
+  @max: 100
+  @default: 100
+  """
+  chargeLimit(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Current charging rate, as in kilometers of range added per hour."""
+  chargeRate(unit: Velocity_Unit_Enum = KILOMETER_PER_HOUR): Float
+
+  """
+  EVSE charging point ID (without separators) of last or current charging event according to ISO 15118-2 Annex H.
+  @comment: Length of id between 7 and 37 characters. ZZ00000 to be used if SECC cannot provide id
+  """
+  evseId: String
+
+  """
+  True if charging is ongoing. Charging is considered to be ongoing if energy is flowing from charger to vehicle.
+  """
+  isCharging: Boolean
+
+  """
+  True if discharging (vehicle to grid) is ongoing. Discharging is considered to be ongoing if energy is flowing from vehicle to charger/grid.
+  """
+  isDischarging: Boolean
+
+  """Maximum charging power of last or current charging event."""
+  maxPower(unit: Power_Unit_Enum = KILOWATT): Float
+
+  """
+  Electrical energy lost by power dissipation to heat inside the AC/DC converter.
+  """
+  powerLoss(unit: Power_Unit_Enum = WATT): Float
+
+  """Start or stop the charging process."""
+  startStopCharging: Vehicle_Powertrain_TractionBattery_Charging_StartStopCharging_Enum
+
+  """
+  Current temperature of AC/DC converter converting grid voltage to battery voltage.
+  """
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """
+  The time needed for the current charging process to reach Charging.ChargeLimit. 0 if charging is complete or no charging process is active or planned.
+  @comment: Shall consider time set by Charging.Timer.Time. E.g. if charging shall start in 3 hours and 2 hours of charging is needed, then Charging.TimeToComplete shall report 5 hours.
+  """
+  timeToComplete(unit: Duration_Unit_Enum = SECOND): UInt32
+  chargeCurrent: Vehicle_Powertrain_TractionBattery_Charging_ChargeCurrent
+  chargeVoltage: Vehicle_Powertrain_TractionBattery_Charging_ChargeVoltage
+  chargingPort_s: [Vehicle_Powertrain_TractionBattery_Charging_ChargingPort]
+  location: Vehicle_Powertrain_TractionBattery_Charging_Location
+  maximumChargingCurrent: Vehicle_Powertrain_TractionBattery_Charging_MaximumChargingCurrent
+  timer: Vehicle_Powertrain_TractionBattery_Charging_Timer
+}
+
+"""Current charging current."""
+type Vehicle_Powertrain_TractionBattery_Charging_ChargeCurrent {
+  """
+  Current DC charging current at inlet. Negative if returning energy to grid.
+  """
+  dc(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Current AC charging current (rms) at inlet for Phase 1. Negative if returning energy to grid.
+  """
+  phase1(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Current AC charging current (rms) at inlet for Phase 2. Negative if returning energy to grid.
+  """
+  phase2(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Current AC charging current (rms) at inlet for Phase 3. Negative if returning energy to grid.
+  """
+  phase3(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+}
+
+"""Current charging voltage, as measured at the charging inlet."""
+type Vehicle_Powertrain_TractionBattery_Charging_ChargeVoltage {
+  """Current DC charging voltage at charging inlet."""
+  dc(unit: Voltage_Unit_Enum = VOLT): Float
+
+  """Current AC charging voltage (rms) at inlet for Phase 1."""
+  phase1(unit: Voltage_Unit_Enum = VOLT): Float
+
+  """Current AC charging voltage (rms) at inlet for Phase 2."""
+  phase2(unit: Voltage_Unit_Enum = VOLT): Float
+
+  """Current AC charging voltage (rms) at inlet for Phase 3."""
+  phase3(unit: Voltage_Unit_Enum = VOLT): Float
+}
+
+"""
+Properties related to a particular charging port available in the vehicle.
+@comment: If a vehicle has a single charging port, then use the instance AnyPosition.
+"""
+type Vehicle_Powertrain_TractionBattery_Charging_ChargingPort {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Indicates whether a charging cable is physically connected to a particular charging port or not.
+  """
+  isChargingCableConnected: Boolean
+
+  """
+  Is charging cable locked to prevent removal.
+  @comment: Locking of charging cable can be used to prevent unintentional removing during charging.
+  """
+  isChargingCableLocked: Boolean
+
+  """
+  Status of the charging port flap(s).
+  @comment: True = at least one flap of this port is open, False = All flaps of this port are closed.
+  """
+  isFlapOpen: Boolean
+
+  """
+  A list of the supported (i.e., available) charging inlets in a particular charging port. IEC types refer to IEC 62196,  GBT refers to  GB/T 20234.
+  @comment: A vehicle may have multiple charging ports. IEC_TYPE_1_AC refers to Type 1 as defined in IEC 62196-2. Also known as Yazaki or J1772 connector. IEC_TYPE_2_AC refers to Type 2 as defined in IEC 62196-2. Also known as Mennekes connector. IEC_TYPE_3_AC refers to Type 3 as defined in IEC 62196-2. Also known as Scame connector. IEC_TYPE_4_DC refers to AA configuration as defined in IEC 62196-3. Also known as Type 4 or CHAdeMO connector. IEC_TYPE_1_CCS_DC refers to EE Configuration as defined in IEC 62196-3. Also known as CCS1 or Combo1 connector. IEC_TYPE_2_CCS_DC refers to FF Configuration as defined in IEC 62196-3. Also known as CCS2 or Combo2 connector. TESLA_ROADSTER, TESLA_HPWC (High Power Wall Connector) and TESLA_SUPERCHARGER refer to non-standardized charging ports/methods used by Tesla. GBT_AC refers to connector specified in GB/T 20234.2. GBT_DC refers to connector specified in GB/T 20234.3. Also specified as BB Configuration in IEC 62196-3. OTHER shall be used for charging ports not included in the list above. For additional information see https://en.wikipedia.org/wiki/IEC_62196.
+  """
+  supportedInletTypes: [Vehicle_Powertrain_TractionBattery_Charging_ChargingPort_SupportedInletTypes_Enum]
+}
+
+"""
+Location of last or current charging event.
+@comment: This may depending on implementation represent the location of (the charge port of) the vehicle during charging, or the actual location of the charger/load connected to the vehicle.
+"""
+type Vehicle_Powertrain_TractionBattery_Charging_Location {
+  """
+  Altitude relative to WGS 84 reference ellipsoid of last or current charging event.
+  """
+  altitude(unit: Length_Unit_Enum = METER): Float
+
+  """
+  Latitude of last or current charging event in WGS 84 geodetic coordinates.
+  @min: -90
+  @max: 90
+  """
+  latitude(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Longitude of last or current charging event in WGS 84 geodetic coordinates.
+  @min: -180
+  @max: 180
+  """
+  longitude(unit: Angle_Unit_Enum = DEGREE): Float
+}
+
+"""
+Maximum charging current that can be accepted by the system, as measured at the charging inlet.
+"""
+type Vehicle_Powertrain_TractionBattery_Charging_MaximumChargingCurrent {
+  """
+  Maximum DC charging current at inlet that can be accepted by the system.
+  """
+  dc(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Maximum AC charging current (rms) at inlet for Phase 1 that can be accepted by the system.
+  """
+  phase1(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Maximum AC charging current (rms) at inlet for Phase 2 that can be accepted by the system.
+  """
+  phase2(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+
+  """
+  Maximum AC charging current (rms) at inlet for Phase 3 that can be accepted by the system.
+  """
+  phase3(unit: Electriccurrent_Unit_Enum = AMPERE): Float
+}
+
+"""Properties related to timing of battery charging sessions."""
+type Vehicle_Powertrain_TractionBattery_Charging_Timer {
+  """
+  Defines timer mode for charging: INACTIVE - no timer set, charging may start as soon as battery is connected to a charger. START_TIME - charging shall start at Charging.Timer.Time. END_TIME - charging shall be finished (reach Charging.ChargeLimit) at Charging.Timer.Time. When charging is completed the vehicle shall change mode to 'inactive' or set a new Charging.Timer.Time. Charging shall start immediately if mode is 'starttime' or 'endtime' and Charging.Timer.Time is a time in the past.
+  """
+  mode: Vehicle_Powertrain_TractionBattery_Charging_Timer_Mode_Enum
+
+  """
+  Time for next charging-related action, formatted according to ISO 8601 with UTC time zone. Value has no significance if Charging.Timer.Mode is 'inactive'.
+  """
+  time(unit: Datetime_Unit_Enum = ISO_8601): String
+}
+
+"""
+Properties related to DC/DC converter converting high voltage (from high voltage battery) to vehicle low voltage (supply voltage, typically 12 Volts).
+"""
+type Vehicle_Powertrain_TractionBattery_DCDC {
+  """
+  Electrical energy lost by power dissipation to heat inside DC/DC converter.
+  """
+  powerLoss(unit: Power_Unit_Enum = WATT): Float
+
+  """
+  Current temperature of DC/DC converter converting battery high voltage to vehicle low voltage (typically 12 Volts).
+  """
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""
+Information on the state of charge of the vehicle's high voltage battery.
+"""
+type Vehicle_Powertrain_TractionBattery_StateOfCharge {
+  """
+  Physical state of charge of the high voltage battery, relative to net capacity. This is not necessarily the state of charge being displayed to the customer.
+  @max: 100.0
+  """
+  current(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Physical state of charge of high voltage battery expressed in kWh.
+  @comment: Current energy could be calculated as .StateOfCharge.Current * .NetCapacity.
+  """
+  currentEnergy(unit: Work_Unit_Enum = KILOWATT_HOURS): Float
+
+  """
+  State of charge displayed to the customer.
+  @max: 100.0
+  """
+  displayed(unit: Relation_Unit_Enum = PERCENT): Float
+}
+
+"""Temperature Information for the battery pack."""
+type Vehicle_Powertrain_TractionBattery_Temperature {
+  """Current average temperature of the battery cells."""
+  average(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """
+  Array of cell temperatures. Length or array shall correspond to number of cells in vehicle.
+  @comment: Cells are identified by relative position in array.
+  """
+  cellTemperature: [Float]
+
+  """
+  Current maximum temperature of the battery cells, i.e. temperature of the hottest cell.
+  """
+  max(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """
+  Current minimum temperature of the battery cells, i.e. temperature of the coldest cell.
+  """
+  min(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+}
+
+"""Transmission-specific data, stopping at the drive shafts."""
+type Vehicle_Powertrain_Transmission {
+  """
+  Clutch engagement. 0% = Clutch fully disengaged. 100% = Clutch fully engaged.
+  @max: 100
+  """
+  clutchEngagement(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Clutch wear as a percent. 0 = no wear. 100 = worn.
+  @max: 100
+  """
+  clutchWear(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """The current gear. 0=Neutral, 1/2/..=Forward, -1/-2/..=Reverse."""
+  currentGear: Int8
+
+  """
+  Front Diff Lock engagement. 0% = Diff lock fully disengaged. 100% = Diff lock fully engaged.
+  @max: 100
+  """
+  diffLockFrontEngagement(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Rear Diff Lock engagement. 0% = Diff lock fully disengaged. 100% = Diff lock fully engaged.
+  @max: 100
+  """
+  diffLockRearEngagement(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Drive type.
+  @default: UNKNOWN
+  """
+  driveType: Vehicle_Powertrain_Transmission_DriveType_Enum
+
+  """Is the gearbox in automatic or manual (paddle) mode."""
+  gearChangeMode: Vehicle_Powertrain_Transmission_GearChangeMode_Enum
+
+  """Number of forward gears in the transmission. -1 = CVT."""
+  gearCount: Int8
+
+  """
+  Is electrical powertrain mechanically connected/engaged to the drivetrain or not. False = Disconnected/Disengaged. True = Connected/Engaged.
+  @comment: In some hybrid solutions it is possible to disconnect/disengage the electrical powertrain mechanically to avoid induced voltage reaching a too high level when driving at high speed.
+  """
+  isElectricalPowertrainEngaged: Boolean
+
+  """
+  Is gearbox in low range mode or not. False = Normal/High range engaged. True = Low range engaged.
+  @comment: The possibility to switch between low and high gear range is typically only available in heavy vehicles and off-road vehicles.
+  """
+  isLowRangeEngaged: Boolean
+
+  """
+  Is the transmission park lock engaged or not. False = Disengaged. True = Engaged.
+  """
+  isParkLockEngaged: Boolean
+
+  """Current gearbox performance mode."""
+  performanceMode: Vehicle_Powertrain_Transmission_PerformanceMode_Enum
+
+  """
+  The selected gear. 0=Neutral, 1/2/..=Forward, -1/-2/..=Reverse, 126=Park, 127=Drive.
+  """
+  selectedGear: Int8
+
+  """The current gearbox temperature."""
+  temperature(unit: Temperature_Unit_Enum = DEGREE_CELSIUS): Float
+
+  """
+  Torque distribution between front and rear axle in percent. -100% = Full torque to front axle, 0% = 50:50 Front/Rear, 100% = Full torque to rear axle.
+  @min: -100
+  @max: 100
+  """
+  torqueDistribution(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Odometer reading, total distance travelled during the lifetime of the transmission.
+  """
+  travelledDistance(unit: Length_Unit_Enum = KILOMETER): Float
+
+  """
+  Transmission type.
+  @default: UNKNOWN
+  """
+  type: Vehicle_Powertrain_Transmission_Type_Enum
+}
+
+"""Service data."""
+type Vehicle_Service {
+  """
+  Remaining distance to service (of any kind). Negative values indicate service overdue.
+  """
+  distanceToService(unit: Length_Unit_Enum = KILOMETER): Float
+
+  """
+  Indicates if vehicle needs service (of any kind). True = Service needed now or in the near future. False = No known need for service.
+  """
+  isServiceDue: Boolean
+
+  """
+  Remaining time to service (of any kind). Negative values indicate service overdue.
+  """
+  timeToService(unit: Duration_Unit_Enum = SECOND): Int
+}
+
+"""Trailer signals."""
+type Vehicle_Trailer {
+  """Signal indicating if trailer is connected or not."""
+  isConnected: Boolean
+}
+
+"""Attributes that identify a vehicle."""
+type Vehicle_VehicleIdentification {
+  """
+  The ACRISS Car Classification Code is a code used by many car rental companies.
+  """
+  acrissCode: String
+
+  """
+  Indicates the design and body style of the vehicle (e.g. station wagon, hatchback, etc.).
+  """
+  bodyType: String
+
+  """Vehicle brand or manufacturer."""
+  brand: String
+
+  """
+  The date in ISO 8601 format of the first registration of the vehicle with the respective public authorities.
+  """
+  dateVehicleFirstRegistered(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """A textual description of known damages, both repaired and unrepaired."""
+  knownVehicleDamages: String
+
+  """
+  The license plate of the vehicle.
+  @comment: Depending on the context, this attribute might not be up to date or might be misconfigured, and therefore should be considered untrustworthy in the absence of another method of verification.
+  """
+  licensePlate: String
+
+  """Indicates that the vehicle meets the respective emission standard."""
+  meetsEmissionStandard: String
+
+  """Vehicle model."""
+  model: String
+
+  """
+  Optional extras refers to all car equipment options that are not installed as standard by the manufacturer.
+  @comment: Allowed values are not standardized, each OEM can specify detail descriptions of array elements.
+  """
+  optionalExtras: [String]
+
+  """The date in ISO 8601 format of production of the item, e.g. vehicle."""
+  productionDate(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """
+  The date in ISO 8601 format of the item e.g. vehicle was purchased by the current owner.
+  """
+  purchaseDate(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """
+  17-character Vehicle Identification Number (VIN) as defined by ISO 3779.
+  """
+  vin: String
+
+  """
+  A short text indicating the configuration of the vehicle, e.g. '5dr hatchback ST 2.5 MT 225 hp' or 'limited edition'.
+  """
+  vehicleConfiguration: String
+
+  """
+  The main color of the exterior within the basic color palette (eg. red, blue, black, white, ...).
+  """
+  vehicleExteriorColor: String
+
+  """The color or color combination of the interior of the vehicle."""
+  vehicleInteriorColor: String
+
+  """
+  The type or material of the interior of the vehicle (e.g. synthetic fabric, leather, wood, etc.).
+  """
+  vehicleInteriorType: String
+
+  """
+  The release date in ISO 8601 format of a vehicle model (often used to differentiate versions of the same make and model).
+  """
+  vehicleModelDate(unit: Datetime_Unit_Enum = ISO_8601): String
+
+  """
+  The number of passengers that can be seated in the vehicle, both in terms of the physical space available, and in terms of limitations set by law.
+  """
+  vehicleSeatingCapacity: UInt16
+
+  """
+  Indicates whether the vehicle has been used for special purposes, like commercial rental, driving school.
+  """
+  vehicleSpecialUsage: String
+
+  """
+  3-character World Manufacturer Identification (WMI) as defined by ISO 3780.
+  """
+  wmi: String
+
+  """Model year of the vehicle."""
+  year: UInt16
+}
+
+"""Supported Version of VSS."""
+type Vehicle_VersionVSS {
+  """
+  Label to further describe the version.
+  @comment: COVESA VSS project typically use dev for latest master, and empty string for released versions.
+  @default: dev
+  """
+  label: String
+
+  """
+  Supported Version of VSS - Major version.
+  @default: 6
+  """
+  major: UInt32
+
+  """Supported Version of VSS - Minor version."""
+  minor: UInt32
+
+  """Supported Version of VSS - Patch version."""
+  patch: UInt32
+}
+
+enum Vehicle_ADAS_ActiveAutonomyLevel_Enum {
+  SAE_0
+  SAE_1
+  SAE_2_DISENGAGING
+  SAE_2
+  SAE_3_DISENGAGING
+  SAE_3
+  SAE_4_DISENGAGING
+  SAE_4
+  SAE_5_DISENGAGING
+  SAE_5
+}
+
+enum Vehicle_ADAS_ObstacleDetection_WarningType_Enum {
+  UNDEFINED
+  CROSS_TRAFFIC
+  BLIND_SPOT
+}
+
+enum Vehicle_ADAS_SupportedAutonomyLevel_Enum {
+  SAE_0
+  SAE_1
+  SAE_2
+  SAE_3
+  SAE_4
+  SAE_5
+}
+
+enum Vehicle_Body_Hood_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+}
+
+enum Vehicle_Body_Lights_Brake_IsActive_Enum {
+  INACTIVE
+  ACTIVE
+  ADAPTIVE
+}
+
+enum Vehicle_Body_Lights_LightSwitch_Enum {
+  OFF
+  POSITION
+  DAYTIME_RUNNING_LIGHTS
+  AUTO
+  BEAM
+}
+
+enum Vehicle_Body_Trunk_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+}
+
+enum Vehicle_Body_Windshield_Wiping_Mode_Enum {
+  OFF
+  SLOW
+  MEDIUM
+  FAST
+  INTERVAL
+  RAIN_SENSOR
+}
+
+enum Vehicle_Body_Windshield_Wiping_System_Mode_Enum {
+  STOP_HOLD
+  WIPE
+  PLANT_MODE
+  EMERGENCY_STOP
+}
+
+enum Vehicle_Cabin_Convertible_Status_Enum {
+  UNDEFINED
+  CLOSED
+  OPEN
+  CLOSING
+  OPENING
+  STALLED
+}
+
+enum Vehicle_Cabin_Door_Shade_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+}
+
+enum Vehicle_Cabin_Door_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+}
+
+enum Vehicle_Cabin_Door_Window_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+}
+
+enum Vehicle_Cabin_DriverPosition_Enum {
+  LEFT
+  MIDDLE
+  RIGHT
+}
+
+enum Vehicle_Cabin_HVAC_Station_AirDistribution_Enum {
+  UP
+  MIDDLE
+  DOWN
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_DateFormat_Enum {
+  YYYY_MM_DD
+  DD_MM_YYYY
+  MM_DD_YYYY
+  YY_MM_DD
+  DD_MM_YY
+  MM_DD_YY
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_DayNightMode_Enum {
+  DAY
+  NIGHT
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_DistanceUnit_Enum {
+  MILES
+  KILOMETERS
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_EVEconomyUnits_Enum {
+  MILES_PER_KILOWATT_HOUR
+  KILOMETERS_PER_KILOWATT_HOUR
+  KILOWATT_HOURS_PER_100_MILES
+  KILOWATT_HOURS_PER_100_KILOMETERS
+  WATT_HOURS_PER_MILE
+  WATT_HOURS_PER_KILOMETER
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_EVEnergyUnits_Enum {
+  WATT_HOURS
+  AMPERE_HOURS
+  KILOWATT_HOURS
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_FontSize_Enum {
+  STANDARD
+  LARGE
+  EXTRA_LARGE
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_FuelEconomyUnits_Enum {
+  MPG_UK
+  MPG_US
+  MILES_PER_LITER
+  KILOMETERS_PER_LITER
+  LITERS_PER_100_KILOMETERS
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_FuelVolumeUnit_Enum {
+  LITER
+  GALLON_US
+  GALLON_UK
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_SpeedUnit_Enum {
+  METERS_PER_SECOND
+  MILES_PER_HOUR
+  KILOMETERS_PER_HOUR
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_TemperatureUnit_Enum {
+  C
+  F
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_TimeFormat_Enum {
+  HR_12
+  HR_24
+}
+
+enum Vehicle_Cabin_Infotainment_HMI_TirePressureUnit_Enum {
+  PSI
+  KPA
+  BAR
+}
+
+enum Vehicle_Cabin_Infotainment_Media_Action_Enum {
+  UNKNOWN
+  STOP
+  PLAY
+  FAST_FORWARD
+  FAST_BACKWARD
+  SKIP_FORWARD
+  SKIP_BACKWARD
+}
+
+enum Vehicle_Cabin_Infotainment_Media_Played_Source_Enum {
+  UNKNOWN
+  SIRIUS_XM
+  AM
+  FM
+  DAB
+  TV
+  CD
+  DVD
+  AUX
+  USB
+  DISK
+  BLUETOOTH
+  INTERNET
+  VOICE
+  BEEP
+}
+
+enum Vehicle_Cabin_Infotainment_Navigation_GuidanceVoice_Enum {
+  STANDARD_MALE
+  STANDARD_FEMALE
+  ETC
+}
+
+enum Vehicle_Cabin_Infotainment_Navigation_Mute_Enum {
+  MUTED
+  ALERT_ONLY
+  UNMUTED
+}
+
+enum Vehicle_Cabin_Infotainment_SmartphoneProjection_Active_Enum {
+  NONE
+  ACTIVE
+  INACTIVE
+}
+
+enum Vehicle_Cabin_Infotainment_SmartphoneProjection_Source_Enum {
+  USB
+  BLUETOOTH
+  WIFI
+}
+
+enum Vehicle_Cabin_Infotainment_SmartphoneProjection_SupportedMode_Enum {
+  ANDROID_AUTO
+  APPLE_CARPLAY
+  MIRROR_LINK
+  OTHER
+}
+
+enum Vehicle_Cabin_Infotainment_SmartphoneScreenMirroring_Active_Enum {
+  NONE
+  ACTIVE
+  INACTIVE
+}
+
+enum Vehicle_Cabin_Infotainment_SmartphoneScreenMirroring_Source_Enum {
+  USB
+  BLUETOOTH
+  WIFI
+}
+
+enum Vehicle_Cabin_RearShade_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+}
+
+enum Vehicle_Cabin_Seat_Massage_Status_Enum {
+  ON
+  OFF
+}
+
+enum Vehicle_Cabin_Seat_OccupancyStatus_Enum {
+  UNKNOWN
+  OCCUPIED
+  EMPTY
+}
+
+enum Vehicle_Cabin_Sunroof_Shade_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+}
+
+enum Vehicle_Cabin_Sunroof_Switch_Enum {
+  INACTIVE
+  CLOSE
+  OPEN
+  ONE_SHOT_CLOSE
+  ONE_SHOT_OPEN
+  TILT_UP
+  TILT_DOWN
+}
+
+enum Vehicle_CurrentLocation_GNSSReceiver_FixType_Enum {
+  NONE
+  TWO_D
+  TWO_D_SATELLITE_BASED_AUGMENTATION
+  TWO_D_GROUND_BASED_AUGMENTATION
+  TWO_D_SATELLITE_AND_GROUND_BASED_AUGMENTATION
+  THREE_D
+  THREE_D_SATELLITE_BASED_AUGMENTATION
+  THREE_D_GROUND_BASED_AUGMENTATION
+  THREE_D_SATELLITE_AND_GROUND_BASED_AUGMENTATION
+}
+
+enum Vehicle_LowVoltageSystemState_Enum {
+  UNDEFINED
+  LOCK
+  OFF
+  ACC
+  ON
+  START
+}
+
+enum Vehicle_OBD_DriveCycleStatus_IgnitionType_Enum {
+  SPARK
+  COMPRESSION
+}
+
+enum Vehicle_OBD_PidsA_Enum {
+  _01
+  _02
+  _03
+  _04
+  _05
+  _06
+  _07
+  _08
+  _09
+  _0A
+  _0B
+  _0C
+  _0D
+  _0E
+  _0F
+  _10
+  _11
+  _12
+  _13
+  _14
+  _15
+  _16
+  _17
+  _18
+  _19
+  _1A
+  _1B
+  _1C
+  _1D
+  _1E
+  _1F
+  _20
+}
+
+enum Vehicle_OBD_PidsB_Enum {
+  _21
+  _22
+  _23
+  _24
+  _25
+  _26
+  _27
+  _28
+  _29
+  _2A
+  _2B
+  _2C
+  _2D
+  _2E
+  _2F
+  _30
+  _31
+  _32
+  _33
+  _34
+  _35
+  _36
+  _37
+  _38
+  _39
+  _3A
+  _3B
+  _3C
+  _3D
+  _3E
+  _3F
+  _40
+}
+
+enum Vehicle_OBD_PidsC_Enum {
+  _41
+  _42
+  _43
+  _44
+  _45
+  _46
+  _47
+  _48
+  _49
+  _4A
+  _4B
+  _4C
+  _4D
+  _4E
+  _4F
+  _50
+  _51
+  _52
+  _53
+  _54
+  _55
+  _56
+  _57
+  _58
+  _59
+  _5A
+  _5B
+  _5C
+  _5D
+  _5E
+  _5F
+  _60
+}
+
+enum Vehicle_OBD_Status_IgnitionType_Enum {
+  SPARK
+  COMPRESSION
+}
+
+enum Vehicle_Powertrain_CombustionEngine_AspirationType_Enum {
+  UNKNOWN
+  NATURAL
+  SUPERCHARGER
+  TURBOCHARGER
+}
+
+enum Vehicle_Powertrain_CombustionEngine_Configuration_Enum {
+  UNKNOWN
+  STRAIGHT
+  V
+  BOXER
+  W
+  ROTARY
+  RADIAL
+  SQUARE
+  H
+  U
+  OPPOSED
+  X
+}
+
+enum Vehicle_Powertrain_CombustionEngine_EngineCoolant_Level_Enum {
+  CRITICALLY_LOW
+  LOW
+  NORMAL
+}
+
+enum Vehicle_Powertrain_CombustionEngine_EngineOil_Level_Enum {
+  CRITICALLY_LOW
+  LOW
+  NORMAL
+  HIGH
+  CRITICALLY_HIGH
+}
+
+enum Vehicle_Powertrain_CombustionEngine_EngineOilLevel_Enum {
+  CRITICALLY_LOW
+  LOW
+  NORMAL
+  HIGH
+  CRITICALLY_HIGH
+}
+
+enum Vehicle_Powertrain_ElectricMotor_EngineCoolant_Level_Enum {
+  CRITICALLY_LOW
+  LOW
+  NORMAL
+}
+
+enum Vehicle_Powertrain_FuelSystem_HybridType_Enum {
+  UNKNOWN
+  NOT_APPLICABLE
+  STOP_START
+  BELT_ISG
+  CIMG
+  PHEV
+}
+
+enum Vehicle_Powertrain_FuelSystem_RefuelPortPosition_Enum {
+  FRONT_LEFT
+  FRONT_MIDDLE
+  FRONT_RIGHT
+  REAR_LEFT
+  REAR_MIDDLE
+  REAR_RIGHT
+  LEFT_FRONT
+  LEFT_MIDDLE
+  LEFT_REAR
+  RIGHT_FRONT
+  RIGHT_MIDDLE
+  RIGHT_REAR
+}
+
+enum Vehicle_Powertrain_FuelSystem_SupportedFuel_Enum {
+  E5_95
+  E5_98
+  E10_95
+  E10_98
+  E85
+  B7
+  B10
+  B20
+  B30
+  B100
+  XTL
+  LPG
+  CNG
+  LNG
+  H2
+  OTHER
+}
+
+enum Vehicle_Powertrain_FuelSystem_SupportedFuelTypes_Enum {
+  GASOLINE
+  DIESEL
+  E85
+  LPG
+  CNG
+  LNG
+  H2
+  OTHER
+}
+
+enum Vehicle_Powertrain_TractionBattery_BatteryConditioning_RequestedMode_Enum {
+  INACTIVE
+  FAST_CHARGING_PREPARATION
+  DRIVING_PREPARATION
+}
+
+enum Vehicle_Powertrain_TractionBattery_Charging_ChargingPort_SupportedInletTypes_Enum {
+  IEC_TYPE_1_AC
+  IEC_TYPE_2_AC
+  IEC_TYPE_3_AC
+  IEC_TYPE_4_DC
+  IEC_TYPE_1_CCS_DC
+  IEC_TYPE_2_CCS_DC
+  TESLA_ROADSTER
+  TESLA_HPWC
+  TESLA_SUPERCHARGER
+  GBT_AC
+  GBT_DC
+  OTHER
+}
+
+enum Vehicle_Powertrain_TractionBattery_Charging_StartStopCharging_Enum {
+  START
+  STOP
+}
+
+enum Vehicle_Powertrain_TractionBattery_Charging_Timer_Mode_Enum {
+  INACTIVE
+  START_TIME
+  END_TIME
+}
+
+enum Vehicle_Powertrain_Transmission_DriveType_Enum {
+  UNKNOWN
+  FORWARD_WHEEL_DRIVE
+  REAR_WHEEL_DRIVE
+  ALL_WHEEL_DRIVE
+}
+
+enum Vehicle_Powertrain_Transmission_GearChangeMode_Enum {
+  MANUAL
+  AUTOMATIC
+}
+
+enum Vehicle_Powertrain_Transmission_PerformanceMode_Enum {
+  NORMAL
+  SPORT
+  ECONOMY
+  SNOW
+  RAIN
+}
+
+enum Vehicle_Powertrain_Transmission_Type_Enum {
+  UNKNOWN
+  SEQUENTIAL
+  H
+  AUTOMATIC
+  DSG
+  CVT
+}
+
+enum Vehicle_Powertrain_Type_Enum {
+  COMBUSTION
+  HYBRID
+  ELECTRIC
+}
+
+enum Acceleration_Unit_Enum {
+  CENTIMETERS_PER_SECOND_SQUARED
+  METERS_PER_SECOND_SQUARED
+}
+
+enum Angle_Unit_Enum {
+  DEGREE
+}
+
+enum Angularspeed_Unit_Enum {
+  DEGREE_PER_SECOND
+  RADIANS_PER_SECOND
+}
+
+enum Datetime_Unit_Enum {
+  ISO_8601
+  UNIX_TIMESTAMP
+}
+
+enum Distancepervolume_Unit_Enum {
+  KILOMETERS_PER_LITER
+  MILES_PER_GALLON
+}
+
+enum Duration_Unit_Enum {
+  DAYS
+  HOUR
+  MILLISECOND
+  MINUTE
+  MONTHS
+  SECOND
+  WEEKS
+  YEARS
+}
+
+enum Electriccharge_Unit_Enum {
+  AMPERE_HOURS
+}
+
+enum Electriccurrent_Unit_Enum {
+  AMPERE
+}
+
+enum Energyconsumptionperdistance_Unit_Enum {
+  KILOWATT_HOURS_PER_100_KILOMETERS
+  WATT_HOUR_PER_KM
+}
+
+enum Force_Unit_Enum {
+  KILO_NEWTON
+  NEWTON
+}
+
+enum Frequency_Unit_Enum {
+  BEATS_PER_MINUTE
+  CYCLES_PER_MINUTE
+  HERTZ
+}
+
+enum Illuminance_Unit_Enum {
+  LUX
+}
+
+enum Length_Unit_Enum {
+  CENTIMETER
+  INCH
+  KILOMETER
+  METER
+  MILLIMETER
+}
+
+enum Mass_Unit_Enum {
+  GRAM
+  KILOGRAM
+  POUND
+}
+
+enum Massperdistance_Unit_Enum {
+  GRAMS_PER_KILOMETER
+}
+
+enum Masspertime_Unit_Enum {
+  GRAMS_PER_SECOND
+}
+
+enum Power_Unit_Enum {
+  HORSEPOWER
+  KILOWATT
+  WATT
+}
+
+enum Pressure_Unit_Enum {
+  KILOPASCAL
+  MILLIBAR
+  PASCAL
+  POUNDS_PER_SQUARE_INCH
+}
+
+enum Rating_Unit_Enum {
+  STARS
+}
+
+enum Relation_Unit_Enum {
+  DECIBEL
+  DECIBEL_MILLIWATT
+  NANO_METER_PER_KILOMETER
+  PERCENT
+  RATIO
+}
+
+enum Resistance_Unit_Enum {
+  OHM
+}
+
+enum Rotationalspeed_Unit_Enum {
+  REVOLUTIONS_PER_MINUTE
+}
+
+enum Temperature_Unit_Enum {
+  DEGREE_CELSIUS
+}
+
+enum Torque_Unit_Enum {
+  NEWTON_METER
+}
+
+enum Velocity_Unit_Enum {
+  KILOMETER_PER_HOUR
+  METERS_PER_SECOND
+}
+
+enum Voltage_Unit_Enum {
+  VOLT
+}
+
+enum Volume_Unit_Enum {
+  CUBIC_CENTIMETERS
+  LITER
+  MILLILITER
+}
+
+enum Volumeflowrate_Unit_Enum {
+  LITER_PER_HOUR
+}
+
+enum Volumeperdistance_Unit_Enum {
+  LITER_PER_100_KILOMETERS
+  MILLILITER_PER_100_KILOMETERS
+}
+
+enum Work_Unit_Enum {
+  KILOWATT_HOURS
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_ADAS_ObstacleDetection.
+"""
+enum Vehicle_ADAS_ObstacleDetection_Instance_Enum {
+  FRONT_LEFT
+  FRONT_CENTER
+  FRONT_RIGHT
+  REAR_LEFT
+  REAR_CENTER
+  REAR_RIGHT
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Body_Lights_Beam.
+"""
+enum Vehicle_Body_Lights_Beam_Instance_Enum {
+  LOW
+  HIGH
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Body_Lights_DirectionIndicator.
+"""
+enum Vehicle_Body_Lights_DirectionIndicator_Instance_Enum {
+  LEFT
+  RIGHT
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Body_Lights_Fog.
+"""
+enum Vehicle_Body_Lights_Fog_Instance_Enum {
+  REAR
+  FRONT
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Body_Mirrors.
+"""
+enum Vehicle_Body_Mirrors_Instance_Enum {
+  DRIVERSIDE
+  PASSENGERSIDE
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Body_Trunk.
+"""
+enum Vehicle_Body_Trunk_Instance_Enum {
+  FRONT
+  REAR
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Body_Windshield.
+"""
+enum Vehicle_Body_Windshield_Instance_Enum {
+  FRONT
+  REAR
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Cabin_Door.
+"""
+enum Vehicle_Cabin_Door_Instance_Enum {
+  ROW1_DRIVERSIDE
+  ROW1_PASSENGERSIDE
+  ROW2_DRIVERSIDE
+  ROW2_PASSENGERSIDE
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Cabin_HVAC_Station.
+"""
+enum Vehicle_Cabin_HVAC_Station_Instance_Enum {
+  ROW1_DRIVER
+  ROW1_PASSENGER
+  ROW2_DRIVER
+  ROW2_PASSENGER
+  ROW3_DRIVER
+  ROW3_PASSENGER
+  ROW4_DRIVER
+  ROW4_PASSENGER
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Cabin_Light_AmbientLight.
+"""
+enum Vehicle_Cabin_Light_AmbientLight_Instance_Enum {
+  ROW1_DRIVERSIDE
+  ROW1_PASSENGERSIDE
+  ROW2_DRIVERSIDE
+  ROW2_PASSENGERSIDE
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Cabin_Light_Spotlight.
+"""
+enum Vehicle_Cabin_Light_Spotlight_Instance_Enum {
+  ROW1_DRIVERSIDE
+  ROW1_PASSENGERSIDE
+  ROW2_DRIVERSIDE
+  ROW2_PASSENGERSIDE
+  ROW3_DRIVERSIDE
+  ROW3_PASSENGERSIDE
+  ROW4_DRIVERSIDE
+  ROW4_PASSENGERSIDE
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Cabin_Seat.
+"""
+enum Vehicle_Cabin_Seat_Instance_Enum {
+  ROW1_DRIVERSIDE
+  ROW1_MIDDLE
+  ROW1_PASSENGERSIDE
+  ROW2_DRIVERSIDE
+  ROW2_MIDDLE
+  ROW2_PASSENGERSIDE
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Chassis_Axle.
+"""
+enum Vehicle_Chassis_Axle_Instance_Enum {
+  ROW1
+  ROW2
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Chassis_Axle_Wheel.
+"""
+enum Vehicle_Chassis_Axle_Wheel_Instance_Enum {
+  LEFT
+  RIGHT
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_MotionManagement_Brake_Axle.
+"""
+enum Vehicle_MotionManagement_Brake_Axle_Instance_Enum {
+  ROW1
+  ROW2
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_MotionManagement_Brake_Axle_Wheel.
+"""
+enum Vehicle_MotionManagement_Brake_Axle_Wheel_Instance_Enum {
+  LEFT
+  RIGHT
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_MotionManagement_ElectricAxle.
+"""
+enum Vehicle_MotionManagement_ElectricAxle_Instance_Enum {
+  ROW1
+  ROW2
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_MotionManagement_Steering_Axle.
+"""
+enum Vehicle_MotionManagement_Steering_Axle_Instance_Enum {
+  ROW1
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_OBD_O2.
+"""
+enum Vehicle_OBD_O2_Instance_Enum {
+  SENSOR1
+  SENSOR2
+  SENSOR3
+  SENSOR4
+  SENSOR5
+  SENSOR6
+  SENSOR7
+  SENSOR8
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_OBD_O2WR.
+"""
+enum Vehicle_OBD_O2WR_Instance_Enum {
+  SENSOR1
+  SENSOR2
+  SENSOR3
+  SENSOR4
+  SENSOR5
+  SENSOR6
+  SENSOR7
+  SENSOR8
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Occupant.
+"""
+enum Vehicle_Occupant_Instance_Enum {
+  ROW1_DRIVERSIDE
+  ROW1_MIDDLE
+  ROW1_PASSENGERSIDE
+  ROW2_DRIVERSIDE
+  ROW2_MIDDLE
+  ROW2_PASSENGERSIDE
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Powertrain_TractionBattery_Charging_ChargingPort.
+"""
+enum Vehicle_Powertrain_TractionBattery_Charging_ChargingPort_Instance_Enum {
+  FRONTLEFT
+  FRONTMIDDLE
+  FRONTRIGHT
+  REARLEFT
+  REARMIDDLE
+  REARRIGHT
+  ANYPOSITION
+}

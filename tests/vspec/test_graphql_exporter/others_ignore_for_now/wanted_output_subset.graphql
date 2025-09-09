@@ -1,0 +1,290 @@
+type Query {
+  vehicle: Vehicle
+}
+
+scalar Int8
+
+scalar UInt8
+
+scalar Int16
+
+scalar UInt16
+
+scalar UInt32
+
+scalar Int64
+
+scalar UInt64
+
+"""High-level vehicle data."""
+type Vehicle @vspec(element: TYPE, value: "branch") {
+  id: ID!
+  cabin: Vehicle_Cabin
+}
+
+"""All in-cabin components, including doors."""
+type Vehicle_Cabin @vspec(element: TYPE, value: "branch") {
+  door_s: [Vehicle_Cabin_Door]
+}
+
+
+"""All doors, including windows and switches."""
+type Vehicle_Cabin_Door @vspec(element: TYPE, value: "branch") {
+  instanceTag: DoorInstanceTag!
+
+  """
+  Is door child lock active. True = Door cannot be opened from inside. False = Door can be opened from inside.
+  """
+  isChildLockActive: Boolean
+
+  """Is item locked or unlocked. True = Locked. False = Unlocked."""
+  isLocked: Boolean
+
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_Door_Switch_Enum
+  shade: Vehicle_Cabin_Door_Shade
+  window: Vehicle_Cabin_Door_Window
+}
+
+type DoorInstanceTag @instanceTag {
+  aspect1: DoorInstanceAspect1Enum!
+  aspect2: DoorInstanceAspect2Enum!
+}
+
+enum DoorInstanceAspect1Enum @vspec(element: INSTANCE_DEFINITION, value: "Row[1,2]") {
+  ROW1 @vspec(element: INSTANCE_LABEL, value: "Row1")
+  ROW2 @vspec(element: INSTANCE_LABEL, value: "Row2")
+}
+
+enum DoorInstanceAspect2Enum @vspec(element: INSTANCE_DEFINITION, value: "['DriverSide','PassengerSide']") {
+  DRIVER_SIDE @vspec(element: INSTANCE_LABEL, value: "DriverSide")
+  PASSENGER_SIDE @vspec(element: INSTANCE_LABEL, value: "PassengerSide")
+}
+
+"""
+Side window shade. Open = Retracted, Closed = Deployed. Start position for Shade is Open/Retracted.
+"""
+type Vehicle_Cabin_Door_Shade @vspec(element: TYPE, value: "branch") {
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_Door_Shade_Switch_Enum
+}
+
+"""Door window status. Start position for Window is Closed."""
+type Vehicle_Cabin_Door_Window @vspec(element: TYPE, value: "branch") {
+  """
+  Is item open or closed? True = Fully or partially open. False = Fully closed.
+  """
+  isOpen: Boolean
+
+  """
+  Item position. 0 = Start position 100 = End position.
+  @comment: Relationship between Open/Close and Start/End position is item dependent.
+  @max: 100
+  """
+  position(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """Switch controlling sliding action such as window, sunroof, or blind."""
+  switch: Vehicle_Cabin_Door_Window_Switch_Enum
+}
+
+enum Vehicle_Cabin_Door_Shade_Switch_Enum {
+  INACTIVE @vspec(element: ALLOWED, value: "INACTIVE")
+  CLOSE @vspec(element: ALLOWED, value: "CLOSE")
+  OPEN @vspec(element: ALLOWED, value: "OPEN")
+  ONE_SHOT_CLOSE @vspec(element: ALLOWED, value: "ONE_SHOT_CLOSE")
+  ONE_SHOT_OPEN @vspec(element: ALLOWED, value: "ONE_SHOT_OPEN")
+}
+
+enum Vehicle_Cabin_Door_Switch_Enum {
+  INACTIVE @vspec(element: ALLOWED, value: "INACTIVE")
+  CLOSE @vspec(element: ALLOWED, value: "CLOSE")
+  OPEN @vspec(element: ALLOWED, value: "OPEN")
+  ONE_SHOT_CLOSE @vspec(element: ALLOWED, value: "ONE_SHOT_CLOSE")
+  ONE_SHOT_OPEN @vspec(element: ALLOWED, value: "ONE_SHOT_OPEN")
+}
+
+enum Vehicle_Cabin_Door_Window_Switch_Enum {
+  INACTIVE @vspec(element: ALLOWED, value: "INACTIVE")
+  CLOSE @vspec(element: ALLOWED, value: "CLOSE")
+  OPEN @vspec(element: ALLOWED, value: "OPEN")
+  ONE_SHOT_CLOSE @vspec(element: ALLOWED, value: "ONE_SHOT_CLOSE")
+  ONE_SHOT_OPEN @vspec(element: ALLOWED, value: "ONE_SHOT_OPEN")
+}
+
+enum Acceleration_Unit_Enum @vspec(element: QUANTITY, value: "acceleration") {
+  CENTIMETERS_PER_SECOND_SQUARED @vspec(element: UNIT, value: "cm/s^2")
+  METERS_PER_SECOND_SQUARED @vspec(element: UNIT, value: "m/s^2")
+}
+
+enum Angle_Unit_Enum @vspec(element: QUANTITY, value: "angle") {
+  DEGREE @vspec(element: UNIT, value: "degrees")
+}
+
+enum Angularspeed_Unit_Enum @vspec(element: QUANTITY, value: "angular-speed") {
+  DEGREE_PER_SECOND @vspec(element: UNIT, value: "degrees/s")
+  RADIANS_PER_SECOND @vspec(element: UNIT, value: "radians/s")
+}
+
+enum Datetime_Unit_Enum @vspec(element: QUANTITY, value: "datetime") {
+  ISO_8601 @vspec(element: UNIT, value: "iso8601")
+  UNIX_TIMESTAMP @vspec(element: UNIT, value: "unix-time")
+}
+
+enum Distancepervolume_Unit_Enum @vspec(element: QUANTITY, value: "distance-per-volume") {
+  KILOMETERS_PER_LITER @vspec(element: UNIT, value: "km/l")
+  MILES_PER_GALLON @vspec(element: UNIT, value: "mpg")
+}
+
+enum Duration_Unit_Enum @vspec(element: QUANTITY, value: "duration") {
+  DAYS @vspec(element: UNIT, value: "day")
+  HOUR @vspec(element: UNIT, value: "h")
+  MILLISECOND @vspec(element: UNIT, value: "ms")
+  MINUTE @vspec(element: UNIT, value: "min")
+  MONTHS @vspec(element: UNIT, value: "months")
+  SECOND @vspec(element: UNIT, value: "s")
+  WEEKS @vspec(element: UNIT, value: "weeks")
+  YEARS @vspec(element: UNIT, value: "years")
+}
+
+enum Electriccharge_Unit_Enum @vspec(element: QUANTITY, value: "electric-charge") {
+  AMPERE_HOURS @vspec(element: UNIT, value: "Ah")
+}
+
+enum Electriccurrent_Unit_Enum @vspec(element: QUANTITY, value: "electric-current") {
+  AMPERE @vspec(element: UNIT, value: "A")
+}
+
+enum Energyconsumptionperdistance_Unit_Enum @vspec(element: QUANTITY, value: "energy-consumption-per-distance") {
+  KILOWATT_HOURS_PER_100_KILOMETERS @vspec(element: UNIT, value: "kWh/100km")
+  WATT_HOUR_PER_KM @vspec(element: UNIT, value: "Wh/km")
+}
+
+enum Force_Unit_Enum @vspec(element: QUANTITY, value: "force") {
+  KILO_NEWTON @vspec(element: UNIT, value: "kN")
+  NEWTON @vspec(element: UNIT, value: "N")
+}
+
+enum Frequency_Unit_Enum @vspec(element: QUANTITY, value: "frequency") {
+  BEATS_PER_MINUTE @vspec(element: UNIT, value: "bpm")
+  CYCLES_PER_MINUTE @vspec(element: UNIT, value: "cpm")
+  HERTZ @vspec(element: UNIT, value: "Hz")
+}
+
+enum Illuminance_Unit_Enum @vspec(element: QUANTITY, value: "illuminance") {
+  LUX @vspec(element: UNIT, value: "lx")
+}
+
+enum Length_Unit_Enum @vspec(element: QUANTITY, value: "length") {
+  CENTIMETER @vspec(element: UNIT, value: "cm")
+  INCH @vspec(element: UNIT, value: "inch")
+  KILOMETER @vspec(element: UNIT, value: "km")
+  METER @vspec(element: UNIT, value: "m")
+  MILLIMETER @vspec(element: UNIT, value: "mm")
+}
+
+enum Mass_Unit_Enum @vspec(element: QUANTITY, value: "mass") {
+  GRAM @vspec(element: UNIT, value: "g")
+  KILOGRAM @vspec(element: UNIT, value: "kg")
+  POUND @vspec(element: UNIT, value: "lbs")
+}
+
+enum Massperdistance_Unit_Enum @vspec(element: QUANTITY, value: "mass-per-distance") {
+  GRAMS_PER_KILOMETER @vspec(element: UNIT, value: "g/km")
+}
+
+enum Masspertime_Unit_Enum @vspec(element: QUANTITY, value: "mass-per-time") {
+  GRAMS_PER_SECOND @vspec(element: UNIT, value: "g/s")
+}
+
+enum Power_Unit_Enum @vspec(element: QUANTITY, value: "power") {
+  HORSEPOWER @vspec(element: UNIT, value: "PS")
+  KILOWATT @vspec(element: UNIT, value: "kW")
+  WATT @vspec(element: UNIT, value: "W")
+}
+
+enum Pressure_Unit_Enum @vspec(element: QUANTITY, value: "pressure") {
+  KILOPASCAL @vspec(element: UNIT, value: "kPa")
+  MILLIBAR @vspec(element: UNIT, value: "mbar")
+  PASCAL @vspec(element: UNIT, value: "Pa")
+  POUNDS_PER_SQUARE_INCH @vspec(element: UNIT, value: "psi")
+}
+
+enum Rating_Unit_Enum @vspec(element: QUANTITY, value: "rating") {
+  STARS @vspec(element: UNIT, value: "stars")
+}
+
+enum Relation_Unit_Enum @vspec(element: QUANTITY, value: "relation") {
+  DECIBEL @vspec(element: UNIT, value: "dB")
+  DECIBEL_MILLIWATT @vspec(element: UNIT, value: "dBm")
+  NANO_METER_PER_KILOMETER @vspec(element: UNIT, value: "nm/km")
+  PERCENT @vspec(element: UNIT, value: "percent")
+  RATIO @vspec(element: UNIT, value: "ratio")
+}
+
+enum Resistance_Unit_Enum @vspec(element: QUANTITY, value: "resistance") {
+  OHM @vspec(element: UNIT, value: "Ohm")
+}
+
+enum Rotationalspeed_Unit_Enum @vspec(element: QUANTITY, value: "rotational-speed") {
+  REVOLUTIONS_PER_MINUTE @vspec(element: UNIT, value: "rpm")
+}
+
+enum Temperature_Unit_Enum @vspec(element: QUANTITY, value: "temperature") {
+  DEGREE_CELSIUS @vspec(element: UNIT, value: "celsius")
+}
+
+enum Torque_Unit_Enum @vspec(element: QUANTITY, value: "torque") {
+  NEWTON_METER @vspec(element: UNIT, value: "Nm")
+}
+
+enum Velocity_Unit_Enum @vspec(element: QUANTITY, value: "velocity") {
+  KILOMETER_PER_HOUR @vspec(element: UNIT, value: "km/h")
+  METERS_PER_SECOND @vspec(element: UNIT, value: "m/s")
+}
+
+enum Voltage_Unit_Enum @vspec(element: QUANTITY, value: "voltage") {
+  VOLT @vspec(element: UNIT, value: "V")
+}
+
+enum Volume_Unit_Enum @vspec(element: QUANTITY, value: "volume") {
+  CUBIC_CENTIMETERS @vspec(element: UNIT, value: "cm^3")
+  LITER @vspec(element: UNIT, value: "l")
+  MILLILITER @vspec(element: UNIT, value: "ml")
+}
+
+enum Volumeflowrate_Unit_Enum @vspec(element: QUANTITY, value: "volume-flow-rate") {
+  LITER_PER_HOUR @vspec(element: UNIT, value: "l/h")
+}
+
+enum Volumeperdistance_Unit_Enum @vspec(element: QUANTITY, value: "volume-per-distance") {
+  LITER_PER_100_KILOMETERS @vspec(element: UNIT, value: "l/100km")
+  MILLILITER_PER_100_KILOMETERS @vspec(element: UNIT, value: "ml/100km")
+}
+
+enum Work_Unit_Enum @vspec(element: QUANTITY, value: "work") {
+  KILOWATT_HOURS @vspec(element: UNIT, value: "kWh")
+}

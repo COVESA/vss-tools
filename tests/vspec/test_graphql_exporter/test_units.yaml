@@ -1,0 +1,23 @@
+# Subset of units for testing purposes taken from vss specification 
+# <https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml>
+
+# Length
+mm:
+  definition: Length measured in millimeters
+  unit: millimeter
+  quantity: length
+  allowed-datatypes: ['numeric']
+
+# Angle
+degrees:
+  definition: Angle measured in degrees
+  unit: degree
+  quantity: angle
+  allowed-datatypes: ['numeric']
+
+# Relation
+percent:
+  definition: Relation measured in percent
+  unit: percent
+  quantity: relation
+  allowed-datatypes: ['numeric']
