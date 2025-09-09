@@ -1,0 +1,11 @@
+directive @vspec(element: VspecElementEnum!, value: String!) on OBJECT | FIELD_DEFINITION | ENUM | ENUM_VALUE
+
+enum VspecElementEnum {
+    TYPE
+    QUANTITY
+    UNIT
+    ALLOWED
+    INSTANCE_DEFINITION
+    INSTANCE_LABEL
+    DATATYPE
+}

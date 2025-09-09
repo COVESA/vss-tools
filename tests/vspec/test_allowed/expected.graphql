@@ -2,79 +2,79 @@ type Query {
   vehicle: A
 }
 
-scalar Int8
+scalar Int8 @vspec(element: DATATYPE, value: "int8")
 
-scalar UInt8
+scalar UInt8 @vspec(element: DATATYPE, value: "uint8")
 
-scalar Int16
+scalar Int16 @vspec(element: DATATYPE, value: "int16")
 
-scalar UInt16
+scalar UInt16 @vspec(element: DATATYPE, value: "uint16")
 
-scalar UInt32
+scalar UInt32 @vspec(element: DATATYPE, value: "uint32")
 
-scalar Int64
+scalar Int64 @vspec(element: DATATYPE, value: "int64")
 
-scalar UInt64
+scalar UInt64 @vspec(element: DATATYPE, value: "uint64")
 
 """Branch A."""
-type A {
+type A @vspec(element: TYPE, value: "branch") {
   """A float"""
-  float: A_Float_Enum
+  float: A_Float_Enum @vspec(element: TYPE, value: "actuator")
 
   """An int"""
-  int: A_Int_Enum
+  int: A_Int_Enum @vspec(element: TYPE, value: "actuator")
 
   """A string"""
-  string: A_String_Enum
+  string: A_String_Enum @vspec(element: TYPE, value: "sensor")
 
   """A string array"""
-  stringArray: [A_StringArray_Enum]
+  stringArray: [A_StringArray_Enum] @vspec(element: TYPE, value: "sensor")
 }
 
 enum A_Float_Enum {
-  _1_1
-  _2_54
-  _3
+  _1_1 @vspec(element: ALLOWED, value: "1.1")
+  _2_54 @vspec(element: ALLOWED, value: "2.54")
+  _3 @vspec(element: ALLOWED, value: "3")
 }
 
 enum A_Int_Enum {
-  _1
-  _2
-  _3
+  _1 @vspec(element: ALLOWED, value: "1")
+  _2 @vspec(element: ALLOWED, value: "2")
+  _3 @vspec(element: ALLOWED, value: "3")
 }
 
 enum A_String_Enum {
-  JANUARY
-  FEBRUARY
+  JANUARY @vspec(element: ALLOWED, value: "January")
+  FEBRUARY @vspec(element: ALLOWED, value: "February")
 }
 
 enum A_StringArray_Enum {
-  JANUARY
-  FEBRUARY
-  MARCH
+  JANUARY @vspec(element: ALLOWED, value: "January")
+  FEBRUARY @vspec(element: ALLOWED, value: "February")
+  MARCH @vspec(element: ALLOWED, value: "March")
 }
 
-enum Angularspeed_Unit_Enum {
-  DEGREE_PER_SECOND
+enum Angularspeed_Unit_Enum @vspec(element: QUANTITY, value: "angular-speed") {
+  DEGREE_PER_SECOND @vspec(element: UNIT, value: "degrees/s")
 }
 
-enum Distance_Unit_Enum {
-  METER
-  MILLIMETER
+enum Distance_Unit_Enum @vspec(element: QUANTITY, value: "distance") {
+  METER @vspec(element: UNIT, value: "m")
+  MILLIMETER @vspec(element: UNIT, value: "mm")
 }
 
-enum Length_Unit_Enum {
-  KILOMETER
+enum Length_Unit_Enum @vspec(element: QUANTITY, value: "length") {
+  KILOMETER @vspec(element: UNIT, value: "km")
 }
 
-enum Relation_Unit_Enum {
-  PERCENT
+enum Relation_Unit_Enum @vspec(element: QUANTITY, value: "relation") {
+  PERCENT @vspec(element: UNIT, value: "percent")
 }
 
-enum Rotationalspeed_Unit_Enum {
-  REVOLUTIONS_PER_MINUTE
+enum Rotationalspeed_Unit_Enum @vspec(element: QUANTITY, value: "rotational-speed") {
+  REVOLUTIONS_PER_MINUTE @vspec(element: UNIT, value: "rpm")
 }
 
-enum Temperature_Unit_Enum {
-  DEGREE_CELSIUS
+enum Temperature_Unit_Enum @vspec(element: QUANTITY, value: "temperature") {
+  DEGREE_CELSIUS @vspec(element: UNIT, value: "celsius")
 }

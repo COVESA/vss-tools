@@ -1,0 +1,107 @@
+Vehicle:
+  description: High-level vehicle data.
+  type: branch
+
+Vehicle.Cabin:
+  description: All in-cabin components, including doors.
+  type: branch
+
+Vehicle.Cabin.Door:
+  description: All doors, including windows and switches.
+  instances:
+    - Row[1,2]
+    - ["DriverSide","PassengerSide"]
+  type: branch
+
+Vehicle.Cabin.Door.IsChildLockActive:
+  datatype: boolean
+  description: Is door child lock active. True = Door cannot be opened from inside. False = Door can be opened from inside.
+  type: sensor
+
+Vehicle.Cabin.Door.IsLocked:
+  datatype: boolean
+  description: Is item locked or unlocked. True = Locked. False = Unlocked.
+  type: actuator
+
+Vehicle.Cabin.Door.IsOpen:
+  datatype: boolean
+  description: Is item open or closed? True = Fully or partially open. False = Fully closed.
+  type: actuator
+
+Vehicle.Cabin.Door.Position:
+  comment: Relationship between Open/Close and Start/End position is item dependent.
+  datatype: uint8
+  description: Item position. 0 = Start position 100 = End position.
+  max: 100
+  min: 0
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Door.Shade:
+  description: Side window shade. Open = Retracted, Closed = Deployed. Start position for Shade is Open/Retracted.
+  type: branch
+
+Vehicle.Cabin.Door.Shade.IsOpen:
+  datatype: boolean
+  description: Is item open or closed? True = Fully or partially open. False = Fully closed.
+  type: actuator
+
+Vehicle.Cabin.Door.Shade.Position:
+  comment: Relationship between Open/Close and Start/End position is item dependent.
+  datatype: uint8
+  description: Item position. 0 = Start position 100 = End position.
+  max: 100
+  min: 0
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Door.Shade.Switch:
+  allowed:
+  - INACTIVE
+  - CLOSE
+  - OPEN
+  - ONE_SHOT_CLOSE
+  - ONE_SHOT_OPEN
+  datatype: string
+  description: Switch controlling sliding action such as window, sunroof, or blind.
+  type: actuator
+
+Vehicle.Cabin.Door.Switch:
+  allowed:
+  - INACTIVE
+  - CLOSE
+  - OPEN
+  - ONE_SHOT_CLOSE
+  - ONE_SHOT_OPEN
+  datatype: string
+  description: Switch controlling sliding action such as window, sunroof, or blind.
+  type: actuator
+
+Vehicle.Cabin.Door.Window:
+  description: Door window status. Start position for Window is Closed.
+  type: branch
+
+Vehicle.Cabin.Door.Window.IsOpen:
+  datatype: boolean
+  description: Is item open or closed? True = Fully or partially open. False = Fully closed.
+  type: actuator
+
+Vehicle.Cabin.Door.Window.Position:
+  comment: Relationship between Open/Close and Start/End position is item dependent.
+  datatype: uint8
+  description: Item position. 0 = Start position 100 = End position.
+  max: 100
+  min: 0
+  type: actuator
+  unit: percent
+
+Vehicle.Cabin.Door.Window.Switch:
+  allowed:
+  - INACTIVE
+  - CLOSE
+  - OPEN
+  - ONE_SHOT_CLOSE
+  - ONE_SHOT_OPEN
+  datatype: string
+  description: Switch controlling sliding action such as window, sunroof, or blind.
+  type: actuator

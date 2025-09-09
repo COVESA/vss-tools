@@ -1,0 +1,838 @@
+Vehicle
+├── Powertrain
+│   ├── CombustionEngine
+│   │   ├── EngineCode
+│   │   ├── Displacement
+│   │   ├── StrokeLength
+│   │   ├── Bore
+│   │   ├── Configuration
+│   │   ├── NumberOfCylinders
+│   │   ├── NumberOfValvesPerCylinder
+│   │   ├── CompressionRatio
+│   │   ├── EngineOilCapacity
+│   │   ├── EngineCoolantCapacity
+│   │   ├── MaxPower
+│   │   ├── MaxTorque
+│   │   ├── AspirationType
+│   │   ├── EngineOilLevel
+│   │   ├── OilLifeRemaining
+│   │   ├── IsRunning
+│   │   ├── Speed
+│   │   ├── EngineHours
+│   │   ├── IdleHours
+│   │   ├── ECT
+│   │   ├── EOT
+│   │   ├── EngineOil
+│   │   │   ├── Capacity
+│   │   │   ├── Level
+│   │   │   ├── LifeRemaining
+│   │   │   └── Temperature
+│   │   ├── EngineCoolant
+│   │   │   ├── Capacity
+│   │   │   ├── Temperature
+│   │   │   ├── Level
+│   │   │   └── LifeRemaining
+│   │   ├── MAP
+│   │   ├── MAF
+│   │   ├── TPS
+│   │   ├── EOP
+│   │   ├── Power
+│   │   ├── Torque
+│   │   ├── DieselExhaustFluid
+│   │   │   ├── Capacity
+│   │   │   ├── Level
+│   │   │   ├── Range
+│   │   │   └── IsLevelLow
+│   │   └── DieselParticulateFilter
+│   │       ├── InletTemperature
+│   │       ├── OutletTemperature
+│   │       └── DeltaPressure
+│   ├── Transmission
+│   │   ├── Type
+│   │   ├── GearCount
+│   │   ├── DriveType
+│   │   ├── TravelledDistance
+│   │   ├── CurrentGear
+│   │   ├── SelectedGear
+│   │   ├── IsParkLockEngaged
+│   │   ├── IsLowRangeEngaged
+│   │   ├── IsElectricalPowertrainEngaged
+│   │   ├── PerformanceMode
+│   │   ├── GearChangeMode
+│   │   ├── Temperature
+│   │   ├── ClutchEngagement
+│   │   ├── ClutchWear
+│   │   ├── DiffLockFrontEngagement
+│   │   ├── DiffLockRearEngagement
+│   │   └── TorqueDistribution
+│   ├── ElectricMotor
+│   │   ├── EngineCode
+│   │   ├── MaxPower
+│   │   ├── MaxTorque
+│   │   ├── MaxRegenPower
+│   │   ├── MaxRegenTorque
+│   │   ├── Speed
+│   │   ├── TimeInUse
+│   │   ├── Temperature
+│   │   ├── CoolantTemperature
+│   │   ├── EngineCoolant
+│   │   │   ├── Capacity
+│   │   │   ├── Temperature
+│   │   │   ├── Level
+│   │   │   └── LifeRemaining
+│   │   ├── Power
+│   │   └── Torque
+│   ├── TractionBattery
+│   │   ├── Id
+│   │   ├── ProductionDate
+│   │   ├── ErrorCodes
+│   │   ├── IsPowerConnected
+│   │   ├── IsGroundConnected
+│   │   ├── Temperature
+│   │   │   ├── Average
+│   │   │   ├── Min
+│   │   │   ├── Max
+│   │   │   └── CellTemperature
+│   │   ├── CellVoltage
+│   │   │   ├── Min
+│   │   │   ├── IdMin
+│   │   │   ├── Max
+│   │   │   ├── IdMax
+│   │   │   └── CellVoltages
+│   │   ├── GrossCapacity
+│   │   ├── NetCapacity
+│   │   ├── StateOfHealth
+│   │   ├── StateOfCharge
+│   │   │   ├── Current
+│   │   │   ├── Displayed
+│   │   │   └── CurrentEnergy
+│   │   ├── NominalVoltage
+│   │   ├── MaxVoltage
+│   │   ├── CurrentVoltage
+│   │   ├── CurrentCurrent
+│   │   ├── CurrentPower
+│   │   ├── AccumulatedChargedEnergy
+│   │   ├── AccumulatedConsumedEnergy
+│   │   ├── AccumulatedChargedThroughput
+│   │   ├── AccumulatedConsumedThroughput
+│   │   ├── PowerLoss
+│   │   ├── Range
+│   │   ├── TimeRemaining
+│   │   ├── Charging
+│   │   │   ├── ChargingPort
+│   │   │   │   ├── SupportedInletTypes
+│   │   │   │   ├── IsFlapOpen
+│   │   │   │   ├── IsChargingCableConnected
+│   │   │   │   └── IsChargingCableLocked
+│   │   │   ├── ChargeLimit
+│   │   │   ├── MaximumChargingCurrent
+│   │   │   │   ├── DC
+│   │   │   │   ├── Phase1
+│   │   │   │   ├── Phase2
+│   │   │   │   └── Phase3
+│   │   │   ├── IsCharging
+│   │   │   ├── IsDischarging
+│   │   │   ├── StartStopCharging
+│   │   │   ├── ChargeCurrent
+│   │   │   │   ├── DC
+│   │   │   │   ├── Phase1
+│   │   │   │   ├── Phase2
+│   │   │   │   └── Phase3
+│   │   │   ├── ChargeVoltage
+│   │   │   │   ├── DC
+│   │   │   │   ├── Phase1
+│   │   │   │   ├── Phase2
+│   │   │   │   └── Phase3
+│   │   │   ├── AveragePower
+│   │   │   ├── MaxPower
+│   │   │   ├── EvseId
+│   │   │   ├── Location
+│   │   │   │   ├── Latitude
+│   │   │   │   ├── Longitude
+│   │   │   │   └── Altitude
+│   │   │   ├── PowerLoss
+│   │   │   ├── Temperature
+│   │   │   ├── ChargeRate
+│   │   │   ├── TimeToComplete
+│   │   │   └── Timer
+│   │   │       ├── Mode
+│   │   │       └── Time
+│   │   ├── DCDC
+│   │   │   ├── PowerLoss
+│   │   │   └── Temperature
+│   │   └── BatteryConditioning
+│   │       ├── IsActive
+│   │       ├── IsOngoing
+│   │       ├── RequestedMode
+│   │       ├── StartTime
+│   │       ├── TargetTime
+│   │       └── TargetTemperature
+│   ├── FuelSystem
+│   │   ├── SupportedFuelTypes
+│   │   ├── SupportedFuel
+│   │   ├── HybridType
+│   │   ├── TankCapacity
+│   │   ├── AbsoluteLevel
+│   │   ├── RelativeLevel
+│   │   ├── Range
+│   │   ├── TimeRemaining
+│   │   ├── InstantConsumption
+│   │   ├── AverageConsumption
+│   │   ├── ConsumptionSinceStart
+│   │   ├── ConsumptionSinceLastRefuel
+│   │   ├── IsEngineStopStartEnabled
+│   │   ├── IsFuelLevelLow
+│   │   ├── RefuelPortPosition
+│   │   └── IsFuelPortFlapOpen
+│   ├── AccumulatedBrakingEnergy
+│   ├── Range
+│   ├── TimeRemaining
+│   ├── Type
+│   ├── PowerOptimizeLevel
+│   └── IsAutoPowerOptimize
+├── Body
+│   ├── BodyType
+│   ├── Hood
+│   │   ├── IsOpen
+│   │   ├── Position
+│   │   └── Switch
+│   ├── Trunk
+│   │   ├── IsLightOn
+│   │   ├── IsLocked
+│   │   ├── IsOpen
+│   │   ├── Position
+│   │   └── Switch
+│   ├── Horn
+│   │   └── IsActive
+│   ├── Raindetection
+│   │   └── Intensity
+│   ├── Windshield
+│   │   ├── Wiping
+│   │   │   ├── Mode
+│   │   │   ├── Intensity
+│   │   │   ├── System
+│   │   │   │   ├── Mode
+│   │   │   │   ├── Frequency
+│   │   │   │   ├── TargetPosition
+│   │   │   │   ├── ActualPosition
+│   │   │   │   ├── DriveCurrent
+│   │   │   │   ├── IsWiping
+│   │   │   │   ├── IsEndingWipeCycle
+│   │   │   │   ├── IsWiperError
+│   │   │   │   ├── IsPositionReached
+│   │   │   │   ├── IsBlocked
+│   │   │   │   └── IsOverheated
+│   │   │   ├── WiperWear
+│   │   │   └── IsWipersWorn
+│   │   ├── IsHeatingOn
+│   │   └── WasherFluid
+│   │       ├── IsLevelLow
+│   │       └── Level
+│   ├── Lights
+│   │   ├── LightSwitch
+│   │   ├── IsHighBeamSwitchOn
+│   │   ├── Beam
+│   │   │   ├── IsOn
+│   │   │   └── IsDefect
+│   │   ├── Running
+│   │   │   ├── IsOn
+│   │   │   └── IsDefect
+│   │   ├── Backup
+│   │   │   ├── IsOn
+│   │   │   └── IsDefect
+│   │   ├── Parking
+│   │   │   ├── IsOn
+│   │   │   └── IsDefect
+│   │   ├── Fog
+│   │   │   ├── IsOn
+│   │   │   └── IsDefect
+│   │   ├── LicensePlate
+│   │   │   ├── IsOn
+│   │   │   └── IsDefect
+│   │   ├── Brake
+│   │   │   ├── IsActive
+│   │   │   └── IsDefect
+│   │   ├── Hazard
+│   │   │   ├── IsSignaling
+│   │   │   └── IsDefect
+│   │   └── DirectionIndicator
+│   │       ├── IsSignaling
+│   │       └── IsDefect
+│   ├── Mirrors
+│   │   ├── Tilt
+│   │   ├── Pan
+│   │   ├── IsHeatingOn
+│   │   ├── IsLocked
+│   │   └── IsFolded
+│   ├── RearMainSpoilerPosition
+│   ├── PowerOptimizeLevel
+│   └── IsAutoPowerOptimize
+├── Cabin
+│   ├── RearShade
+│   │   ├── IsOpen
+│   │   ├── Position
+│   │   └── Switch
+│   ├── HVAC
+│   │   ├── Station
+│   │   │   ├── FanSpeed
+│   │   │   ├── Temperature
+│   │   │   └── AirDistribution
+│   │   ├── IsRecirculationActive
+│   │   ├── IsFrontDefrosterActive
+│   │   ├── IsRearDefrosterActive
+│   │   ├── IsAirConditioningActive
+│   │   ├── AmbientAirTemperature
+│   │   ├── PowerOptimizeLevel
+│   │   └── IsAutoPowerOptimize
+│   ├── Infotainment
+│   │   ├── Media
+│   │   │   ├── Action
+│   │   │   ├── Played
+│   │   │   │   ├── Source
+│   │   │   │   ├── Genre
+│   │   │   │   ├── Artist
+│   │   │   │   ├── Album
+│   │   │   │   ├── Track
+│   │   │   │   ├── URI
+│   │   │   │   └── PlaybackRate
+│   │   │   ├── DeclinedURI
+│   │   │   ├── SelectedURI
+│   │   │   └── Volume
+│   │   ├── Navigation
+│   │   │   ├── DestinationSet
+│   │   │   │   ├── Latitude
+│   │   │   │   └── Longitude
+│   │   │   ├── Mute
+│   │   │   ├── Volume
+│   │   │   ├── GuidanceVoice
+│   │   │   └── Map
+│   │   │       └── IsAutoScaleModeUsed
+│   │   ├── HMI
+│   │   │   ├── CurrentLanguage
+│   │   │   ├── FontSize
+│   │   │   ├── DateFormat
+│   │   │   ├── TimeFormat
+│   │   │   ├── DistanceUnit
+│   │   │   ├── FuelVolumeUnit
+│   │   │   ├── FuelEconomyUnits
+│   │   │   ├── EVEconomyUnits
+│   │   │   ├── TemperatureUnit
+│   │   │   ├── TirePressureUnit
+│   │   │   ├── SpeedUnit
+│   │   │   ├── EVEnergyUnits
+│   │   │   ├── Brightness
+│   │   │   ├── DayNightMode
+│   │   │   ├── IsScreenAlwaysOn
+│   │   │   ├── LastActionTime
+│   │   │   └── DisplayOffDuration
+│   │   ├── SmartphoneProjection
+│   │   │   ├── Active
+│   │   │   ├── Source
+│   │   │   └── SupportedMode
+│   │   ├── SmartphoneScreenMirroring
+│   │   │   ├── Active
+│   │   │   └── Source
+│   │   ├── PowerOptimizeLevel
+│   │   └── IsAutoPowerOptimize
+│   ├── Sunroof
+│   │   ├── Position
+│   │   ├── Switch
+│   │   └── Shade
+│   │       ├── IsOpen
+│   │       ├── Position
+│   │       └── Switch
+│   ├── RearviewMirror
+│   │   └── DimmingLevel
+│   ├── Light
+│   │   ├── IsGloveBoxOn
+│   │   ├── IsDomeOn
+│   │   ├── PerceivedAmbientLight
+│   │   ├── Spotlight
+│   │   │   ├── IsLightOn
+│   │   │   ├── Intensity
+│   │   │   └── Color
+│   │   ├── AmbientLight
+│   │   │   ├── IsLightOn
+│   │   │   ├── Intensity
+│   │   │   └── Color
+│   │   └── InteractiveLightBar
+│   │       ├── Effect
+│   │       ├── IsLightOn
+│   │       ├── Intensity
+│   │       └── Color
+│   ├── Door
+│   │   ├── Window
+│   │   │   ├── IsOpen
+│   │   │   ├── Position
+│   │   │   └── Switch
+│   │   ├── IsChildLockActive
+│   │   ├── Shade
+│   │   │   ├── IsOpen
+│   │   │   ├── Position
+│   │   │   └── Switch
+│   │   ├── IsLocked
+│   │   ├── IsOpen
+│   │   ├── Position
+│   │   └── Switch
+│   ├── DoorCount
+│   ├── IsWindowChildLockEngaged
+│   ├── Seat
+│   │   ├── OccupancyStatus
+│   │   ├── Occupant
+│   │   │   └── Identifier
+│   │   │       ├── Subject
+│   │   │       └── Issuer
+│   │   ├── IsBelted
+│   │   ├── SeatBeltHeight
+│   │   ├── Massage
+│   │   │   ├── IsAvailable
+│   │   │   ├── Level
+│   │   │   ├── Status
+│   │   │   ├── SupportedTypes
+│   │   │   └── TypeActive
+│   │   ├── Position
+│   │   ├── Height
+│   │   ├── Tilt
+│   │   ├── Backrest
+│   │   │   ├── Recline
+│   │   │   ├── Lumbar
+│   │   │   │   ├── Support
+│   │   │   │   └── Height
+│   │   │   ├── LumbarSupport
+│   │   │   ├── TopLumbarSupport
+│   │   │   ├── MidLumbarSupport
+│   │   │   ├── BottomLumbarSupport
+│   │   │   ├── LumbarHeight
+│   │   │   ├── SideBolster
+│   │   │   │   └── Support
+│   │   │   ├── SideBolsterSupport
+│   │   │   ├── SideBolsterSupportLeft
+│   │   │   ├── SideBolsterSupportRight
+│   │   │   ├── UpperShoulderSupport
+│   │   │   ├── IsReclineForwardSwitchEngaged
+│   │   │   ├── IsReclineBackwardSwitchEngaged
+│   │   │   ├── IsMoreLumbarSupportSwitchEngaged
+│   │   │   ├── IsLessLumbarSupportSwitchEngaged
+│   │   │   ├── IsLumbarUpSwitchEngaged
+│   │   │   ├── IsLumbarDownSwitchEngaged
+│   │   │   ├── IsMoreSideBolsterSupportSwitchEngaged
+│   │   │   ├── IsLessSideBolsterSupportSwitchEngaged
+│   │   │   └── HeatingCooling
+│   │   ├── Seating
+│   │   │   ├── Length
+│   │   │   ├── SideBolsterSupportRight
+│   │   │   ├── SideBolsterSupportLeft
+│   │   │   ├── IsForwardSwitchEngaged
+│   │   │   ├── IsBackwardSwitchEngaged
+│   │   │   └── HeatingCooling
+│   │   ├── Headrest
+│   │   │   ├── Height
+│   │   │   ├── Angle
+│   │   │   ├── IsUpSwitchEngaged
+│   │   │   ├── IsDownSwitchEngaged
+│   │   │   ├── IsForwardSwitchEngaged
+│   │   │   └── IsBackwardSwitchEngaged
+│   │   ├── Airbag
+│   │   │   ├── IsEnabled
+│   │   │   └── IsDeployed
+│   │   ├── NeckScarf
+│   │   │   ├── HeatingCooling
+│   │   │   └── FanSpeed
+│   │   ├── Switch
+│   │   │   ├── IsWarmerEngaged
+│   │   │   ├── IsCoolerEngaged
+│   │   │   ├── IsForwardEngaged
+│   │   │   ├── IsBackwardEngaged
+│   │   │   ├── IsUpEngaged
+│   │   │   ├── IsDownEngaged
+│   │   │   ├── IsTiltForwardEngaged
+│   │   │   ├── IsTiltBackwardEngaged
+│   │   │   ├── Backrest
+│   │   │   │   ├── IsReclineForwardEngaged
+│   │   │   │   ├── IsReclineBackwardEngaged
+│   │   │   │   ├── Lumbar
+│   │   │   │   │   ├── IsMoreSupportEngaged
+│   │   │   │   │   ├── IsLessSupportEngaged
+│   │   │   │   │   ├── IsUpEngaged
+│   │   │   │   │   └── IsDownEngaged
+│   │   │   │   └── SideBolster
+│   │   │   │       ├── IsMoreSupportEngaged
+│   │   │   │       └── IsLessSupportEngaged
+│   │   │   ├── Seating
+│   │   │   │   ├── IsForwardEngaged
+│   │   │   │   └── IsBackwardEngaged
+│   │   │   ├── Headrest
+│   │   │   │   ├── IsUpEngaged
+│   │   │   │   ├── IsDownEngaged
+│   │   │   │   ├── IsForwardEngaged
+│   │   │   │   └── IsBackwardEngaged
+│   │   │   └── Massage
+│   │   │       ├── IsIncreaseEngaged
+│   │   │       └── IsDecreaseEngaged
+│   │   ├── IsWarmerSwitchEngaged
+│   │   ├── IsCoolerSwitchEngaged
+│   │   ├── IsForwardSwitchEngaged
+│   │   ├── IsBackwardSwitchEngaged
+│   │   ├── IsUpSwitchEngaged
+│   │   ├── IsDownSwitchEngaged
+│   │   ├── IsTiltForwardSwitchEngaged
+│   │   ├── IsTiltBackwardSwitchEngaged
+│   │   ├── IsIncreaseMassageLevelSwitchEngaged
+│   │   ├── IsDecreaseMassageLevelSwitchEngaged
+│   │   └── HeatingCooling
+│   ├── DriverPosition
+│   ├── SeatRowCount
+│   ├── SeatPosCount
+│   ├── Convertible
+│   │   └── Status
+│   ├── PowerOptimizeLevel
+│   └── IsAutoPowerOptimize
+├── ADAS
+│   ├── ActiveAutonomyLevel
+│   ├── SupportedAutonomyLevel
+│   ├── CruiseControl
+│   │   ├── IsEnabled
+│   │   ├── IsActive
+│   │   ├── SpeedSet
+│   │   ├── IsError
+│   │   ├── IsAdaptive
+│   │   ├── AdaptiveDistanceSet
+│   │   └── AdaptiveIntervalSet
+│   ├── LaneDepartureDetection
+│   │   ├── IsEnabled
+│   │   ├── IsWarning
+│   │   └── IsError
+│   ├── ObstacleDetection
+│   │   ├── IsEnabled
+│   │   ├── IsWarning
+│   │   ├── IsError
+│   │   ├── Distance
+│   │   ├── TimeGap
+│   │   └── WarningType
+│   ├── ABS
+│   │   ├── IsEnabled
+│   │   ├── IsError
+│   │   └── IsEngaged
+│   ├── TCS
+│   │   ├── IsEnabled
+│   │   ├── IsError
+│   │   └── IsEngaged
+│   ├── ESC
+│   │   ├── IsEnabled
+│   │   ├── IsError
+│   │   ├── IsEngaged
+│   │   ├── IsStrongCrossWindDetected
+│   │   └── RoadFriction
+│   │       ├── MostProbable
+│   │       ├── LowerBound
+│   │       └── UpperBound
+│   ├── EBD
+│   │   ├── IsEnabled
+│   │   ├── IsError
+│   │   └── IsEngaged
+│   ├── EBA
+│   │   ├── IsEnabled
+│   │   ├── IsError
+│   │   └── IsEngaged
+│   ├── DMS
+│   │   ├── IsEnabled
+│   │   ├── IsWarning
+│   │   └── IsError
+│   ├── PowerOptimizeLevel
+│   └── IsAutoPowerOptimize
+├── Chassis
+│   ├── Wheelbase
+│   ├── Axle
+│   │   ├── TreadWidth
+│   │   ├── TrackWidth
+│   │   ├── AxleWidth
+│   │   ├── WheelCount
+│   │   ├── WheelDiameter
+│   │   ├── WheelWidth
+│   │   ├── SteeringAngle
+│   │   ├── TireDiameter
+│   │   ├── TireWidth
+│   │   ├── TireAspectRatio
+│   │   └── Wheel
+│   │       ├── Brake
+│   │       │   ├── FluidLevel
+│   │       │   ├── IsFluidLevelLow
+│   │       │   ├── PadWear
+│   │       │   └── IsBrakesWorn
+│   │       ├── Tire
+│   │       │   ├── Pressure
+│   │       │   ├── IsPressureLow
+│   │       │   └── Temperature
+│   │       ├── Speed
+│   │       └── AngularSpeed
+│   ├── AxleCount
+│   ├── ParkingBrake
+│   │   ├── IsEngaged
+│   │   └── IsAutoApplyEnabled
+│   ├── SteeringWheel
+│   │   ├── Angle
+│   │   ├── Tilt
+│   │   ├── Extension
+│   │   └── HeatingCooling
+│   ├── Accelerator
+│   │   └── PedalPosition
+│   └── Brake
+│       ├── PedalPosition
+│       └── IsDriverEmergencyBrakingDetected
+├── OBD
+│   ├── PidsA
+│   ├── PidsB
+│   ├── PidsC
+│   ├── Status
+│   │   ├── IsMILOn
+│   │   ├── DTCCount
+│   │   └── IgnitionType
+│   ├── DTCList
+│   ├── FreezeDTC
+│   ├── FuelStatus
+│   ├── EngineLoad
+│   ├── CoolantTemperature
+│   ├── ShortTermFuelTrim1
+│   ├── LongTermFuelTrim1
+│   ├── ShortTermFuelTrim2
+│   ├── LongTermFuelTrim2
+│   ├── FuelPressure
+│   ├── MAP
+│   ├── EngineSpeed
+│   ├── Speed
+│   ├── TimingAdvance
+│   ├── IntakeTemp
+│   ├── MAF
+│   ├── ThrottlePosition
+│   ├── AirStatus
+│   ├── OxygenSensorsIn2Banks
+│   ├── O2
+│   │   ├── Voltage
+│   │   └── ShortTermFuelTrim
+│   ├── OBDStandards
+│   ├── OxygenSensorsIn4Banks
+│   ├── IsPTOActive
+│   ├── RunTime
+│   ├── DistanceWithMIL
+│   ├── FuelRailPressureVac
+│   ├── FuelRailPressureDirect
+│   ├── O2WR
+│   │   ├── Lambda
+│   │   ├── Voltage
+│   │   └── Current
+│   ├── CommandedEGR
+│   ├── EGRError
+│   ├── CommandedEVAP
+│   ├── FuelLevel
+│   ├── WarmupsSinceDTCClear
+│   ├── DistanceSinceDTCClear
+│   ├── EVAPVaporPressure
+│   ├── BarometricPressure
+│   ├── Catalyst
+│   │   ├── Bank1
+│   │   │   ├── Temperature1
+│   │   │   └── Temperature2
+│   │   └── Bank2
+│   │       ├── Temperature1
+│   │       └── Temperature2
+│   ├── DriveCycleStatus
+│   │   ├── IsMILOn
+│   │   ├── DTCCount
+│   │   └── IgnitionType
+│   ├── ControlModuleVoltage
+│   ├── AbsoluteLoad
+│   ├── CommandedEquivalenceRatio
+│   ├── RelativeThrottlePosition
+│   ├── AmbientAirTemperature
+│   ├── ThrottlePositionB
+│   ├── ThrottlePositionC
+│   ├── AcceleratorPositionD
+│   ├── AcceleratorPositionE
+│   ├── AcceleratorPositionF
+│   ├── ThrottleActuator
+│   ├── RunTimeMIL
+│   ├── TimeSinceDTCCleared
+│   ├── MaxMAF
+│   ├── FuelType
+│   ├── EthanolPercent
+│   ├── EVAPVaporPressureAbsolute
+│   ├── EVAPVaporPressureAlternate
+│   ├── ShortTermO2Trim1
+│   ├── ShortTermO2Trim3
+│   ├── LongTermO2Trim1
+│   ├── LongTermO2Trim3
+│   ├── ShortTermO2Trim2
+│   ├── ShortTermO2Trim4
+│   ├── LongTermO2Trim2
+│   ├── LongTermO2Trim4
+│   ├── FuelRailPressureAbsolute
+│   ├── RelativeAcceleratorPosition
+│   ├── HybridBatteryRemaining
+│   ├── OilTemperature
+│   ├── FuelInjectionTiming
+│   └── FuelRate
+├── Driver
+│   ├── Identifier
+│   │   ├── Subject
+│   │   └── Issuer
+│   ├── DistractionLevel
+│   ├── IsEyesOnRoad
+│   ├── IsHandsOnWheel
+│   ├── AttentiveProbability
+│   ├── FatigueLevel
+│   └── HeartRate
+├── Occupant
+│   ├── Identifier
+│   │   ├── Subject
+│   │   └── Issuer
+│   ├── HeadPosition
+│   │   ├── X
+│   │   ├── Y
+│   │   ├── Z
+│   │   ├── Yaw
+│   │   ├── Pitch
+│   │   └── Roll
+│   └── MidEyeGaze
+│       ├── Azimuth
+│       └── Elevation
+├── Exterior
+│   ├── AirTemperature
+│   ├── Humidity
+│   └── LightIntensity
+├── Service
+│   ├── IsServiceDue
+│   ├── DistanceToService
+│   └── TimeToService
+├── Connectivity
+│   └── IsConnectivityAvailable
+├── VersionVSS
+│   ├── Major
+│   ├── Minor
+│   ├── Patch
+│   └── Label
+├── VehicleIdentification
+│   ├── VIN
+│   ├── WMI
+│   ├── Brand
+│   ├── Model
+│   ├── Year
+│   ├── AcrissCode
+│   ├── BodyType
+│   ├── DateVehicleFirstRegistered
+│   ├── LicensePlate
+│   ├── MeetsEmissionStandard
+│   ├── ProductionDate
+│   ├── PurchaseDate
+│   ├── VehicleModelDate
+│   ├── VehicleConfiguration
+│   ├── VehicleSeatingCapacity
+│   ├── VehicleSpecialUsage
+│   ├── VehicleExteriorColor
+│   ├── VehicleInteriorColor
+│   ├── VehicleInteriorType
+│   ├── KnownVehicleDamages
+│   └── OptionalExtras
+├── LowVoltageSystemState
+├── LowVoltageBattery
+│   ├── NominalVoltage
+│   ├── NominalCapacity
+│   ├── CurrentVoltage
+│   └── CurrentCurrent
+├── Speed
+├── TraveledDistance
+├── TraveledDistanceSinceStart
+├── StartTime
+├── TripDuration
+├── TripMeterReading
+├── IsBrokenDown
+├── IsMoving
+├── AverageSpeed
+├── Acceleration
+│   ├── Longitudinal
+│   ├── Lateral
+│   └── Vertical
+├── AngularVelocity
+│   ├── Roll
+│   ├── Pitch
+│   └── Yaw
+├── RoofLoad
+├── CargoVolume
+├── EmissionsCO2
+├── CurrentOverallWeight
+├── CurbWeight
+├── GrossWeight
+├── MaxTowWeight
+├── MaxTowBallWeight
+├── Length
+├── Height
+├── WidthExcludingMirrors
+├── WidthIncludingMirrors
+├── WidthFoldedMirrors
+├── TurningDiameter
+├── Trailer
+│   └── IsConnected
+├── CurrentLocation
+│   ├── Timestamp
+│   ├── Latitude
+│   ├── Longitude
+│   ├── Heading
+│   ├── HorizontalAccuracy
+│   ├── Altitude
+│   ├── VerticalAccuracy
+│   └── GNSSReceiver
+│       ├── FixType
+│       └── MountingPosition
+│           ├── X
+│           ├── Y
+│           └── Z
+├── PowerOptimizeLevel
+├── IsAutoPowerOptimize
+├── Diagnostics
+│   ├── DTCCount
+│   └── DTCList
+└── MotionManagement
+    ├── ElectricAxle
+    │   ├── Torque
+    │   ├── TorqueTarget
+    │   ├── TorqueMaximum
+    │   ├── TorqueMinimum
+    │   ├── TorqueMaximumLimit
+    │   ├── TorqueMinimumLimit
+    │   ├── RotationalSpeed
+    │   ├── RotationalSpeedTarget
+    │   ├── RotationalSpeedMaximumLimit
+    │   └── RotationalSpeedMinimumLimit
+    ├── Brake
+    │   ├── VehicleForceMaximum
+    │   ├── VehicleForceElectricMinimumArbitrated
+    │   ├── VehicleForceElectric
+    │   ├── VehicleForceDistributionFrontMaximum
+    │   ├── VehicleForceDistributionFrontMinimum
+    │   └── Axle
+    │       ├── TorqueElectricMinimum
+    │       ├── TorqueFrictionDifferenceMaximum
+    │       ├── TorqueDistributionFrictionRightMaximum
+    │       ├── TorqueDistributionFrictionRightMinimum
+    │       └── Wheel
+    │           ├── Torque
+    │           ├── TorqueArbitrated
+    │           ├── TorqueFrictionMaximum
+    │           ├── TorqueFrictionMinimum
+    │           ├── OmegaUpper
+    │           └── OmegaLower
+    └── Steering
+        ├── SteeringWheel
+        │   ├── Angle
+        │   ├── AngleTarget
+        │   ├── AngleTargetMode
+        │   ├── TorqueOffsetTarget
+        │   ├── TorqueOffsetTargetMode
+        │   ├── TorqueTarget
+        │   ├── TorqueTargetMode
+        │   └── Torque
+        └── Axle
+            ├── RackPositionOffsetTarget
+            ├── RackPositionOffsetTargetMode
+            ├── RackPosition
+            ├── RackPositionTarget
+            └── RackPositionTargetMode
