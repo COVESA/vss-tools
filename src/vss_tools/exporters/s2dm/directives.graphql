@@ -20,6 +20,8 @@ enum VspecElementKind {
   INSTANCE_LABEL
   ALLOWED_VALUE
   QUANTITY_KIND
+  """Fully Qualified Name (i.e., the path)"""
+  FQN
 }
 
 enum VspecType {
