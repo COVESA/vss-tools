@@ -78,7 +78,7 @@ class TestS2DMExporter:
             expand=False,
         )
         
-        schema, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree)
         
         # Check that schema is valid
         assert schema is not None
@@ -117,7 +117,7 @@ class TestS2DMExporter:
             expand=False,
         )
         
-        schema, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree)
         schema_str = print_schema(schema)
         
         # Check that output contains expected elements
@@ -145,7 +145,7 @@ class TestS2DMExporter:
             expand=False,
         )
         
-        schema, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree)
         schema_str = print_schema(schema)
         
         # Check that unit enums are generated
@@ -178,8 +178,10 @@ class TestS2DMExporter:
             expand=False,
         )
         
-        schema, unit_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
-        schema_str = print_schema_with_vspec_directives(schema, unit_enums_metadata, vspec_comments)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema_str = print_schema_with_vspec_directives(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+        )
         
         # Check that field comments are captured
         assert len(vspec_comments['field_comments']) > 0
@@ -187,8 +189,8 @@ class TestS2DMExporter:
         # Check that type comments are captured
         assert len(vspec_comments['type_comments']) > 0
         
-        # Check that @vspec comment directives appear in the output
-        assert '@vspec(comment:' in schema_str
+        # Check that @vspec comment directives appear in the output with new consolidated format
+        assert 'comment: "Affects the property (SingleSeat.Position)."' in schema_str
         
         # Check for specific field comment directive
         assert 'Affects the property (SingleSeat.Position)' in schema_str
@@ -210,8 +212,10 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
-        sdl = print_schema_with_vspec_directives(schema, unit_enums_metadata, vspec_comments)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        sdl = print_schema_with_vspec_directives(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+        )
         
         # Test @deprecated directive for massage field
         assert '@deprecated(reason: "v5.0 - refactored to Seat.MassageLevel")' in sdl
@@ -256,8 +260,10 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
-        sdl = print_schema_with_vspec_directives(schema, unit_enums_metadata, vspec_comments)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        sdl = print_schema_with_vspec_directives(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+        )
         
         # Test that instance tag type is created
         assert 'type Vehicle_Cabin_Seat_InstanceTag @instanceTag' in sdl
@@ -315,7 +321,7 @@ class TestS2DMExporter:
         )
         
         # Generate schema
-        schema, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree)
         schema_sdl = print_schema(schema)
         
         # Check that allowed value enums were generated (test.vspec has multiple fields with allowed values)

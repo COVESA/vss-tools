@@ -236,11 +236,11 @@ def cli(
         log.info("Generating S2DM GraphQL schema...")
 
         # Generate the schema
-        schema, unit_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
         
         # Write to output file with custom @vspec directives
         with open(output, "w") as outfile:
-            outfile.write(print_schema_with_vspec_directives(schema, unit_enums_metadata, vspec_comments))
+            outfile.write(print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments))
 
         log.info(f"S2DM GraphQL schema written to {output}")
 
@@ -286,7 +286,7 @@ def generate_s2dm_schema(tree: VSSNode) -> tuple[GraphQLSchema, dict, dict]:
     instance_types = generate_instance_types_and_enums(branches_df, vspec_comments)
     
     # Generate allowed value enums
-    allowed_enums = generate_allowed_value_enums(leaves_df)
+    allowed_enums, allowed_enums_metadata = generate_allowed_value_enums(leaves_df)
     
     # Add instance types and allowed enums to types_registry so they can be referenced
     types_registry.update(instance_types)
@@ -322,7 +322,7 @@ def generate_s2dm_schema(tree: VSSNode) -> tuple[GraphQLSchema, dict, dict]:
         directives=[VSpecDirective, RangeDirective, DeprecatedDirective, InstanceTagDirective],
     )
     
-    return schema, unit_enums_metadata, vspec_comments
+    return schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
 
 
 def create_object_type(
@@ -559,7 +559,12 @@ def get_unit_enum_for_quantity(quantity: str, unit_enums: dict[str, GraphQLEnumT
     return unit_enums.get(quantity)
 
 
-def print_schema_with_vspec_directives(schema: GraphQLSchema, unit_enums_metadata: dict, vspec_comments: dict) -> str:
+def print_schema_with_vspec_directives(
+    schema: GraphQLSchema, 
+    unit_enums_metadata: dict, 
+    allowed_enums_metadata: dict, 
+    vspec_comments: dict
+) -> str:
     """
     Custom schema printer that includes @vspec directives.
     
@@ -578,6 +583,9 @@ def print_schema_with_vspec_directives(schema: GraphQLSchema, unit_enums_metadat
     # Process unit enum directives - maintain exact original logic
     processed_enum_values = set()
     lines = _process_unit_enum_directives(lines, unit_enums_metadata, processed_enum_values)
+    
+    # Process allowed value enum directives
+    lines = _process_allowed_value_enum_directives(lines, allowed_enums_metadata, processed_enum_values)
     
     # Process all field @vspec directives in one consolidated step
     lines = _process_consolidated_vspec_directives(lines, vspec_comments)
@@ -629,6 +637,44 @@ def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, p
                             directive = (f'@vspec(source: {{kind: UNIT, value: "{unit_key}", '
                                         f'note: "Taken and converted from full name <{unit_name}>."}})') 
                             lines[i] = f'{indent}{enum_value_name} {directive}'
+                        
+                        processed_enum_values.add(enum_value_key)
+                        break
+    return lines
+
+
+def _process_allowed_value_enum_directives(
+    lines: list[str], allowed_enums_metadata: dict, processed_enum_values: set
+) -> list[str]:
+    """Process allowed value enum directives."""
+    for enum_name, enum_data in allowed_enums_metadata.items():
+        allowed_values_dict = enum_data.get('allowed_values', {})
+        in_target_enum = False
+        for i, line in enumerate(lines):
+            if line.strip().startswith(f'enum {enum_name}'):
+                # Don't add directive to enum declaration for allowed values
+                in_target_enum = True
+                continue
+            elif line.strip().startswith('enum ') and in_target_enum:
+                in_target_enum = False
+                continue
+            elif line.strip() == '}' and in_target_enum:
+                in_target_enum = False
+                continue
+            
+            if in_target_enum and line.strip() and not line.strip().startswith('"'):
+                stripped_line = line.strip()
+                
+                for graphql_enum_value, original_value in allowed_values_dict.items():
+                    enum_value_key = f"{enum_name}.{graphql_enum_value}"
+                    
+                    if (stripped_line.startswith(graphql_enum_value) and 
+                        enum_value_key not in processed_enum_values):
+                        
+                        if '@vspec' not in line:
+                            indent = line[:len(line) - len(line.lstrip())]
+                            directive = f'@vspec(source: {{kind: ALLOWED_VALUE, value: "{original_value}"}})'
+                            lines[i] = f'{indent}{graphql_enum_value} {directive}'
                         
                         processed_enum_values.add(enum_value_key)
                         break
@@ -1082,9 +1128,12 @@ def generate_allowed_value_enums(leaves_df):
     Generate GraphQL enums for VSS fields with allowed values.
     
     Returns:
-        dict: Dictionary mapping enum names to GraphQL enum types
+        tuple: (allowed_enums dict, allowed_enums_metadata dict)
+               allowed_enums: Dictionary mapping enum names to GraphQL enum types
+               allowed_enums_metadata: Dictionary mapping enum names to their VSS metadata
     """
     allowed_enums = {}
+    allowed_enums_metadata = {}
     
     # Find all leaves with allowed values
     leaves_with_allowed = leaves_df[leaves_df['allowed'].notna()]
@@ -1095,17 +1144,29 @@ def generate_allowed_value_enums(leaves_df):
             # Generate enum name from FQN
             enum_name = f"{convert_to_graphql_type_name(fqn)}_Enum"
             
+            # Store metadata for @vspec directive generation
+            allowed_enums_metadata[enum_name] = {
+                'fqn': fqn,
+                'allowed_values': {}
+            }
+            
             # Create GraphQL enum values
             graphql_values = {}
             for value in allowed_values:
                 # Convert all values to strings and ensure they're valid GraphQL enum names
                 value_str = str(value)
+                original_value = value_str  # Store original for @vspec directive
+                
                 # GraphQL enum values must start with a letter or underscore
                 if value_str[0].isdigit():
                     value_str = f"_{value_str}"
                 # Replace any invalid characters
                 value_str = value_str.replace(".", "_DOT_").replace("-", "_DASH_")
+                
                 graphql_values[value_str] = GraphQLEnumValue(value)
+                
+                # Store mapping for @vspec directive: GraphQL name -> original VSS value
+                allowed_enums_metadata[enum_name]['allowed_values'][value_str] = original_value
             
             # Create the GraphQL enum type
             allowed_enums[enum_name] = GraphQLEnumType(
@@ -1117,4 +1178,4 @@ def generate_allowed_value_enums(leaves_df):
             # Also store a mapping from FQN to enum name for easy lookup
             allowed_enums[f"_fqn_to_enum_{fqn}"] = enum_name
     
-    return allowed_enums
+    return allowed_enums, allowed_enums_metadata
