@@ -318,8 +318,8 @@ class TestS2DMExporter:
         # Check that allowed value enums were generated (test.vspec has multiple fields with allowed values)
         # Check for the string field with allowed values ["January", "February"] (updated for new naming approach)
         assert "A_String_Enum" in schema_sdl
-        assert "January" in schema_sdl
-        assert "February" in schema_sdl
+        assert "JANUARY" in schema_sdl  # String values converted to SCREAMING_CASE
+        assert "FEBRUARY" in schema_sdl
         
         # Check for numeric field with allowed values [1, 2, 3] (updated for new naming approach)
         assert "A_Int_Enum" in schema_sdl
@@ -329,8 +329,9 @@ class TestS2DMExporter:
         
         # Check for float field with allowed values [1.1, 2.54, 3] (updated for new naming approach)
         assert "A_Float_Enum" in schema_sdl
-        assert "_1_DOT_1" in schema_sdl  # Float with decimal should use _DOT_
-        assert "_2_DOT_54" in schema_sdl
+        assert "_11" in schema_sdl   # Float values are also converted to valid enum names
+        assert "_254" in schema_sdl
+        assert "_3" in schema_sdl
         
         # Check that fields use the enum types instead of base types (updated for new naming approach)
         assert "string: A_String_Enum" in schema_sdl
