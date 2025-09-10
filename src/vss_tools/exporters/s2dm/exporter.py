@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import rich_click as click
@@ -48,35 +49,36 @@ from vss_tools.utils.misc import getattr_nn
 
 class S2DMExporterException(Exception):
     """Exception raised for errors in the S2DM export process."""
+
     pass
 
 
 def load_directives_from_sdl() -> dict[str, GraphQLDirective]:
     """
     Load custom GraphQL directives from SDL file.
-    
+
     Returns:
         Dictionary mapping directive names to GraphQLDirective objects
     """
     # Get the path to the directives file relative to this module
     directives_file = Path(__file__).parent / "directives.graphql"
-    
+
     if not directives_file.exists():
         raise S2DMExporterException(f"Directives file not found: {directives_file}")
-    
+
     # Read the SDL content
     sdl_content = directives_file.read_text()
-    
+
     # Build a temporary schema to extract the directives
     try:
         temp_schema = build_schema(sdl_content + "\ntype Query { dummy: String }")
         directives = {}
-        
+
         for directive in temp_schema.directives:
             # Skip built-in GraphQL directives
-            if directive.name not in ['skip', 'include', 'deprecated', 'specifiedBy']:
+            if directive.name not in ["skip", "include", "deprecated", "specifiedBy"]:
                 directives[directive.name] = directive
-                
+
         return directives
     except Exception as e:
         raise S2DMExporterException(f"Failed to parse directives SDL: {e}")
@@ -130,12 +132,13 @@ DATATYPE_MAP = {
 # Case conversion functions using case-converter library
 # These handle GraphQL naming conventions while preserving certain structure
 
+
 def convert_to_graphql_type_name(name: str) -> str:
     """Convert a VSS path to GraphQL type name (PascalCase with underscores preserved)."""
     # Split by dots and convert each part to PascalCase, then join with underscores
-    parts = name.split('.')
+    parts = name.split(".")
     converted_parts = [pascalcase(part) for part in parts if part]
-    return '_'.join(converted_parts)
+    return "_".join(converted_parts)
 
 
 def convert_to_graphql_field_name(name: str) -> str:
@@ -153,7 +156,7 @@ def convert_to_graphql_enum_value(name: str) -> str:
 def get_metadata_df(root: VSSNode) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Traverses the VSS tree and returns DataFrames with metadata for branches and leaves.
-    
+
     Returns:
         tuple: (branches_df, leaves_df)
     """
@@ -170,14 +173,14 @@ def get_metadata_df(root: VSSNode) -> tuple[pd.DataFrame, pd.DataFrame]:
         parent = get_expected_parent(fqn)
         name = node.name
         vss_type = data.type.value
-        
+
         metadata = {
             "fqn": fqn,
             "parent": parent,
             "name": name,
             "type": vss_type,
         }
-        
+
         # Add all other metadata fields
         for header in headers[4:]:
             metadata[header] = getattr_nn(data, header, "")
@@ -237,10 +240,12 @@ def cli(
 
         # Generate the schema
         schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
-        
+
         # Write to output file with custom @vspec directives
         with open(output, "w") as outfile:
-            outfile.write(print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments))
+            outfile.write(
+                print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
+            )
 
         log.info(f"S2DM GraphQL schema written to {output}")
 
@@ -249,93 +254,95 @@ def cli(
         sys.exit(1)
 
 
-def generate_s2dm_schema(tree: VSSNode) -> tuple[GraphQLSchema, dict, dict]:
+def generate_s2dm_schema(
+    tree: VSSNode,
+) -> tuple[
+    GraphQLSchema,
+    dict[str, dict[str, dict[str, str]]],
+    dict[str, dict[str, dict[str, str]]],
+    dict[str, dict[str, Any]],
+]:
     """
     Generate a GraphQL schema from a VSS tree.
-    
+
     Args:
         tree: The root VSSNode of the VSS tree
-        
+
     Returns:
-        tuple: (GraphQLSchema, unit_enums_metadata, vspec_comments) 
+        tuple: (GraphQLSchema, unit_enums_metadata, vspec_comments)
                The generated GraphQL schema, unit enum metadata, and vspec comments
     """
     # Get metadata DataFrames
     branches_df, leaves_df = get_metadata_df(tree)
-    
+
     # Create unit enums and get metadata
     unit_enums = create_unit_enums()
     unit_enums_metadata = get_quantity_kinds_and_units()
-    
+
     # Dictionary to store @vspec comments and other directives for fields and types
-    vspec_comments = {
-        'field_comments': {},  # field_path -> comment
-        'type_comments': {},   # type_name -> comment
-        'field_ranges': {},    # field_path -> {'min': value, 'max': value}
-        'field_deprecated': {},# field_path -> reason
-        'instance_tags': {},   # type_name -> True (for types with instances)
-        'instance_tag_types': {}, # type_name -> instance_tag_type_name
-        'vss_types': {},       # type_name -> {'fqn': fqn, 'vspec_type': type}
-        'field_vss_types': {}  # field_path -> {'fqn': fqn, 'vspec_type': type}
+    vspec_comments: dict[str, dict[str, Any]] = {
+        "field_comments": {},  # field_path -> comment
+        "type_comments": {},  # type_name -> comment
+        "field_ranges": {},  # field_path -> {'min': value, 'max': value}
+        "field_deprecated": {},  # field_path -> reason
+        "instance_tags": {},  # type_name -> True (for types with instances)
+        "instance_tag_types": {},  # type_name -> instance_tag_type_name
+        "vss_types": {},  # type_name -> {'fqn': fqn, 'vspec_type': type}
+        "field_vss_types": {},  # field_path -> {'fqn': fqn, 'vspec_type': type}
     }
-    
+
     # Generate all types
     types_registry = {}
-    
+
     # Generate instance types and enums first
     instance_types = generate_instance_types_and_enums(branches_df, vspec_comments)
-    
+
     # Generate allowed value enums
     allowed_enums, allowed_enums_metadata = generate_allowed_value_enums(leaves_df)
-    
+
     # Add instance types and allowed enums to types_registry so they can be referenced
     types_registry.update(instance_types)
-    
+
     # Only add actual GraphQL types from allowed_enums (filter out mapping keys)
-    actual_allowed_enums = {k: v for k, v in allowed_enums.items() if not k.startswith('_fqn_to_enum_')}
+    actual_allowed_enums = {k: v for k, v in allowed_enums.items() if not k.startswith("_fqn_to_enum_")}
     types_registry.update(actual_allowed_enums)
-    
+
     # Create GraphQL types for each branch in topological order
     for fqn in branches_df.index:
         if fqn not in types_registry:
             gql_type = create_object_type(fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments)
             types_registry[fqn] = gql_type
-    
+
     # Create the Query type
     vehicle_type = types_registry.get("Vehicle")
     query_type = GraphQLObjectType(
-        name="Query",
-        fields={
-            "vehicle": GraphQLField(vehicle_type) if vehicle_type else GraphQLField(GraphQLString)
-        }
+        name="Query", fields={"vehicle": GraphQLField(vehicle_type) if vehicle_type else GraphQLField(GraphQLString)}
     )
-    
+
     # Create the schema with custom scalar types and directives
     all_types = (
-        [Int8, UInt8, Int16, UInt16, UInt32, Int64, UInt64] 
-        + list(types_registry.values()) 
-        + list(unit_enums.values())
+        [Int8, UInt8, Int16, UInt16, UInt32, Int64, UInt64] + list(types_registry.values()) + list(unit_enums.values())
     )
     schema = GraphQLSchema(
         query=query_type,
         types=all_types,
         directives=[VSpecDirective, RangeDirective, DeprecatedDirective, InstanceTagDirective],
     )
-    
+
     return schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
 
 
 def create_object_type(
-    fqn: str, 
-    branches_df: pd.DataFrame, 
-    leaves_df: pd.DataFrame, 
-    types_registry: dict, 
-    unit_enums: dict, 
-    vspec_comments: dict
+    fqn: str,
+    branches_df: pd.DataFrame,
+    leaves_df: pd.DataFrame,
+    types_registry: dict,
+    unit_enums: dict,
+    vspec_comments: dict,
 ) -> GraphQLObjectType:
     """
     Create a GraphQL object type for a given VSS branch.
-    
+
     Args:
         fqn: Fully qualified name of the branch
         branches_df: DataFrame containing branch metadata
@@ -343,67 +350,64 @@ def create_object_type(
         types_registry: Registry of already created types
         unit_enums: Dictionary of unit enums by quantity
         vspec_comments: Dictionary to store @vspec comments
-        
+
     Returns:
         GraphQLObjectType: The created GraphQL object type
     """
     branch_row = branches_df.loc[fqn]
     type_name = convert_to_graphql_type_name(fqn)
     description = branch_row.get("description", "")
-    
+
     # Store VSS type information for @vspec directive
-    vspec_comments['vss_types'][type_name] = {
-        'fqn': fqn,
-        'vspec_type': 'BRANCH'  # All types created here are branches
+    vspec_comments["vss_types"][type_name] = {
+        "fqn": fqn,
+        "vspec_type": "BRANCH",  # All types created here are branches
     }
-    
+
     # Store type-level comment if available
     vss_comment = branch_row.get("comment", "")
     if vss_comment:
-        vspec_comments['type_comments'][type_name] = vss_comment
-    
+        vspec_comments["type_comments"][type_name] = vss_comment
+
     # Mark types with instances for @instanceTag directive
     # Note: Only the InstanceTag type gets the directive, not the main type
     # if branch_row.get("instances"):
     #     vspec_comments['instance_tags'][type_name] = True
-    
+
     # Use a lambda to create fields lazily to avoid circular dependencies
     def get_fields():
         fields = {}
-        
+
         # Add ID field for Vehicle and types with instances
         if type_name == "Vehicle" or branch_row.get("instances"):
             fields["id"] = GraphQLField(GraphQLNonNull(GraphQLID))
-        
+
         # Add instanceTag field for types with instances
-        if type_name in vspec_comments.get('instance_tag_types', {}):
-            instance_tag_type_name = vspec_comments['instance_tag_types'][type_name]
+        if type_name in vspec_comments.get("instance_tag_types", {}):
+            instance_tag_type_name = vspec_comments["instance_tag_types"][type_name]
             # Get the instance tag type from types_registry
             if instance_tag_type_name in types_registry:
                 instance_tag_type = types_registry[instance_tag_type_name]
                 fields["instanceTag"] = GraphQLField(instance_tag_type)
-        
+
         # Add fields for child leaves (attributes, sensors, actuators)
         child_leaves = leaves_df[leaves_df["parent"] == fqn]
         for child_fqn, leaf_row in child_leaves.iterrows():
             field_name = convert_to_graphql_field_name(leaf_row["name"])
             field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
             field_description = leaf_row.get("description", "")
-            
+
             # Store VSS type information for field-level @vspec directive
             field_path = f"{type_name}.{field_name}"
             leaf_type = leaf_row.get("type", "").upper()  # SENSOR, ACTUATOR, ATTRIBUTE
             if leaf_type in ["SENSOR", "ACTUATOR", "ATTRIBUTE"]:
-                vspec_comments['field_vss_types'][field_path] = {
-                    'fqn': child_fqn,
-                    'vspec_type': leaf_type
-                }
-            
+                vspec_comments["field_vss_types"][field_path] = {"fqn": child_fqn, "vspec_type": leaf_type}
+
             # Store field-level comment if available
             vss_comment = leaf_row.get("comment", "")
             if vss_comment:
-                vspec_comments['field_comments'][field_path] = vss_comment
-            
+                vspec_comments["field_comments"][field_path] = vss_comment
+
             # Store field-level range constraints if available
             field_path = f"{type_name}.{field_name}"
             min_val = leaf_row.get("min", None)
@@ -411,20 +415,20 @@ def create_object_type(
             if min_val is not None or max_val is not None:
                 range_data = {}
                 if min_val is not None:
-                    range_data['min'] = min_val
+                    range_data["min"] = min_val
                 if max_val is not None:
-                    range_data['max'] = max_val
-                vspec_comments['field_ranges'][field_path] = range_data
-            
+                    range_data["max"] = max_val
+                vspec_comments["field_ranges"][field_path] = range_data
+
             # Store field-level deprecation if available
             deprecation = leaf_row.get("deprecation", "")
             if deprecation:
-                vspec_comments['field_deprecated'][field_path] = deprecation
-            
+                vspec_comments["field_deprecated"][field_path] = deprecation
+
             # Check if leaf has a unit and add unit argument if it does
             unit = leaf_row.get("unit", "")
             field_args = {}
-            
+
             if unit and unit in dynamic_units:
                 unit_data = dynamic_units[unit]
                 quantity = unit_data.quantity
@@ -434,20 +438,18 @@ def create_object_type(
                         # Use the unit key as default value
                         field_args["unit"] = GraphQLArgument(
                             type_=unit_enum,
-                            default_value=unit  # Use the unit key directly (e.g., 'mm', 'km')
+                            default_value=unit,  # Use the unit key directly (e.g., 'mm', 'km')
                         )
-            
+
             fields[field_name] = GraphQLField(
-                field_type,
-                args=field_args if field_args else None,
-                description=field_description
+                field_type, args=field_args if field_args else None, description=field_description
             )
-        
+
         # Add fields for child branches
         child_branches = branches_df[branches_df["parent"] == fqn]
         for child_fqn, child_branch_row in child_branches.iterrows():
             field_name = convert_to_graphql_field_name(child_branch_row["name"])
-            
+
             # If child has instances, make it a list
             if child_branch_row.get("instances"):
                 field_name += "_s"  # Following the pattern from desired output
@@ -470,38 +472,34 @@ def create_object_type(
                 else:
                     child_type = types_registry[child_fqn]
                 fields[field_name] = GraphQLField(child_type)
-        
+
         return fields
-    
-    return GraphQLObjectType(
-        name=type_name,
-        fields=get_fields,
-        description=description
-    )
+
+    return GraphQLObjectType(name=type_name, fields=get_fields, description=description)
 
 
 def get_quantity_kinds_and_units() -> dict[str, dict[str, dict[str, str]]]:
     """Get the quantity kinds and their units from the VSS dynamic units."""
     quantity_units: dict[str, dict[str, dict[str, str]]] = {}
-    
+
     # Process each unit only once to avoid duplicates
     # The dynamic_units dict contains both unit keys and unit display names pointing to the same VSSUnit
     # We want to process only the actual unit keys, not the display names
     processed_units = set()
-    
+
     for unit_key, unit_data in dynamic_units.items():
         # Skip if we've already processed this VSSUnit object via its display name
         unit_id = id(unit_data)
         if unit_id in processed_units:
             continue
-            
+
         quantity = unit_data.quantity
         unit_display_name = unit_data.unit  # This is the display name like "millimeter", "degree"
-        
+
         if quantity and unit_display_name:
             if quantity not in quantity_units:
                 quantity_units[quantity] = {}
-            
+
             # Use the key that's NOT the display name
             # If unit_key equals the display name, find the actual key
             actual_unit_key = unit_key
@@ -511,14 +509,11 @@ def get_quantity_kinds_and_units() -> dict[str, dict[str, dict[str, str]]]:
                     if id(other_data) == unit_id and other_key != unit_display_name:
                         actual_unit_key = other_key
                         break
-            
-            quantity_units[quantity][actual_unit_key] = {
-                'name': unit_display_name,
-                'key': actual_unit_key
-            }
-            
+
+            quantity_units[quantity][actual_unit_key] = {"name": unit_display_name, "key": actual_unit_key}
+
             processed_units.add(unit_id)
-    
+
     return quantity_units
 
 
@@ -526,31 +521,31 @@ def create_unit_enums() -> dict[str, GraphQLEnumType]:
     """Create GraphQL enums for VSS units grouped by quantity."""
     quantity_units = get_quantity_kinds_and_units()
     unit_enums = {}
-    
+
     for quantity, units_data in quantity_units.items():
         # Create enum name: length -> LengthUnitEnum, angular-speed -> AngularSpeedUnitEnum
         enum_name = f"{convert_to_graphql_type_name(quantity)}UnitEnum"
-        
-        # Create enum values  
+
+        # Create enum values
         enum_values = {}
         for unit_key, unit_info in units_data.items():
             # Use the unit name for enum value name (kilometer -> KILOMETER)
-            unit_name = unit_info['name']  # Use the display name from VSS unit data
+            unit_name = unit_info["name"]  # Use the display name from VSS unit data
             enum_value_name = convert_to_graphql_enum_value(unit_name)
-            
+
             # The GraphQL enum value should represent the original unit key
             # This is what will be used in schema serialization
             enum_values[enum_value_name] = GraphQLEnumValue(
                 value=unit_key  # Use the unit key (e.g., 'km', 'km/h')
             )
-        
+
         # Create the enum with description
         unit_enums[quantity] = GraphQLEnumType(
             name=enum_name,
             values=enum_values,
-            description=f'Set of units for the quantity kind "{quantity}". NOTE: Taken from VSS specification.'
+            description=f'Set of units for the quantity kind "{quantity}". NOTE: Taken from VSS specification.',
         )
-    
+
     return unit_enums
 
 
@@ -560,84 +555,81 @@ def get_unit_enum_for_quantity(quantity: str, unit_enums: dict[str, GraphQLEnumT
 
 
 def print_schema_with_vspec_directives(
-    schema: GraphQLSchema, 
-    unit_enums_metadata: dict, 
-    allowed_enums_metadata: dict, 
-    vspec_comments: dict
+    schema: GraphQLSchema, unit_enums_metadata: dict, allowed_enums_metadata: dict, vspec_comments: dict
 ) -> str:
     """
     Custom schema printer that includes @vspec directives.
-    
+
     Args:
         schema: The GraphQL schema to print
         unit_enums_metadata: Metadata for unit enums to add @vspec directives
         vspec_comments: Comments data for fields and types
-        
+
     Returns:
         SDL string with @vspec directives
     """
     # Start with the default schema print
     sdl = print_schema(schema)
-    lines = sdl.split('\n')
-    
+    lines = sdl.split("\n")
+
     # Process unit enum directives - maintain exact original logic
-    processed_enum_values = set()
+    processed_enum_values: set[str] = set()
     lines = _process_unit_enum_directives(lines, unit_enums_metadata, processed_enum_values)
-    
+
     # Process allowed value enum directives
     lines = _process_allowed_value_enum_directives(lines, allowed_enums_metadata, processed_enum_values)
-    
+
     # Process all field @vspec directives in one consolidated step
     lines = _process_consolidated_vspec_directives(lines, vspec_comments)
-    
+
     # Process deprecated field directives - separate @deprecated directive
-    lines = _process_deprecated_field_directives(lines, vspec_comments['field_deprecated'])
-    
+    lines = _process_deprecated_field_directives(lines, vspec_comments["field_deprecated"])
+
     # Process range directives - separate directive, not @vspec
-    lines = _process_range_directives(lines, vspec_comments['field_ranges'])
-    
+    lines = _process_range_directives(lines, vspec_comments["field_ranges"])
+
     # Process type-level directives - maintain exact original logic
     lines = _process_type_level_directives(lines, vspec_comments)
-    
-    return '\n'.join(lines)
+
+    return "\n".join(lines)
 
 
 def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, processed_enum_values: set) -> list[str]:
     """Process unit enum directives - extracted from original logic."""
     for quantity, units_data in unit_enums_metadata.items():
         enum_name = f"{convert_to_graphql_type_name(quantity)}UnitEnum"
-        
+
         in_target_enum = False
         for i, line in enumerate(lines):
-            if line.strip().startswith(f'enum {enum_name}'):
-                if '@vspec' not in line:
-                    lines[i] = line.replace(' {', f' @vspec(source: {{kind: QUANTITY_KIND, value: "{quantity}"}}) {{')
+            if line.strip().startswith(f"enum {enum_name}"):
+                if "@vspec" not in line:
+                    lines[i] = line.replace(" {", f' @vspec(source: {{kind: QUANTITY_KIND, value: "{quantity}"}}) {{')
                 in_target_enum = True
                 continue
-            elif line.strip().startswith('enum ') and in_target_enum:
+            elif line.strip().startswith("enum ") and in_target_enum:
                 in_target_enum = False
                 continue
-            elif line.strip() == '}' and in_target_enum:
+            elif line.strip() == "}" and in_target_enum:
                 in_target_enum = False
                 continue
-            
+
             if in_target_enum and line.strip() and not line.strip().startswith('"'):
                 stripped_line = line.strip()
-                
+
                 for unit_key, unit_info in units_data.items():
-                    unit_name = unit_info['name']  # Display name from VSS unit data
+                    unit_name = unit_info["name"]  # Display name from VSS unit data
                     enum_value_name = convert_to_graphql_enum_value(unit_name)
-                    
+
                     enum_value_key = f"{enum_name}.{enum_value_name}"
-                    if (stripped_line.startswith(enum_value_name) and 
-                        enum_value_key not in processed_enum_values):
-                        
-                        if '@vspec' not in line:
-                            indent = line[:len(line) - len(line.lstrip())]
-                            directive = (f'@vspec(source: {{kind: UNIT, value: "{unit_key}", '
-                                        f'note: "Taken and converted from full name <{unit_name}>."}})') 
-                            lines[i] = f'{indent}{enum_value_name} {directive}'
-                        
+                    if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_enum_values:
+                        if "@vspec" not in line:
+                            indent = line[: len(line) - len(line.lstrip())]
+                            directive = (
+                                f'@vspec(source: {{kind: UNIT, value: "{unit_key}", '
+                                f'note: "Taken and converted from full name <{unit_name}>."}})'
+                            )
+                            lines[i] = f"{indent}{enum_value_name} {directive}"
+
                         processed_enum_values.add(enum_value_key)
                         break
     return lines
@@ -648,34 +640,32 @@ def _process_allowed_value_enum_directives(
 ) -> list[str]:
     """Process allowed value enum directives."""
     for enum_name, enum_data in allowed_enums_metadata.items():
-        allowed_values_dict = enum_data.get('allowed_values', {})
+        allowed_values_dict = enum_data.get("allowed_values", {})
         in_target_enum = False
         for i, line in enumerate(lines):
-            if line.strip().startswith(f'enum {enum_name}'):
+            if line.strip().startswith(f"enum {enum_name}"):
                 # Don't add directive to enum declaration for allowed values
                 in_target_enum = True
                 continue
-            elif line.strip().startswith('enum ') and in_target_enum:
+            elif line.strip().startswith("enum ") and in_target_enum:
                 in_target_enum = False
                 continue
-            elif line.strip() == '}' and in_target_enum:
+            elif line.strip() == "}" and in_target_enum:
                 in_target_enum = False
                 continue
-            
+
             if in_target_enum and line.strip() and not line.strip().startswith('"'):
                 stripped_line = line.strip()
-                
+
                 for graphql_enum_value, original_value in allowed_values_dict.items():
                     enum_value_key = f"{enum_name}.{graphql_enum_value}"
-                    
-                    if (stripped_line.startswith(graphql_enum_value) and 
-                        enum_value_key not in processed_enum_values):
-                        
-                        if '@vspec' not in line:
-                            indent = line[:len(line) - len(line.lstrip())]
+
+                    if stripped_line.startswith(graphql_enum_value) and enum_value_key not in processed_enum_values:
+                        if "@vspec" not in line:
+                            indent = line[: len(line) - len(line.lstrip())]
                             directive = f'@vspec(source: {{kind: ALLOWED_VALUE, value: "{original_value}"}})'
-                            lines[i] = f'{indent}{graphql_enum_value} {directive}'
-                        
+                            lines[i] = f"{indent}{graphql_enum_value} {directive}"
+
                         processed_enum_values.add(enum_value_key)
                         break
     return lines
@@ -685,23 +675,28 @@ def _process_field_comment_directives(lines: list[str], field_comments: dict) ->
     """Process field comment directives - extracted from original logic."""
     for field_path, comment in field_comments.items():
         escaped_comment = comment.replace('"', '\\"')
-        type_name, field_name = field_path.split('.')
-        
+        type_name, field_name = field_path.split(".")
+
         in_type = False
         for i, line in enumerate(lines):
-            if line.strip().startswith(f'type {type_name}'):
+            if line.strip().startswith(f"type {type_name}"):
                 in_type = True
                 continue
-            elif line.strip().startswith('type ') and in_type:
+            elif line.strip().startswith("type ") and in_type:
                 in_type = False
                 continue
-            elif line.strip() == '}' and in_type:
+            elif line.strip() == "}" and in_type:
                 in_type = False
                 continue
-            
-            if (in_type and field_name in line and ':' in line and 
-                not line.strip().startswith('"') and '@vspec' not in line):
-                indent = '    '
+
+            if (
+                in_type
+                and field_name in line
+                and ":" in line
+                and not line.strip().startswith('"')
+                and "@vspec" not in line
+            ):
+                indent = "    "
                 directive_line = f'{indent}@vspec(comment: "{escaped_comment}")'
                 lines.insert(i + 1, directive_line)
                 break
@@ -712,29 +707,32 @@ def _process_deprecated_field_directives(lines: list[str], field_deprecated: dic
     """Process deprecated field directives - extracted from original logic."""
     for field_path, reason in field_deprecated.items():
         escaped_reason = reason.replace('"', '\\"')
-        type_name, field_name = field_path.split('.')
-        
+        type_name, field_name = field_path.split(".")
+
         in_type = False
         for i, line in enumerate(lines):
-            if line.strip().startswith(f'type {type_name}'):
+            if line.strip().startswith(f"type {type_name}"):
                 in_type = True
                 continue
-            elif line.strip().startswith('type ') and in_type:
+            elif line.strip().startswith("type ") and in_type:
                 in_type = False
                 continue
-            elif line.strip() == '}' and in_type:
+            elif line.strip() == "}" and in_type:
                 in_type = False
                 continue
-            
-            if (in_type and field_name in line and ':' in line and 
-                not line.strip().startswith('"') and '@deprecated' not in line):
+
+            if (
+                in_type
+                and field_name in line
+                and ":" in line
+                and not line.strip().startswith('"')
+                and "@deprecated" not in line
+            ):
                 insert_line = i + 1
-                while (insert_line < len(lines) and 
-                       lines[insert_line].strip().startswith('@vspec')):
+                while insert_line < len(lines) and lines[insert_line].strip().startswith("@vspec"):
                     insert_line += 1
-                if (insert_line < len(lines) and 
-                    '@deprecated' not in lines[insert_line]):
-                    indent = '    '
+                if insert_line < len(lines) and "@deprecated" not in lines[insert_line]:
+                    indent = "    "
                     lines.insert(insert_line, f'{indent}@deprecated(reason: "{escaped_reason}")')
                 break
     return lines
@@ -744,43 +742,48 @@ def _process_range_directives(lines: list[str], field_ranges: dict) -> list[str]
     """Process range directives - extracted from original logic."""
     for field_path, range_data in field_ranges.items():
         range_args = []
-        min_val = range_data.get('min', '')
-        max_val = range_data.get('max', '')
-        
-        if min_val != '' and min_val is not None:
-            range_args.append(f'min: {min_val}')
-        if max_val != '' and max_val is not None:
-            range_args.append(f'max: {max_val}')
-        
+        min_val = range_data.get("min", "")
+        max_val = range_data.get("max", "")
+
+        if min_val != "" and min_val is not None:
+            range_args.append(f"min: {min_val}")
+        if max_val != "" and max_val is not None:
+            range_args.append(f"max: {max_val}")
+
         if not range_args:
             continue
-            
+
         range_directive = f'@range({", ".join(range_args)})'
-        type_name, field_name = field_path.split('.')
-        
+        type_name, field_name = field_path.split(".")
+
         in_type = False
         for i, line in enumerate(lines):
-            if line.strip().startswith(f'type {type_name}'):
+            if line.strip().startswith(f"type {type_name}"):
                 in_type = True
                 continue
-            elif line.strip().startswith('type ') and in_type:
+            elif line.strip().startswith("type ") and in_type:
                 in_type = False
                 continue
-            elif line.strip() == '}' and in_type:
+            elif line.strip() == "}" and in_type:
                 in_type = False
                 continue
-            
-            if (in_type and field_name in line and ':' in line and 
-                not line.strip().startswith('"') and '@range' not in line):
+
+            if (
+                in_type
+                and field_name in line
+                and ":" in line
+                and not line.strip().startswith('"')
+                and "@range" not in line
+            ):
                 insert_line = i + 1
-                while (insert_line < len(lines) and 
-                       (lines[insert_line].strip().startswith('@vspec') or 
-                        lines[insert_line].strip().startswith('@deprecated'))):
+                while insert_line < len(lines) and (
+                    lines[insert_line].strip().startswith("@vspec")
+                    or lines[insert_line].strip().startswith("@deprecated")
+                ):
                     insert_line += 1
-                if (insert_line < len(lines) and 
-                    '@range' not in lines[insert_line]):
-                    indent = '    '
-                    lines.insert(insert_line, f'{indent}{range_directive}')
+                if insert_line < len(lines) and "@range" not in lines[insert_line]:
+                    indent = "    "
+                    lines.insert(insert_line, f"{indent}{range_directive}")
                 break
     return lines
 
@@ -788,31 +791,36 @@ def _process_range_directives(lines: list[str], field_ranges: dict) -> list[str]
 def _process_field_vss_type_directives(lines: list[str], field_vss_types: dict) -> list[str]:
     """Process field-level VSS type directives for FQN mapping."""
     for field_path, vss_info in field_vss_types.items():
-        type_name, field_name = field_path.split('.')
-        fqn = vss_info['fqn']
-        vspec_type = vss_info['vspec_type']
-        
+        type_name, field_name = field_path.split(".")
+        fqn = vss_info["fqn"]
+        vspec_type = vss_info["vspec_type"]
+
         # Create the @vspec directive with FQN mapping
         vspec_directive = f'@vspec(source: {{kind: FQN, value: "{fqn}"}}, vspecType: {vspec_type})'
-        
+
         in_type = False
         for i, line in enumerate(lines):
-            if line.strip().startswith(f'type {type_name}'):
+            if line.strip().startswith(f"type {type_name}"):
                 in_type = True
                 continue
-            elif line.strip().startswith('type ') and in_type:
+            elif line.strip().startswith("type ") and in_type:
                 in_type = False
                 continue
-            elif line.strip() == '}' and in_type:
+            elif line.strip() == "}" and in_type:
                 in_type = False
                 continue
-            
-            if (in_type and field_name in line and ':' in line and 
-                not line.strip().startswith('"') and '@vspec' not in line):
+
+            if (
+                in_type
+                and field_name in line
+                and ":" in line
+                and not line.strip().startswith('"')
+                and "@vspec" not in line
+            ):
                 # Insert @vspec directive as the first directive after field declaration
                 insert_line = i + 1
-                indent = '    '
-                lines.insert(insert_line, f'{indent}{vspec_directive}')
+                indent = "    "
+                lines.insert(insert_line, f"{indent}{vspec_directive}")
                 break
     return lines
 
@@ -820,164 +828,164 @@ def _process_field_vss_type_directives(lines: list[str], field_vss_types: dict) 
 def _process_type_level_directives(lines: list[str], vspec_comments: dict) -> list[str]:
     """Process type-level directives - extracted from original logic."""
     for i, line in enumerate(lines):
-        if line.strip().startswith('type '):
+        if line.strip().startswith("type "):
             type_line = line.strip()
-            
+
             type_part = type_line[5:]  # Remove "type "
-            if ' {' in type_part:
-                type_name = type_part.split(' {')[0].strip()
-            elif ' @' in type_part:
-                type_name = type_part.split(' @')[0].strip()
+            if " {" in type_part:
+                type_name = type_part.split(" {")[0].strip()
+            elif " @" in type_part:
+                type_name = type_part.split(" @")[0].strip()
             else:
                 continue
-            
-            needs_vspec_comment = type_name in vspec_comments['type_comments']
-            needs_instance_tag = type_name in vspec_comments['instance_tags']
-            needs_vss_type = type_name in vspec_comments['vss_types']
-            
+
+            needs_vspec_comment = type_name in vspec_comments["type_comments"]
+            needs_instance_tag = type_name in vspec_comments["instance_tags"]
+            needs_vss_type = type_name in vspec_comments["vss_types"]
+
             if needs_vspec_comment or needs_instance_tag or needs_vss_type:
-                new_line = f'type {type_name}'
-                
+                new_line = f"type {type_name}"
+
                 # Add @vspec directive with VSS type information
-                if needs_vss_type and '@vspec' not in line:
-                    vss_info = vspec_comments['vss_types'][type_name]
-                    fqn = vss_info['fqn']
-                    vspec_type = vss_info['vspec_type']
-                    
+                if needs_vss_type and "@vspec" not in line:
+                    vss_info = vspec_comments["vss_types"][type_name]
+                    fqn = vss_info["fqn"]
+                    vspec_type = vss_info["vspec_type"]
+
                     vspec_directive = f'@vspec(source: {{kind: FQN, value: "{fqn}"}}, vspecType: {vspec_type}'
-                    
+
                     # Add comment if available
                     if needs_vspec_comment:
-                        comment = vspec_comments['type_comments'][type_name]
+                        comment = vspec_comments["type_comments"][type_name]
                         escaped_comment = comment.replace('"', '\\"')
                         vspec_directive += f', comment: "{escaped_comment}"'
-                    
-                    vspec_directive += ')'
-                    new_line += f' {vspec_directive}'
-                elif needs_vspec_comment and '@vspec' not in line:
+
+                    vspec_directive += ")"
+                    new_line += f" {vspec_directive}"
+                elif needs_vspec_comment and "@vspec" not in line:
                     # Fallback to just comment if no VSS type info
-                    comment = vspec_comments['type_comments'][type_name]
+                    comment = vspec_comments["type_comments"][type_name]
                     escaped_comment = comment.replace('"', '\\"')
                     new_line += f' @vspec(comment: "{escaped_comment}")'
-                
-                if needs_instance_tag and '@instanceTag' not in line:
-                    new_line += ' @instanceTag'
-                
-                if '@' in type_line and not (new_line.endswith('@instanceTag') or '@vspec' in new_line):
+
+                if needs_instance_tag and "@instanceTag" not in line:
+                    new_line += " @instanceTag"
+
+                if "@" in type_line and not (new_line.endswith("@instanceTag") or "@vspec" in new_line):
                     existing_directives = []
-                    if '@vspec' in type_line and not (needs_vss_type or needs_vspec_comment):
-                        vspec_start = type_line.find('@vspec')
-                        vspec_end = type_line.find(')', vspec_start) + 1
+                    if "@vspec" in type_line and not (needs_vss_type or needs_vspec_comment):
+                        vspec_start = type_line.find("@vspec")
+                        vspec_end = type_line.find(")", vspec_start) + 1
                         existing_directives.append(type_line[vspec_start:vspec_end])
-                    
+
                     if existing_directives:
-                        new_line += ' ' + ' '.join(existing_directives)
-                
-                new_line += ' {'
-                lines[i] = '  ' + new_line  # Preserve original indentation
+                        new_line += " " + " ".join(existing_directives)
+
+                new_line += " {"
+                lines[i] = "  " + new_line  # Preserve original indentation
     return lines
 
 
 def _process_consolidated_vspec_directives(lines: list[str], vspec_comments: dict) -> list[str]:
     """Process all field @vspec directives in one consolidated step to avoid multiple @vspec directives per field."""
-    
+
     # Build a consolidated map of all vspec data per field
-    field_vspec_data = {}
-    
+    field_vspec_data: dict[str, dict[str, Any]] = {}
+
     # Merge all field vspec information
-    for field_path, vss_info in vspec_comments.get('field_vss_types', {}).items():
+    for field_path, vss_info in vspec_comments.get("field_vss_types", {}).items():
         if field_path not in field_vspec_data:
             field_vspec_data[field_path] = {}
-        field_vspec_data[field_path]['source'] = f'{{kind: FQN, value: "{vss_info["fqn"]}"}}'
-        field_vspec_data[field_path]['vspecType'] = vss_info['vspec_type']
-    
-    for field_path, comment in vspec_comments.get('field_comments', {}).items():
+        field_vspec_data[field_path]["source"] = f'{{kind: FQN, value: "{vss_info["fqn"]}"}}'
+        field_vspec_data[field_path]["vspecType"] = vss_info["vspec_type"]
+
+    for field_path, comment in vspec_comments.get("field_comments", {}).items():
         if field_path not in field_vspec_data:
             field_vspec_data[field_path] = {}
         escaped_comment = comment.replace('"', '\\"')
-        field_vspec_data[field_path]['comment'] = f'"{escaped_comment}"'
-    
-    for field_path, deprecated_info in vspec_comments.get('field_deprecated', {}).items():
+        field_vspec_data[field_path]["comment"] = f'"{escaped_comment}"'
+
+    for field_path, deprecated_info in vspec_comments.get("field_deprecated", {}).items():
         # Handle deprecation as a comment for now, since @deprecated is not part of @vspec
         if field_path not in field_vspec_data:
             field_vspec_data[field_path] = {}
         # Note: We'll handle @deprecated separately since it's not part of @vspec directive
-    
+
     # Apply consolidated @vspec directives
     for field_path, vspec_data in field_vspec_data.items():
-        type_name, field_name = field_path.split('.')
-        
+        type_name, field_name = field_path.split(".")
+
         in_type = False
         for i, line in enumerate(lines):
-            if line.strip().startswith(f'type {type_name}'):
+            if line.strip().startswith(f"type {type_name}"):
                 in_type = True
                 continue
-            elif line.strip().startswith('type ') and in_type:
+            elif line.strip().startswith("type ") and in_type:
                 in_type = False
                 continue
-            elif line.strip() == '}' and in_type:
+            elif line.strip() == "}" and in_type:
                 in_type = False
                 continue
-            
-            if in_type and line.strip().startswith(f'{field_name}') and '@vspec' not in line:
+
+            if in_type and line.strip().startswith(f"{field_name}") and "@vspec" not in line:
                 # Build consolidated @vspec directive
                 vspec_parts = []
-                
-                if 'source' in vspec_data:
+
+                if "source" in vspec_data:
                     vspec_parts.append(f'source: {vspec_data["source"]}')
-                
-                if 'vspecType' in vspec_data:
+
+                if "vspecType" in vspec_data:
                     vspec_parts.append(f'vspecType: {vspec_data["vspecType"]}')
-                
-                if 'comment' in vspec_data:
+
+                if "comment" in vspec_data:
                     vspec_parts.append(f'comment: {vspec_data["comment"]}')
-                
+
                 if vspec_parts:
                     directive = f'@vspec({", ".join(vspec_parts)})'
-                    
+
                     # Add directive to the line
-                    if line.strip().endswith(')'):
+                    if line.strip().endswith(")"):
                         # Field with parameters like: field(unit: Unit): Type
-                        lines[i] = line.rstrip() + f' {directive}'
+                        lines[i] = line.rstrip() + f" {directive}"
                     else:
                         # Simple field like: field: Type
-                        lines[i] = line.rstrip() + f' {directive}'
-                
+                        lines[i] = line.rstrip() + f" {directive}"
+
                 break  # Found and processed this field, move to next
-    
+
     return lines
 
 
 def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry=None):
     """
     Get the appropriate GraphQL type for a VSS leaf node.
-    
+
     Args:
         leaf_row: Pandas Series containing leaf metadata
         types_registry: Registry of custom GraphQL types (for enums)
-        
+
     Returns:
         GraphQL type for the leaf
     """
     # Check for allowed values first - these override the base type
     if types_registry:
         try:
-            allowed_values = leaf_row.get('allowed')
+            allowed_values = leaf_row.get("allowed")
             if allowed_values is not None and isinstance(allowed_values, list) and len(allowed_values) > 0:
                 # Create enum type name based on the leaf's fully qualified path
                 # Use the index as the FQN since qualified_name might not be available
-                fqn = leaf_row.name if hasattr(leaf_row, 'name') else leaf_row.get('qualified_name', 'unknown')
+                fqn = leaf_row.name if hasattr(leaf_row, "name") else leaf_row.get("qualified_name", "unknown")
                 enum_type_name = f"{convert_to_graphql_type_name(fqn)}_Enum"
-                
+
                 # Return the enum type if it exists in registry
                 if enum_type_name in types_registry:
                     return types_registry[enum_type_name]
         except (ValueError, TypeError, KeyError):
             # Handle pandas array issues gracefully
             pass
-    
+
     datatype = leaf_row.get("datatype", "string")
-    
+
     # Map VSS datatypes to GraphQL types
     return DATATYPE_MAP.get(datatype, GraphQLString)
 
@@ -985,148 +993,139 @@ def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry=None):
 def parse_instance_dimensions(instances_list):
     """
     Parse VSS instances list to extract dimensional data.
-    
+
     Args:
         instances_list: List of instance definitions like:
         - ['Row[1,2]', ['DriverSide', 'PassengerSide']] (multi-dimensional)
         - ['Low', 'High'] (single dimension flat list)
         - [['Low', 'High']] (single dimension nested list)
-    
+
     Returns:
         list: List of dimensional enum definitions like [
             {
-                'dimension_name': 'dimension1', 
-                'enum_name': 'TypeName_InstanceTag_Dimension1', 
+                'dimension_name': 'dimension1',
+                'enum_name': 'TypeName_InstanceTag_Dimension1',
                 'values': ['Row1', 'Row2']
             },
             {
-                'dimension_name': 'dimension2', 
-                'enum_name': 'TypeName_InstanceTag_Dimension2', 
+                'dimension_name': 'dimension2',
+                'enum_name': 'TypeName_InstanceTag_Dimension2',
                 'values': ['DriverSide', 'PassengerSide']
             }
         ]
     """
     dimensions = []
-    
+
     # Special case: if all items are simple strings (not containing '[' or being lists),
     # treat the entire list as a single dimension
-    if (isinstance(instances_list, list) and 
-        all(isinstance(item, str) and '[' not in item for item in instances_list)):
+    if isinstance(instances_list, list) and all(isinstance(item, str) and "[" not in item for item in instances_list):
         # This is a flat list like ["Low", "High"] - treat as single dimension
-        dimensions.append({
-            'dimension_name': 'dimension1',
-            'dimension_num': 1,
-            'values': instances_list
-        })
+        dimensions.append({"dimension_name": "dimension1", "dimension_num": 1, "values": instances_list})
         return dimensions
-    
+
     # Handle multi-dimensional cases
     for idx, instance_def in enumerate(instances_list):
         dimension_num = idx + 1
         dimension_name = f"dimension{dimension_num}"
-        
+
         if isinstance(instance_def, str):
             # Handle range format like "Row[1,2]"
-            if '[' in instance_def and ']' in instance_def:
+            if "[" in instance_def and "]" in instance_def:
                 # Extract base name and range
-                base_name = instance_def.split('[')[0]
-                range_part = instance_def.split('[')[1].split(']')[0]
-                
+                base_name = instance_def.split("[")[0]
+                range_part = instance_def.split("[")[1].split("]")[0]
+
                 # Parse range (e.g., "1,2" -> [1, 2])
-                range_values = [int(x.strip()) for x in range_part.split(',')]
+                range_values = [int(x.strip()) for x in range_part.split(",")]
                 start, end = range_values[0], range_values[1]
-                
+
                 # Generate enum values (e.g., Row1, Row2)
                 enum_values = [f"{base_name}{i}" for i in range(start, end + 1)]
-                
-                dimensions.append({
-                    'dimension_name': dimension_name,
-                    'dimension_num': dimension_num,
-                    'values': enum_values
-                })
+
+                dimensions.append(
+                    {"dimension_name": dimension_name, "dimension_num": dimension_num, "values": enum_values}
+                )
         elif isinstance(instance_def, list):
             # Handle explicit list format like ['DriverSide', 'PassengerSide']
             if len(instance_def) > 0:
                 # Use the actual values as enum values
                 enum_values = instance_def
-                
-                dimensions.append({
-                    'dimension_name': dimension_name,
-                    'dimension_num': dimension_num,
-                    'values': enum_values
-                })
-    
+
+                dimensions.append(
+                    {"dimension_name": dimension_name, "dimension_num": dimension_num, "values": enum_values}
+                )
+
     return dimensions
 
 
 def generate_instance_types_and_enums(branches_df, vspec_comments):
     """
     Generate instance tag types and dimensional enums for VSS instances.
-    
+
     Returns:
         dict: Dictionary mapping enum/type names to GraphQL types
     """
     instance_types = {}
-    
+
     # Find all branches with instances
-    branches_with_instances = branches_df[branches_df['instances'].notna()]
-    
+    branches_with_instances = branches_df[branches_df["instances"].notna()]
+
     for fqn, branch_row in branches_with_instances.iterrows():
-        instances = branch_row['instances']
+        instances = branch_row["instances"]
         if instances:
             base_type_name = convert_to_graphql_type_name(fqn)
             instance_tag_type_name = f"{base_type_name}_InstanceTag"
-            
+
             dimensions = parse_instance_dimensions(instances)
-            
+
             # Create dimensional enums
             instance_tag_fields = {}
-            
+
             for dimension in dimensions:
-                dimension_num = dimension['dimension_num']
+                dimension_num = dimension["dimension_num"]
                 enum_name = f"{base_type_name}_InstanceTag_Dimension{dimension_num}"
-                enum_values = dimension['values']
-                
+                enum_values = dimension["values"]
+
                 # Create GraphQL enum values
                 graphql_values = {}
                 for value in enum_values:
                     graphql_values[value] = GraphQLEnumValue(value)
-                
+
                 # Create the GraphQL enum type
                 dimensional_enum = GraphQLEnumType(
                     name=enum_name,
                     values=graphql_values,
-                    description=f"Dimensional enum for VSS instance dimension {dimension_num}."
+                    description=f"Dimensional enum for VSS instance dimension {dimension_num}.",
                 )
-                
+
                 instance_types[enum_name] = dimensional_enum
-                
+
                 # Add field to instance tag type
-                instance_tag_fields[dimension['dimension_name']] = GraphQLField(dimensional_enum)
-            
+                instance_tag_fields[dimension["dimension_name"]] = GraphQLField(dimensional_enum)
+
             # Create the instance tag type
             instance_tag_type = GraphQLObjectType(
                 name=instance_tag_type_name,
                 fields=instance_tag_fields,
-                description=f"Instance tag for {base_type_name} with dimensional information."
+                description=f"Instance tag for {base_type_name} with dimensional information.",
             )
-            
+
             instance_types[instance_tag_type_name] = instance_tag_type
-            
+
             # Mark the instance tag type for @instanceTag directive
-            vspec_comments['instance_tags'][instance_tag_type_name] = True
-            
+            vspec_comments["instance_tags"][instance_tag_type_name] = True
+
             # Store reference for adding instanceTag field to main type
-            vspec_comments['instance_tag_types'] = vspec_comments.get('instance_tag_types', {})
-            vspec_comments['instance_tag_types'][base_type_name] = instance_tag_type_name
-    
+            vspec_comments["instance_tag_types"] = vspec_comments.get("instance_tag_types", {})
+            vspec_comments["instance_tag_types"][base_type_name] = instance_tag_type_name
+
     return instance_types
 
 
 def generate_allowed_value_enums(leaves_df):
     """
     Generate GraphQL enums for VSS fields with allowed values.
-    
+
     Returns:
         tuple: (allowed_enums dict, allowed_enums_metadata dict)
                allowed_enums: Dictionary mapping enum names to GraphQL enum types
@@ -1134,48 +1133,43 @@ def generate_allowed_value_enums(leaves_df):
     """
     allowed_enums = {}
     allowed_enums_metadata = {}
-    
+
     # Find all leaves with allowed values
-    leaves_with_allowed = leaves_df[leaves_df['allowed'].notna()]
-    
+    leaves_with_allowed = leaves_df[leaves_df["allowed"].notna()]
+
     for fqn, leaf_row in leaves_with_allowed.iterrows():
-        allowed_values = leaf_row['allowed']
+        allowed_values = leaf_row["allowed"]
         if allowed_values and isinstance(allowed_values, list):
             # Generate enum name from FQN
             enum_name = f"{convert_to_graphql_type_name(fqn)}_Enum"
-            
+
             # Store metadata for @vspec directive generation
-            allowed_enums_metadata[enum_name] = {
-                'fqn': fqn,
-                'allowed_values': {}
-            }
-            
+            allowed_enums_metadata[enum_name] = {"fqn": fqn, "allowed_values": {}}
+
             # Create GraphQL enum values
             graphql_values = {}
             for value in allowed_values:
                 # Convert all values to strings and ensure they're valid GraphQL enum names
                 value_str = str(value)
                 original_value = value_str  # Store original for @vspec directive
-                
+
                 # GraphQL enum values must start with a letter or underscore
                 if value_str[0].isdigit():
                     value_str = f"_{value_str}"
                 # Replace any invalid characters
                 value_str = value_str.replace(".", "_DOT_").replace("-", "_DASH_")
-                
+
                 graphql_values[value_str] = GraphQLEnumValue(value)
-                
+
                 # Store mapping for @vspec directive: GraphQL name -> original VSS value
-                allowed_enums_metadata[enum_name]['allowed_values'][value_str] = original_value
-            
+                allowed_enums_metadata[enum_name]["allowed_values"][value_str] = original_value
+
             # Create the GraphQL enum type
             allowed_enums[enum_name] = GraphQLEnumType(
-                name=enum_name,
-                values=graphql_values,
-                description=f"Allowed values for {fqn}."
+                name=enum_name, values=graphql_values, description=f"Allowed values for {fqn}."
             )
-            
+
             # Also store a mapping from FQN to enum name for easy lookup
             allowed_enums[f"_fqn_to_enum_{fqn}"] = enum_name
-    
+
     return allowed_enums, allowed_enums_metadata
