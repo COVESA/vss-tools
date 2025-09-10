@@ -13,10 +13,10 @@ directive @vspec(
 input VspecElement {
   """Kind of Vspec element to which the name applies (e.g., UNIT_KEY)."""
   kind: VspecElementKind!
-  
+
   """Original value (e.g., name) in vspec."""
   value: String!
-  
+
   """Optional note about the mapping."""
   note: String
 }

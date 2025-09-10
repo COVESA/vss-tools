@@ -26,7 +26,7 @@ type Vehicle {
 """All in-cabin components, including doors."""
 type Vehicle_Cabin {
     """The position of the driver seat in row 1."""
-    driverPosition: Vehicle_Cabin_DriverPosition_Enum 
+    driverPosition: Vehicle_Cabin_DriverPosition_Enum
         @vspec(comment: "Some signals use DriverSide and PassengerSide as instances. If this signal specifies that DriverPosition is LEFT or MIDDLE, then DriverSide refers to left side and PassengerSide to right side. If this signal specifies that DriverPosition is RIGHT, then DriverSide refers to right side and PassengerSide to left side.")
     seat_s: [Vehicle_Cabin_Seat]
 }
@@ -40,7 +40,7 @@ type Vehicle_Cabin_Seat {
 
     """Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating."""
     heatingCooling(unit: RelationUnitEnum = PERCENT): Int8
-        @range(min: -100, max: 100) 
+        @range(min: -100, max: 100)
 
     """Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported."""
     height(unit: LengthUnitEnum = MILLIMETER): UInt16
@@ -92,7 +92,7 @@ type Vehicle_Cabin_Seat {
         @vspec(comment: "Affects the property (SingleSeat.Heating).")
 
     """Seat massage level. 0 = off. 100 = max massage."""
-    massage(unit: RelationUnitEnum = PERCENT): UInt8 
+    massage(unit: RelationUnitEnum = PERCENT): UInt8
         @deprecated(reason: "v5.0 - refactored to Seat.MassageLevel")
         @range(max: 100)
 
@@ -116,7 +116,7 @@ type Vehicle_Cabin_Seat {
 }
 
 type Vehicle_Cabin_Seat_InstanceTag @instanceTag {
-    dimension1: Vehicle_Cabin_Seat_InstanceTag_Dimension1 
+    dimension1: Vehicle_Cabin_Seat_InstanceTag_Dimension1
     dimension2: Vehicle_Cabin_Seat_InstanceTag_Dimension2
 }
 
@@ -158,7 +158,7 @@ type Vehicle_Cabin_Seat_Backrest {
   isMoreLumbarSupportSwitchEngaged: Boolean
     @vspec(comment: "Affects the property (SingleSeat.Backrest.LumbarSupport).")
 
-  """Is switch for more side bolster support engaged.""" 
+  """Is switch for more side bolster support engaged."""
   isMoreSideBolsterSupportSwitchEngaged: Boolean
     @vspec(comment: "Affects the property (SingleSeat.Backrest.SideBolsterSupport).")
 
