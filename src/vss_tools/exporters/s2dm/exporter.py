@@ -579,16 +579,13 @@ def print_schema_with_vspec_directives(schema: GraphQLSchema, unit_enums_metadat
     processed_enum_values = set()
     lines = _process_unit_enum_directives(lines, unit_enums_metadata, processed_enum_values)
     
-    # Process field VSS type directives for FQN mapping (first)
-    lines = _process_field_vss_type_directives(lines, vspec_comments['field_vss_types'])
+    # Process all field @vspec directives in one consolidated step
+    lines = _process_consolidated_vspec_directives(lines, vspec_comments)
     
-    # Process field comment directives - maintain exact original logic  
-    lines = _process_field_comment_directives(lines, vspec_comments['field_comments'])
-    
-    # Process deprecated field directives - maintain exact original logic
+    # Process deprecated field directives - separate @deprecated directive
     lines = _process_deprecated_field_directives(lines, vspec_comments['field_deprecated'])
     
-    # Process range directives - maintain exact original logic
+    # Process range directives - separate directive, not @vspec
     lines = _process_range_directives(lines, vspec_comments['field_ranges'])
     
     # Process type-level directives - maintain exact original logic
@@ -606,7 +603,7 @@ def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, p
         for i, line in enumerate(lines):
             if line.strip().startswith(f'enum {enum_name}'):
                 if '@vspec' not in line:
-                    lines[i] = line.replace(' {', f' @vspec(quantityKindKey: "{quantity}") {{')
+                    lines[i] = line.replace(' {', f' @vspec(source: {{kind: QUANTITY_KIND, value: "{quantity}"}}) {{')
                 in_target_enum = True
                 continue
             elif line.strip().startswith('enum ') and in_target_enum:
@@ -629,7 +626,7 @@ def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, p
                         
                         if '@vspec' not in line:
                             indent = line[:len(line) - len(line.lstrip())]
-                            directive = (f'@vspec(sourceRef: {{name:"{unit_key}", elementKind: "UNIT", '
+                            directive = (f'@vspec(source: {{kind: UNIT, value: "{unit_key}", '
                                         f'note: "Taken and converted from full name <{unit_name}>."}})') 
                             lines[i] = f'{indent}{enum_value_name} {directive}'
                         
@@ -750,7 +747,7 @@ def _process_field_vss_type_directives(lines: list[str], field_vss_types: dict) 
         vspec_type = vss_info['vspec_type']
         
         # Create the @vspec directive with FQN mapping
-        vspec_directive = f'@vspec(sourceRef: {{name: "{fqn}", elementKind: FQN}}, vspecType: {vspec_type})'
+        vspec_directive = f'@vspec(source: {{kind: FQN, value: "{fqn}"}}, vspecType: {vspec_type})'
         
         in_type = False
         for i, line in enumerate(lines):
@@ -787,7 +784,7 @@ def _process_type_level_directives(lines: list[str], vspec_comments: dict) -> li
                 type_name = type_part.split(' @')[0].strip()
             else:
                 continue
-                
+            
             needs_vspec_comment = type_name in vspec_comments['type_comments']
             needs_instance_tag = type_name in vspec_comments['instance_tags']
             needs_vss_type = type_name in vspec_comments['vss_types']
@@ -801,7 +798,7 @@ def _process_type_level_directives(lines: list[str], vspec_comments: dict) -> li
                     fqn = vss_info['fqn']
                     vspec_type = vss_info['vspec_type']
                     
-                    vspec_directive = f'@vspec(sourceRef: {{name: "{fqn}", elementKind: FQN}}, vspecType: {vspec_type}'
+                    vspec_directive = f'@vspec(source: {{kind: FQN, value: "{fqn}"}}, vspecType: {vspec_type}'
                     
                     # Add comment if available
                     if needs_vspec_comment:
@@ -832,6 +829,76 @@ def _process_type_level_directives(lines: list[str], vspec_comments: dict) -> li
                 
                 new_line += ' {'
                 lines[i] = '  ' + new_line  # Preserve original indentation
+    return lines
+
+
+def _process_consolidated_vspec_directives(lines: list[str], vspec_comments: dict) -> list[str]:
+    """Process all field @vspec directives in one consolidated step to avoid multiple @vspec directives per field."""
+    
+    # Build a consolidated map of all vspec data per field
+    field_vspec_data = {}
+    
+    # Merge all field vspec information
+    for field_path, vss_info in vspec_comments.get('field_vss_types', {}).items():
+        if field_path not in field_vspec_data:
+            field_vspec_data[field_path] = {}
+        field_vspec_data[field_path]['source'] = f'{{kind: FQN, value: "{vss_info["fqn"]}"}}'
+        field_vspec_data[field_path]['vspecType'] = vss_info['vspec_type']
+    
+    for field_path, comment in vspec_comments.get('field_comments', {}).items():
+        if field_path not in field_vspec_data:
+            field_vspec_data[field_path] = {}
+        escaped_comment = comment.replace('"', '\\"')
+        field_vspec_data[field_path]['comment'] = f'"{escaped_comment}"'
+    
+    for field_path, deprecated_info in vspec_comments.get('field_deprecated', {}).items():
+        # Handle deprecation as a comment for now, since @deprecated is not part of @vspec
+        if field_path not in field_vspec_data:
+            field_vspec_data[field_path] = {}
+        # Note: We'll handle @deprecated separately since it's not part of @vspec directive
+    
+    # Apply consolidated @vspec directives
+    for field_path, vspec_data in field_vspec_data.items():
+        type_name, field_name = field_path.split('.')
+        
+        in_type = False
+        for i, line in enumerate(lines):
+            if line.strip().startswith(f'type {type_name}'):
+                in_type = True
+                continue
+            elif line.strip().startswith('type ') and in_type:
+                in_type = False
+                continue
+            elif line.strip() == '}' and in_type:
+                in_type = False
+                continue
+            
+            if in_type and line.strip().startswith(f'{field_name}') and '@vspec' not in line:
+                # Build consolidated @vspec directive
+                vspec_parts = []
+                
+                if 'source' in vspec_data:
+                    vspec_parts.append(f'source: {vspec_data["source"]}')
+                
+                if 'vspecType' in vspec_data:
+                    vspec_parts.append(f'vspecType: {vspec_data["vspecType"]}')
+                
+                if 'comment' in vspec_data:
+                    vspec_parts.append(f'comment: {vspec_data["comment"]}')
+                
+                if vspec_parts:
+                    directive = f'@vspec({", ".join(vspec_parts)})'
+                    
+                    # Add directive to the line
+                    if line.strip().endswith(')'):
+                        # Field with parameters like: field(unit: Unit): Type
+                        lines[i] = line.rstrip() + f' {directive}'
+                    else:
+                        # Simple field like: field: Type
+                        lines[i] = line.rstrip() + f' {directive}'
+                
+                break  # Found and processed this field, move to next
+    
     return lines
 
 
