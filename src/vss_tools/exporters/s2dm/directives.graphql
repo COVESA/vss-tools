@@ -1,4 +1,33 @@
-directive @vspec(comment: String, quantityKindKey: String, unitKey: String, unitName: String) on FIELD_DEFINITION | OBJECT | ENUM | ENUM_VALUE
+directive @vspec(
+  sourceRef: VspecMapping,
+  vspecType: VspecType,
+  comment: String,
+  defaultValue: String
+) on FIELD_DEFINITION | OBJECT | ENUM | ENUM_VALUE
+
+input VspecMapping {
+  """Original name in vspec (e.g., "millimeter", "mm", "Front", etc.)."""
+  name: String!
+  """Kind of Vspec element to which the name applies (e.g., UNIT_KEY)."""
+  elementKind: VspecElementKind!
+
+    """Optional note or comment about the mapping."""
+  note: String
+}
+
+enum VspecElementKind {
+  UNIT
+  INSTANCE_LABEL
+  ALLOWED_VALUE
+  QUANTITY_KIND
+}
+
+enum VspecType {
+  BRANCH
+  ATTRIBUTE
+  SENSOR
+  ACTUATOR
+}
 
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
 
