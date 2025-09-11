@@ -6,7 +6,6 @@ from typing import Any
 
 import pandas as pd
 import rich_click as click
-from anytree import PreOrderIter
 from caseconverter import camelcase, macrocase, pascalcase
 from graphql import (
     GraphQLArgument,
@@ -32,8 +31,8 @@ import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.datatypes import Datatypes, dynamic_units
 from vss_tools.main import get_trees
-from vss_tools.tree import VSSNode, get_expected_parent
-from vss_tools.utils.misc import getattr_nn
+from vss_tools.tree import VSSNode
+from vss_tools.utils.pandas_utils import get_metadata_df
 
 
 class S2DMExporterException(Exception):
@@ -109,74 +108,31 @@ DATATYPE_MAP = {
 }
 
 
-# Case conversion functions using case-converter library
-# These handle GraphQL naming conventions while preserving certain structure
-
-
+# Case conversion functions using case-converter library --> <https://github.com/chrisdoherty4/python-case-converter>
 def convert_to_graphql_type_name(name: str) -> str:
-    """Convert a VSS path to GraphQL type name (PascalCase with underscores preserved)."""
-    # Split by dots and convert each part to PascalCase, then join with underscores
+    """Convert a given string to the desired type name case.
+    
+    Example: "Vehicle.Body.Lights" -> "Vehicle_Body_Lights"
+    """
     parts = name.split(".")
     converted_parts = [pascalcase(part) for part in parts if part]
     return "_".join(converted_parts)
 
 
 def convert_to_graphql_field_name(name: str) -> str:
-    """Convert a VSS name to GraphQL field name (camelCase)."""
-    # For field names, we want pure camelCase without underscores
+    """Convert a given string to the desired field name case.
+    
+    Example: "IsLightOn" -> "isLightOn"
+    """
     return camelcase(name)
 
 
 def convert_to_graphql_enum_value(name: str) -> str:
-    """Convert a name to GraphQL enum value (SCREAMING_CASE)."""
-    # For enum values, we want SCREAMING_CASE which macrocase provides
+    """Convert a given string to the desired enum value case.
+
+    Example: "kilometer per hour" -> "KILOMETER_PER_HOUR"
+    """
     return macrocase(name)
-
-
-def get_metadata_df(root: VSSNode) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Traverses the VSS tree and returns DataFrames with metadata for branches and leaves.
-
-    Returns:
-        tuple: (branches_df, leaves_df)
-    """
-    core_headers = ["fqn", "parent", "name", "type", "description", "comment", "deprecation"]
-    leaf_specific_headers = ["datatype", "unit", "min", "max", "allowed", "default"]
-    branch_specific_headers = ["instances"]
-    headers = core_headers + leaf_specific_headers + branch_specific_headers
-
-    df = pd.DataFrame(columns=headers)
-
-    for node in PreOrderIter(root):
-        data = node.get_vss_data()
-        fqn = node.get_fqn()
-        parent = get_expected_parent(fqn)
-        name = node.name
-        vss_type = data.type.value
-
-        metadata = {
-            "fqn": fqn,
-            "parent": parent,
-            "name": name,
-            "type": vss_type,
-        }
-
-        # Add all other metadata fields
-        for header in headers[4:]:
-            metadata[header] = getattr_nn(data, header, "")
-
-        df = pd.concat([df, pd.DataFrame([metadata])], ignore_index=True)
-
-    # Split into branches and leaves
-    branch_headers = core_headers + branch_specific_headers
-    branches_df = df[df["type"] == "branch"]
-    branches_df = branches_df[branch_headers].set_index("fqn").sort_index()
-
-    leaf_headers = core_headers + leaf_specific_headers
-    leaves_df = df[df["type"].isin(["attribute", "sensor", "actuator"])]
-    leaves_df = leaves_df[leaf_headers].set_index("fqn").sort_index()
-
-    return branches_df, leaves_df
 
 
 @click.command()
