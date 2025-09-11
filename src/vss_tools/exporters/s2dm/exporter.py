@@ -1,13 +1,3 @@
-# Copyright (c) 2024 Contributors to COVESA
-#
-# This program and the accompanying materials are made available under the
-# terms of the Mozilla Public License 2.0 which is available at
-# https://www.mozilla.org/en-US/MPL/2.0/
-#
-# SPDX-License-Identifier: MPL-2.0
-
-"""S2DM (Schema to Data Model) GraphQL exporter using graphql-core."""
-
 from __future__ import annotations
 
 import sys
@@ -19,7 +9,6 @@ import rich_click as click
 from anytree import PreOrderIter
 from caseconverter import camelcase, macrocase, pascalcase
 from graphql import (
-    DirectiveLocation,
     GraphQLArgument,
     GraphQLBoolean,
     GraphQLDirective,
@@ -88,7 +77,7 @@ def load_directives_from_sdl() -> dict[str, GraphQLDirective]:
 CUSTOM_DIRECTIVES = load_directives_from_sdl()
 
 
-# Custom scalar types for VSS data types
+# Custom scalar types for Vspec data types
 Int8 = GraphQLScalarType(name="Int8")
 UInt8 = GraphQLScalarType(name="UInt8")
 Int16 = GraphQLScalarType(name="Int16")
@@ -101,15 +90,6 @@ UInt64 = GraphQLScalarType(name="UInt64")
 VSpecDirective = CUSTOM_DIRECTIVES["vspec"]
 RangeDirective = CUSTOM_DIRECTIVES["range"]
 InstanceTagDirective = CUSTOM_DIRECTIVES["instanceTag"]
-
-# Note: We keep the deprecated directive as a Python definition since it's built-in to GraphQL
-DeprecatedDirective = GraphQLDirective(
-    name="deprecated",
-    locations=[DirectiveLocation.FIELD_DEFINITION],
-    args={
-        "reason": GraphQLArgument(GraphQLString),
-    },
-)
 
 
 # Mapping from VSS datatypes to GraphQL types
@@ -326,7 +306,7 @@ def generate_s2dm_schema(
     schema = GraphQLSchema(
         query=query_type,
         types=all_types,
-        directives=[VSpecDirective, RangeDirective, DeprecatedDirective, InstanceTagDirective],
+        directives=[VSpecDirective, RangeDirective, InstanceTagDirective],
     )
 
     return schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
