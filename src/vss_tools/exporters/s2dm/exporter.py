@@ -10,7 +10,6 @@ from caseconverter import camelcase, macrocase, pascalcase
 from graphql import (
     GraphQLArgument,
     GraphQLBoolean,
-    GraphQLDirective,
     GraphQLEnumType,
     GraphQLEnumValue,
     GraphQLField,
@@ -23,7 +22,6 @@ from graphql import (
     GraphQLScalarType,
     GraphQLSchema,
     GraphQLString,
-    build_schema,
     print_schema,
 )
 
@@ -32,6 +30,7 @@ from vss_tools import log
 from vss_tools.datatypes import Datatypes, dynamic_units
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
+from vss_tools.utils.graphql_utils import load_predefined_schema_elements
 from vss_tools.utils.pandas_utils import get_metadata_df
 
 
@@ -41,39 +40,9 @@ class S2DMExporterException(Exception):
     pass
 
 
-def load_directives_from_sdl() -> dict[str, GraphQLDirective]:
-    """
-    Load custom GraphQL directives from SDL file.
-
-    Returns:
-        Dictionary mapping directive names to GraphQLDirective objects
-    """
-    # Get the path to the directives file relative to this module
-    directives_file = Path(__file__).parent / "directives.graphql"
-
-    if not directives_file.exists():
-        raise S2DMExporterException(f"Directives file not found: {directives_file}")
-
-    # Read the SDL content
-    sdl_content = directives_file.read_text()
-
-    # Build a temporary schema to extract the directives
-    try:
-        temp_schema = build_schema(sdl_content + "\ntype Query { dummy: String }")
-        directives = {}
-
-        for directive in temp_schema.directives:
-            # Skip built-in GraphQL directives
-            if directive.name not in ["skip", "include", "deprecated", "specifiedBy"]:
-                directives[directive.name] = directive
-
-        return directives
-    except Exception as e:
-        raise S2DMExporterException(f"Failed to parse directives SDL: {e}")
-
-
-# Load custom directives from SDL file
-CUSTOM_DIRECTIVES = load_directives_from_sdl()
+# Load predefined schema elements from directory
+predefined_dir = Path(__file__).parent / "predefined_elements"
+BASE_SCHEMA, CUSTOM_DIRECTIVES = load_predefined_schema_elements(predefined_dir)
 
 
 # Custom scalar types for Vspec data types
@@ -111,7 +80,7 @@ DATATYPE_MAP = {
 # Case conversion functions using case-converter library --> <https://github.com/chrisdoherty4/python-case-converter>
 def convert_to_graphql_type_name(name: str) -> str:
     """Convert a given string to the desired type name case.
-    
+
     Example: "Vehicle.Body.Lights" -> "Vehicle_Body_Lights"
     """
     parts = name.split(".")
@@ -121,7 +90,7 @@ def convert_to_graphql_type_name(name: str) -> str:
 
 def convert_to_graphql_field_name(name: str) -> str:
     """Convert a given string to the desired field name case.
-    
+
     Example: "IsLightOn" -> "isLightOn"
     """
     return camelcase(name)

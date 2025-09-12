@@ -1,13 +1,13 @@
 # S2DM Exporter
 
-The S2DM exporter generates GraphQL schemas in the Schema Definition Language (SDL) from Vspec specifications.  
-It is specifically designed for compatibility with the [Simplified Semantic Data Modeling (S2DM)](https://github.com/COVESA/s2dm) approach.  
-While it produces GraphQL SDL syntax output, its purpose differs from traditional GraphQL APIs: it focuses purely on the modeling language as a mechanism to formalize domain expertise, not on API implementation.  
+The S2DM exporter generates GraphQL schemas in the Schema Definition Language (SDL) from Vspec specifications.
+It is specifically designed for compatibility with the [Simplified Semantic Data Modeling (S2DM)](https://github.com/COVESA/s2dm) approach.
+While it produces GraphQL SDL syntax output, its purpose differs from traditional GraphQL APIs: it focuses purely on the modeling language as a mechanism to formalize domain expertise, not on API implementation.
 The S2DM exporter transforms VSS (Vehicle Signal Specification) into a GraphQL schema that maintains complete traceability back to the original VSS elements through specialized directives.
 
 ## What is S2DM?
 
-S2DM is a pragmatic data modeling approach that balances semantic rigor and usability for non-modelers.  
+S2DM is a pragmatic data modeling approach that balances semantic rigor and usability for non-modelers.
 It aims to enhance the Vspec language to be more aligned with existing tools and communities outside COVESA.
 
 ## Key Features
@@ -21,7 +21,7 @@ The most distinctive feature of the S2DM exporter is its comprehensive use of `@
 type Vehicle_Cabin @vspec(source: {kind: FQN, value: "Vehicle.Cabin"}, vspecType: BRANCH) {
     """The position of the driver seat in row 1."""
     driverPosition: Vehicle_Cabin_DriverPosition_Enum @vspec(
-        source: {kind: FQN, value: "Vehicle.Cabin.DriverPosition"}, 
+        source: {kind: FQN, value: "Vehicle.Cabin.DriverPosition"},
         vspecType: ATTRIBUTE,
         comment: "Some signals use DriverSide and PassengerSide as instances..."
     )

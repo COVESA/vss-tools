@@ -5,7 +5,6 @@ Tests for pandas utilities.
 from pathlib import Path
 
 import pandas as pd
-
 from vss_tools.main import get_trees
 from vss_tools.utils.pandas_utils import get_metadata_df
 
@@ -35,11 +34,9 @@ class TestPandasUtils:
         assert isinstance(leaves_df, pd.DataFrame)
 
         # Test DataFrame structure (fqn is the index, not a column)
-        expected_branch_headers = [
-            "parent", "name", "type", "description", "comment", "deprecation", "instances"
-        ]
+        expected_branch_headers = ["parent", "name", "type", "description", "comment", "deprecation", "instances"]
         expected_leaf_headers = [
-            "parent", 
+            "parent",
             "name",
             "type",
             "description",
@@ -124,7 +121,7 @@ class TestPandasUtils:
 
         # Look for nodes with instances (seat example should have some)
         branches_with_instances = branches_df[branches_df["instances"].notna()]
-        
+
         # We should have at least some branches with instances based on the seat example
         if len(branches_with_instances) > 0:
             # Check that instances are properly captured
@@ -132,7 +129,7 @@ class TestPandasUtils:
                 instances = row["instances"]
                 assert instances is not None
                 # Instances should be a list or similar structure
-                assert hasattr(instances, '__iter__')
+                assert hasattr(instances, "__iter__")
 
         # Test specific allowed values we know exist
         if "Vehicle.Cabin.DriverPosition" in leaves_df.index:
