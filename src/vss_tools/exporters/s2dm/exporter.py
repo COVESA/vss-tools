@@ -9,27 +9,24 @@ import rich_click as click
 from caseconverter import DELIMITERS, pascalcase
 from graphql import (
     GraphQLArgument,
-    GraphQLBoolean,
     GraphQLEnumType,
     GraphQLEnumValue,
     GraphQLField,
-    GraphQLFloat,
     GraphQLID,
-    GraphQLInt,
     GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,
-    GraphQLScalarType,
     GraphQLSchema,
     GraphQLString,
-    print_schema,
 )
 
 import vss_tools.cli_options as clo
 from vss_tools import log
-from vss_tools.datatypes import Datatypes, dynamic_units
+from vss_tools.datatypes import dynamic_units
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
+from vss_tools.utils.graphql_directive_processor import GraphQLDirectiveProcessor
+from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP, get_vss_scalar_types
 from vss_tools.utils.graphql_utils import (
     DEFAULT_CONVERSIONS,
     GraphQLElementType,
@@ -72,43 +69,15 @@ class S2DMExporterException(Exception):
 
 
 # Load predefined schema elements from directory
-predefined_dir = Path(__file__).parent / "predefined_elements"
-BASE_SCHEMA, CUSTOM_DIRECTIVES = load_predefined_schema_elements(predefined_dir)
-
-
-# Custom scalar types for Vspec data types
-Int8 = GraphQLScalarType(name="Int8")
-UInt8 = GraphQLScalarType(name="UInt8")
-Int16 = GraphQLScalarType(name="Int16")
-UInt16 = GraphQLScalarType(name="UInt16")
-UInt32 = GraphQLScalarType(name="UInt32")
-Int64 = GraphQLScalarType(name="Int64")
-UInt64 = GraphQLScalarType(name="UInt64")
+BASE_SCHEMA, CUSTOM_DIRECTIVES = load_predefined_schema_elements(Path(__file__).parent / "predefined_elements")
 
 # Custom directives loaded from SDL
 VSpecDirective = CUSTOM_DIRECTIVES["vspec"]
 RangeDirective = CUSTOM_DIRECTIVES["range"]
 InstanceTagDirective = CUSTOM_DIRECTIVES["instanceTag"]
 
-
-# Mapping from VSS datatypes to GraphQL types
-DATATYPE_MAP = {
-    Datatypes.INT8[0]: Int8,
-    Datatypes.UINT8[0]: UInt8,
-    Datatypes.INT16[0]: Int16,
-    Datatypes.UINT16[0]: UInt16,
-    Datatypes.INT32[0]: GraphQLInt,
-    Datatypes.UINT32[0]: UInt32,
-    Datatypes.INT64[0]: Int64,
-    Datatypes.UINT64[0]: UInt64,
-    Datatypes.FLOAT[0]: GraphQLFloat,
-    Datatypes.DOUBLE[0]: GraphQLFloat,
-    Datatypes.BOOLEAN[0]: GraphQLBoolean,
-    Datatypes.STRING[0]: GraphQLString,
-}
-
-
-# Direct use of convert_name_for_graphql_schema with S2DM_CONVERSIONS throughout the file
+# Initialize directive processor
+directive_processor = GraphQLDirectiveProcessor()
 
 
 @click.command()
@@ -132,9 +101,7 @@ def cli(
     quantities: tuple[Path, ...],
     units: tuple[Path, ...],
 ):
-    """
-    Export a VSS specification to S2DM GraphQL schema.
-    """
+    """Export a VSS specification to S2DM GraphQL schema."""
     try:
         tree, _ = get_trees(
             vspec=vspec,
@@ -232,9 +199,8 @@ def generate_s2dm_schema(
     )
 
     # Create the schema with custom scalar types and directives
-    all_types = (
-        [Int8, UInt8, Int16, UInt16, UInt32, Int64, UInt64] + list(types_registry.values()) + list(unit_enums.values())
-    )
+    vss_scalars = get_vss_scalar_types()
+    all_types = vss_scalars + list(types_registry.values()) + list(unit_enums.values())
     schema = GraphQLSchema(
         query=query_type,
         types=all_types,
@@ -484,394 +450,8 @@ def print_schema_with_vspec_directives(
     Returns:
         SDL string with @vspec directives
     """
-    # Start with the default schema print
-    sdl = print_schema(schema)
-    lines = sdl.split("\n")
-
-    # Process unit enum directives - maintain exact original logic
-    processed_enum_values: set[str] = set()
-    lines = _process_unit_enum_directives(lines, unit_enums_metadata, processed_enum_values)
-
-    # Process allowed value enum directives
-    lines = _process_allowed_value_enum_directives(lines, allowed_enums_metadata, processed_enum_values)
-
-    # Process all field @vspec directives in one consolidated step
-    lines = _process_consolidated_vspec_directives(lines, vspec_comments)
-
-    # Process deprecated field directives - separate @deprecated directive
-    lines = _process_deprecated_field_directives(lines, vspec_comments["field_deprecated"])
-
-    # Process range directives - separate directive, not @vspec
-    lines = _process_range_directives(lines, vspec_comments["field_ranges"])
-
-    # Process type-level directives - maintain exact original logic
-    lines = _process_type_level_directives(lines, vspec_comments)
-
-    return "\n".join(lines)
-
-
-def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, processed_enum_values: set) -> list[str]:
-    """Process unit enum directives - extracted from original logic."""
-    for quantity, units_data in unit_enums_metadata.items():
-        enum_name = f"{convert_name_for_graphql_schema(quantity, GraphQLElementType.TYPE, S2DM_CONVERSIONS)}UnitEnum"
-
-        in_target_enum = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"enum {enum_name}"):
-                if "@vspec" not in line:
-                    lines[i] = line.replace(" {", f' @vspec(source: {{kind: QUANTITY_KIND, value: "{quantity}"}}) {{')
-                in_target_enum = True
-                continue
-            elif line.strip().startswith("enum ") and in_target_enum:
-                in_target_enum = False
-                continue
-            elif line.strip() == "}" and in_target_enum:
-                in_target_enum = False
-                continue
-
-            if in_target_enum and line.strip() and not line.strip().startswith('"'):
-                stripped_line = line.strip()
-
-                for unit_key, unit_info in units_data.items():
-                    unit_name = unit_info["name"]  # Display name from VSS unit data
-                    enum_value_name = convert_name_for_graphql_schema(
-                        unit_name, GraphQLElementType.ENUM_VALUE, S2DM_CONVERSIONS
-                    )
-
-                    enum_value_key = f"{enum_name}.{enum_value_name}"
-                    if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_enum_values:
-                        if "@vspec" not in line:
-                            indent = line[: len(line) - len(line.lstrip())]
-                            directive = (
-                                f'@vspec(source: {{kind: UNIT, value: "{unit_key}", '
-                                f'note: "Taken and converted from full name <{unit_name}>."}})'
-                            )
-                            lines[i] = f"{indent}{enum_value_name} {directive}"
-
-                        processed_enum_values.add(enum_value_key)
-                        break
-    return lines
-
-
-def _process_allowed_value_enum_directives(
-    lines: list[str], allowed_enums_metadata: dict, processed_enum_values: set
-) -> list[str]:
-    """Process allowed value enum directives."""
-    for enum_name, enum_data in allowed_enums_metadata.items():
-        allowed_values_dict = enum_data.get("allowed_values", {})
-        in_target_enum = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"enum {enum_name}"):
-                # Don't add directive to enum declaration for allowed values
-                in_target_enum = True
-                continue
-            elif line.strip().startswith("enum ") and in_target_enum:
-                in_target_enum = False
-                continue
-            elif line.strip() == "}" and in_target_enum:
-                in_target_enum = False
-                continue
-
-            if in_target_enum and line.strip() and not line.strip().startswith('"'):
-                stripped_line = line.strip()
-
-                for graphql_enum_value, original_value in allowed_values_dict.items():
-                    enum_value_key = f"{enum_name}.{graphql_enum_value}"
-
-                    if stripped_line.startswith(graphql_enum_value) and enum_value_key not in processed_enum_values:
-                        if "@vspec" not in line:
-                            indent = line[: len(line) - len(line.lstrip())]
-                            directive = f'@vspec(source: {{kind: ALLOWED_VALUE, value: "{original_value}"}})'
-                            lines[i] = f"{indent}{graphql_enum_value} {directive}"
-
-                        processed_enum_values.add(enum_value_key)
-                        break
-    return lines
-
-
-def _process_field_comment_directives(lines: list[str], field_comments: dict) -> list[str]:
-    """Process field comment directives - extracted from original logic."""
-    for field_path, comment in field_comments.items():
-        escaped_comment = comment.replace('"', '\\"')
-        type_name, field_name = field_path.split(".")
-
-        in_type = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"type {type_name}"):
-                in_type = True
-                continue
-            elif line.strip().startswith("type ") and in_type:
-                in_type = False
-                continue
-            elif line.strip() == "}" and in_type:
-                in_type = False
-                continue
-
-            if (
-                in_type
-                and field_name in line
-                and ":" in line
-                and not line.strip().startswith('"')
-                and "@vspec" not in line
-            ):
-                indent = "    "
-                directive_line = f'{indent}@vspec(comment: "{escaped_comment}")'
-                lines.insert(i + 1, directive_line)
-                break
-    return lines
-
-
-def _process_deprecated_field_directives(lines: list[str], field_deprecated: dict) -> list[str]:
-    """Process deprecated field directives - extracted from original logic."""
-    for field_path, reason in field_deprecated.items():
-        escaped_reason = reason.replace('"', '\\"')
-        type_name, field_name = field_path.split(".")
-
-        in_type = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"type {type_name}"):
-                in_type = True
-                continue
-            elif line.strip().startswith("type ") and in_type:
-                in_type = False
-                continue
-            elif line.strip() == "}" and in_type:
-                in_type = False
-                continue
-
-            if (
-                in_type
-                and field_name in line
-                and ":" in line
-                and not line.strip().startswith('"')
-                and "@deprecated" not in line
-            ):
-                insert_line = i + 1
-                while insert_line < len(lines) and lines[insert_line].strip().startswith("@vspec"):
-                    insert_line += 1
-                if insert_line < len(lines) and "@deprecated" not in lines[insert_line]:
-                    indent = "    "
-                    lines.insert(insert_line, f'{indent}@deprecated(reason: "{escaped_reason}")')
-                break
-    return lines
-
-
-def _process_range_directives(lines: list[str], field_ranges: dict) -> list[str]:
-    """Process range directives - extracted from original logic."""
-    for field_path, range_data in field_ranges.items():
-        range_args = []
-        min_val = range_data.get("min", "")
-        max_val = range_data.get("max", "")
-
-        if min_val != "" and min_val is not None:
-            range_args.append(f"min: {min_val}")
-        if max_val != "" and max_val is not None:
-            range_args.append(f"max: {max_val}")
-
-        if not range_args:
-            continue
-
-        range_directive = f'@range({", ".join(range_args)})'
-        type_name, field_name = field_path.split(".")
-
-        in_type = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"type {type_name}"):
-                in_type = True
-                continue
-            elif line.strip().startswith("type ") and in_type:
-                in_type = False
-                continue
-            elif line.strip() == "}" and in_type:
-                in_type = False
-                continue
-
-            if (
-                in_type
-                and field_name in line
-                and ":" in line
-                and not line.strip().startswith('"')
-                and "@range" not in line
-            ):
-                insert_line = i + 1
-                while insert_line < len(lines) and (
-                    lines[insert_line].strip().startswith("@vspec")
-                    or lines[insert_line].strip().startswith("@deprecated")
-                ):
-                    insert_line += 1
-                if insert_line < len(lines) and "@range" not in lines[insert_line]:
-                    indent = "    "
-                    lines.insert(insert_line, f"{indent}{range_directive}")
-                break
-    return lines
-
-
-def _process_field_vss_type_directives(lines: list[str], field_vss_types: dict) -> list[str]:
-    """Process field-level VSS type directives for FQN mapping."""
-    for field_path, vss_info in field_vss_types.items():
-        type_name, field_name = field_path.split(".")
-        fqn = vss_info["fqn"]
-        vspec_type = vss_info["vspec_type"]
-
-        # Create the @vspec directive with FQN mapping
-        vspec_directive = f'@vspec(source: {{kind: FQN, value: "{fqn}"}}, vspecType: {vspec_type})'
-
-        in_type = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"type {type_name}"):
-                in_type = True
-                continue
-            elif line.strip().startswith("type ") and in_type:
-                in_type = False
-                continue
-            elif line.strip() == "}" and in_type:
-                in_type = False
-                continue
-
-            if (
-                in_type
-                and field_name in line
-                and ":" in line
-                and not line.strip().startswith('"')
-                and "@vspec" not in line
-            ):
-                # Insert @vspec directive as the first directive after field declaration
-                insert_line = i + 1
-                indent = "    "
-                lines.insert(insert_line, f"{indent}{vspec_directive}")
-                break
-    return lines
-
-
-def _process_type_level_directives(lines: list[str], vspec_comments: dict) -> list[str]:
-    """Process type-level directives - extracted from original logic."""
-    for i, line in enumerate(lines):
-        if line.strip().startswith("type "):
-            type_line = line.strip()
-
-            type_part = type_line[5:]  # Remove "type "
-            if " {" in type_part:
-                type_name = type_part.split(" {")[0].strip()
-            elif " @" in type_part:
-                type_name = type_part.split(" @")[0].strip()
-            else:
-                continue
-
-            needs_vspec_comment = type_name in vspec_comments["type_comments"]
-            needs_instance_tag = type_name in vspec_comments["instance_tags"]
-            needs_vss_type = type_name in vspec_comments["vss_types"]
-
-            if needs_vspec_comment or needs_instance_tag or needs_vss_type:
-                new_line = f"type {type_name}"
-
-                # Add @vspec directive with VSS type information
-                if needs_vss_type and "@vspec" not in line:
-                    vss_info = vspec_comments["vss_types"][type_name]
-                    fqn = vss_info["fqn"]
-                    vspec_type = vss_info["vspec_type"]
-
-                    vspec_directive = f'@vspec(source: {{kind: FQN, value: "{fqn}"}}, vspecType: {vspec_type}'
-
-                    # Add comment if available
-                    if needs_vspec_comment:
-                        comment = vspec_comments["type_comments"][type_name]
-                        escaped_comment = comment.replace('"', '\\"')
-                        vspec_directive += f', comment: "{escaped_comment}"'
-
-                    vspec_directive += ")"
-                    new_line += f" {vspec_directive}"
-                elif needs_vspec_comment and "@vspec" not in line:
-                    # Fallback to just comment if no VSS type info
-                    comment = vspec_comments["type_comments"][type_name]
-                    escaped_comment = comment.replace('"', '\\"')
-                    new_line += f' @vspec(comment: "{escaped_comment}")'
-
-                if needs_instance_tag and "@instanceTag" not in line:
-                    new_line += " @instanceTag"
-
-                if "@" in type_line and not (new_line.endswith("@instanceTag") or "@vspec" in new_line):
-                    existing_directives = []
-                    if "@vspec" in type_line and not (needs_vss_type or needs_vspec_comment):
-                        vspec_start = type_line.find("@vspec")
-                        vspec_end = type_line.find(")", vspec_start) + 1
-                        existing_directives.append(type_line[vspec_start:vspec_end])
-
-                    if existing_directives:
-                        new_line += " " + " ".join(existing_directives)
-
-                new_line += " {"
-                lines[i] = "  " + new_line  # Preserve original indentation
-    return lines
-
-
-def _process_consolidated_vspec_directives(lines: list[str], vspec_comments: dict) -> list[str]:
-    """Process all field @vspec directives in one consolidated step to avoid multiple @vspec directives per field."""
-
-    # Build a consolidated map of all vspec data per field
-    field_vspec_data: dict[str, dict[str, Any]] = {}
-
-    # Merge all field vspec information
-    for field_path, vss_info in vspec_comments.get("field_vss_types", {}).items():
-        if field_path not in field_vspec_data:
-            field_vspec_data[field_path] = {}
-        field_vspec_data[field_path]["source"] = f'{{kind: FQN, value: "{vss_info["fqn"]}"}}'
-        field_vspec_data[field_path]["vspecType"] = vss_info["vspec_type"]
-
-    for field_path, comment in vspec_comments.get("field_comments", {}).items():
-        if field_path not in field_vspec_data:
-            field_vspec_data[field_path] = {}
-        escaped_comment = comment.replace('"', '\\"')
-        field_vspec_data[field_path]["comment"] = f'"{escaped_comment}"'
-
-    for field_path, deprecated_info in vspec_comments.get("field_deprecated", {}).items():
-        # Handle deprecation as a comment for now, since @deprecated is not part of @vspec
-        if field_path not in field_vspec_data:
-            field_vspec_data[field_path] = {}
-        # Note: We'll handle @deprecated separately since it's not part of @vspec directive
-
-    # Apply consolidated @vspec directives
-    for field_path, vspec_data in field_vspec_data.items():
-        type_name, field_name = field_path.split(".")
-
-        in_type = False
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"type {type_name}"):
-                in_type = True
-                continue
-            elif line.strip().startswith("type ") and in_type:
-                in_type = False
-                continue
-            elif line.strip() == "}" and in_type:
-                in_type = False
-                continue
-
-            if in_type and line.strip().startswith(f"{field_name}") and "@vspec" not in line:
-                # Build consolidated @vspec directive
-                vspec_parts = []
-
-                if "source" in vspec_data:
-                    vspec_parts.append(f'source: {vspec_data["source"]}')
-
-                if "vspecType" in vspec_data:
-                    vspec_parts.append(f'vspecType: {vspec_data["vspecType"]}')
-
-                if "comment" in vspec_data:
-                    vspec_parts.append(f'comment: {vspec_data["comment"]}')
-
-                if vspec_parts:
-                    directive = f'@vspec({", ".join(vspec_parts)})'
-
-                    # Add directive to the line
-                    if line.strip().endswith(")"):
-                        # Field with parameters like: field(unit: Unit): Type
-                        lines[i] = line.rstrip() + f" {directive}"
-                    else:
-                        # Simple field like: field: Type
-                        lines[i] = line.rstrip() + f" {directive}"
-
-                break  # Found and processed this field, move to next
-
-    return lines
+    # Use directive processor instead of manual string manipulation
+    return directive_processor.process_schema(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
 
 
 def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry=None):
@@ -907,7 +487,7 @@ def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry=None):
     datatype = leaf_row.get("datatype", "string")
 
     # Map VSS datatypes to GraphQL types
-    return DATATYPE_MAP.get(datatype, GraphQLString)
+    return VSS_DATATYPE_MAP.get(datatype, GraphQLString)
 
 
 def parse_instance_dimensions(instances_list):

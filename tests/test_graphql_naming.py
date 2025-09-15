@@ -4,8 +4,8 @@ Tests for the unified GraphQL naming conventions.
 
 from vss_tools.utils.graphql_utils import (
     GraphQLElementType,
-    convert_name_for_graphql_schema,
     convert_fqn_to_graphql_type_name,
+    convert_name_for_graphql_schema,
     is_valid_graphql_name,
     sanitize_graphql_name,
 )
@@ -29,7 +29,9 @@ class TestGraphQLNaming:
     def test_convert_name_for_graphql_schema_enum_values(self):
         """Test case conversion for GraphQL enum values."""
         assert convert_name_for_graphql_schema("simple", GraphQLElementType.ENUM_VALUE) == "SIMPLE"
-        assert convert_name_for_graphql_schema("kilometer per hour", GraphQLElementType.ENUM_VALUE) == "KILOMETER_PER_HOUR"
+        assert (
+            convert_name_for_graphql_schema("kilometer per hour", GraphQLElementType.ENUM_VALUE) == "KILOMETER_PER_HOUR"
+        )
         assert convert_name_for_graphql_schema("with-dash", GraphQLElementType.ENUM_VALUE) == "WITH_DASH"
 
     def test_convert_name_for_graphql_schema_enum_with_prefix(self):

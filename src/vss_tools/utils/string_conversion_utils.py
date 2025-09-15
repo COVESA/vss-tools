@@ -24,12 +24,12 @@ def clean_name_for_conversion(name: str) -> str:
 def handle_fqn_conversion(name: str, case_func: Callable[..., str], delimiters: str = " -_") -> str:
     """
     Handle fully qualified names by converting each part separately and joining with underscores.
-    
+
     Args:
         name: The FQN string to convert (e.g., "Vehicle.Body.Lights")
         case_func: The case conversion function to apply to each part
         delimiters: Delimiters to pass to the case conversion function
-        
+
     Returns:
         Converted FQN with underscores between parts
     """
