@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Dict
 
 import pandas as pd
 import rich_click as click
-from caseconverter import camelcase, macrocase, pascalcase
+from caseconverter import DELIMITERS, pascalcase
 from graphql import (
     GraphQLArgument,
     GraphQLBoolean,
@@ -30,8 +30,39 @@ from vss_tools import log
 from vss_tools.datatypes import Datatypes, dynamic_units
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
-from vss_tools.utils.graphql_utils import load_predefined_schema_elements
+from vss_tools.utils.graphql_utils import (
+    DEFAULT_CONVERSIONS,
+    GraphQLElementType,
+    convert_name_for_graphql_schema,
+    load_predefined_schema_elements,
+)
 from vss_tools.utils.pandas_utils import get_metadata_df
+from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
+
+# S2DM-specific conversions that override defaults for FQN handling
+# For type-like elements, we use standard delimiters (without dots) so FQNs are handled correctly
+# For other elements, we inherit the DEFAULT behavior (includes dot delimiter support)
+
+
+def get_s2dm_conversions() -> Dict[GraphQLElementType, Callable[[str], str]]:
+    """Get S2DM conversions with proper enum instances."""
+    s2dm_conversions = DEFAULT_CONVERSIONS.copy()
+    s2dm_conversions.update(
+        {
+            # Override type-like elements to handle FQNs (Vehicle.Body -> Vehicle_Body)
+            # Use standard delimiters (space, dash, underscore) but NOT dots for FQN names
+            GraphQLElementType.TYPE: lambda name: handle_fqn_conversion(name, pascalcase, DELIMITERS),
+            GraphQLElementType.INTERFACE: lambda name: handle_fqn_conversion(name, pascalcase, DELIMITERS),
+            GraphQLElementType.UNION: lambda name: handle_fqn_conversion(name, pascalcase, DELIMITERS),
+            GraphQLElementType.INPUT: lambda name: handle_fqn_conversion(name, pascalcase, DELIMITERS),
+            GraphQLElementType.ENUM: lambda name: handle_fqn_conversion(name, pascalcase, DELIMITERS),
+        }
+    )
+    return s2dm_conversions
+
+
+# Create the conversions dictionary
+S2DM_CONVERSIONS = get_s2dm_conversions()
 
 
 class S2DMExporterException(Exception):
@@ -77,31 +108,7 @@ DATATYPE_MAP = {
 }
 
 
-# Case conversion functions using case-converter library --> <https://github.com/chrisdoherty4/python-case-converter>
-def convert_to_graphql_type_name(name: str) -> str:
-    """Convert a given string to the desired type name case.
-
-    Example: "Vehicle.Body.Lights" -> "Vehicle_Body_Lights"
-    """
-    parts = name.split(".")
-    converted_parts = [pascalcase(part) for part in parts if part]
-    return "_".join(converted_parts)
-
-
-def convert_to_graphql_field_name(name: str) -> str:
-    """Convert a given string to the desired field name case.
-
-    Example: "IsLightOn" -> "isLightOn"
-    """
-    return camelcase(name)
-
-
-def convert_to_graphql_enum_value(name: str) -> str:
-    """Convert a given string to the desired enum value case.
-
-    Example: "kilometer per hour" -> "KILOMETER_PER_HOUR"
-    """
-    return macrocase(name)
+# Direct use of convert_name_for_graphql_schema with S2DM_CONVERSIONS throughout the file
 
 
 @click.command()
@@ -260,7 +267,7 @@ def create_object_type(
         GraphQLObjectType: The created GraphQL object type
     """
     branch_row = branches_df.loc[fqn]
-    type_name = convert_to_graphql_type_name(fqn)
+    type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
     description = branch_row.get("description", "")
 
     # Store VSS type information for @vspec directive
@@ -298,7 +305,7 @@ def create_object_type(
         # Add fields for child leaves (attributes, sensors, actuators)
         child_leaves = leaves_df[leaves_df["parent"] == fqn]
         for child_fqn, leaf_row in child_leaves.iterrows():
-            field_name = convert_to_graphql_field_name(leaf_row["name"])
+            field_name = convert_name_for_graphql_schema(leaf_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
             field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
             field_description = leaf_row.get("description", "")
 
@@ -353,7 +360,9 @@ def create_object_type(
         # Add fields for child branches
         child_branches = branches_df[branches_df["parent"] == fqn]
         for child_fqn, child_branch_row in child_branches.iterrows():
-            field_name = convert_to_graphql_field_name(child_branch_row["name"])
+            field_name = convert_name_for_graphql_schema(
+                child_branch_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS
+            )
 
             # If child has instances, make it a list
             if child_branch_row.get("instances"):
@@ -429,14 +438,16 @@ def create_unit_enums() -> dict[str, GraphQLEnumType]:
 
     for quantity, units_data in quantity_units.items():
         # Create enum name: length -> LengthUnitEnum, angular-speed -> AngularSpeedUnitEnum
-        enum_name = f"{convert_to_graphql_type_name(quantity)}UnitEnum"
+        enum_name = f"{convert_name_for_graphql_schema(quantity, GraphQLElementType.ENUM, S2DM_CONVERSIONS)}UnitEnum"
 
         # Create enum values
         enum_values = {}
         for unit_key, unit_info in units_data.items():
             # Use the unit name for enum value name (kilometer -> KILOMETER)
             unit_name = unit_info["name"]  # Use the display name from VSS unit data
-            enum_value_name = convert_to_graphql_enum_value(unit_name)
+            enum_value_name = convert_name_for_graphql_schema(
+                unit_name, GraphQLElementType.ENUM_VALUE, S2DM_CONVERSIONS
+            )
 
             # The GraphQL enum value should represent the original unit key
             # This is what will be used in schema serialization
@@ -502,7 +513,7 @@ def print_schema_with_vspec_directives(
 def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, processed_enum_values: set) -> list[str]:
     """Process unit enum directives - extracted from original logic."""
     for quantity, units_data in unit_enums_metadata.items():
-        enum_name = f"{convert_to_graphql_type_name(quantity)}UnitEnum"
+        enum_name = f"{convert_name_for_graphql_schema(quantity, GraphQLElementType.TYPE, S2DM_CONVERSIONS)}UnitEnum"
 
         in_target_enum = False
         for i, line in enumerate(lines):
@@ -523,7 +534,9 @@ def _process_unit_enum_directives(lines: list[str], unit_enums_metadata: dict, p
 
                 for unit_key, unit_info in units_data.items():
                     unit_name = unit_info["name"]  # Display name from VSS unit data
-                    enum_value_name = convert_to_graphql_enum_value(unit_name)
+                    enum_value_name = convert_name_for_graphql_schema(
+                        unit_name, GraphQLElementType.ENUM_VALUE, S2DM_CONVERSIONS
+                    )
 
                     enum_value_key = f"{enum_name}.{enum_value_name}"
                     if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_enum_values:
@@ -880,7 +893,9 @@ def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry=None):
                 # Create enum type name based on the leaf's fully qualified path
                 # Use the index as the FQN since qualified_name might not be available
                 fqn = leaf_row.name if hasattr(leaf_row, "name") else leaf_row.get("qualified_name", "unknown")
-                enum_type_name = f"{convert_to_graphql_type_name(fqn)}_Enum"
+                enum_type_name = (
+                    f"{convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)}_Enum"
+                )
 
                 # Return the enum type if it exists in registry
                 if enum_type_name in types_registry:
@@ -978,7 +993,7 @@ def generate_instance_types_and_enums(branches_df, vspec_comments):
     for fqn, branch_row in branches_with_instances.iterrows():
         instances = branch_row["instances"]
         if instances:
-            base_type_name = convert_to_graphql_type_name(fqn)
+            base_type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
             instance_tag_type_name = f"{base_type_name}_InstanceTag"
 
             dimensions = parse_instance_dimensions(instances)
@@ -1046,7 +1061,7 @@ def generate_allowed_value_enums(leaves_df):
         allowed_values = leaf_row["allowed"]
         if allowed_values and isinstance(allowed_values, list):
             # Generate enum name from FQN
-            enum_name = f"{convert_to_graphql_type_name(fqn)}_Enum"
+            enum_name = f"{convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)}_Enum"
 
             # Store metadata for @vspec directive generation
             allowed_enums_metadata[enum_name] = {"fqn": fqn, "allowed_values": {}}
