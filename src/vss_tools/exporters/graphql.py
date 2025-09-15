@@ -10,10 +10,8 @@
 from __future__ import annotations
 
 import json
-import keyword
 import re
 import sys
-from enum import Enum
 from itertools import product
 from pathlib import Path
 from typing import Any, Dict
@@ -28,10 +26,8 @@ from vss_tools import log
 from vss_tools.datatypes import Datatypes, dynamic_units, is_array
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode, expand_string
-from vss_tools.utils.misc import str_to_screaming_snake_case
+from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from vss_tools.utils.pandas_utils import get_metadata_df
-
-from .samm.helpers.string_helper import str_to_lc_first_camel_case, str_to_uc_first
 
 
 class GraphQLExporterException(Exception):
@@ -70,18 +66,8 @@ class UInt64(Scalar):
 
 
 # ========= Mapping aids =========
-class GQLElementType(Enum):
-    """Enum of GraphQL elements to better handle naming conventions during the export process"""
-
-    TYPE = "type"
-    FIELD = "field"
-    ARGUMENT = "argument"
-    DIRECTIVE = "directive"
-    ENUM = "enum"
-    INTERFACE = "interface"
-    UNION = "union"
-    SCALAR = "scalar"
-    ENUM_VALUE = "enum_value"
+# Use the unified GraphQL element type enum from utils
+GQLElementType = GraphQLElementType
 
 
 datatype_map = {
@@ -132,38 +118,22 @@ mapping_leaves_df = pd.DataFrame(
 def get_gql_name(text: str, gql_type: GQLElementType) -> str:
     """
     Converts a given text to a GraphQL compatible name based on the given GQLElementType.
+
+    This function wraps the unified convert_name_for_graphql_schema utility to maintain
+    backward compatibility with existing code.
+
     For example:
     - type, enum, and scalars must be PascalCase.
     - fields and arguments must be camelCase.
     - enum values must be SCREAMING_SNAKE_CASE.
     """
-
-    if gql_type in {GQLElementType.FIELD, GQLElementType.ARGUMENT, GQLElementType.DIRECTIVE}:
-        text = str_to_lc_first_camel_case(text.replace(".", "_"))
-        return text if not keyword.iskeyword(text) else f"{text}_"
-    elif gql_type in {
-        GQLElementType.TYPE,
-        GQLElementType.ENUM,
-        GQLElementType.INTERFACE,
-        GQLElementType.UNION,
-        GQLElementType.SCALAR,
-    }:
-        text = text.replace(".", "_").replace("-", "")
-        text = f"{text}_Enum" if gql_type == GQLElementType.ENUM else text
-        text = str_to_uc_first(text)
-        return text if not keyword.iskeyword(text) else f"{text}_"
-    elif gql_type in {GQLElementType.ENUM_VALUE}:
-        text = str_to_screaming_snake_case(text)
-        if text[0].isdigit():
-            text = f"_{text}"
-        return text if not keyword.iskeyword(text) else f"{text}_"
-    raise GraphQLExporterException(f"Invalid GQLElementType: {gql_type}")
+    return convert_name_for_graphql_schema(text, gql_type)
 
 
 def get_unit_enum_name(quantity_kind: str) -> str:
     """Get the name for the GraphQL unit enum"""
     text = f"{quantity_kind}_Unit"
-    return get_gql_name(str_to_uc_first(text), GQLElementType.ENUM)
+    return get_gql_name(text, GQLElementType.ENUM)
 
 
 def get_gql_unit_enums() -> Dict[str, graphene.Enum]:

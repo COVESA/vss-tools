@@ -10,27 +10,28 @@ from vss_tools.exporters.s2dm import (
     get_metadata_df,
     print_schema_with_vspec_directives,
 )
-from vss_tools.exporters.s2dm.exporter import (
-    convert_to_graphql_field_name,
-    convert_to_graphql_type_name,
-)
+from vss_tools.exporters.s2dm.exporter import S2DM_CONVERSIONS
 from vss_tools.main import get_trees
+from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
 
 class TestS2DMExporter:
     """Test class for S2DM GraphQL exporter."""
 
-    def test_convert_to_graphql_type_name(self):
-        """Test conversion to GraphQL type names."""
-        assert convert_to_graphql_type_name("Vehicle.Cabin.Seat") == "Vehicle_Cabin_Seat"
-        assert convert_to_graphql_type_name("simple") == "Simple"
-        assert convert_to_graphql_type_name("with-dash") == "WithDash"
+    def test_convert_for_graphql_type_names(self):
+        """Test conversion to GraphQL type names using unified function."""
+        assert (
+            convert_name_for_graphql_schema("Vehicle.Cabin.Seat", GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+            == "Vehicle_Cabin_Seat"
+        )
+        assert convert_name_for_graphql_schema("simple", GraphQLElementType.TYPE, S2DM_CONVERSIONS) == "Simple"
+        assert convert_name_for_graphql_schema("with-dash", GraphQLElementType.TYPE, S2DM_CONVERSIONS) == "WithDash"
 
-    def test_convert_to_graphql_field_name(self):
-        """Test conversion to GraphQL field names."""
-        assert convert_to_graphql_field_name("SomeName") == "someName"
-        assert convert_to_graphql_field_name("simple") == "simple"
-        assert convert_to_graphql_field_name("with.dots") == "withdots"
+    def test_convert_for_graphql_field_names(self):
+        """Test conversion to GraphQL field names using unified function."""
+        assert convert_name_for_graphql_schema("SomeName", GraphQLElementType.FIELD, S2DM_CONVERSIONS) == "someName"
+        assert convert_name_for_graphql_schema("simple", GraphQLElementType.FIELD, S2DM_CONVERSIONS) == "simple"
+        assert convert_name_for_graphql_schema("with.dots", GraphQLElementType.FIELD, S2DM_CONVERSIONS) == "withDots"
 
     def test_get_metadata_df_with_seat_example(self):
         """Test metadata extraction from seat example."""
