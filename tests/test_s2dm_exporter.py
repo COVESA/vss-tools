@@ -1,6 +1,10 @@
-"""
-Tests for the S2DM GraphQL exporter.
-"""
+# Copyright (c) 2025 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
 
 from pathlib import Path
 
@@ -37,13 +41,13 @@ class TestS2DMExporter:
         """Test metadata extraction from seat example."""
         # Load the example seat vspec
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -67,13 +71,13 @@ class TestS2DMExporter:
         """Test that basic schema generation works."""
         # Load the example seat vspec
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -106,13 +110,13 @@ class TestS2DMExporter:
         """Test that the schema can be serialized to GraphQL SDL."""
         # Load the example seat vspec
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -134,13 +138,13 @@ class TestS2DMExporter:
         """Test that unit enums are generated correctly."""
         # Load the example seat vspec
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -167,13 +171,13 @@ class TestS2DMExporter:
         """Test that @vspec comment directives are generated correctly."""
         # Load the example seat vspec
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -201,13 +205,13 @@ class TestS2DMExporter:
     def test_range_and_deprecation_directives(self):
         """Test that @range and @deprecated directives are correctly generated for VSS constraints"""
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -248,13 +252,13 @@ class TestS2DMExporter:
     def test_instance_tag_support(self):
         """Test that @instanceTag directive and dimensional enums are correctly generated for VSS instances"""
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -305,8 +309,8 @@ class TestS2DMExporter:
 
     def test_allowed_value_enums_generation(self):
         """Test that allowed value enums are generated correctly."""
-        # Use test file with allowed values
-        test_vspec_path = Path(__file__).parent / "vspec" / "test_allowed" / "test.vspec"
+        # Use S2DM-specific test file with allowed values
+        test_vspec_path = Path(__file__).parent / "vspec" / "test_s2dm" / "test_allowed_values.vspec"
 
         # Get tree from file
         tree, _ = get_trees(
@@ -324,27 +328,31 @@ class TestS2DMExporter:
         schema, _, _, _ = generate_s2dm_schema(tree)
         schema_sdl = print_schema(schema)
 
-        # Check that allowed value enums were generated (test.vspec has multiple fields with allowed values)
-        # Check for the string field with allowed values ["January", "February"]
-        assert "A_String_Enum" in schema_sdl
-        assert "January" in schema_sdl
-        assert "February" in schema_sdl
+        # Check that allowed value enums were generated
+        # Check for the string field with allowed values ["PARK", "REVERSE", "NEUTRAL", "DRIVE"]
+        assert "Vehicle_Transmission_GearMode_Enum" in schema_sdl
+        assert "PARK" in schema_sdl
+        assert "REVERSE" in schema_sdl
+        assert "NEUTRAL" in schema_sdl
+        assert "DRIVE" in schema_sdl
 
-        # Check for numeric field with allowed values [1, 2, 3]
-        assert "A_Int_Enum" in schema_sdl
+        # Check for numeric field with allowed values [1, 2, 3, 4, 5]
+        assert "Vehicle_Performance_Level_Enum" in schema_sdl
         assert "_1" in schema_sdl  # Numeric values should have underscore prefix
         assert "_2" in schema_sdl
-        assert "_3" in schema_sdl
+        assert "_5" in schema_sdl
 
-        # Check for float field with allowed values [1.1, 2.54, 3]
-        assert "A_Float_Enum" in schema_sdl
-        assert "_1_DOT_1" in schema_sdl  # Float with decimal should use _DOT_
-        assert "_2_DOT_54" in schema_sdl
+        # Check for float field with allowed values [1.0, 2.5, 4.0, 5.0]
+        assert "Vehicle_Performance_Rating_Enum" in schema_sdl
+        assert "_1" in schema_sdl  # 1.0 becomes _1
+        assert "_2_DOT_5" in schema_sdl  # 2.5 should use _DOT_
+        assert "_4" in schema_sdl
+        assert "_5" in schema_sdl
 
         # Check that fields use the enum types instead of base types
-        assert "string: A_String_Enum" in schema_sdl
-        assert "int: A_Int_Enum" in schema_sdl
-        assert "float: A_Float_Enum" in schema_sdl
+        assert "gearMode: Vehicle_Transmission_GearMode_Enum" in schema_sdl
+        assert "level: Vehicle_Performance_Level_Enum" in schema_sdl
+        assert "rating: Vehicle_Performance_Rating_Enum" in schema_sdl
 
         # Check enum descriptions
-        assert "Allowed values for A.String" in schema_sdl
+        assert "Allowed values for Vehicle.Transmission.GearMode" in schema_sdl
