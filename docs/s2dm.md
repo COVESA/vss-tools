@@ -1,20 +1,26 @@
 # S2DM Exporter
 
-The S2DM exporter generates GraphQL schemas in the Schema Definition Language (SDL) from Vspec specifications.
-It is specifically designed for compatibility with the [Simplified Semantic Data Modeling (S2DM)](https://github.com/COVESA/s2dm) approach.
-While it produces GraphQL SDL syntax output, its purpose differs from traditional GraphQL APIs: it focuses purely on the modeling language as a mechanism to formalize domain expertise, not on API implementation.
-The S2DM exporter transforms VSS (Vehicle Signal Specification) into a GraphQL schema that maintains complete traceability back to the original VSS elements through specialized directives.
+The S2DM exporter converts VSS (Vehicle Signal Specification) files into GraphQL schema format. This makes VSS data models more accessible to developers familiar with GraphQL while maintaining full traceability back to the original VSS specification.
 
 ## What is S2DM?
 
-S2DM is a pragmatic data modeling approach that balances semantic rigor and usability for non-modelers.
-It aims to enhance the Vspec language to be more aligned with existing tools and communities outside COVESA.
+S2DM (Simplified Semantic Data Modeling) is a pragmatic approach to data modeling that uses GraphQL as a modeling language. It focuses on making domain expertise more accessible to developers and tools outside the automotive industry.
+
+## What the Exporter Does
+
+The S2DM exporter takes your VSS specification and generates a GraphQL schema that:
+
+1. **Converts VSS structure to GraphQL types** - Each VSS branch becomes a GraphQL type
+2. **Preserves all VSS information** - Every piece of data from your VSS file is kept using special `@vspec` directives
+3. **Handles VSS data types** - Maps VSS data types to appropriate GraphQL types
+4. **Supports VSS instances** - Creates proper GraphQL structures for multi-dimensional VSS instances
+5. **Includes constraints** - Range limits and allowed values are preserved
 
 ## Key Features
 
-### 1. VSS Traceability with `@vspec` Directives
+### Complete VSS Traceability
 
-The most distinctive feature of the S2DM exporter is its comprehensive use of `@vspec` directives, which provide complete traceability from every element in the generated GraphQL schema back to its origin in the VSS specification:
+Every element in the generated GraphQL schema includes an `@vspec` directive that tells you exactly where it came from in the original VSS file:
 
 ```graphql
 """All in-cabin components, including doors."""
@@ -23,105 +29,113 @@ type Vehicle_Cabin @vspec(source: {kind: FQN, value: "Vehicle.Cabin"}, vspecType
     driverPosition: Vehicle_Cabin_DriverPosition_Enum @vspec(
         source: {kind: FQN, value: "Vehicle.Cabin.DriverPosition"},
         vspecType: ATTRIBUTE,
-        comment: "Some signals use DriverSide and PassengerSide as instances..."
+        comment: "Driver seat position configuration"
     )
-    seats: [Vehicle_Cabin_Seat]
 }
 ```
 
-Each `@vspec` directive includes:
-- **source**: Information about the VSS element origin
-- **vspecType**: The VSS type (BRANCH, ATTRIBUTE, SENSOR, ACTUATOR)
-- **comment**: Original VSS comments, when present
-- **defaultValue**: Default values from VSS, when specified
+### VSS Data Types Support
 
-### 2. Comprehensive Source Mapping
+The exporter handles all VSS data types:
+- **Strings** → GraphQL String
+- **Numbers** → GraphQL Int, Float, or custom scalars (Int8, UInt16, etc.)
+- **Booleans** → GraphQL Boolean
+- **Arrays** → GraphQL Lists
+- **Allowed values** → GraphQL Enums
 
-The `source` parameter in `@vspec` directives uses a structured approach to identify different types of VSS elements:
+### VSS Instances Become GraphQL Structures
 
-- **FQN** (Fully Qualified Name): Maps to the complete VSS path
-- **UNIT**: References unit definitions from VSS `units.yaml`
-- **QUANTITY_KIND**: References quantity kinds from VSS `quantities.yaml`
-- **INSTANCE_LABEL**: Maps to instance labels from VSS instances
-- **ALLOWED_VALUE**: Maps to individual allowed values in enums
+When your VSS has instances (like multiple seats), the exporter creates proper GraphQL types:
 
-Example of allowed value mapping:
 ```graphql
-enum Vehicle_Cabin_DriverPosition_Enum {
-    LEFT @vspec(source: {kind: ALLOWED_VALUE, value: "LEFT"})
-    MIDDLE @vspec(source: {kind: ALLOWED_VALUE, value: "MIDDLE"})
-    RIGHT @vspec(source: {kind: ALLOWED_VALUE, value: "RIGHT"})
+# From VSS instances: ['Row[1,2]', ['DriverSide', 'PassengerSide']]
+type Vehicle_Cabin_Seat_InstanceTag {
+    dimension1: Vehicle_Cabin_Seat_InstanceTag_Dimension1  # Row1, Row2
+    dimension2: Vehicle_Cabin_Seat_InstanceTag_Dimension2  # DriverSide, PassengerSide
 }
 ```
 
-### 3. VSS Data Type Support
+### Range Constraints Preserved
 
-The exporter provides comprehensive support for VSS data types through custom GraphQL scalars:
-
-- **Standard Types**: String, Boolean, Float (for float and double)
-- **Integer Types**: Int8, UInt8, Int16, UInt16, UInt32, Int64, UInt64
-- **Special Types**: ID for unique identifiers
-
-### 4. Instance Handling
-
-VSS instances are modeled using specialized instance tag types that preserve the dimensional structure:
+VSS min/max values become GraphQL `@range` directives:
 
 ```graphql
-"""Instance tag for Vehicle_Cabin_Seat with dimensional information."""
-type Vehicle_Cabin_Seat_InstanceTag @instanceTag {
-    dimension1: Vehicle_Cabin_Seat_InstanceTag_Dimension1
-    dimension2: Vehicle_Cabin_Seat_InstanceTag_Dimension2
-}
-
-"""Dimensional enum for VSS instance dimension 1."""
-enum Vehicle_Cabin_Seat_InstanceTag_Dimension1 {
-    Row1
-    Row2
-}
-
-"""Dimensional enum for VSS instance dimension 2."""
-enum Vehicle_Cabin_Seat_InstanceTag_Dimension2 {
-    DriverSide
-    PassengerSide
-}
+temperature: Float @range(min: -40, max: 85) @vspec(...)
 ```
 
-### 5. Range Constraints
+### Unit Support
 
-Numeric constraints from VSS are preserved using `@range` directives:
+VSS units are converted to GraphQL enums with proper arguments:
 
 ```graphql
-"""Heating or cooling requested for the item."""
-heatingCooling: Int8 @range(min: -100, max: 100) @vspec(
-    source: {kind: FQN, value: "Vehicle.Cabin.Seat.HeatingCooling"},
-    vspecType: ACTUATOR
-)
+speed(unit: VelocityUnitEnum = "km/h"): Float
 ```
 
 ## Usage
 
-### Command-Line Interface
+### Basic Command
 
 ```bash
-vss-tools export s2dm --vspec <input.vspec> --output <output.graphql> [options]
+vss-tools export s2dm --vspec input.vspec --output output.graphql
 ```
 
-**Options:**
-- `--vspec`: Path to the VSS specification file
-- `--output`: Path for the generated GraphQL schema
-- `--include-dirs`: Additional directories to search for included files
-- `--strict`: Enable strict validation mode
-- `--overlays`: Apply overlay files to modify the specification
-- `--quantities`: Custom quantities definition file
-- `--units`: Custom units definition file
-- `--extended-attributes`: Include additional VSS attributes in processing
-
-### Example
+### Common Options
 
 ```bash
 vss-tools export s2dm \
     --vspec vehicle.vspec \
-    --output vehicle_s2dm.graphql \
-    --quantities quantities.yaml \
-    --units units.yaml
+    --output vehicle_schema.graphql \
+    --include-dirs ./includes \
+    --units units.yaml \
+    --quantities quantities.yaml
 ```
+
+### Available Options
+
+- `--vspec` - Your VSS specification file (required)
+- `--output` - Where to save the GraphQL schema (required)
+- `--include-dirs` - Folders with additional VSS files to include
+- `--units` - Custom units definition file
+- `--quantities` - Custom quantities definition file
+- `--overlays` - VSS overlay files to apply modifications
+- `--strict` - Enable strict validation mode
+- `--extended-attributes` - Include additional VSS attributes
+
+## Output Example
+
+Given a simple VSS file:
+
+```yaml
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Speed:
+  datatype: float
+  type: sensor
+  unit: km/h
+  description: Vehicle speed.
+  min: 0
+  max: 300
+```
+
+The exporter generates:
+
+```graphql
+"""High-level vehicle data."""
+type Vehicle @vspec(source: {kind: FQN, value: "Vehicle"}, vspecType: BRANCH) {
+  """Vehicle speed."""
+  speed(unit: VelocityUnitEnum = "km/h"): Float @range(min: 0, max: 300) @vspec(
+    source: {kind: FQN, value: "Vehicle.Speed"},
+    vspecType: SENSOR
+  )
+}
+
+enum VelocityUnitEnum {
+  KM_H @vspec(source: {kind: UNIT, value: "km/h"})
+  M_S @vspec(source: {kind: UNIT, value: "m/s"})
+  MPH @vspec(source: {kind: UNIT, value: "mph"})
+}
+```
+
+This makes your VSS data model accessible to GraphQL tools while keeping all the original VSS information intact.
