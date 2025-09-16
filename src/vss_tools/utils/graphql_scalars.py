@@ -10,7 +10,7 @@
 GraphQL scalar types and datatype mappings for VSS exporters.
 
 This module provides reusable GraphQL scalar type definitions and mappings
-that can be used across different VSS exporters. It centralizes the 
+that can be used across different VSS exporters. It centralizes the
 custom scalar types needed for VSS data types.
 """
 
@@ -50,6 +50,7 @@ VSS_DATATYPE_MAP = {
     Datatypes.BOOLEAN[0]: GraphQLBoolean,
     Datatypes.STRING[0]: GraphQLString,
 }
+
 
 def get_vss_scalar_types() -> list[GraphQLScalarType]:
     """Get list of all VSS custom scalar types for schema inclusion."""

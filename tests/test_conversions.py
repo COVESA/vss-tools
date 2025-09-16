@@ -4,13 +4,14 @@
 
 import sys
 
+from caseconverter import DELIMITERS, pascalcase
+
 sys.path.insert(0, "src")
 
 from vss_tools.utils.graphql_utils import DEFAULT_CONVERSIONS, GraphQLElementType, convert_name_for_graphql_schema
+from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
 
 print("=== Creating S2DM conversions in same scope ===")
-from caseconverter import DELIMITERS, pascalcase
-from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
 
 # Create S2DM conversions in the same scope
 S2DM_CONVERSIONS = DEFAULT_CONVERSIONS.copy()

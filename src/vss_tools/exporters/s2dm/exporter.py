@@ -148,66 +148,287 @@ def generate_s2dm_schema(
         tree: The root VSSNode of the VSS tree
 
     Returns:
-        tuple: (GraphQLSchema, unit_enums_metadata, vspec_comments)
-               The generated GraphQL schema, unit enum metadata, and vspec comments
+        tuple: (GraphQLSchema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
+               The generated GraphQL schema, unit enum metadata, allowed enums metadata, and vspec comments
     """
-    # Get metadata DataFrames
-    branches_df, leaves_df = get_metadata_df(tree)
+    # Use the structured schema builder
+    schema_builder = S2DMSchemaBuilder(tree)
+    return schema_builder.build_schema()
 
-    # Create unit enums and get metadata
-    unit_enums = create_unit_enums()
-    unit_enums_metadata = get_quantity_kinds_and_units()
 
-    # Dictionary to store @vspec comments and other directives for fields and types
-    vspec_comments: dict[str, dict[str, Any]] = {
-        "field_comments": {},  # field_path -> comment
-        "type_comments": {},  # type_name -> comment
-        "field_ranges": {},  # field_path -> {'min': value, 'max': value}
-        "field_deprecated": {},  # field_path -> reason
-        "instance_tags": {},  # type_name -> True (for types with instances)
-        "instance_tag_types": {},  # type_name -> instance_tag_type_name
-        "vss_types": {},  # type_name -> {'fqn': fqn, 'vspec_type': type}
-        "field_vss_types": {},  # field_path -> {'fqn': fqn, 'vspec_type': type}
-    }
+class S2DMSchemaBuilder:
+    """Builds GraphQL schema in structured phases for S2DM exporter."""
 
-    # Generate all types
-    types_registry = {}
+    def __init__(self, tree: VSSNode):
+        """Initialize the schema builder with VSS tree."""
+        self.tree = tree
+        self.branches_df, self.leaves_df = get_metadata_df(tree)
+        self.types_registry: dict[str, Any] = {}
+        self.vspec_comments = self._init_vspec_comments()
 
-    # Generate instance types and enums first
-    instance_types = generate_instance_types_and_enums(branches_df, vspec_comments)
+    def _init_vspec_comments(self) -> dict[str, dict[str, Any]]:
+        """Initialize the vspec comments dictionary structure."""
+        return {
+            "field_comments": {},  # field_path -> comment
+            "type_comments": {},  # type_name -> comment
+            "field_ranges": {},  # field_path -> {'min': value, 'max': value}
+            "field_deprecated": {},  # field_path -> reason
+            "instance_tags": {},  # type_name -> True (for types with instances)
+            "instance_tag_types": {},  # type_name -> instance_tag_type_name
+            "vss_types": {},  # type_name -> {'fqn': fqn, 'vspec_type': type}
+            "field_vss_types": {},  # field_path -> {'fqn': fqn, 'vspec_type': type}
+        }
 
-    # Generate allowed value enums
-    allowed_enums, allowed_enums_metadata = generate_allowed_value_enums(leaves_df)
+    def build_schema(
+        self,
+    ) -> tuple[
+        GraphQLSchema,
+        dict[str, dict[str, dict[str, str]]],
+        dict[str, dict[str, dict[str, str]]],
+        dict[str, dict[str, Any]],
+    ]:
+        """Build schema in phases."""
+        # Phase 1: Prepare base data
+        unit_enums, unit_enums_metadata = self._create_unit_data()
 
-    # Add instance types and allowed enums to types_registry so they can be referenced
-    types_registry.update(instance_types)
+        # Phase 2: Generate supporting types
+        self._generate_instance_types()
+        allowed_enums_metadata = self._generate_allowed_value_enums()
 
-    # Only add actual GraphQL types from allowed_enums (filter out mapping keys)
-    actual_allowed_enums = {k: v for k, v in allowed_enums.items() if not k.startswith("_fqn_to_enum_")}
-    types_registry.update(actual_allowed_enums)
+        # Phase 3: Generate main object types
+        self._generate_object_types(unit_enums)
 
-    # Create GraphQL types for each branch in topological order
-    for fqn in branches_df.index:
-        if fqn not in types_registry:
-            gql_type = create_object_type(fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments)
-            types_registry[fqn] = gql_type
+        # Phase 4: Assemble final schema
+        schema = self._assemble_schema(unit_enums)
 
-    # Create the Query type
-    vehicle_type = types_registry.get("Vehicle")
-    query_type = GraphQLObjectType(
-        name="Query", fields={"vehicle": GraphQLField(vehicle_type) if vehicle_type else GraphQLField(GraphQLString)}
-    )
+        return schema, unit_enums_metadata, allowed_enums_metadata, self.vspec_comments
 
-    # Create the schema with custom scalar types and directives
-    vss_scalars = get_vss_scalar_types()
-    all_types = vss_scalars + list(types_registry.values()) + list(unit_enums.values())
-    schema = GraphQLSchema(
-        query=query_type,
-        types=all_types,
-        directives=[VSpecDirective, RangeDirective, InstanceTagDirective],
-    )
+    def _create_unit_data(self) -> tuple[dict[str, GraphQLEnumType], dict[str, dict[str, dict[str, str]]]]:
+        """Phase 1: Create unit enums and metadata."""
+        unit_enums = create_unit_enums()
+        unit_enums_metadata = get_quantity_kinds_and_units()
+        return unit_enums, unit_enums_metadata
 
-    return schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+    def _generate_instance_types(self) -> None:
+        """Phase 2a: Generate instance types and enums."""
+        instance_types = generate_instance_types_and_enums(self.branches_df, self.vspec_comments)
+        self.types_registry.update(instance_types)
+
+    def _generate_allowed_value_enums(self) -> dict[str, dict[str, dict[str, str]]]:
+        """Phase 2b: Generate allowed value enums."""
+        allowed_enums, allowed_enums_metadata = generate_allowed_value_enums(self.leaves_df)
+
+        # Only add actual GraphQL types (filter out mapping keys)
+        actual_allowed_enums = {k: v for k, v in allowed_enums.items() if not k.startswith("_fqn_to_enum_")}
+        self.types_registry.update(actual_allowed_enums)
+
+        return allowed_enums_metadata
+
+    def _generate_object_types(self, unit_enums: dict[str, GraphQLEnumType]) -> None:
+        """Phase 3: Generate main GraphQL object types."""
+        # Create GraphQL types for each branch in topological order
+        for fqn in self.branches_df.index:
+            if fqn not in self.types_registry:
+                gql_type = create_object_type(
+                    fqn, self.branches_df, self.leaves_df, self.types_registry, unit_enums, self.vspec_comments
+                )
+                self.types_registry[fqn] = gql_type
+
+    def _assemble_schema(self, unit_enums: dict[str, GraphQLEnumType]) -> GraphQLSchema:
+        """Phase 4: Assemble the final GraphQL schema."""
+        # Create the Query type
+        vehicle_type = self.types_registry.get("Vehicle")
+        query_type = GraphQLObjectType(
+            name="Query",
+            fields={"vehicle": GraphQLField(vehicle_type) if vehicle_type else GraphQLField(GraphQLString)},
+        )
+
+        # Create the schema with custom scalar types and directives
+        vss_scalars = get_vss_scalar_types()
+        all_types = vss_scalars + list(self.types_registry.values()) + list(unit_enums.values())
+        schema = GraphQLSchema(
+            query=query_type,
+            types=all_types,
+            directives=[VSpecDirective, RangeDirective, InstanceTagDirective],
+        )
+
+        return schema
+
+
+class VSpecMetadataProcessor:
+    """Processes VSS metadata for GraphQL directive generation."""
+
+    @staticmethod
+    def extract_field_metadata(field_path: str, child_fqn: str, leaf_row: pd.Series) -> dict[str, Any]:
+        """Extract all metadata for a field in one pass."""
+        metadata = {}
+
+        # VSS type info
+        leaf_type = leaf_row.get("type", "").upper()
+        if leaf_type in ["SENSOR", "ACTUATOR", "ATTRIBUTE"]:
+            metadata["vss_type"] = {"fqn": child_fqn, "vspec_type": leaf_type}
+
+        # Comments
+        vss_comment = leaf_row.get("comment", "")
+        if vss_comment:
+            metadata["comment"] = vss_comment
+
+        # Range constraints
+        min_val = leaf_row.get("min", None)
+        max_val = leaf_row.get("max", None)
+        if min_val is not None or max_val is not None:
+            range_data = {}
+            if min_val is not None:
+                range_data["min"] = min_val
+            if max_val is not None:
+                range_data["max"] = max_val
+            metadata["range"] = range_data
+
+        # Deprecation
+        deprecation = leaf_row.get("deprecation", "")
+        if deprecation:
+            metadata["deprecation"] = deprecation
+
+        return metadata
+
+    @staticmethod
+    def store_field_metadata(vspec_comments: dict, field_path: str, metadata: dict[str, Any]) -> None:
+        """Store field metadata in the appropriate vspec_comments sections."""
+        if "vss_type" in metadata:
+            vspec_comments["field_vss_types"][field_path] = metadata["vss_type"]
+
+        if "comment" in metadata:
+            vspec_comments["field_comments"][field_path] = metadata["comment"]
+
+        if "range" in metadata:
+            vspec_comments["field_ranges"][field_path] = metadata["range"]
+
+        if "deprecation" in metadata:
+            vspec_comments["field_deprecated"][field_path] = metadata["deprecation"]
+
+    @staticmethod
+    def extract_type_metadata(branch_row: pd.Series) -> dict[str, Any]:
+        """Extract metadata for a type."""
+        metadata = {}
+
+        # Type-level comment
+        vss_comment = branch_row.get("comment", "")
+        if vss_comment:
+            metadata["comment"] = vss_comment
+
+        return metadata
+
+    @staticmethod
+    def store_type_metadata(vspec_comments: dict, type_name: str, fqn: str, metadata: dict[str, Any]) -> None:
+        """Store type metadata in vspec_comments."""
+        # Always store VSS type information
+        vspec_comments["vss_types"][type_name] = {
+            "fqn": fqn,
+            "vspec_type": "BRANCH",  # All types created here are branches
+        }
+
+        # Store type-level comment if available
+        if "comment" in metadata:
+            vspec_comments["type_comments"][type_name] = metadata["comment"]
+
+
+class FieldProcessor:
+    """Handles processing of different GraphQL field types for S2DM exporter."""
+
+    def __init__(self, vspec_comments: dict, types_registry: dict, unit_enums: dict):
+        """
+        Initialize the field processor.
+
+        Args:
+            vspec_comments: Dictionary to store @vspec comments and directives
+            types_registry: Registry of already created GraphQL types
+            unit_enums: Dictionary of unit enums by quantity
+        """
+        self.vspec_comments = vspec_comments
+        self.types_registry = types_registry
+        self.unit_enums = unit_enums
+
+    def add_system_fields(self, fields: dict, type_name: str, branch_row: pd.Series) -> None:
+        """Add system fields like ID and instanceTag."""
+        # Add ID field for Vehicle and types with instances
+        if type_name == "Vehicle" or branch_row.get("instances"):
+            fields["id"] = GraphQLField(GraphQLNonNull(GraphQLID))
+
+        # Add instanceTag field for types with instances
+        if type_name in self.vspec_comments.get("instance_tag_types", {}):
+            instance_tag_type_name = self.vspec_comments["instance_tag_types"][type_name]
+            if instance_tag_type_name in self.types_registry:
+                instance_tag_type = self.types_registry[instance_tag_type_name]
+                fields["instanceTag"] = GraphQLField(instance_tag_type)
+
+    def process_leaf_fields(self, fields: dict, type_name: str, fqn: str, leaves_df: pd.DataFrame) -> None:
+        """Process leaf fields (attributes, sensors, actuators)."""
+        child_leaves = leaves_df[leaves_df["parent"] == fqn]
+        for child_fqn, leaf_row in child_leaves.iterrows():
+            field_name = convert_name_for_graphql_schema(leaf_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
+            field_type = get_graphql_type_for_leaf(leaf_row, self.types_registry)
+            field_description = leaf_row.get("description", "")
+            field_path = f"{type_name}.{field_name}"
+
+            # Extract and store metadata using the metadata processor
+            metadata = VSpecMetadataProcessor.extract_field_metadata(field_path, child_fqn, leaf_row)
+            VSpecMetadataProcessor.store_field_metadata(self.vspec_comments, field_path, metadata)
+
+            # Process unit arguments
+            field_args = self._process_unit_arguments(leaf_row)
+
+            fields[field_name] = GraphQLField(
+                field_type, args=field_args if field_args else None, description=field_description
+            )
+
+    def process_branch_fields(self, fields: dict, fqn: str, branches_df: pd.DataFrame, leaves_df: pd.DataFrame) -> None:
+        """Process branch fields (child branches)."""
+        child_branches = branches_df[branches_df["parent"] == fqn]
+        for child_fqn, child_branch_row in child_branches.iterrows():
+            field_name = convert_name_for_graphql_schema(
+                child_branch_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS
+            )
+
+            # Get or create the child type
+            child_type = self._get_or_create_child_type(child_fqn, branches_df, leaves_df)
+
+            # Handle instances (make it a list)
+            if child_branch_row.get("instances"):
+                field_name += "_s"  # Following the pattern from desired output
+                fields[field_name] = GraphQLField(GraphQLList(child_type))
+            else:
+                fields[field_name] = GraphQLField(child_type)
+
+    def _process_unit_arguments(self, leaf_row: pd.Series) -> dict:
+        """Process unit arguments for a leaf field."""
+        unit = leaf_row.get("unit", "")
+        field_args = {}
+
+        if unit and unit in dynamic_units:
+            unit_data = dynamic_units[unit]
+            quantity = unit_data.quantity
+            if quantity:
+                unit_enum = get_unit_enum_for_quantity(quantity, self.unit_enums)
+                if unit_enum:
+                    field_args["unit"] = GraphQLArgument(
+                        type_=unit_enum,
+                        default_value=unit,  # Use the unit key directly (e.g., 'mm', 'km')
+                    )
+
+        return field_args
+
+    def _get_or_create_child_type(
+        self, child_fqn: str, branches_df: pd.DataFrame, leaves_df: pd.DataFrame
+    ) -> GraphQLObjectType:
+        """Get or create a child type from the types registry."""
+        if child_fqn not in self.types_registry:
+            child_type = create_object_type(
+                child_fqn, branches_df, leaves_df, self.types_registry, self.unit_enums, self.vspec_comments
+            )
+            self.types_registry[child_fqn] = child_type
+        else:
+            child_type = self.types_registry[child_fqn]
+        return child_type
 
 
 def create_object_type(
@@ -236,16 +457,9 @@ def create_object_type(
     type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
     description = branch_row.get("description", "")
 
-    # Store VSS type information for @vspec directive
-    vspec_comments["vss_types"][type_name] = {
-        "fqn": fqn,
-        "vspec_type": "BRANCH",  # All types created here are branches
-    }
-
-    # Store type-level comment if available
-    vss_comment = branch_row.get("comment", "")
-    if vss_comment:
-        vspec_comments["type_comments"][type_name] = vss_comment
+    # Extract and store type metadata using the metadata processor
+    type_metadata = VSpecMetadataProcessor.extract_type_metadata(branch_row)
+    VSpecMetadataProcessor.store_type_metadata(vspec_comments, type_name, fqn, type_metadata)
 
     # Mark types with instances for @instanceTag directive
     # Note: Only the InstanceTag type gets the directive, not the main type
@@ -256,102 +470,17 @@ def create_object_type(
     def get_fields():
         fields = {}
 
-        # Add ID field for Vehicle and types with instances
-        if type_name == "Vehicle" or branch_row.get("instances"):
-            fields["id"] = GraphQLField(GraphQLNonNull(GraphQLID))
+        # Create field processor to handle different field types
+        field_processor = FieldProcessor(vspec_comments, types_registry, unit_enums)
 
-        # Add instanceTag field for types with instances
-        if type_name in vspec_comments.get("instance_tag_types", {}):
-            instance_tag_type_name = vspec_comments["instance_tag_types"][type_name]
-            # Get the instance tag type from types_registry
-            if instance_tag_type_name in types_registry:
-                instance_tag_type = types_registry[instance_tag_type_name]
-                fields["instanceTag"] = GraphQLField(instance_tag_type)
+        # Add system fields (ID, instanceTag)
+        field_processor.add_system_fields(fields, type_name, branch_row)
 
         # Add fields for child leaves (attributes, sensors, actuators)
-        child_leaves = leaves_df[leaves_df["parent"] == fqn]
-        for child_fqn, leaf_row in child_leaves.iterrows():
-            field_name = convert_name_for_graphql_schema(leaf_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
-            field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
-            field_description = leaf_row.get("description", "")
-
-            # Store VSS type information for field-level @vspec directive
-            field_path = f"{type_name}.{field_name}"
-            leaf_type = leaf_row.get("type", "").upper()  # SENSOR, ACTUATOR, ATTRIBUTE
-            if leaf_type in ["SENSOR", "ACTUATOR", "ATTRIBUTE"]:
-                vspec_comments["field_vss_types"][field_path] = {"fqn": child_fqn, "vspec_type": leaf_type}
-
-            # Store field-level comment if available
-            vss_comment = leaf_row.get("comment", "")
-            if vss_comment:
-                vspec_comments["field_comments"][field_path] = vss_comment
-
-            # Store field-level range constraints if available
-            field_path = f"{type_name}.{field_name}"
-            min_val = leaf_row.get("min", None)
-            max_val = leaf_row.get("max", None)
-            if min_val is not None or max_val is not None:
-                range_data = {}
-                if min_val is not None:
-                    range_data["min"] = min_val
-                if max_val is not None:
-                    range_data["max"] = max_val
-                vspec_comments["field_ranges"][field_path] = range_data
-
-            # Store field-level deprecation if available
-            deprecation = leaf_row.get("deprecation", "")
-            if deprecation:
-                vspec_comments["field_deprecated"][field_path] = deprecation
-
-            # Check if leaf has a unit and add unit argument if it does
-            unit = leaf_row.get("unit", "")
-            field_args = {}
-
-            if unit and unit in dynamic_units:
-                unit_data = dynamic_units[unit]
-                quantity = unit_data.quantity
-                if quantity:
-                    unit_enum = get_unit_enum_for_quantity(quantity, unit_enums)
-                    if unit_enum:
-                        # Use the unit key as default value
-                        field_args["unit"] = GraphQLArgument(
-                            type_=unit_enum,
-                            default_value=unit,  # Use the unit key directly (e.g., 'mm', 'km')
-                        )
-
-            fields[field_name] = GraphQLField(
-                field_type, args=field_args if field_args else None, description=field_description
-            )
+        field_processor.process_leaf_fields(fields, type_name, fqn, leaves_df)
 
         # Add fields for child branches
-        child_branches = branches_df[branches_df["parent"] == fqn]
-        for child_fqn, child_branch_row in child_branches.iterrows():
-            field_name = convert_name_for_graphql_schema(
-                child_branch_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS
-            )
-
-            # If child has instances, make it a list
-            if child_branch_row.get("instances"):
-                field_name += "_s"  # Following the pattern from desired output
-                # Create the child type if not already created
-                if child_fqn not in types_registry:
-                    child_type = create_object_type(
-                        child_fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
-                    )
-                    types_registry[child_fqn] = child_type
-                else:
-                    child_type = types_registry[child_fqn]
-                fields[field_name] = GraphQLField(GraphQLList(child_type))
-            else:
-                # Create the child type if not already created
-                if child_fqn not in types_registry:
-                    child_type = create_object_type(
-                        child_fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
-                    )
-                    types_registry[child_fqn] = child_type
-                else:
-                    child_type = types_registry[child_fqn]
-                fields[field_name] = GraphQLField(child_type)
+        field_processor.process_branch_fields(fields, fqn, branches_df, leaves_df)
 
         return fields
 
