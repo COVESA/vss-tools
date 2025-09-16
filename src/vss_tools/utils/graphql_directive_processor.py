@@ -26,35 +26,31 @@ class GraphQLDirectiveProcessor:
 
     # Template definitions for different directive types
     TEMPLATES = {
-        'vspec_fqn': Template('@vspec(source: {kind: FQN, value: "$fqn"}, vspecType: $vspec_type)'),
-        'vspec_unit': Template(
+        "vspec_fqn": Template('@vspec(source: {kind: FQN, value: "$fqn"}, vspecType: $vspec_type)'),
+        "vspec_unit": Template(
             '@vspec(source: {kind: UNIT, value: "$unit_key", '
             'note: "Taken and converted from full name <$unit_name>."})'
         ),
-        'vspec_allowed': Template('@vspec(source: {kind: ALLOWED_VALUE, value: "$original_value"})'),
-        'vspec_quantity': Template('@vspec(source: {kind: QUANTITY_KIND, value: "$quantity"})'),
-        'vspec_comment': Template('@vspec(comment: "$comment")'),
-        'vspec_consolidated': Template('@vspec($parts)'),
-        'range': Template('@range($args)'),
-        'deprecated': Template('@deprecated(reason: "$reason")'),
+        "vspec_allowed": Template('@vspec(source: {kind: ALLOWED_VALUE, value: "$original_value"})'),
+        "vspec_quantity": Template('@vspec(source: {kind: QUANTITY_KIND, value: "$quantity"})'),
+        "vspec_comment": Template('@vspec(comment: "$comment")'),
+        "vspec_consolidated": Template("@vspec($parts)"),
+        "range": Template("@range($args)"),
+        "deprecated": Template('@deprecated(reason: "$reason")'),
     }
 
     def process_schema(
-        self, 
-        schema: GraphQLSchema, 
-        unit_enums_metadata: dict, 
-        allowed_enums_metadata: dict, 
-        vspec_comments: dict
+        self, schema: GraphQLSchema, unit_enums_metadata: dict, allowed_enums_metadata: dict, vspec_comments: dict
     ) -> str:
         """
         Process schema SDL to inject directives using templates.
-        
+
         Args:
             schema: GraphQL schema from graphql-core
             unit_enums_metadata: Unit enum metadata
-            allowed_enums_metadata: Allowed enum metadata  
+            allowed_enums_metadata: Allowed enum metadata
             vspec_comments: VSS comment and directive data
-            
+
         Returns:
             SDL string with injected directives
         """
@@ -64,7 +60,7 @@ class GraphQLDirectiveProcessor:
 
         # Process directives using templates
         processed_enum_values: set[str] = set()
-        
+
         lines = self._process_unit_enum_directives(lines, unit_enums_metadata, processed_enum_values)
         lines = self._process_allowed_enum_directives(lines, allowed_enums_metadata, processed_enum_values)
         lines = self._process_field_directives(lines, vspec_comments)
@@ -80,12 +76,12 @@ class GraphQLDirectiveProcessor:
         """Process unit enum directives using templates."""
         for quantity, units_data in unit_enums_metadata.items():
             enum_name = f"{convert_name_for_graphql_schema(quantity, GraphQLElementType.TYPE)}UnitEnum"
-            
+
             in_target_enum = False
             for i, line in enumerate(lines):
                 if line.strip().startswith(f"enum {enum_name}"):
                     if "@vspec" not in line:
-                        directive = self.TEMPLATES['vspec_quantity'].substitute(quantity=quantity)
+                        directive = self.TEMPLATES["vspec_quantity"].substitute(quantity=quantity)
                         lines[i] = line.replace(" {", f" {directive} {{")
                     in_target_enum = True
                     continue
@@ -106,10 +102,9 @@ class GraphQLDirectiveProcessor:
                         enum_value_key = f"{enum_name}.{enum_value_name}"
                         if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_values:
                             if "@vspec" not in line:
-                                indent = line[:len(line) - len(line.lstrip())]
-                                directive = self.TEMPLATES['vspec_unit'].substitute(
-                                    unit_key=unit_key, 
-                                    unit_name=unit_name
+                                indent = line[: len(line) - len(line.lstrip())]
+                                directive = self.TEMPLATES["vspec_unit"].substitute(
+                                    unit_key=unit_key, unit_name=unit_name
                                 )
                                 lines[i] = f"{indent}{enum_value_name} {directive}"
 
@@ -124,7 +119,7 @@ class GraphQLDirectiveProcessor:
         for enum_name, enum_data in allowed_enums_metadata.items():
             allowed_values_dict = enum_data.get("allowed_values", {})
             in_target_enum = False
-            
+
             for i, line in enumerate(lines):
                 if line.strip().startswith(f"enum {enum_name}"):
                     in_target_enum = True
@@ -144,8 +139,8 @@ class GraphQLDirectiveProcessor:
 
                         if stripped_line.startswith(graphql_enum_value) and enum_value_key not in processed_values:
                             if "@vspec" not in line:
-                                indent = line[:len(line) - len(line.lstrip())]
-                                directive = self.TEMPLATES['vspec_allowed'].substitute(original_value=original_value)
+                                indent = line[: len(line) - len(line.lstrip())]
+                                directive = self.TEMPLATES["vspec_allowed"].substitute(original_value=original_value)
                                 lines[i] = f"{indent}{graphql_enum_value} {directive}"
 
                             processed_values.add(enum_value_key)
@@ -156,7 +151,7 @@ class GraphQLDirectiveProcessor:
         """Process consolidated field @vspec directives using templates."""
         # Build consolidated field data
         field_data: dict[str, dict[str, str]] = {}
-        
+
         # Merge VSS type information
         for field_path, vss_info in vspec_comments.get("field_vss_types", {}).items():
             if field_path not in field_data:
@@ -197,7 +192,7 @@ class GraphQLDirectiveProcessor:
                         parts.append(f'comment: "{data["comment"]}"')
 
                     if parts:
-                        directive = self.TEMPLATES['vspec_consolidated'].substitute(parts=", ".join(parts))
+                        directive = self.TEMPLATES["vspec_consolidated"].substitute(parts=", ".join(parts))
                         lines[i] = line.rstrip() + f" {directive}"
 
                     break
@@ -222,16 +217,19 @@ class GraphQLDirectiveProcessor:
                     in_type = False
                     continue
 
-                if (in_type and field_name in line and ":" in line 
-                    and not line.strip().startswith('"') and "@deprecated" not in line):
-                    
+                if (
+                    in_type
+                    and field_name in line
+                    and ":" in line
+                    and not line.strip().startswith('"')
+                    and "@deprecated" not in line
+                ):
                     insert_line = i + 1
-                    while (insert_line < len(lines) and 
-                           lines[insert_line].strip().startswith("@vspec")):
+                    while insert_line < len(lines) and lines[insert_line].strip().startswith("@vspec"):
                         insert_line += 1
-                    
+
                     if insert_line < len(lines) and "@deprecated" not in lines[insert_line]:
-                        directive = self.TEMPLATES['deprecated'].substitute(reason=escaped_reason)
+                        directive = self.TEMPLATES["deprecated"].substitute(reason=escaped_reason)
                         lines.insert(insert_line, f"    {directive}")
                     break
         return lines
@@ -266,17 +264,22 @@ class GraphQLDirectiveProcessor:
                     in_type = False
                     continue
 
-                if (in_type and field_name in line and ":" in line 
-                    and not line.strip().startswith('"') and "@range" not in line):
-                    
+                if (
+                    in_type
+                    and field_name in line
+                    and ":" in line
+                    and not line.strip().startswith('"')
+                    and "@range" not in line
+                ):
                     insert_line = i + 1
-                    while (insert_line < len(lines) and 
-                           (lines[insert_line].strip().startswith("@vspec") or 
-                            lines[insert_line].strip().startswith("@deprecated"))):
+                    while insert_line < len(lines) and (
+                        lines[insert_line].strip().startswith("@vspec")
+                        or lines[insert_line].strip().startswith("@deprecated")
+                    ):
                         insert_line += 1
-                    
+
                     if insert_line < len(lines) and "@range" not in lines[insert_line]:
-                        directive = self.TEMPLATES['range'].substitute(args=", ".join(range_args))
+                        directive = self.TEMPLATES["range"].substitute(args=", ".join(range_args))
                         lines.insert(insert_line, f"    {directive}")
                     break
         return lines
@@ -316,13 +319,13 @@ class GraphQLDirectiveProcessor:
                             escaped_comment = comment.replace('"', '\\"')
                             parts.append(f'comment: "{escaped_comment}"')
 
-                        directive = self.TEMPLATES['vspec_consolidated'].substitute(parts=", ".join(parts))
+                        directive = self.TEMPLATES["vspec_consolidated"].substitute(parts=", ".join(parts))
                         new_line += f" {directive}"
                     elif needs_vspec_comment and "@vspec" not in line:
                         # Fallback to just comment
                         comment = vspec_comments["type_comments"][type_name]
                         escaped_comment = comment.replace('"', '\\"')
-                        directive = self.TEMPLATES['vspec_comment'].substitute(comment=escaped_comment)
+                        directive = self.TEMPLATES["vspec_comment"].substitute(comment=escaped_comment)
                         new_line += f" {directive}"
 
                     if needs_instance_tag and "@instanceTag" not in line:
