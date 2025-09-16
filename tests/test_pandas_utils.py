@@ -1,6 +1,10 @@
-"""
-Tests for pandas utilities.
-"""
+# Copyright (c) 2025 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
 
 from pathlib import Path
 
@@ -16,13 +20,13 @@ class TestPandasUtils:
         """Test that get_metadata_df returns proper DataFrames with expected structure."""
         # Load a simple example vspec
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -65,13 +69,13 @@ class TestPandasUtils:
         """Test that get_metadata_df extracts correct content from VSS tree."""
         # Load the example seat vspec
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
@@ -106,13 +110,13 @@ class TestPandasUtils:
         """Test get_metadata_df handles instances and constraints properly."""
         # Load the example seat vspec which should have instances
         tree, _ = get_trees(
-            vspec=Path("tests/vspec/test_graphql_exporter/example_seat.vspec"),
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
             include_dirs=(),
             aborts=(),
             strict=False,
             extended_attributes=(),
-            quantities=(Path("tests/vspec/test_graphql_exporter/test_quantities.yaml"),),
-            units=(Path("tests/vspec/test_graphql_exporter/test_units.yaml"),),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
             overlays=(),
             expand=False,
         )
