@@ -128,6 +128,14 @@ output_required_opt = option(
     required=True,
 )
 
+output_file_or_dir_opt = option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=True, writable=True, path_type=Path),
+    help="Output file or directory (when using --modular).",
+    required=True,
+)
+
 output_opt = option(
     "--output",
     "-o",
@@ -167,3 +175,17 @@ extend_all_attributes_opt = option(
 )
 
 pretty_print_opt = option("--pretty/--no-pretty", help="Pretty print.", default=False, show_default=True)
+
+modular_opt = option(
+    "--modular/--no-modular",
+    help="Generate modular output with separate files for each component alongside the main schema file.",
+    default=False,
+    show_default=True,
+)
+
+flat_domains_opt = option(
+    "--flat-domains/--nested-domains",
+    help="Use flat domain structure vs nested directories (only with --modular).",
+    default=True,  # Default to flat for simplicity
+    show_default=True,
+)

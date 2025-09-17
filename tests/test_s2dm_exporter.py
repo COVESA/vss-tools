@@ -356,3 +356,95 @@ class TestS2DMExporter:
 
         # Check enum descriptions
         assert "Allowed values for Vehicle.Transmission.GearMode" in schema_sdl
+
+    def test_modular_export_flat_domains(self, tmp_path):
+        """Test modular export with flat domain structure."""
+        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+
+        # Load the example seat vspec
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+
+        # Test modular export with flat domains (default)
+        output_dir = tmp_path / "modular_flat"
+        write_modular_schema(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir, flat_domains=True
+        )
+
+        # Check that common files were created in other/ directory
+        assert (output_dir / "other" / "directives.graphql").exists()
+        assert (output_dir / "other" / "scalars.graphql").exists()
+        assert (output_dir / "other" / "queries.graphql").exists()
+
+        # Check that domain files were created in domain/ directory (flat structure)
+        assert (output_dir / "domain" / "Vehicle.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle_Cabin.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle_Cabin_Seat.graphql").exists()
+
+        # Check that unit enum files were created in other/ directory
+        assert (output_dir / "other" / "units.graphql").exists()
+
+        # Check that instance files were created in instances/ directory
+        assert (output_dir / "instances" / "Vehicle_Cabin_Seat_InstanceTag.graphql").exists()
+
+        # Verify content of a domain file
+        vehicle_content = (output_dir / "domain" / "Vehicle.graphql").read_text()
+        assert "type Vehicle" in vehicle_content
+        assert "Domain-specific GraphQL types" in vehicle_content
+
+    def test_modular_export_nested_domains(self, tmp_path):
+        """Test modular export with nested domain structure."""
+        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+
+        # Load the example seat vspec
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/example_seat.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+
+        # Test modular export with nested domains
+        output_dir = tmp_path / "modular_nested"
+        write_modular_schema(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir, flat_domains=False
+        )
+
+        # Check that common files were created in other/ directory
+        assert (output_dir / "other" / "directives.graphql").exists()
+        assert (output_dir / "other" / "queries.graphql").exists()
+
+        # Check that nested structure was created in domain/ directory
+        assert (output_dir / "domain" / "vehicle.graphql").exists()
+        assert (output_dir / "domain" / "vehicle" / "cabin.graphql").exists()
+        assert (output_dir / "domain" / "vehicle" / "cabin" / "seat.graphql").exists()
+
+        # Check that enum directory structure was created in other/ directory
+        assert (output_dir / "other" / "units.graphql").exists()
+
+        # Check that instance files were created in instances/ directory
+        assert (output_dir / "instances" / "Vehicle_Cabin_Seat_InstanceTag.graphql").exists()
+
+        # Verify nested directory content
+        seat_content = (output_dir / "domain" / "vehicle" / "cabin" / "seat.graphql").read_text()
+        assert "Vehicle_Cabin_Seat" in seat_content

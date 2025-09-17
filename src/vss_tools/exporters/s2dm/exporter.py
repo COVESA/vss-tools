@@ -90,7 +90,7 @@ directive_processor = GraphQLDirectiveProcessor()
 
 @click.command()
 @clo.vspec_opt
-@clo.output_required_opt
+@clo.output_file_or_dir_opt
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -98,6 +98,8 @@ directive_processor = GraphQLDirectiveProcessor()
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
+@clo.modular_opt
+@clo.flat_domains_opt
 def cli(
     vspec: Path,
     output: Path,
@@ -108,6 +110,8 @@ def cli(
     overlays: tuple[Path, ...],
     quantities: tuple[Path, ...],
     units: tuple[Path, ...],
+    modular: bool,
+    flat_domains: bool,
 ) -> None:
     """Export a VSS specification to S2DM GraphQL schema."""
     try:
@@ -128,13 +132,40 @@ def cli(
         # Generate the schema
         schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
 
-        # Write to output file with custom @vspec directives
-        with open(output, "w") as outfile:
-            outfile.write(
-                print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
+        # Generate the full schema string once
+        full_schema_str = print_schema_with_vspec_directives(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+        )
+
+        if modular:
+            # Handle directory or file path for modular output
+            if output.is_dir():
+                output_dir = output
+            else:
+                output_dir = output.parent / output.stem if output.suffix else output
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Write main SDL schema file in the root of output directory
+            main_schema_file = output_dir / "full_sdl_schema.graphql"
+            with open(main_schema_file, "w") as outfile:
+                outfile.write(full_schema_str)
+
+            # Create modular_spec directory and write modular files
+            modular_spec_dir = output_dir / "modular_spec"
+            write_modular_schema(
+                schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, modular_spec_dir, flat_domains
             )
 
-        log.info(f"S2DM GraphQL schema written to {output}")
+            log.info(f"Full SDL schema written to {main_schema_file}")
+            log.info(f"Modular files written to {modular_spec_dir}")
+        else:
+            # Single file export (default behavior)
+            # Ensure output is treated as a file
+            output.parent.mkdir(parents=True, exist_ok=True)
+            with open(output, "w") as outfile:
+                outfile.write(full_schema_str)
+
+            log.info(f"S2DM GraphQL schema written to {output}")
 
     except S2DMExporterException as e:
         log.error(e)
@@ -533,3 +564,42 @@ def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry: dict[str, Any
 
     # Map VSS datatypes to GraphQL types
     return VSS_DATATYPE_MAP.get(datatype, GraphQLString)
+
+
+def write_modular_schema(
+    schema: GraphQLSchema,
+    unit_enums_metadata: dict[str, Any],
+    allowed_enums_metadata: dict[str, Any],
+    vspec_comments: dict[str, Any],
+    output_dir: Path,
+    flat_domains: bool = True,
+) -> None:
+    """
+    Write the GraphQL schema as modular files.
+
+    Args:
+        schema: The GraphQL schema to split
+        unit_enums_metadata: Metadata for unit enums
+        allowed_enums_metadata: Metadata for allowed value enums
+        vspec_comments: Comments data for fields and types
+        output_dir: Directory to write modular files to
+        flat_domains: If True, create flat structure; if False, create nested structure
+    """
+    from vss_tools.utils.modular_export_utils import (
+        analyze_schema_for_flat_domains,
+        analyze_schema_for_nested_domains,
+        write_common_files,
+        write_domain_files,
+    )
+
+    # Write common files (directives, scalars, schema definition)
+    write_common_files(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir)
+
+    # Analyze schema structure based on chosen strategy
+    if flat_domains:
+        domain_structure = analyze_schema_for_flat_domains(schema)
+    else:
+        domain_structure = analyze_schema_for_nested_domains(schema)
+
+    # Write domain-specific files
+    write_domain_files(domain_structure, schema, output_dir, vspec_comments, directive_processor)
