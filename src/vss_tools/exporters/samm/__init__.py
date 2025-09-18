@@ -65,19 +65,21 @@ def __get_version_vss(vss_tree: VSSNode) -> str:
 
         if vss_version_node:
             for v_child in vss_version_node.children:
+                # NOTE: Major, Minor and Patch Version fields are integers.
+                #       There is a fourth Version field: Label, which is a string and currently is not handled.
                 if (
                     v_child.name in ["Major", "Minor", "Patch"]
                     and hasattr(v_child.data, "default")
                     and type(v_child.data.default) is int
-                    and v_child.data.default > 1
                 ):
-                    match v_child.name:
-                        case "Major":
-                            major = v_child.data.default
-                        case "Minor":
-                            minor = v_child.data.default
-                        case "Patch":
-                            patch = v_child.data.default
+                    if v_child.name == "Major" and v_child.data.default > major:
+                        major = v_child.data.default
+
+                    if v_child.name == "Minor" and v_child.data.default > minor:
+                        minor = v_child.data.default
+
+                    if v_child.name == "Patch" and v_child.data.default > patch:
+                        patch = v_child.data.default
 
     return f"{major}.{minor}.{patch}"
 
