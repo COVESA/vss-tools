@@ -6,14 +6,19 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "anytree>=2.12.1",
+    "bump2version>=1.0.1", # x
     "click>=8.1.7",
+    "dataclasses-json>=0.6.7",
+    "deprecation>=2.1.0", # x
     "graphql-core>=3.2.5",
+    "importlib-metadata>=8.5.0", # x
     "jsonschema>=4.23.0",
     "pydantic>=2.9.2",
     "pyyaml>=6.0.2",
     "rdflib>=7.1.1",
     "rich-click>=1.8.3",
     "rich>=13.9.4",
+    "ruff>=0.7.3", # x
     "graphene>=3.4.3",
     "pandas>=2.2.3",
 ]
