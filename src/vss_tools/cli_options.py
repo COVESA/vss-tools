@@ -178,7 +178,7 @@ pretty_print_opt = option("--pretty/--no-pretty", help="Pretty print.", default=
 
 modular_opt = option(
     "--modular/--no-modular",
-    help="Generate modular output with separate files for each component alongside the main schema file.",
+    help="Generate modular output with separate files for each component instead of a single file.",
     default=False,
     show_default=True,
 )

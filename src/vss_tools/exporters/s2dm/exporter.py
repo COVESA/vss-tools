@@ -132,11 +132,6 @@ def cli(
         # Generate the schema
         schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
 
-        # Generate the full schema string once
-        full_schema_str = print_schema_with_vspec_directives(
-            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
-        )
-
         if modular:
             # Handle directory or file path for modular output
             if output.is_dir():
@@ -145,21 +140,17 @@ def cli(
                 output_dir = output.parent / output.stem if output.suffix else output
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Write main SDL schema file in the root of output directory
-            main_schema_file = output_dir / "full_sdl_schema.graphql"
-            with open(main_schema_file, "w") as outfile:
-                outfile.write(full_schema_str)
-
             # Create modular_spec directory and write modular files
-            modular_spec_dir = output_dir / "modular_spec"
+            modular_spec_dir = output_dir
             write_modular_schema(
                 schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, modular_spec_dir, flat_domains
             )
-
-            log.info(f"Full SDL schema written to {main_schema_file}")
             log.info(f"Modular files written to {modular_spec_dir}")
         else:
             # Single file export (default behavior)
+            full_schema_str = print_schema_with_vspec_directives(
+                schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+            )
             # Ensure output is treated as a file
             output.parent.mkdir(parents=True, exist_ok=True)
             with open(output, "w") as outfile:
@@ -212,7 +203,15 @@ def generate_s2dm_schema(
 
 
 def _init_vspec_comments() -> dict[str, dict[str, Any]]:
-    """Initialize vspec comments structure."""
+    """
+    Initialize data structure for storing VSS metadata to be rendered as GraphQL directives.
+
+    Creates a dictionary with predefined keys for tracking comments, ranges, deprecations,
+    instance tags, and VSS type information that will later be converted to @vspec directives.
+
+    Returns:
+        Dictionary with empty sub-dictionaries for each metadata category
+    """
     return {
         "field_comments": {},
         "type_comments": {},
@@ -226,7 +225,17 @@ def _init_vspec_comments() -> dict[str, dict[str, Any]]:
 
 
 def _create_unit_enums() -> tuple[dict[str, GraphQLEnumType], dict[str, dict[str, dict[str, str]]]]:
-    """Create unit enums and metadata."""
+    """
+    Create GraphQL enum types for VSS units grouped by quantity kind.
+
+    Processes the VSS dynamic units registry to generate GraphQL enums where each enum
+    represents all valid units for a specific quantity (e.g., LengthUnitEnum for length).
+
+    Returns:
+        A tuple containing:
+        - Dictionary mapping quantity names to their corresponding GraphQL enum types
+        - Nested dictionary with unit metadata (quantity -> unit_key -> {name, key})
+    """
     unit_enums = {}
     unit_metadata = {}
 
@@ -245,7 +254,16 @@ def _create_unit_enums() -> tuple[dict[str, GraphQLEnumType], dict[str, dict[str
 
 
 def _get_quantity_units() -> dict[str, dict[str, dict[str, str]]]:
-    """Get quantity units from VSS dynamic units."""
+    """
+    Extract and organize units from VSS dynamic units registry by quantity kind.
+
+    Processes the dynamic_units registry to avoid duplicates (since it contains both
+    unit keys and display names pointing to the same VSSUnit object) and groups
+    units by their quantity kind.
+
+    Returns:
+        Nested dictionary: quantity -> unit_key -> {name: display_name, key: unit_key}
+    """
     quantity_units: dict[str, dict[str, dict[str, str]]] = {}
     processed_units = set()
 
@@ -277,7 +295,20 @@ def _get_quantity_units() -> dict[str, dict[str, dict[str, str]]]:
 def _create_allowed_enums(
     leaves_df: pd.DataFrame,
 ) -> tuple[dict[str, GraphQLEnumType], dict[str, dict[str, dict[str, str]]]]:
-    """Create allowed value enums."""
+    """
+    Create GraphQL enum types for VSS signals with allowed value constraints.
+
+    Scans leaf nodes to identify those with 'allowed' values defined and generates
+    corresponding GraphQL enum types to enforce these constraints in the schema.
+
+    Args:
+        leaves_df: DataFrame containing VSS leaf node metadata
+
+    Returns:
+        A tuple containing:
+        - Dictionary mapping enum type names to GraphQL enum types
+        - Nested dictionary with enum metadata (enum_name -> {fqn, allowed_values})
+    """
     enums, metadata = {}, {}
 
     for fqn, row in leaves_df[leaves_df["allowed"].notna()].iterrows():
@@ -291,7 +322,18 @@ def _create_allowed_enums(
 
 
 def _clean_enum_name(value: str) -> str:
-    """Clean enum value name for GraphQL compatibility."""
+    """
+    Sanitize enum value names to comply with GraphQL naming rules.
+
+    GraphQL enum values must start with a letter and cannot contain dots or hyphens.
+    This function prefixes numeric values and replaces invalid characters.
+
+    Args:
+        value: Original enum value string
+
+    Returns:
+        GraphQL-compliant enum value name
+    """
     if value[0].isdigit():
         value = f"_{value}"
     return value.replace(".", "_DOT_").replace("-", "_DASH_")
@@ -300,7 +342,20 @@ def _clean_enum_name(value: str) -> str:
 def _create_instance_types(
     branches_df: pd.DataFrame, vspec_comments: dict[str, dict[str, Any]]
 ) -> dict[str, GraphQLEnumType | GraphQLObjectType]:
-    """Create instance types."""
+    """
+    Create GraphQL types for VSS instance-based branches.
+
+    For branches with instance declarations (e.g., Row[1,2], ["Left", "Right"]),
+    generates instance tag enums and object types to represent the dimensional
+    structure of instances in the GraphQL schema.
+
+    Args:
+        branches_df: DataFrame containing VSS branch node metadata
+        vspec_comments: Dictionary to store instance tag metadata
+
+    Returns:
+        Dictionary mapping type names to GraphQL enum or object types
+    """
     types: dict[str, GraphQLEnumType | GraphQLObjectType] = {}
     for fqn, row in branches_df[branches_df["instances"].notna()].iterrows():
         if instances := row.get("instances"):
@@ -326,7 +381,18 @@ def _create_instance_types(
 
 
 def _parse_instances_simple(instances: list[Any]) -> list[list[str]]:
-    """Parse VSS instances into dimensions."""
+    """
+    Parse VSS instance declarations into dimensional arrays.
+
+    Converts VSS instance notation (e.g., "Row[1,4]", ["Left", "Right"]) into
+    a list of dimensions where each dimension contains the expanded instance values.
+
+    Args:
+        instances: List of VSS instance declarations (ranges or literal lists)
+
+    Returns:
+        List of dimensions, where each dimension is a list of instance values
+    """
     if all(isinstance(item, str) and "[" not in item for item in instances):
         return [instances]  # Single dimension
 
@@ -415,7 +481,19 @@ def _create_object_type(
 
 
 def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) -> dict[str, GraphQLArgument]:
-    """Get unit arguments for a field."""
+    """
+    Generate GraphQL field arguments for unit selection.
+
+    If a VSS leaf has a unit defined, creates a 'unit' argument with the appropriate
+    enum type and default value, allowing clients to request values in different units.
+
+    Args:
+        leaf_row: Pandas Series containing leaf node metadata
+        unit_enums: Dictionary of GraphQL enum types for units by quantity
+
+    Returns:
+        Dictionary with 'unit' argument if applicable, empty dict otherwise
+    """
     unit = leaf_row.get("unit", "")
     if not unit or unit not in dynamic_units:
         return {}
