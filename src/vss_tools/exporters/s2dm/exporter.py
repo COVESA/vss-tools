@@ -132,11 +132,6 @@ def cli(
         # Generate the schema
         schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
 
-        # Generate the full schema string once
-        full_schema_str = print_schema_with_vspec_directives(
-            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
-        )
-
         if modular:
             # Handle directory or file path for modular output
             if output.is_dir():
@@ -145,21 +140,17 @@ def cli(
                 output_dir = output.parent / output.stem if output.suffix else output
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Write main SDL schema file in the root of output directory
-            main_schema_file = output_dir / "full_sdl_schema.graphql"
-            with open(main_schema_file, "w") as outfile:
-                outfile.write(full_schema_str)
-
             # Create modular_spec directory and write modular files
-            modular_spec_dir = output_dir / "modular_spec"
+            modular_spec_dir = output_dir
             write_modular_schema(
                 schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, modular_spec_dir, flat_domains
             )
-
-            log.info(f"Full SDL schema written to {main_schema_file}")
             log.info(f"Modular files written to {modular_spec_dir}")
         else:
             # Single file export (default behavior)
+            full_schema_str = print_schema_with_vspec_directives(
+                schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+            )
             # Ensure output is treated as a file
             output.parent.mkdir(parents=True, exist_ok=True)
             with open(output, "w") as outfile:
