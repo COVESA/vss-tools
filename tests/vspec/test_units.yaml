@@ -35,3 +35,18 @@ percent:
   definition: Relation measured in percent
   quantity: relation
   allowed-datatypes: ['numeric']
+km/h:
+  unit: kilometer per hour
+  definition: Speed measured in kilometers per hour
+  quantity: relation
+  allowed-datatypes: ['numeric']
+m/s^2:
+  unit: meter per second squared
+  definition: Acceleration measured in meters per second squared
+  quantity: relation
+  allowed-datatypes: ['numeric']
+kPa:
+  unit: kilopascal
+  definition: Pressure measured in kilopascal
+  quantity: relation
+  allowed-datatypes: ['numeric']
