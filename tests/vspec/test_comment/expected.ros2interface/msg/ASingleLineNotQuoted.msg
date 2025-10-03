@@ -1,0 +1,7 @@
+# Auto-generated from VSS by vss-tools (ros2msg exporter)
+# Signal: A.SingleLineNotQuoted
+
+uint64 timestamp
+
+# A sensor.; unit=km
+float32 single_line_not_quoted

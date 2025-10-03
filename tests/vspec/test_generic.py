@@ -40,6 +40,8 @@ def run_exporter(directory, exporter, tmp_path):
     types = directory / "types.vspec"
     output = tmp_path / f"out.{exporter}"
     expected = directory / f"expected.{exporter}"
+    topics_file = directory / "topics.txt"
+    topics_file.write_text("# includes only branch A \n" "A.*", encoding="utf-8")
     if not expected.exists():
         # If you want find directory/exporter combinations not yet covered enable the assert
         # assert False, f"Folder {expected} not found"
@@ -51,12 +53,22 @@ def run_exporter(directory, exporter, tmp_path):
         cmd += f" --output-dir {output}"
     elif exporter in ["samm"]:
         cmd += f" --target-folder {output}"
+    elif exporter in ["ros2interface"]:
+        cmd += f" --output {output}"
+        cmd += f" --topics-file {topics_file} --topics A.* --topics A.Double --topics fqn:A.Uint8"
+        cmd += "  --mode aggregate --srv both --expand --srv-use-msg --exclude-topics Z.*"
+        cmd += "  --topics-case-sensitive --topics name:Uint16 --topics Uint32"
+        cmd += "  --topics *:Float --topics regex:^A\\.Int16\\..*$ --topics Uint32"
     else:
         cmd += f" --output {output}"
+
     subprocess.run(cmd.split(), check=True)
     if exporter in ["apigear", "samm"]:
         dcmp = filecmp.dircmp(output, expected)
         assert not (dcmp.diff_files or dcmp.left_only or dcmp.right_only)
+    elif exporter in ["ros2interface"]:
+        dcmp = filecmp.dircmp(output, expected)
+        assert not (dcmp.diff_files)
     else:
         assert filecmp.cmp(output, expected)
 
@@ -66,6 +78,7 @@ def test_exporters(directory, tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
     exporters = [
+        "ros2interface",
         "apigear",
         "json",
         "jsonschema",
