@@ -38,3 +38,11 @@ def str_to_screaming_snake_case(text: str) -> str:
     text = re.sub(r"[^a-zA-Z0-9]", " ", text)
     words = text.split()
     return "_".join(word.upper() for word in words)
+
+
+def to_snake(name: str) -> str:
+    # PascalCase -> snake_case, hyphens/spaces -> underscores, collapse
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+    s = re.sub(r"[^0-9a-zA-Z_]+", "_", s)
+    s = re.sub(r"_+", "_", s).strip("_")
+    return s.lower()

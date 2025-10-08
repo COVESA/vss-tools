@@ -1,18 +1,21 @@
 
-# ROS 2 Interface Exporter (`ros2interface`)
+# Vspec ROS Exporter
 
-Export a VSS model to a ROS 2 interface package: generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for Get/Set operations. This exporter plugs into the `vspec export` CLI like other vss-tools exporters. For generic exporter usage and common arguments, see the `vspec` documentation.
+Exports a VSS model to a ROS 2 interface package.
 
+## What this exporter is about?
+This exporter takes VSS `Vspec` file as a source and it generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for Get/Set operations. This exporter plugs into the `vspec export` CLI like other vss-tools exporters. For generic exporter usage and common arguments, see the `vspec` documentation.
 
 ## Generated Output Structure
-
+```
 \<output><br>
 └── \<package-name><br>
-&emsp;&emsp;├── msg  # generated .msg definitions<br>
-&emsp;&emsp;│ &emsp; └── \<MSG>.msg<br>
-&emsp;&emsp;└── srv  # generated .srv (if setting is enabled)<br>
-&emsp;&emsp;&emsp;&emsp;        ├── Get\<MSG>.srv<br>
-&emsp;&emsp;&emsp;&emsp;        └── Set\<MSG>.srv<br>
+    ├── msg  # generated .msg definitions<br>
+            │ &emsp; └── \<MSG>.msg<br>
+            └── srv  # generated .srv (if setting is enabled)<br>
+                        ├── Get\<MSG>.srv<br>
+                        └── Set\<MSG>.srv<br>
+```
 
 - .msg files include VSS metadata as comments (description, unit, min/max, allowed values).
 - Optional .srv files (Get\<Msg>.srv, Set\<Msg>.srv) that either nest the generated message or flatten its fields.

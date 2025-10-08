@@ -1,0 +1,16 @@
+rules:
+  - kind: regex
+    pattern: "^Vehicle.*"
+    case_insensitive: true
+
+  - kind: glob
+    pattern: "*.Speed"
+    case_insensitive: false
+
+  - kind: fqn
+    pattern: Vehicle.Engine
+    case_insensitive: true
+
+  - kind: name
+    pattern: Temperature
+    case_insensitive: false
