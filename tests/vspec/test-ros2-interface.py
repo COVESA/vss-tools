@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Contributors to COVESA
+# Copyright (c) 2025 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License 2.0 which is available at
@@ -476,7 +476,6 @@ A.Speed:
         vspec,
         tmp_path,
         mode="leaf",
-        extra_args=["--srv", "none"],
     )
     get_srv = pkg_dir / "srv" / "GetASpeed.srv"
     set_srv = pkg_dir / "srv" / "SetASpeed.srv"
@@ -579,6 +578,8 @@ B.Level:
 def test_ros2_topics_file_includes_only_matching(tmp_path):
     """
     --topics-file loads include patterns; comments with '#' are ignored.
+    --file formats which are supported are `Yaml` and `txt` files.
+    --`txt` files support only one topic per line.
     """
     vspec = """\
 A:
@@ -688,7 +689,7 @@ def test_cli_entrypoint_smoke():
 
     try:
         cp = subprocess.run(
-            ["vspec", "export", "ros2interface", "--help"],
+            ["vspec", "export", "ros", "--help"],
             text=True,
             capture_output=True,
         )
@@ -697,12 +698,12 @@ def test_cli_entrypoint_smoke():
 
     if cp.returncode != 0:
         pytest.skip(
-            "ros2interface exporter not registered with 'vspec export'. "
+            "ros exporter not registered with 'vspec export'. "
             "Install exporter package with entry points (e.g., pip install -e .) to enable this smoke test."
         )
 
-    # Minimal sanity: help text should contain 'Export a VSS model' (from click help)
-    assert "Export a VSS model" in (cp.stdout or "") + (cp.stderr or "")
+    # Minimal sanity: help text should contain 'Export a VSS model to a ROS 2 interface' (from click help)
+    assert "Export a VSS model to a ROS 2 interface" in (cp.stdout or "") + (cp.stderr or "")
 
 
 # ------------- bool datatype conversion output test -------------
@@ -743,20 +744,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: uint8
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "uint8 temprature" in text
-    assert "Engine Temprature." in text
+    assert "uint8 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- uint16 datatype conversion output test -------------
@@ -770,20 +771,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: uint16
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "uint16 temprature" in text
-    assert "Engine Temprature." in text
+    assert "uint16 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- uint32 datatype conversion output test -------------
@@ -797,20 +798,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: uint32
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "uint32 temprature" in text
-    assert "Engine Temprature." in text
+    assert "uint32 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- uint64 datatype conversion output test -------------
@@ -824,20 +825,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: uint64
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "uint64 temprature" in text
-    assert "Engine Temprature." in text
+    assert "uint64 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- int8 datatype conversion output test -------------
@@ -851,20 +852,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: int8
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "int8 temprature" in text
-    assert "Engine Temprature." in text
+    assert "int8 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- int16 datatype conversion output test -------------
@@ -878,20 +879,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: int16
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "int16 temprature" in text
-    assert "Engine Temprature." in text
+    assert "int16 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- int32 datatype conversion output test -------------
@@ -905,20 +906,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: int32
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "int32 temprature" in text
-    assert "Engine Temprature." in text
+    assert "int32 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- int64 datatype conversion output test -------------
@@ -932,20 +933,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: int64
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "int64 temprature" in text
-    assert "Engine Temprature." in text
+    assert "int64 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- float32 datatype conversion output test -------------
@@ -959,20 +960,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: float
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "float32 temprature" in text
-    assert "Engine Temprature." in text
+    assert "float32 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- float64 datatype conversion output test -------------
@@ -986,20 +987,20 @@ A:
 A.Engine:
   type: branch
   description: Engine of Branch A.
-A.Engine.Temprature:
+A.Engine.Temperature:
   type: attribute
   datatype: double
-  description: Engine Temprature.
+  description: Engine Temperature.
 """
     pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
-    msg = pkg_dir / "msg" / "AEngineTemprature.msg"
+    msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
     assert "uint64 timestamp" in text
-    assert "float64 temprature" in text
-    assert "Engine Temprature." in text
+    assert "float64 temperature" in text
+    assert "Engine Temperature." in text
 
 
 # ------------- string datatype conversion output test -------------

@@ -1,18 +1,19 @@
 
-# ROS 2 Interface Exporter (`ros2interface`)
+# ROS 2 Interface Exporter (`ros2interface`)
 
-Export a VSS model to a ROS 2 interface package: generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for Get/Set operations. This exporter plugs into the `vspec export` CLI like other vss-tools exporters. For generic exporter usage and common arguments, see the `vspec` documentation.
-
+Export a VSS model to a ROS 2 interface package: generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for Get/Set operations.
+This exporter plugs into the `vspec export` CLI like other vss-tools exporters. For generic exporter usage and common arguments, see the `vspec` documentation.
 
 ## Generated Output Structure
-
+```
 \<output><br>
 └── \<package-name><br>
-&emsp;&emsp;├── msg  # generated .msg definitions<br>
-&emsp;&emsp;│ &emsp; └── \<MSG>.msg<br>
-&emsp;&emsp;└── srv  # generated .srv (if setting is enabled)<br>
-&emsp;&emsp;&emsp;&emsp;        ├── Get\<MSG>.srv<br>
-&emsp;&emsp;&emsp;&emsp;        └── Set\<MSG>.srv<br>
+    ├── msg  # generated .msg definitions<br>
+            │ &emsp; └── \<MSG>.msg<br>
+            └── srv  # generated .srv (if setting is enabled)<br>
+                        ├── Get\<MSG>.srv<br>
+                        └── Set\<MSG>.srv<br>
+```
 
 - .msg files include VSS metadata as comments (description, unit, min/max, allowed values).
 - Optional .srv files (Get\<Msg>.srv, Set\<Msg>.srv) that either nest the generated message or flatten its fields.
@@ -45,9 +46,7 @@ Export a VSS model to a ROS 2 interface package: generates `.msg` files (per le
 - `--mode {aggregate, leaf}`:
   - `aggregate`: one `.msg` per direct parent branch containing all of its leaf signals.
   - `leaf`: one `.msg` per leaf signal.
-- `--srv {none, get, set, both}`: Also generate `.srv` files.
-  - `none`:
-    - using this option does not create any .srv files
+- `--srv {get, set, both}`: Also generate `.srv` files.
   - `get`:
     - creates Get<MSG>.srv files to retrieve data within a specified start and end time.
   - `set`:
@@ -88,7 +87,7 @@ Following patterns are supported:
 
 ### Services (`.srv`)
 
-This file is Generated when `--srv none|get|set|both` parameter is used. The output files are:
+This file is Generated when `--srv get|set|both` parameter is used. The output files are:
 
 - `Get<Msg>.srv`
   - Request: `uint64 start_time_ms`, `uint64 end_time_ms`
@@ -110,5 +109,5 @@ vspec export ros2interface   --vspec spec/VehicleSignalSpecification.vspec   -I 
 ## Usage
 
 ```bash
-vspec export ros2interface   --vspec spec/VehicleSignalSpecification.vspec   -I spec   --output ./out   --package-name vss_interfaces   --mode aggregate|leaf   --srv none|get|set|both   [--srv-use-msg | --no-srv-use-msg]   [--topics PATTERN ...]   [--exclude-topics PATTERN ...]   [--topics-file patterns.txt]   [--topics-case-insensitive]
+vspec export ros2interface   --vspec spec/VehicleSignalSpecification.vspec   -I spec   --output ./out   --package-name vss_interfaces   --mode aggregate|leaf   --srv get|set|both   [--srv-use-msg | --no-srv-use-msg]   [--topics PATTERN ...]   [--exclude-topics PATTERN ...]   [--topics-file patterns.txt]   [--topics-case-insensitive]
 ```
