@@ -22,6 +22,7 @@ from vss_tools.model import (
     VSSDataStruct,
     get_all_model_fields,
 )
+from vss_tools.strict import StrictExceptions, StrictOption, load_strict_exceptions
 from vss_tools.tree import ModelValidationException, VSSNode, add_struct_schemas, build_tree
 from vss_tools.units_quantities import load_quantities, load_units
 from vss_tools.vspec import InvalidSpecDuplicatedEntryException, InvalidSpecException, load_vspec
@@ -74,29 +75,28 @@ def load_quantities_and_units(quantities: tuple[Path, ...], units: tuple[Path, .
         dynamic_units[k] = v
 
 
-def check_name_violations(root: VSSNode, strict: bool, aborts: tuple[str, ...]) -> None:
-    if strict or "name-style" in aborts:
+def check_name_violations(root: VSSNode, strict: bool, aborts: tuple[str, ...], exceptions: set[str]) -> None:
+    if strict or StrictOption.NAME_STYLE in aborts:
         naming_violations = root.get_naming_violations()
-        if naming_violations:
+        if naming_violations and any([v[0] not in exceptions for v in naming_violations]):
             for violation in naming_violations:
                 log.warning(f"Name violation: '{violation[0]}' ({violation[1]})")
             raise NameViolationException(f"Name violations detected: {naming_violations}")
 
 
 def check_extra_attribute_violations(
-    root: VSSNode,
-    strict: bool,
-    aborts: tuple[str, ...],
-    extended_attributes: tuple[str, ...],
+    root: VSSNode, strict: bool, aborts: tuple[str, ...], extended_attributes: tuple[str, ...], exceptions: set[str]
 ) -> None:
     extra_attributes = root.get_extra_attributes(extended_attributes)
+    if not extra_attributes or all([v[0] in exceptions for v in extra_attributes]):
+        return
     for attribute in extra_attributes:
         log.warning(f"Unknown extra attribute: '{attribute[0]}':'{attribute[1]}'")
         if attribute[1] in get_all_model_fields():
             raise ExtraAttributesException(
                 f"Forbidden extra attribute (core attribute): '{attribute[0]}':'{attribute[1]}'"
             )
-    if strict or "unknown-attribute" in aborts:
+    if strict or StrictOption.UNKNOWN_ATTRIBUTE in aborts:
         if extra_attributes:
             raise ExtraAttributesException(f"Forbidden extra attributes detected: {extra_attributes}")
 
@@ -191,6 +191,7 @@ def get_trees(
     types: tuple[Path, ...] = (),
     overlays: tuple[Path, ...] = (),
     expand: bool = True,
+    strict_exceptions_file: Path | None = None,
 ) -> tuple[VSSNode, VSSNode | None]:
     """
     Loading vspec files, building and validating trees (types and normal).
@@ -238,14 +239,18 @@ def get_trees(
     if types_root:
         validate_tree(types_root)
         try:
-            check_extra_attribute_violations(types_root, True, aborts, extended_attributes)
+            check_extra_attribute_violations(types_root, True, aborts, extended_attributes, set())
         except (NameViolationException, ExtraAttributesException) as e:
             log.critical(e)
             exit(1)
 
+    strict_exceptions = StrictExceptions()
+    if strict or aborts:
+        strict_exceptions = load_strict_exceptions(strict_exceptions_file)
+
     try:
-        check_name_violations(root, strict, aborts)
-        check_extra_attribute_violations(root, strict, aborts, extended_attributes)
+        check_name_violations(root, strict, aborts, strict_exceptions.names)
+        check_extra_attribute_violations(root, strict, aborts, extended_attributes, strict_exceptions.attributes)
     except (NameViolationException, ExtraAttributesException) as e:
         log.critical(e)
         exit(1)

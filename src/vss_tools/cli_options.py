@@ -12,6 +12,7 @@ import rich_click as click
 from rich_click import option
 
 from vss_tools.model import get_all_model_fields
+from vss_tools.strict import StrictOption
 
 
 def validate_attribute(value):
@@ -63,11 +64,19 @@ strict_opt = option(
     show_default=True,
 )
 
+strict_exceptions_opt = option(
+    "--strict-exceptions",
+    help="""A YAML file that specifies a list of absolute VSS signal paths to be excluded from the strict check
+    Entries are VSS signal paths the value either empty or a list of allowed aborts.
+    """,
+    type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=True),
+)
+
 aborts_opt = option(
     "--aborts",
     "-a",
     multiple=True,
-    type=click.Choice(["unknown-attribute", "name-style"]),
+    type=click.Choice([StrictOption.NAME_STYLE.value, StrictOption.UNKNOWN_ATTRIBUTE.value]),
     help="Abort on selected option. The '--strict' option enables all of them.",
     show_choices=True,
 )

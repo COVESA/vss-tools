@@ -61,6 +61,7 @@ class NoAliasDumper(yaml.SafeDumper):
 @clo.types_opt
 @clo.types_output_opt
 @clo.extend_all_attributes_opt
+@clo.strict_exceptions_opt
 def cli(
     vspec: Path,
     output: Path,
@@ -75,6 +76,7 @@ def cli(
     types: tuple[Path],
     types_output: Path | None,
     extend_all_attributes: bool,
+    strict_exceptions: Path | None,
 ):
     """
     Export as YAML.
@@ -90,6 +92,7 @@ def cli(
         types=types,
         overlays=overlays,
         expand=expand,
+        strict_exceptions_file=strict_exceptions,
     )
     log.info("Generating YAML output...")
     tree_data = tree.as_flat_dict(extend_all_attributes, extended_attributes)

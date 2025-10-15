@@ -49,3 +49,13 @@ def test_strict_error(vspec_file: str, tmp_path):
     cmd = f"vspec export json --pretty --strict -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split())
     assert process.returncode != 0
+
+
+@pytest.mark.parametrize("vspec_file", ["faulty_case.vspec", "faulty_name_boolean.vspec"])
+def test_strict_exceptions(vspec_file: str, tmp_path):
+    spec = HERE / vspec_file
+    output = tmp_path / "out.json"
+    cmd = f"vspec export json --pretty --strict --strict-exceptions {HERE / 'exceptions.yaml'}"
+    cmd += f" -u {TEST_UNITS} -q {TEST_QUANT} --vspec {spec} --output {output}"
+    process = subprocess.run(cmd.split())
+    assert process.returncode == 0

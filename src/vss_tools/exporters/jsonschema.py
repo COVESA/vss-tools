@@ -58,6 +58,7 @@ type_map = {
 @clo.types_opt
 @clo.extend_all_attributes_opt
 @clo.pretty_print_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--no-additional-properties",
     is_flag=True,
@@ -84,6 +85,7 @@ def cli(
     pretty: bool,
     no_additional_properties: bool,
     require_all_properties: bool,
+    strict_exceptions: Path | None,
 ):
     """
     Export as a jsonschema.
@@ -99,6 +101,7 @@ def cli(
         types=types,
         overlays=overlays,
         expand=expand,
+        strict_exceptions_file=strict_exceptions,
     )
     log.info("Generating JSON schema...")
     indent = None
