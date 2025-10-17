@@ -449,6 +449,7 @@ def export_apigear(
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--output-dir",
     required=True,
@@ -486,6 +487,7 @@ def cli(
     units: tuple[Path],
     types: tuple[Path],
     output_dir: Path,
+    strict_exceptions: Path | None,
     apigear_template_unreal_path: Path,
     apigear_template_cpp_path: Path,
     apigear_template_qt5_path: Path,
@@ -504,6 +506,7 @@ def cli(
         units=units,
         types=types,
         overlays=overlays,
+        strict_exceptions_file=strict_exceptions,
     )
     log.info("Generating ApiGear output...")
     if output_dir.exists():

@@ -227,8 +227,7 @@ def export_node(node: VSSNode, generate_all_idl_features: bool) -> None:
                 allowed_values = str(allowed)
             else:
                 log.warning(
-                    f"VSS2IDL can only handle allowed values for string type, "
-                    f"signal {node.name} has type {datatype}"
+                    f"VSS2IDL can only handle allowed values for string type, signal {node.name} has type {datatype}"
                 )
 
         idl_file_buffer.append("struct " + getAllowedName(node.name))
@@ -390,6 +389,7 @@ def export_idl(file, root, generate_all_idl_features=False):
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--all-idl-features",
     is_flag=True,
@@ -407,6 +407,7 @@ def cli(
     units: tuple[Path],
     types: tuple[Path],
     all_idl_features: bool,
+    strict_exceptions: Path | None,
 ):
     """
     Export as DDSIDL.
@@ -421,6 +422,7 @@ def cli(
         units=units,
         types=types,
         overlays=overlays,
+        strict_exceptions_file=strict_exceptions,
     )
     log.info("Generating DDS-IDL output...")
 

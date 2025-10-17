@@ -193,6 +193,7 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.strict_exceptions_opt
 @click.option("--attr", help="Show VSSData attribute", multiple=True)
 def cli(
     vspec: Path,
@@ -207,6 +208,7 @@ def cli(
     types: tuple[Path],
     output: Path | None,
     attr: tuple[str],
+    strict_exceptions: Path | None,
 ):
     """
     Export as PlantUML.
@@ -222,6 +224,7 @@ def cli(
         types=types,
         overlays=overlays,
         expand=expand,
+        strict_exceptions_file=strict_exceptions,
     )
 
     plant_code = get_enums(tree, "", attr)

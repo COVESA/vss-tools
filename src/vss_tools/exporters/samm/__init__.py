@@ -160,6 +160,7 @@ Path to or name for the target folder, where generated aspect models (.ttl files
 @clo.units_opt
 @clo.types_opt
 @clo.types_output_opt
+@clo.strict_exceptions_opt
 def cli(
     vspec: Path,
     target_folder: Path,
@@ -172,6 +173,7 @@ def cli(
     units: tuple[Path],
     types: tuple[Path],
     types_output: Path,
+    strict_exceptions: Path | None,
     signals_file,
     output_namespace,
     split,
@@ -191,7 +193,17 @@ def cli(
     #       Just keep in mind that this might lead to some additional logic,
     #       to make sure that each case is handled correctly.
     vss_tree, datatype_tree = get_trees(
-        vspec, include_dirs, aborts, strict, extended_attributes, quantities, units, types, overlays, False
+        vspec,
+        include_dirs,
+        aborts,
+        strict,
+        extended_attributes,
+        quantities,
+        units,
+        types,
+        overlays,
+        False,
+        strict_exceptions,
     )
 
     # Get the VSS version from the vss_tree::VersionVSS
@@ -271,8 +283,7 @@ def cli(
             )
         else:
             log.warning(
-                "VSS to ESMF - SAMM processing - COMPLETED\n\n"
-                "VSS tree was not converted because it is DEPRECATED.\n\n"
+                "VSS to ESMF - SAMM processing - COMPLETED\n\nVSS tree was not converted because it is DEPRECATED.\n\n"
             )
 
     else:

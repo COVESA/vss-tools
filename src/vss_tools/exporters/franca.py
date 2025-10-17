@@ -91,6 +91,7 @@ def print_franca_content(file: TextIOWrapper, root: VSSNode) -> None:
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
+@clo.strict_exceptions_opt
 @click.option("--franca-vss-version", help="Adds franca version info.")
 def cli(
     vspec: Path,
@@ -104,6 +105,7 @@ def cli(
     units: tuple[Path],
     types: tuple[Path],
     franca_vss_version: str,
+    strict_exceptions: Path | None,
 ):
     """
     Export as Franca.
@@ -119,6 +121,7 @@ def cli(
         types=types,
         units=units,
         overlays=overlays,
+        strict_exceptions_file=strict_exceptions,
     )
     with open(output, "w") as f:
         print_franca_header(f, franca_vss_version)

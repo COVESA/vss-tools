@@ -270,6 +270,7 @@ def strip_structs_prefix(prefix: str, structs: dict[str, GoStruct]) -> int:
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.strict_exceptions_opt
 @click.option("--package", default="vss", help="Go package name", show_default=True)
 @click.option("--short-names/--no-short-names", default=True, show_default=True, help="Shorten struct names")
 def cli(
@@ -285,6 +286,7 @@ def cli(
     types: tuple[Path],
     package: str,
     short_names: bool,
+    strict_exceptions: Path | None,
 ):
     """
     Export as Go structs.
@@ -299,6 +301,7 @@ def cli(
         units=units,
         types=types,
         overlays=overlays,
+        strict_exceptions_file=strict_exceptions,
     )
     instance_map = get_instance_mapping(tree)
     structs = get_go_structs(tree, instance_map)

@@ -291,7 +291,7 @@ class VSSNode(Node):  # type: ignore[misc]
                     if not node.name.startswith("Is") and not node.name.startswith("Has"):
                         violations.append([node.get_fqn(), "Not starting with 'Is' or 'Has'"])
         if violations:
-            log.info(f"Naming violations: {len(violations)}")
+            log.info(f"Naming violations (before applying exceptions): {len(violations)}")
         return violations
 
     def get_extra_attributes(self, allowed: tuple[str, ...]) -> list[list[str]]:
@@ -305,7 +305,7 @@ class VSSNode(Node):  # type: ignore[misc]
                 if field not in allowed:
                     violations.append([node.get_fqn(), field])
         if violations:
-            log.warning(f"Attributes, violations={len(violations)}")
+            log.info(f"Attributes (before applying exceptions): {len(violations)}")
         return violations
 
     def as_flat_dict(self, with_extra_attributes: bool, extended_attributes: tuple[str, ...] = ()) -> dict[str, Any]:
