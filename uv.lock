@@ -97,6 +97,15 @@ wheels = [
 ]
 
 [[package]]
+name = "case-converter"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/09/f5b4cf1f5da361e7c6f5f5f5d8bbf313a57d01574194f84abed68447fbb6/case_converter-1.2.0.tar.gz", hash = "sha256:4e0281ae60d4335e57300bafd61cfb3fa65734587fe9efd32f6cec1a506685c5", size = 8760, upload-time = "2025-02-19T16:49:34.891Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/42/8e/32a7ab1ac97de46e6a0d45b1fcfe1ad7ba9a523a6fb449662ccf39b9591e/case_converter-1.2.0-py3-none-any.whl", hash = "sha256:bb5bc6b1e121c394a6de6526cd3f8be0f5c5817c40d32251cce28a2cf4a72d8c", size = 16250, upload-time = "2025-02-19T16:49:30.48Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.7.14"
 source = { registry = "https://pypi.org/simple" }
@@ -1706,10 +1715,11 @@ wheels = [
 
 [[package]]
 name = "vss-tools"
-version = "6.0.0"
+version = "6.0.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "anytree" },
+    { name = "case-converter" },
     { name = "click" },
     { name = "graphene" },
     { name = "graphql-core" },
@@ -1739,6 +1749,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anytree", specifier = ">=2.12.1" },
+    { name = "case-converter", specifier = ">=1.2.0" },
     { name = "click", specifier = ">=8.1.7" },
     { name = "graphene", specifier = ">=3.4.3" },
     { name = "graphql-core", specifier = ">=3.2.5" },

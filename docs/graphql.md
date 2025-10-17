@@ -1,7 +1,9 @@
-# Vspec Graphql Exporter
+# GraphQL Exporter
+
+> **Note**: This GraphQL exporter is being evaluated for potential deprecation or rework. **Why deprecation?** This exporter generates a GraphQL schema that resambles the Vspec tree. It was not designed to serve directly a GraphQL API, but for migrating the information of Vspec files to the GraphQL Schema Definition Language (SDL). It uses graphene package which relies on classes to create elements, whereas in the logic the classes are dynamically generated. Also, since graphene is an abstraction of the graphql-core implementation, some modifications were not easily achievable. Hence, a more sophisticated [Simplified Semantic Data Modeling (S2DM) exporter](s2dm.md) was created for this purpose. **Why rework?** It might still make sense to keep this exporter and refactor it to produce an output file that enables a proper GraphQL API.
 
 This exporter generates a valid GraphQL schema out of the VSS specification.
-The schema is constructed according to the [GraphQL Schema Language](https://graphql.org/learn/schema/).
+The schema is constructed according to the [GraphQL Schema Language](https://graphql.org/learn/schema/) and is designed for traditional GraphQL API usage patterns.
 
 ## VSS to GraphQL Mapping
 ### VSS elements in a nutshell
@@ -352,6 +354,34 @@ The mapping reference file will look like follows:
                     "SAE_5": "SAE_5"
                 }
             },
+          ...
+        }
+```
+
+## GraphQL vs S2DM Exporters
+
+VSS-tools provides two GraphQL-related exporters that serve different purposes:
+
+### Traditional GraphQL Exporter (this document)
+- **Purpose**: Generate schemas optimized for GraphQL APIs and runtime query execution
+- **Target Use Case**: Building GraphQL servers, client applications, and API endpoints
+- **Schema Design**: Focuses on query efficiency and typical GraphQL patterns
+- **Directives**: Minimal use of custom directives
+- **Traceability**: Limited mapping information available via optional JSON output
+
+### S2DM Exporter ([see S2DM documentation](s2dm.md))
+- **Purpose**: Generate schemas for semantic data modeling with comprehensive VSS traceability
+- **Target Use Case**: Code generation, documentation, data modeling, and cross-platform integration
+- **Schema Design**: Preserves VSS structure and metadata extensively
+- **Directives**: Comprehensive `@vspec` directives on every schema element
+- **Traceability**: Complete bidirectional mapping between GraphQL schema and VSS specification
+
+### Choosing the Right Exporter
+
+- **Use the GraphQL exporter** when building traditional GraphQL APIs, servers, or client applications that need to query VSS data efficiently
+- **Use the S2DM exporter** when you need comprehensive traceability, code generation, documentation, or integration with semantic data modeling tools
+
+Both exporters produce valid GraphQL SDL, but they optimize for different use cases and integration patterns.
           ...
         }
 

@@ -50,6 +50,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "tree": "vss_tools.exporters.tree:cli",
         "samm": "vss_tools.exporters.samm:cli",
         "go": "vss_tools.exporters.go:cli",
+        "s2dm": "vss_tools.exporters.s2dm:cli",
     },
 )
 @click.pass_context

@@ -10,10 +10,8 @@
 from __future__ import annotations
 
 import json
-import keyword
 import re
 import sys
-from enum import Enum
 from itertools import product
 from pathlib import Path
 from typing import Any, Dict
@@ -21,17 +19,15 @@ from typing import Any, Dict
 import graphene
 import pandas as pd
 import rich_click as click
-from anytree import PreOrderIter
 from graphene import Field, Scalar
 
 import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.datatypes import Datatypes, dynamic_units, is_array
 from vss_tools.main import get_trees
-from vss_tools.tree import VSSNode, expand_string, get_expected_parent
-from vss_tools.utils.misc import getattr_nn, str_to_screaming_snake_case
-
-from .samm.helpers.string_helper import str_to_lc_first_camel_case, str_to_uc_first
+from vss_tools.tree import VSSNode, expand_string
+from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
+from vss_tools.utils.pandas_utils import get_metadata_df
 
 
 class GraphQLExporterException(Exception):
@@ -70,18 +66,8 @@ class UInt64(Scalar):
 
 
 # ========= Mapping aids =========
-class GQLElementType(Enum):
-    """Enum of GraphQL elements to better handle naming conventions during the export process"""
-
-    TYPE = "type"
-    FIELD = "field"
-    ARGUMENT = "argument"
-    DIRECTIVE = "directive"
-    ENUM = "enum"
-    INTERFACE = "interface"
-    UNION = "union"
-    SCALAR = "scalar"
-    ENUM_VALUE = "enum_value"
+# Use the unified GraphQL element type enum from utils
+GQLElementType = GraphQLElementType
 
 
 datatype_map = {
@@ -132,74 +118,22 @@ mapping_leaves_df = pd.DataFrame(
 def get_gql_name(text: str, gql_type: GQLElementType) -> str:
     """
     Converts a given text to a GraphQL compatible name based on the given GQLElementType.
+
+    This function wraps the unified convert_name_for_graphql_schema utility to maintain
+    backward compatibility with existing code.
+
     For example:
     - type, enum, and scalars must be PascalCase.
     - fields and arguments must be camelCase.
     - enum values must be SCREAMING_SNAKE_CASE.
     """
-
-    if gql_type in {GQLElementType.FIELD, GQLElementType.ARGUMENT, GQLElementType.DIRECTIVE}:
-        text = str_to_lc_first_camel_case(text.replace(".", "_"))
-        return text if not keyword.iskeyword(text) else f"{text}_"
-    elif gql_type in {
-        GQLElementType.TYPE,
-        GQLElementType.ENUM,
-        GQLElementType.INTERFACE,
-        GQLElementType.UNION,
-        GQLElementType.SCALAR,
-    }:
-        text = text.replace(".", "_").replace("-", "")
-        text = f"{text}_Enum" if gql_type == GQLElementType.ENUM else text
-        text = str_to_uc_first(text)
-        return text if not keyword.iskeyword(text) else f"{text}_"
-    elif gql_type in {GQLElementType.ENUM_VALUE}:
-        text = str_to_screaming_snake_case(text)
-        if text[0].isdigit():
-            text = f"_{text}"
-        return text if not keyword.iskeyword(text) else f"{text}_"
-    raise GraphQLExporterException(f"Invalid GQLElementType: {gql_type}")
+    return convert_name_for_graphql_schema(text, gql_type)
 
 
 def get_unit_enum_name(quantity_kind: str) -> str:
     """Get the name for the GraphQL unit enum"""
     text = f"{quantity_kind}_Unit"
-    return get_gql_name(str_to_uc_first(text), GQLElementType.ENUM)
-
-
-def get_metadata_df(root: VSSNode) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Traverses the tree and returns a DataFrame with the metadata of all the nodes."""
-    core_headers = ["fqn", "parent", "name", "type", "description", "comment", "deprecation"]
-    leaf_specific_headers = ["datatype", "unit", "min", "max", "allowed", "default"]
-    branch_specific_headers = ["instances"]
-    headers = core_headers + leaf_specific_headers + branch_specific_headers
-
-    df = pd.DataFrame(columns=headers)
-
-    for node in PreOrderIter(root):
-        data = node.get_vss_data()
-        fqn = node.get_fqn()
-        parent = get_expected_parent(fqn)
-        name = node.name
-        vss_type = data.type.value
-        metadata = {}
-        metadata["fqn"] = fqn
-        metadata["parent"] = parent
-        metadata["name"] = name
-        metadata["type"] = vss_type
-        for header in headers[4:]:
-            metadata[header] = getattr_nn(data, header, "")
-
-        df = pd.concat([df, pd.DataFrame([metadata])], ignore_index=True)
-
-    branch_headers = core_headers + branch_specific_headers
-    branches_df = df[df["type"].isin(["branch"])]
-    branches_df = branches_df[branch_headers].set_index("fqn").sort_index()
-
-    leaf_headers = core_headers + leaf_specific_headers
-    leaves_df = df[df["type"].isin(["attribute", "sensor", "actuator"])]
-    leaves_df = leaves_df[leaf_headers].set_index("fqn").sort_index()
-
-    return branches_df, leaves_df
+    return get_gql_name(text, GQLElementType.ENUM)
 
 
 def get_gql_unit_enums() -> Dict[str, graphene.Enum]:
