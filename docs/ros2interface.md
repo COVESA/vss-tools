@@ -6,13 +6,25 @@ This exporter plugs into the `vspec export` CLI like other vss-tools exporters. 
 
 ## Generated Output Structure
 ```
-\<output><br>
-└── \<package-name><br>
-    ├── msg  # generated .msg definitions<br>
-            │ &emsp; └── \<MSG>.msg<br>
-            └── srv  # generated .srv (if setting is enabled)<br>
-                        ├── Get\<MSG>.srv<br>
-                        └── Set\<MSG>.srv<br>
+\<output>
+└── <package-name>
+    ├── msg  # generated .msg definitions
+    |   └── \<MSG>.msg
+    └── srv  # generated .srv (if setting is enabled)
+        ├── Get\<MSG>.srv
+        └── Set\<MSG>.srv
+```
+
+**Example Output**
+
+```
+OutputFolder
+└── Vss-Interface
+    ├── msg
+    |   └── VehicleSpeed.msg
+    └── srv
+        ├── GetVehicleSpeed.srv
+        └── SetVehicleSpeed.srv
 ```
 
 - .msg files include VSS metadata as comments (description, unit, min/max, allowed values).
