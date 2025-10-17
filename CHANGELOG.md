@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `plantuml` exporter
 
+### Removed
+
+ - vspec2ttl removed.
+
 ## 5.0
 
 ### Major restructure of repository structure and CLI

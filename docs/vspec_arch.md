@@ -155,7 +155,7 @@ Continuous Integration requires that no Mypy errors are reported.
 To run manually:
 
 ```bash
-mypy src tests contrib
+mypy src tests
 ```
 
 Suppressed error categories include:
@@ -186,5 +186,5 @@ pre-commit install
 To run manually:
 
 ```bash
-flake8 src tests contrib
+flake8 src tests
 ```
