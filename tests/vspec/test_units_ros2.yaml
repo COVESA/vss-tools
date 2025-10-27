@@ -1,0 +1,52 @@
+# Unit file for test purposes only
+# Includes a subset of units existing in VSS catalog
+km:
+  definition: Length measured in kilometers
+  unit: kilometer
+  quantity: length
+  allowed-datatypes: ['numeric']
+celsius:
+  definition: Temperature measured in degree celsius
+  unit: degree celsius
+  quantity: temperature
+  allowed-datatypes: ['numeric']
+mm:
+  unit: millimeter
+  definition: Distance measured in millimeters
+  quantity: distance
+  allowed-datatypes: ['numeric']
+m:
+  unit: meter
+  definition: Distance measured in meters
+  quantity: distance
+  allowed-datatypes: ['numeric']
+degrees/s:
+  unit: degree per second
+  definition: Angular speed measured in degrees per second
+  quantity: angular-speed
+  allowed-datatypes: ['numeric']
+rpm:
+  unit: revolutions per minute
+  definition: Rotational speed measured in revolutions per minute
+  quantity: rotational-speed
+  allowed-datatypes: ['numeric']
+percent:
+  unit: percent
+  definition: Relation measured in percent
+  quantity: relation
+  allowed-datatypes: ['numeric']
+km/h:
+  unit: kilometer per hour
+  definition: Speed measured in kilometers per hour
+  quantity: relation
+  allowed-datatypes: ['numeric']
+m/s^2:
+  unit: meter per second squared
+  definition: Acceleration measured in meters per second squared
+  quantity: relation
+  allowed-datatypes: ['numeric']
+kPa:
+  unit: kilopascal
+  definition: Pressure measured in kilopascal
+  quantity: relation
+  allowed-datatypes: ['numeric']
