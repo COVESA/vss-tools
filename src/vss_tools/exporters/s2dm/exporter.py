@@ -80,6 +80,10 @@ def get_s2dm_conversions() -> Dict[GraphQLElementType, Callable[[str], str]]:
 # Create the conversions dictionary
 S2DM_CONVERSIONS = get_s2dm_conversions()
 
+# VSS leaf types to track in field metadata (corresponds to VspecType enum in directives.graphql)
+# Note: BRANCH is excluded as it's handled separately for object types
+VSS_LEAF_TYPES = ["SENSOR", "ACTUATOR", "ATTRIBUTE"]
+
 
 class S2DMExporterException(Exception):
     """Exception raised for errors in the S2DM export process."""
@@ -407,7 +411,7 @@ def _create_object_type(
 
             # Store metadata inline
             if leaf_type := leaf_row.get("type", "").upper():
-                if leaf_type in ["SENSOR", "ACTUATOR", "ATTRIBUTE"]:
+                if leaf_type in VSS_LEAF_TYPES:
                     vspec_comments["field_vss_types"][field_path] = {"fqn": child_fqn, "vspec_type": leaf_type}
             if comment := leaf_row.get("comment"):
                 vspec_comments["field_comments"][field_path] = comment
