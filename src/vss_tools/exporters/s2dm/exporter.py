@@ -41,6 +41,12 @@ from vss_tools.utils.graphql_utils import (
     convert_name_for_graphql_schema,
     load_predefined_schema_elements,
 )
+from vss_tools.utils.modular_export_utils import (
+    analyze_schema_for_flat_domains,
+    analyze_schema_for_nested_domains,
+    write_common_files,
+    write_domain_files,
+)
 from vss_tools.utils.pandas_utils import get_metadata_df
 from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
 
@@ -663,14 +669,6 @@ def write_modular_schema(
         output_dir: Directory to write modular files to
         flat_domains: If True, create flat structure; if False, create nested structure
     """
-    from vss_tools.utils.modular_export_utils import (
-        analyze_schema_for_flat_domains,
-        analyze_schema_for_nested_domains,
-        write_common_files,
-        write_domain_files,
-    )
-
-    # Write common files (directives, scalars, schema definition)
     write_common_files(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir)
 
     # Analyze schema structure based on chosen strategy
