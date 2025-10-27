@@ -671,11 +671,9 @@ def write_modular_schema(
     """
     write_common_files(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir)
 
-    # Analyze schema structure based on chosen strategy
     if flat_domains:
         domain_structure = analyze_schema_for_flat_domains(schema)
     else:
         domain_structure = analyze_schema_for_nested_domains(schema)
 
-    # Write domain-specific files
     write_domain_files(domain_structure, schema, output_dir, vspec_comments, directive_processor)
