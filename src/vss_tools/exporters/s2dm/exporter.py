@@ -91,8 +91,8 @@ class S2DMExporterException(Exception):
     pass
 
 
-# Load predefined schema elements from directory
-BASE_SCHEMA, CUSTOM_DIRECTIVES = load_predefined_schema_elements(Path(__file__).parent / "predefined_elements")
+# Load custom directives from predefined GraphQL schema files
+_, CUSTOM_DIRECTIVES = load_predefined_schema_elements(Path(__file__).parent / "predefined_elements")
 
 # Custom directives loaded from SDL
 VSpecDirective = CUSTOM_DIRECTIVES["vspec"]
@@ -451,9 +451,10 @@ def _create_object_type(
 def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) -> dict[str, GraphQLArgument]:
     """Generate 'unit' argument for fields with units, enabling unit conversion in queries."""
     unit = leaf_row.get("unit", "")
-    if not unit or unit not in dynamic_units:
+    if not unit:
         return {}
 
+    # Unit validity is guaranteed by tree parsing validation
     unit_data = dynamic_units[unit]
     if not unit_data.quantity:
         return {}
