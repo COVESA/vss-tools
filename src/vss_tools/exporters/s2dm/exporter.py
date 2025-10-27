@@ -32,7 +32,7 @@ import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.datatypes import dynamic_units
 from vss_tools.main import get_trees
-from vss_tools.tree import VSSNode
+from vss_tools.tree import VSSNode, expand_string
 from vss_tools.utils.graphql_directive_processor import GraphQLDirectiveProcessor
 from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP, get_vss_scalar_types
 from vss_tools.utils.graphql_utils import (
@@ -399,10 +399,7 @@ def _parse_instances_simple(instances: list[Any]) -> list[list[str]]:
     dimensions = []
     for item in instances:
         if isinstance(item, str) and "[" in item:
-            base = item.split("[")[0]
-            range_part = item.split("[")[1].split("]")[0]
-            start, end = map(int, range_part.split(","))
-            dimensions.append([f"{base}{i}" for i in range(start, end + 1)])
+            dimensions.append(expand_string(item))
         elif isinstance(item, list):
             dimensions.append(item)
 
