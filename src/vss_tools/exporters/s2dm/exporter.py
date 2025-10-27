@@ -263,9 +263,8 @@ def _get_quantity_units() -> dict[str, dict[str, dict[str, str]]]:
     """
     Extract and organize units from VSS dynamic units registry by quantity kind.
 
-    Processes the dynamic_units registry to avoid duplicates (since it contains both
-    unit keys and display names pointing to the same VSSUnit object) and groups
-    units by their quantity kind.
+    Leverages the VSSUnit.key field to directly access the unit key without
+    needing to deduplicate or search through the registry.
 
     Returns:
         Nested dictionary: quantity -> unit_key -> {name: display_name, key: unit_key}
@@ -274,23 +273,18 @@ def _get_quantity_units() -> dict[str, dict[str, dict[str, str]]]:
     processed_units = set()
 
     for unit_key, unit_data in dynamic_units.items():
+        # Skip if we've already processed this VSSUnit object
         unit_id = id(unit_data)
         if unit_id in processed_units:
             continue
 
         quantity = unit_data.quantity
         unit_display_name = unit_data.unit
+        actual_unit_key = unit_data.key or unit_key  # Use the key field if available
 
         if quantity and unit_display_name:
             if quantity not in quantity_units:
                 quantity_units[quantity] = {}
-
-            actual_unit_key = unit_key
-            if unit_key == unit_display_name:
-                for other_key, other_data in dynamic_units.items():
-                    if id(other_data) == unit_id and other_key != unit_display_name:
-                        actual_unit_key = other_key
-                        break
 
             quantity_units[quantity][actual_unit_key] = {"name": unit_display_name, "key": actual_unit_key}
             processed_units.add(unit_id)
@@ -513,84 +507,6 @@ def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) 
         return {}
 
     return {"unit": GraphQLArgument(type_=unit_enum, default_value=unit)}
-
-
-def get_quantity_kinds_and_units() -> dict[str, dict[str, dict[str, str]]]:
-    """Get the quantity kinds and their units from the VSS dynamic units."""
-    quantity_units: dict[str, dict[str, dict[str, str]]] = {}
-
-    # Process each unit only once to avoid duplicates
-    # The dynamic_units dict contains both unit keys and unit display names pointing to the same VSSUnit
-    # We want to process only the actual unit keys, not the display names
-    processed_units = set()
-
-    for unit_key, unit_data in dynamic_units.items():
-        # Skip if we've already processed this VSSUnit object via its display name
-        unit_id = id(unit_data)
-        if unit_id in processed_units:
-            continue
-
-        quantity = unit_data.quantity
-        unit_display_name = unit_data.unit  # This is the display name like "millimeter", "degree"
-
-        if quantity and unit_display_name:
-            if quantity not in quantity_units:
-                quantity_units[quantity] = {}
-
-            # Use the key that's NOT the display name
-            # If unit_key equals the display name, find the actual key
-            actual_unit_key = unit_key
-            if unit_key == unit_display_name:
-                # Find the actual key by looking for the other entry with same VSSUnit
-                for other_key, other_data in dynamic_units.items():
-                    if id(other_data) == unit_id and other_key != unit_display_name:
-                        actual_unit_key = other_key
-                        break
-
-            quantity_units[quantity][actual_unit_key] = {"name": unit_display_name, "key": actual_unit_key}
-
-            processed_units.add(unit_id)
-
-    return quantity_units
-
-
-def create_unit_enums() -> dict[str, GraphQLEnumType]:
-    """Create GraphQL enums for VSS units grouped by quantity."""
-    quantity_units = get_quantity_kinds_and_units()
-    unit_enums = {}
-
-    for quantity, units_data in quantity_units.items():
-        # Create enum name: length -> LengthUnitEnum, angular-speed -> AngularSpeedUnitEnum
-        enum_name = f"{convert_name_for_graphql_schema(quantity, GraphQLElementType.ENUM, S2DM_CONVERSIONS)}UnitEnum"
-
-        # Create enum values
-        enum_values = {}
-        for unit_key, unit_info in units_data.items():
-            # Use the unit name for enum value name (kilometer -> KILOMETER)
-            unit_name = unit_info["name"]  # Use the display name from VSS unit data
-            enum_value_name = convert_name_for_graphql_schema(
-                unit_name, GraphQLElementType.ENUM_VALUE, S2DM_CONVERSIONS
-            )
-
-            # The GraphQL enum value should represent the original unit key
-            # This is what will be used in schema serialization
-            enum_values[enum_value_name] = GraphQLEnumValue(
-                value=unit_key  # Use the unit key (e.g., 'km', 'km/h')
-            )
-
-        # Create the enum with description
-        unit_enums[quantity] = GraphQLEnumType(
-            name=enum_name,
-            values=enum_values,
-            description=f'Set of units for the quantity kind "{quantity}". NOTE: Taken from VSS specification.',
-        )
-
-    return unit_enums
-
-
-def get_unit_enum_for_quantity(quantity: str, unit_enums: dict[str, GraphQLEnumType]) -> GraphQLEnumType | None:
-    """Get the unit enum for a given quantity."""
-    return unit_enums.get(quantity)
 
 
 def print_schema_with_vspec_directives(
