@@ -461,6 +461,10 @@ def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) 
 
     unit_enum = unit_enums.get(unit_data.quantity)
     if not unit_enum:
+        log.warning(
+            f"Unit '{unit}' with quantity '{unit_data.quantity}' has no corresponding GraphQL enum. "
+            "Unit argument will not be generated."
+        )
         return {}
 
     return {"unit": GraphQLArgument(type_=unit_enum, default_value=unit)}
