@@ -56,7 +56,12 @@ from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
 
 
 def get_s2dm_conversions() -> Dict[GraphQLElementType, Callable[[str], str]]:
-    """Get S2DM conversions with proper enum instances."""
+    """
+    Configure GraphQL naming conversions for S2DM schema generation.
+
+    Overrides default conversions for type-like elements to handle fully qualified names
+    (e.g., Vehicle.Body -> Vehicle_Body) by excluding dots from delimiters.
+    """
     s2dm_conversions = DEFAULT_CONVERSIONS.copy()
     s2dm_conversions.update(
         {
@@ -177,7 +182,12 @@ def generate_s2dm_schema(
     dict[str, dict[str, dict[str, str]]],
     dict[str, dict[str, Any]],
 ]:
-    """Generate S2DM GraphQL schema from VSS tree."""
+    """
+    Generate complete S2DM GraphQL schema from VSS tree.
+
+    Creates unit enums, instance types, allowed value enums, and object types for all branches,
+    then assembles them into a GraphQL schema with custom directives.
+    """
     branches_df, leaves_df = get_metadata_df(tree)
     vspec_comments = _init_vspec_comments()
 
@@ -209,15 +219,7 @@ def generate_s2dm_schema(
 
 
 def _init_vspec_comments() -> dict[str, dict[str, Any]]:
-    """
-    Initialize data structure for storing VSS metadata to be rendered as GraphQL directives.
-
-    Creates a dictionary with predefined keys for tracking comments, ranges, deprecations,
-    instance tags, and VSS type information that will later be converted to @vspec directives.
-
-    Returns:
-        Dictionary with empty sub-dictionaries for each metadata category
-    """
+    """Initialize dictionary for storing VSS metadata that will be rendered as @vspec directives."""
     return {
         "field_comments": {},
         "type_comments": {},
@@ -232,15 +234,9 @@ def _init_vspec_comments() -> dict[str, dict[str, Any]]:
 
 def _create_unit_enums() -> tuple[dict[str, GraphQLEnumType], dict[str, dict[str, dict[str, str]]]]:
     """
-    Create GraphQL enum types for VSS units grouped by quantity kind.
+    Create GraphQL enum types for VSS units grouped by quantity.
 
-    Processes the VSS dynamic units registry to generate GraphQL enums where each enum
-    represents all valid units for a specific quantity (e.g., LengthUnitEnum for length).
-
-    Returns:
-        A tuple containing:
-        - Dictionary mapping quantity names to their corresponding GraphQL enum types
-        - Nested dictionary with unit metadata (quantity -> unit_key -> {name, key})
+    Generates enums like LengthUnitEnum containing all length units (km, m, cm, etc.).
     """
     unit_enums = {}
     unit_metadata = {}
@@ -260,15 +256,7 @@ def _create_unit_enums() -> tuple[dict[str, GraphQLEnumType], dict[str, dict[str
 
 
 def _get_quantity_units() -> dict[str, dict[str, dict[str, str]]]:
-    """
-    Extract and organize units from VSS dynamic units registry by quantity kind.
-
-    Leverages the VSSUnit.key field to directly access the unit key without
-    needing to deduplicate or search through the registry.
-
-    Returns:
-        Nested dictionary: quantity -> unit_key -> {name: display_name, key: unit_key}
-    """
+    """Extract and organize units from VSS registry by quantity (e.g., length -> {km, m, cm})."""
     quantity_units: dict[str, dict[str, dict[str, str]]] = {}
     processed_units = set()
 
@@ -298,16 +286,8 @@ def _create_allowed_enums(
     """
     Create GraphQL enum types for VSS signals with allowed value constraints.
 
-    Scans leaf nodes to identify those with 'allowed' values defined and generates
-    corresponding GraphQL enum types to enforce these constraints in the schema.
-
     Args:
         leaves_df: DataFrame containing VSS leaf node metadata
-
-    Returns:
-        A tuple containing:
-        - Dictionary mapping enum type names to GraphQL enum types
-        - Nested dictionary with enum metadata (enum_name -> {fqn, allowed_values})
     """
     enums, metadata = {}, {}
 
@@ -322,18 +302,7 @@ def _create_allowed_enums(
 
 
 def _clean_enum_name(value: str) -> str:
-    """
-    Sanitize enum value names to comply with GraphQL naming rules.
-
-    GraphQL enum values must start with a letter and cannot contain dots or hyphens.
-    This function prefixes numeric values and replaces invalid characters.
-
-    Args:
-        value: Original enum value string
-
-    Returns:
-        GraphQL-compliant enum value name
-    """
+    """Sanitize enum value names for GraphQL (prefix numbers, replace dots/hyphens)."""
     if value[0].isdigit():
         value = f"_{value}"
     return value.replace(".", "_DOT_").replace("-", "_DASH_")
@@ -384,14 +353,7 @@ def _parse_instances_simple(instances: list[Any]) -> list[list[str]]:
     """
     Parse VSS instance declarations into dimensional arrays.
 
-    Converts VSS instance notation (e.g., "Row[1,4]", ["Left", "Right"]) into
-    a list of dimensions where each dimension contains the expanded instance values.
-
-    Args:
-        instances: List of VSS instance declarations (ranges or literal lists)
-
-    Returns:
-        List of dimensions, where each dimension is a list of instance values
+    Example: ["Row[1,2]", ["Left", "Right"]] -> [["Row1", "Row2"], ["Left", "Right"]]
     """
     if all(isinstance(item, str) and "[" not in item for item in instances):
         return [instances]  # Single dimension
@@ -414,7 +376,12 @@ def _create_object_type(
     unit_enums: dict[str, GraphQLEnumType],
     vspec_comments: dict[str, dict[str, Any]],
 ) -> GraphQLObjectType:
-    """Create GraphQL object type with inline field processing."""
+    """
+    Create GraphQL object type for a VSS branch.
+
+    Recursively builds the type hierarchy with system fields (id, instanceTag),
+    leaf fields (sensors/actuators/attributes), and nested branches.
+    """
     branch_row = branches_df.loc[fqn]
     type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
 
@@ -478,19 +445,7 @@ def _create_object_type(
 
 
 def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) -> dict[str, GraphQLArgument]:
-    """
-    Generate GraphQL field arguments for unit selection.
-
-    If a VSS leaf has a unit defined, creates a 'unit' argument with the appropriate
-    enum type and default value, allowing clients to request values in different units.
-
-    Args:
-        leaf_row: Pandas Series containing leaf node metadata
-        unit_enums: Dictionary of GraphQL enum types for units by quantity
-
-    Returns:
-        Dictionary with 'unit' argument if applicable, empty dict otherwise
-    """
+    """Generate 'unit' argument for fields with units, enabling unit conversion in queries."""
     unit = leaf_row.get("unit", "")
     if not unit or unit not in dynamic_units:
         return {}
@@ -512,32 +467,13 @@ def print_schema_with_vspec_directives(
     allowed_enums_metadata: dict[str, Any],
     vspec_comments: dict[str, Any],
 ) -> str:
-    """
-    Custom schema printer that includes @vspec directives.
-
-    Args:
-        schema: The GraphQL schema to print
-        unit_enums_metadata: Metadata for unit enums to add @vspec directives
-        vspec_comments: Comments data for fields and types
-
-    Returns:
-        SDL string with @vspec directives
-    """
+    """Serialize GraphQL schema to SDL with @vspec directives."""
     # Use directive processor instead of manual string manipulation
     return directive_processor.process_schema(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
 
 
 def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry: dict[str, Any] | None = None) -> Any:
-    """
-    Get the appropriate GraphQL type for a VSS leaf node.
-
-    Args:
-        leaf_row: Pandas Series containing leaf metadata
-        types_registry: Registry of custom GraphQL types (for enums)
-
-    Returns:
-        GraphQL type for the leaf
-    """
+    """Map VSS leaf to GraphQL type, using custom enum if allowed values are defined."""
     # Check for allowed values first - these override the base type
     if types_registry:
         try:
