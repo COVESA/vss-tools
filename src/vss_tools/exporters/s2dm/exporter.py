@@ -113,6 +113,7 @@ directive_processor = GraphQLDirectiveProcessor()
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
+@clo.types_opt
 @clo.modular_opt
 @clo.flat_domains_opt
 def cli(
@@ -125,12 +126,13 @@ def cli(
     overlays: tuple[Path, ...],
     quantities: tuple[Path, ...],
     units: tuple[Path, ...],
+    types: tuple[Path, ...],
     modular: bool,
     flat_domains: bool,
 ) -> None:
     """Export a VSS specification to S2DM GraphQL schema."""
     try:
-        tree, _ = get_trees(
+        tree, data_type_tree = get_trees(
             vspec=vspec,
             include_dirs=include_dirs,
             aborts=aborts,
@@ -138,6 +140,7 @@ def cli(
             extended_attributes=extended_attributes,
             quantities=quantities,
             units=units,
+            types=types,
             overlays=overlays,
             expand=False,
         )
@@ -145,7 +148,7 @@ def cli(
         log.info("Generating S2DM GraphQL schema...")
 
         # Generate the schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
 
         if modular:
             # Handle directory or file path for modular output
@@ -180,6 +183,7 @@ def cli(
 
 def generate_s2dm_schema(
     tree: VSSNode,
+    data_type_tree: VSSNode | None = None,
 ) -> tuple[
     GraphQLSchema,
     dict[str, dict[str, dict[str, str]]],
@@ -189,8 +193,12 @@ def generate_s2dm_schema(
     """
     Generate complete S2DM GraphQL schema from VSS tree.
 
-    Creates unit enums, instance types, allowed value enums, and object types for all branches,
+    Creates unit enums, instance types, allowed value enums, struct types, and object types for all branches,
     then assembles them into a GraphQL schema with custom directives.
+
+    Args:
+        tree: The main VSS tree containing vehicle signals
+        data_type_tree: Optional tree containing user-defined struct types
     """
     branches_df, leaves_df = get_metadata_df(tree)
     vspec_comments = _init_vspec_comments()
@@ -200,8 +208,11 @@ def generate_s2dm_schema(
     instance_types = _create_instance_types(branches_df, vspec_comments)
     allowed_enums, allowed_metadata = _create_allowed_enums(leaves_df)
 
+    # Create struct types from data type tree
+    struct_types = _create_struct_types(data_type_tree, vspec_comments)
+
     # Combine all types
-    types_registry = {**instance_types, **allowed_enums}
+    types_registry = {**instance_types, **allowed_enums, **struct_types}
 
     # Create object types
     for fqn in branches_df.index:
@@ -310,6 +321,123 @@ def _clean_enum_name(value: str) -> str:
     if value[0].isdigit():
         value = f"_{value}"
     return value.replace(".", "_DOT_").replace("-", "_DASH_")
+
+
+def _resolve_datatype_to_graphql(datatype: str, types_registry: dict[str, Any]) -> Any:
+    """
+    Resolve a VSS datatype string to its corresponding GraphQL type.
+
+    Handles primitive types, struct references, and arrays.
+
+    Args:
+        datatype: VSS datatype string (e.g., "uint8", "MyStruct", "MyStruct[]")
+        types_registry: Dictionary of custom types (structs, enums)
+
+    Returns:
+        Corresponding GraphQL type
+    """
+    # Handle array types
+    if datatype.endswith("[]"):
+        base_datatype = datatype[:-2]
+        struct_type_name = convert_name_for_graphql_schema(base_datatype, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+
+        if struct_type_name in types_registry:
+            return GraphQLList(GraphQLNonNull(types_registry[struct_type_name]))
+
+        # Primitive array type
+        base_type = VSS_DATATYPE_MAP.get(base_datatype, GraphQLString)
+        return GraphQLList(GraphQLNonNull(base_type))
+
+    # Check for custom types (structs)
+    struct_type_name = convert_name_for_graphql_schema(datatype, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+    if struct_type_name in types_registry:
+        return types_registry[struct_type_name]
+
+    # Fall back to primitive type
+    return VSS_DATATYPE_MAP.get(datatype, GraphQLString)
+
+
+def _create_struct_types(
+    data_type_tree: VSSNode | None,
+    vspec_comments: dict[str, dict[str, Any]],
+) -> dict[str, GraphQLObjectType]:
+    """
+    Convert VSS struct definitions to GraphQL object types.
+
+    Each struct becomes a GraphQL object type with all properties as non-null fields.
+    Supports nested structs and struct arrays.
+
+    Args:
+        data_type_tree: VSS tree containing user-defined struct types
+        vspec_comments: Dictionary to store struct metadata for @vspec directives
+
+    Returns:
+        Dictionary mapping struct type names to GraphQL object types
+    """
+    if not data_type_tree:
+        return {}
+
+    struct_types: dict[str, GraphQLObjectType] = {}
+
+    # Get metadata for the data type tree
+    branches_df, leaves_df = get_metadata_df(data_type_tree)
+
+    # Filter for struct nodes (type == "struct")
+    struct_nodes = branches_df[branches_df["type"] == "struct"]
+
+    for fqn, struct_row in struct_nodes.iterrows():
+        type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+
+        # Get struct properties (children of the struct node - type == "property")
+        properties = leaves_df[leaves_df["parent"] == fqn]
+
+        fields = {}
+        for prop_fqn, prop_row in properties.iterrows():
+            field_name = convert_name_for_graphql_schema(prop_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
+
+            # Get base GraphQL type for the property
+            base_type = _get_graphql_type_for_property(prop_row, struct_types)
+
+            # All struct properties are non-null (!)
+            fields[field_name] = GraphQLField(GraphQLNonNull(base_type), description=prop_row.get("description", ""))
+
+            # Store property metadata for @vspec directives
+            field_path = f"{type_name}.{field_name}"
+            if comment := prop_row.get("comment"):
+                vspec_comments["field_comments"][field_path] = comment
+
+            # Handle range constraints for properties
+            min_val = prop_row.get("min")
+            max_val = prop_row.get("max")
+            if min_val is not None or max_val is not None:
+                range_data = {k: v for k, v in {"min": min_val, "max": max_val}.items() if v is not None}
+                vspec_comments["field_ranges"][field_path] = range_data
+
+        struct_types[type_name] = GraphQLObjectType(
+            name=type_name, fields=fields, description=struct_row.get("description", "")
+        )
+
+        # Track struct metadata for @vspec directives
+        vspec_comments["vss_types"][type_name] = {"fqn": fqn, "vspec_type": "STRUCT"}
+        if comment := struct_row.get("comment"):
+            vspec_comments["type_comments"][type_name] = comment
+
+    return struct_types
+
+
+def _get_graphql_type_for_property(prop_row: pd.Series, struct_types: dict[str, GraphQLObjectType]) -> Any:
+    """
+    Map VSS property datatype to GraphQL type.
+
+    Args:
+        prop_row: DataFrame row containing property metadata
+        struct_types: Dictionary of already-created struct types
+
+    Returns:
+        GraphQL type for the property
+    """
+    datatype = prop_row.get("datatype", "string")
+    return _resolve_datatype_to_graphql(datatype, struct_types)
 
 
 def _create_instance_types(
@@ -482,29 +610,28 @@ def print_schema_with_vspec_directives(
 
 
 def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry: dict[str, Any] | None = None) -> Any:
-    """Map VSS leaf to GraphQL type, using custom enum if allowed values are defined."""
+    """Map VSS leaf to GraphQL type, using custom enum if allowed values are defined or struct types."""
     # Check for allowed values first - these override the base type
     if types_registry:
         try:
             allowed_values = leaf_row.get("allowed")
             if allowed_values is not None and isinstance(allowed_values, list) and len(allowed_values) > 0:
-                # Create enum type name based on the leaf's fully qualified path
-                # Use the index as the FQN since qualified_name might not be available
                 fqn = leaf_row.name if hasattr(leaf_row, "name") else leaf_row.get("qualified_name", "unknown")
                 enum_type_name = (
                     f"{convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)}_Enum"
                 )
-
-                # Return the enum type if it exists in registry
                 if enum_type_name in types_registry:
                     return types_registry[enum_type_name]
         except (ValueError, TypeError, KeyError):
-            # Handle pandas array issues gracefully
             pass
 
     datatype = leaf_row.get("datatype", "string")
 
-    # Map VSS datatypes to GraphQL types
+    # Use unified resolver for struct/array/primitive types
+    if types_registry:
+        return _resolve_datatype_to_graphql(datatype, types_registry)
+
+    # No types registry - just handle primitive types
     return VSS_DATATYPE_MAP.get(datatype, GraphQLString)
 
 

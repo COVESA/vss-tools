@@ -52,11 +52,13 @@ def get_metadata_df(root: VSSNode) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     # Split into branches and leaves
     branch_headers = core_headers + branch_specific_headers
-    branches_df = df[df["type"] == "branch"]
+    # Include both "branch" and "struct" as branch-like types
+    branches_df = df[df["type"].isin(["branch", "struct"])]
     branches_df = branches_df[branch_headers].set_index("fqn").sort_index()
 
     leaf_headers = core_headers + leaf_specific_headers
-    leaves_df = df[df["type"].isin(["attribute", "sensor", "actuator"])]
+    # Include "property" along with attribute, sensor, actuator as leaf-like types
+    leaves_df = df[df["type"].isin(["attribute", "sensor", "actuator", "property"])]
     leaves_df = leaves_df[leaf_headers].set_index("fqn").sort_index()
 
     return branches_df, leaves_df

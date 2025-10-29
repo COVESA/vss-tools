@@ -23,6 +23,7 @@ def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str
     Each object type gets its own file, named exactly after the type (no transformation).
     Files are organized in domain/ directory with flat structure.
     Instance tags get their own files in instances/ directory.
+    Struct types get their own files in structs/ directory.
 
     Returns:
         Dict mapping file paths to list of type names to include
@@ -42,6 +43,14 @@ def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str
                 if instance_file not in domain_files:
                     domain_files[instance_file] = []
                 domain_files[instance_file].append(type_name)
+            # Check if this is a struct type by examining the schema's vspec_comments
+            # Structs are identified by having type metadata with vspec_type="STRUCT"
+            # Note: We'll need to check this via metadata passed separately
+            # For now, use naming convention - types from VehicleDataTypes tree
+            elif type_name.startswith("VehicleDataTypes"):
+                # Struct types go to structs/ directory
+                struct_file = f"structs/{type_name}.graphql"
+                domain_files[struct_file] = [type_name]
             else:
                 # Regular object types get their own file in domain/
                 file_name = f"domain/{type_name}.graphql"
