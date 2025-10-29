@@ -435,9 +435,9 @@ class TestS2DMExporter:
         assert (output_dir / "other" / "queries.graphql").exists()
 
         # Check that nested structure was created in domain/ directory
-        assert (output_dir / "domain" / "vehicle.graphql").exists()
-        assert (output_dir / "domain" / "vehicle" / "cabin.graphql").exists()
-        assert (output_dir / "domain" / "vehicle" / "cabin" / "seat.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle" / "Cabin.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat.graphql").exists()
 
         # Check that enum directory structure was created in other/ directory
         assert (output_dir / "other" / "units.graphql").exists()
@@ -446,5 +446,5 @@ class TestS2DMExporter:
         assert (output_dir / "instances" / "Vehicle_Cabin_Seat_InstanceTag.graphql").exists()
 
         # Verify nested directory content
-        seat_content = (output_dir / "domain" / "vehicle" / "cabin" / "seat.graphql").read_text()
+        seat_content = (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat.graphql").read_text()
         assert "Vehicle_Cabin_Seat" in seat_content
