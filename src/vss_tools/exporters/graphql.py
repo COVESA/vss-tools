@@ -535,6 +535,7 @@ def sort_dict_by_key(dictionary: dict) -> dict:
 @clo.overlays_opt
 @clo.quantities_opt
 @clo.units_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--legacy-mapping-output",
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
@@ -551,6 +552,7 @@ def cli(
     quantities: tuple[Path],
     units: tuple[Path],
     legacy_mapping_output: Path | None,
+    strict_exceptions: Path | None,
 ):
     """
     Export a VSS specification to a GraphQL schema.
@@ -566,6 +568,7 @@ def cli(
             units=units,
             overlays=overlays,
             expand=False,
+            strict_exceptions_file=strict_exceptions,
         )
 
         log.info("Generating GraphQL output...")

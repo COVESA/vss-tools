@@ -97,6 +97,7 @@ def write_csv(rows: list[list[Any]], output: Path):
 @clo.units_opt
 @clo.types_opt
 @clo.types_output_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--stats-sankey",
     type=click.Path(path_type=Path),
@@ -128,6 +129,7 @@ def cli(
     stats_sankey: Path | None,
     stats_piechart: Path | None,
     stats_old_piechart: Path | None,
+    strict_exceptions: Path | None,
 ):
     """
     Export as CSV.
@@ -159,6 +161,7 @@ def cli(
         types=types,
         overlays=overlays,
         expand=expand,
+        strict_exceptions_file=strict_exceptions,
     )
     log.info("Generating CSV output...")
 

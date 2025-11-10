@@ -60,7 +60,7 @@ def intToHexChar(hexInt):
 # Create a struct containing the length of the string as uint8
 #  and the string itself
 def create_l8v_string(s: str) -> bytes:
-    pack = struct.pack(f"{len(s)+1}p", s.encode())
+    pack = struct.pack(f"{len(s) + 1}p", s.encode())
     # log.debug(f"create_l8v_string: {s} as {pack.hex()}")
     return pack
 
@@ -113,6 +113,7 @@ def export_node(node: VSSNode, f: BinaryIO):
 @clo.units_opt
 @clo.types_opt
 @clo.types_output_opt
+@clo.strict_exceptions_opt
 def cli(
     vspec: Path,
     output: Path,
@@ -125,6 +126,7 @@ def cli(
     units: tuple[Path],
     types: tuple[Path],
     types_output: Path | None,
+    strict_exceptions: Path | None,
 ):
     """
     Export to Binary.
@@ -140,6 +142,7 @@ def cli(
         units=units,
         types=types,
         overlays=overlays,
+        strict_exceptions_file=strict_exceptions,
     )
 
     log.info("Generating binary output...")

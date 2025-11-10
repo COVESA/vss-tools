@@ -50,6 +50,7 @@ def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attribu
 @clo.types_output_opt
 @clo.pretty_print_opt
 @clo.extend_all_attributes_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--stats-radial",
     type=click.Path(path_type=Path),
@@ -73,6 +74,7 @@ def cli(
     pretty: bool,
     extend_all_attributes: bool,
     stats_radial: Path | None,
+    strict_exceptions: Path | None,
 ):
     """
     Export as JSON.
@@ -92,6 +94,7 @@ def cli(
         types=types,
         overlays=overlays,
         expand=expand,
+        strict_exceptions_file=strict_exceptions,
     )
     log.info("Generating JSON output...")
     indent = None
