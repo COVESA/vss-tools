@@ -162,6 +162,7 @@ class VSSUnit(BaseModel):
     unit: str | None
     quantity: str
     allowed_datatypes: list[str] | None = Field(alias="allowed-datatypes", default=None)
+    key: str | None = None  # The actual unit key (e.g., 'km'), populated during loading
 
     @field_validator("quantity")
     @classmethod

@@ -30,7 +30,7 @@ def run_error_test(tool, exporter, argument, arg_error_expected: bool, tmp_path)
 
 @pytest.mark.parametrize(
     "exporter",
-    ["binary", "csv", "ddsidl", "franca", "graphql", "id", "json", "jsonschema", "protobuf", "tree", "yaml"],
+    ["binary", "csv", "ddsidl", "franca", "id", "json", "jsonschema", "protobuf", "tree", "yaml"],
 )
 def test_obsolete_arg(exporter, tmp_path):
     """

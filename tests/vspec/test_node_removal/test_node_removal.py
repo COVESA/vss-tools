@@ -22,7 +22,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
-def get_cla(test_file: str, out_file: str, overlay: Optional[str]):
+def get_cla(test_file: str | Path, out_file: str, overlay: Optional[str]) -> str:
     args = f"-u {TEST_UNITS} -q {TEST_QUANT}"
     if overlay:
         args += f" -l {overlay}"
@@ -37,7 +37,6 @@ def get_cla(test_file: str, out_file: str, overlay: Optional[str]):
         ("vspec export csv", "out.csv"),
         ("vspec export ddsidl", "out.idl"),
         ("vspec export franca", "out.fidl"),
-        ("vspec export graphql", "out.graphql"),
         ("vspec export json", "out.json"),
         ("vspec export jsonschema", "out.jsonschema"),
         ("vspec export protobuf", "out.pb"),
@@ -94,26 +93,6 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str], tmp_
         remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
         for node in remaining_nodes:
             assert node in result
-    if exporter in ["vspec export graphql"]:
-        remaining_nodes = [
-            "float",
-            "int16",
-            "string",
-            "stringArray",
-            "A_B",
-            "newName",
-            "isLeaf",
-            "min",
-            "max",
-            "A_C",
-            "A_C_Instance_Enum",
-            "test",
-        ]
-
-        assert "int32:" not in result
-        print(result)
-        for node in remaining_nodes:
-            assert node in result
     else:
         assert "A.B.Int32" not in result
         for node in remaining_nodes:
@@ -127,7 +106,6 @@ def test_deleted_node(exporter: str, out_file: str, overlay: Optional[str], tmp_
         ("vspec export csv", "out.csv"),
         ("vspec export ddsidl", "out.idl"),
         ("vspec export franca", "out.fidl"),
-        ("vspec export graphql", "out.graphql"),
         ("vspec export json", "out.json"),
         ("vspec export jsonschema", "out.jsonschema"),
         ("vspec export protobuf", "out.pb"),
@@ -180,22 +158,6 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tm
         remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
         for node in remaining_nodes:
             assert node in result_file
-    elif exporter == "vspec export graphql":
-        remaining_nodes = [
-            "float",
-            "int16",
-            "string",
-            "stringArray",
-            "A_C",
-            "INSTANCE1",
-            "test",
-            "INSTANCE2",
-            "A_C_Instance_Enum",
-        ]
-        assert "A.B".replace(".", "_") not in result_file
-        remaining_nodes = [node.replace(".", "_") for node in remaining_nodes]
-        for node in remaining_nodes:
-            assert node in result_file
     else:
         assert "A.B" not in result_file
         for node in remaining_nodes:
@@ -209,7 +171,6 @@ def test_deleted_branch(exporter: str, out_file: str, overlay: Optional[str], tm
         ("vspec export csv", "out.csv"),
         ("vspec export ddsidl", "out.idl"),
         ("vspec export franca", "out.fidl"),
-        ("vspec export graphql", "out.graphql"),
         ("vspec export json", "out.json"),
         ("vspec export jsonschema", "out.jsonschema"),
         ("vspec export protobuf", "out.pb"),
@@ -269,25 +230,6 @@ def test_deleted_instance(
         ]:
             assert "A.C.Instance2".split(".")[-1] not in result_file
             remaining_nodes = [node.split(".")[-1] for node in remaining_nodes]
-            for node in remaining_nodes:
-                assert node in result_file
-        elif exporter == "vspec export graphql":
-            print(result_file)
-            remaining_nodes = [
-                "float",
-                "int16",
-                "string",
-                "stringArray",
-                "A_B",
-                "newName",
-                "isLeaf",
-                "min",
-                "max",
-                "A_C",
-                "INSTANCE1",
-                "test",
-            ]
-            assert "Instance2" not in result_file
             for node in remaining_nodes:
                 assert node in result_file
         else:

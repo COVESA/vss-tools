@@ -71,7 +71,7 @@ jobs:
           vspec export franca --help
           vspec export ddsidl --help
           vspec export protobuf --help
-          vspec export graphql --help
+          vspec export s2dm --help
       - name: Test that generated DDSIDL is correct
         run: |
           pip install cyclonedds

@@ -1,0 +1,325 @@
+type Query {
+  vehicle: Vehicle
+}
+
+scalar Int8
+
+scalar UInt8
+
+scalar Int16
+
+scalar UInt16
+
+scalar UInt32
+
+scalar Int64
+
+scalar UInt64
+
+"""All in-cabin components, including doors."""
+type Vehicle {
+  id: ID!
+  cabin: Vehicle_Cabin
+  vehicleIdentification: Vehicle_VehicleIdentification
+}
+
+"""All in-cabin components, including doors."""
+type Vehicle_Cabin {
+  """
+  The position of the driver seat in row 1.
+  @comment: Some signals use DriverSide and PassengerSide as instances. If this signal specifies that DriverPosition is LEFT or MIDDLE, then DriverSide refers to left side and PassengerSide to right side. If this signal specifies that DriverPosition is RIGHT, then DriverSide refers to right side and PassengerSide to left side.
+  """
+  driverPosition: Vehicle_Cabin_DriverPosition_Enum
+  seat_s: [Vehicle_Cabin_Seat]
+}
+
+"""The model of a vehicle's Seat."""
+type Vehicle_Cabin_Seat {
+  id: ID!
+  instanceLabel: String
+
+  """
+  Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating.
+  @min: -100
+  @max: 100
+  """
+  heatingCooling(unit: Relation_Unit_Enum = PERCENT): Int8
+
+  """
+  Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported.
+  """
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Seat backward switch engaged.
+  @comment: Affects the property (SingleSeat.Position).
+  """
+  isBackwardSwitchEngaged: Boolean
+
+  """Is the belt engaged."""
+  isBelted: Boolean
+
+  """
+  Cooler switch for Seat heater.
+  @comment: Affects the property (SingleSeat.Heating).
+  """
+  isCoolerSwitchEngaged: Boolean
+
+  """
+  Decrease massage level switch engaged.
+  @comment: Affects the property (SingleSeat.MassageLevel).
+  """
+  isDecreaseMassageLevelSwitchEngaged: Boolean
+
+  """
+  Seat down switch engaged.
+  @comment: Affects the property (SingleSeat.Height).
+  """
+  isDownSwitchEngaged: Boolean
+
+  """
+  Seat forward switch engaged.
+  @comment: Affects the property (SingleSeat.Position).
+  """
+  isForwardSwitchEngaged: Boolean
+
+  """
+  Increase massage level switch engaged.
+  @comment: Affects the property (SingleSeat.MassageLevel).
+  """
+  isIncreaseMassageLevelSwitchEngaged: Boolean
+
+  """Does the seat have a passenger in it."""
+  isOccupied: Boolean
+
+  """
+  Tilt backward switch engaged.
+  @comment: Affects the property (SingleSeat.Tilt).
+  """
+  isTiltBackwardSwitchEngaged: Boolean
+
+  """
+  Tilt forward switch engaged.
+  @comment: Affects the property (SingleSeat.Tilt).
+  """
+  isTiltForwardSwitchEngaged: Boolean
+
+  """
+  Seat up switch engaged.
+  @comment: Affects the property (SingleSeat.Height).
+  """
+  isUpSwitchEngaged: Boolean
+
+  """
+  Warmer switch for Seat heater.
+  @comment: Affects the property (SingleSeat.Heating).
+  """
+  isWarmerSwitchEngaged: Boolean
+
+  """
+  Seat massage level. 0 = off. 100 = max massage.
+  @max: 100
+  """
+  massage(unit: Relation_Unit_Enum = PERCENT): UInt8 @deprecated(reason: "v5.0 - refactored to Seat.MassageLevel")
+
+  """
+  Seat massage level. 0 = off. 100 = max massage.
+  @max: 100
+  """
+  massageLevel(unit: Relation_Unit_Enum = PERCENT): UInt8
+
+  """
+  Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported.
+  """
+  position(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Seat belt position on vehicle z-axis. Position is relative within available movable range of the seat belt. 0 = Lowermost position supported.
+  """
+  seatBeltHeight(unit: Length_Unit_Enum = MILLIMETER): UInt16
+
+  """
+  Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward.
+  @comment: In VSS it is assumed that tilting a seat affects both seating (seat bottom) and backrest, i.e. the angle between seating and backrest will not be affected when changing Tilt.
+  """
+  tilt(unit: Angle_Unit_Enum = DEGREE): Float
+  airbag: Vehicle_Cabin_Seat_Airbag
+  backrest: Vehicle_Cabin_Seat_Backrest
+  headrest: Vehicle_Cabin_Seat_Headrest
+  seating: Vehicle_Cabin_Seat_Seating
+}
+
+"""Airbag signals."""
+type Vehicle_Cabin_Seat_Airbag {
+  """
+  Airbag deployment status. True = Airbag deployed. False = Airbag not deployed.
+  """
+  isDeployed: Boolean
+}
+
+"""Describes signals related to the backrest of the seat."""
+type Vehicle_Cabin_Seat_Backrest {
+  """
+  Is switch for less lumbar support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isLessLumbarSupportSwitchEngaged: Boolean
+
+  """
+  Is switch for less side bolster support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport).
+  """
+  isLessSideBolsterSupportSwitchEngaged: Boolean
+
+  """
+  Lumbar down switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isLumbarDownSwitchEngaged: Boolean
+
+  """
+  Lumbar up switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isLumbarUpSwitchEngaged: Boolean
+
+  """
+  Is switch for more lumbar support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.LumbarSupport).
+  """
+  isMoreLumbarSupportSwitchEngaged: Boolean
+
+  """
+  Is switch for more side bolster support engaged.
+  @comment: Affects the property (SingleSeat.Backrest.SideBolsterSupport).
+  """
+  isMoreSideBolsterSupportSwitchEngaged: Boolean
+
+  """
+  Backrest recline backward switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.Recline).
+  """
+  isReclineBackwardSwitchEngaged: Boolean
+
+  """
+  Backrest recline forward switch engaged.
+  @comment: Affects the property (SingleSeat.Backrest.Recline).
+  """
+  isReclineForwardSwitchEngaged: Boolean
+
+  """
+  Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported.
+  """
+  lumbarHeight(unit: Length_Unit_Enum = MILLIMETER): UInt8
+
+  """
+  Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position.
+  @max: 100
+  """
+  lumbarSupport(unit: Relation_Unit_Enum = PERCENT): Float
+
+  """
+  Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees for backward recline.
+  @comment: Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.
+  """
+  recline(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support.
+  @max: 100
+  """
+  sideBolsterSupport(unit: Relation_Unit_Enum = PERCENT): Float
+}
+
+"""Headrest settings."""
+type Vehicle_Cabin_Seat_Headrest {
+  """
+  Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.
+  """
+  angle(unit: Angle_Unit_Enum = DEGREE): Float
+
+  """
+  Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.
+  """
+  height(unit: Length_Unit_Enum = MILLIMETER): UInt8
+
+  """
+  Head rest backward switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Angle).
+  """
+  isBackwardSwitchEngaged: Boolean
+
+  """
+  Head rest down switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Height).
+  """
+  isDownSwitchEngaged: Boolean
+
+  """
+  Head rest forward switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Angle).
+  """
+  isForwardSwitchEngaged: Boolean
+
+  """
+  Head rest up switch engaged.
+  @comment: Affects the property (SingleSeat.Headrest.Height).
+  """
+  isUpSwitchEngaged: Boolean
+}
+
+"""
+Describes signals related to the seat bottom of the seat.
+@comment: Seating is here considered as the part of the seat that supports the thighs. Additional cushions (if any) for support of lower legs is not covered by this branch.
+"""
+type Vehicle_Cabin_Seat_Seating {
+  """
+  Is switch to decrease seating length engaged.
+  @comment: Affects the property (SingleSeat.Seating.Length).
+  """
+  isBackwardSwitchEngaged: Boolean
+
+  """Is switch to increase seating length engaged."""
+  isForwardSwitchEngaged: Boolean
+
+  """
+  Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating).
+  """
+  length(unit: Length_Unit_Enum = MILLIMETER): UInt16
+}
+
+"""Attributes that identify a vehicle."""
+type Vehicle_VehicleIdentification {
+  """
+  17-character Vehicle Identification Number (VIN) as defined by ISO 3779.
+  """
+  vin: String
+}
+
+enum Vehicle_Cabin_DriverPosition_Enum {
+  LEFT
+  MIDDLE
+  RIGHT
+}
+
+enum Angle_Unit_Enum {
+  DEGREE
+}
+
+enum Length_Unit_Enum {
+  MILLIMETER
+}
+
+enum Relation_Unit_Enum {
+  PERCENT
+}
+
+"""
+Specified reference instance names (informative only) for the type Vehicle_Cabin_Seat.
+"""
+enum Vehicle_Cabin_Seat_Instance_Enum {
+  ROW1_DRIVERSIDE
+  ROW1_PASSENGERSIDE
+  ROW2_DRIVERSIDE
+  ROW2_PASSENGERSIDE
+}

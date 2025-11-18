@@ -28,7 +28,7 @@ TEST_UNITS = HERE / ".." / "test_units.yaml"
 TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
-def get_cla_test(test_file: Path, tmp_path: Path, overlay: str | None = None):
+def get_cla_test(test_file: Path, tmp_path: Path, overlay: str | Path | None = None) -> str:
     args = f"--vspec {test_file}"
     output = tmp_path / "out.vspec"
     if overlay:

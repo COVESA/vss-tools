@@ -84,8 +84,9 @@ def test_complex_structures():
     # helper function to check, if all information are present
 
     def check_instance_branch(branch: VSSNode, numberOfChildren: int):
-        assert branch.data.type == model.NodeType.BRANCH
-        assert branch.data.description == "High-level vehicle data."
+        vss_data = branch.get_vss_data()
+        assert vss_data.type == model.NodeType.BRANCH
+        assert vss_data.description == "High-level vehicle data."
 
     for tfs in TEST_FILES_COMPLEX:
         print(tfs)

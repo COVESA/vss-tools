@@ -28,7 +28,7 @@ TEST_QUANT = HERE / ".." / "test_quantities.yaml"
     ],
 )
 def test_description_error(vspec_file: str, types_file, types_out_file, overlay_file, tmp_path):
-    vspec_file = HERE / vspec_file
+    vspec_path = HERE / vspec_file
     out = tmp_path / "out.json"
     log = tmp_path / "log.txt"
 
@@ -39,7 +39,7 @@ def test_description_error(vspec_file: str, types_file, types_out_file, overlay_
         cmd += f" --types-output {tmp_path / types_out_file}"
     if overlay_file:
         cmd += f" -l {HERE / overlay_file}"
-    cmd += f" --vspec {vspec_file} --output {out}"
+    cmd += f" --vspec {vspec_path} --output {out}"
 
     process = subprocess.run(cmd.split())
     assert process.returncode != 0
@@ -50,10 +50,10 @@ def test_description_error(vspec_file: str, types_file, types_out_file, overlay_
 
 @pytest.mark.parametrize("vspec_file", [("branch_wrong_case.vspec"), ("sensor_wrong_case.vspec")])
 def type_case_sensitive(vspec_file: str, tmp_path):
-    vspec_file = HERE / vspec_file
+    vspec_path = HERE / vspec_file
     out = tmp_path / "out.json"
     log = tmp_path / "log.txt"
-    cmd = f"vspec --log-file {log} export json --pretty --vspec {vspec_file} --output {out}"
+    cmd = f"vspec --log-file {log} export json --pretty --vspec {vspec_path} --output {out}"
     process = subprocess.run(cmd.split())
     assert process.returncode != 0
     assert "Unknown type" in log.read_text()
@@ -66,11 +66,11 @@ def type_case_sensitive(vspec_file: str, tmp_path):
     ],
 )
 def test_scope_error(vspec_file: str, tmp_path):
-    vspec_file = HERE / vspec_file
+    vspec_path = HERE / vspec_file
     out = tmp_path / "out.json"
     log = tmp_path / "log.txt"
     cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS}"
-    cmd += f" -q {TEST_QUANT} --vspec {vspec_file} --output {out}"
+    cmd += f" -q {TEST_QUANT} --vspec {vspec_path} --output {out}"
     process = subprocess.run(cmd.split())
     assert process.returncode != 0
     log_content = log.read_text()

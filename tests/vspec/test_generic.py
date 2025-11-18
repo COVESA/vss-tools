@@ -87,7 +87,6 @@ def test_exporters(directory, tmp_path):
         "csv",
         "yaml",
         "franca",
-        "graphql",
         "go",
         "samm",
     ]

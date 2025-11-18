@@ -18,7 +18,6 @@ vspec export --help
 │ ddsidl        Export as DDSIDL.                                                                                      │
 │ plantuml      Export as PlantUML.                                                                                    │
 │ franca        Export as Franca.                                                                                      │
-│ graphql       Export as GraphQL.                                                                                     │
 │ id            Export as IDs.                                                                                         │
 │ json          Export as JSON.                                                                                        │
 │ jsonschema    Export as a jsonschema.                                                                                │
@@ -26,6 +25,7 @@ vspec export --help
 | samm          Export as Eclipse Semantic Modeling Framework (ESMF) - Semantic Aspect Meta Model (SAMM) - .ttl files. |
 │ yaml          Export as YAML.                                                                                        │
 │ tree          Export as Tree.                                                                                        |
+| s2dm          Export as S2DM GraphQL schema.                                                                         |
 | ros2interface Export as .msg and .srv files                                                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
@@ -53,10 +53,10 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
 - [ddsidl](./ddsidl.md)
 - [plantuml](./plantuml.md)
 - [go](./go.md)
-- [graphql](./graphql.md)
 - [id](./id.md)
 - [protobuf](./protobuf.md)
 - [samm](./samm.md)
+- [s2dm](./s2dm.md)
 - [tree](./tree.md)
 - [ros2interface](./ros2interface.md)
 
@@ -417,13 +417,6 @@ Lets the exporter generate _all_ extended metadata attributes found in the model
 ### --all-idl-features
 
 Will also generate non-payload const attributes such as unit/datatype. Default is not to generate them/comment them out because at least Cyclone DDS and FastDDS do not support const. For more information check the [DDS-IDL exporter docs](ddsidl.md).
-
-## GRAPHQL exporter notes
-
-### --gql-fields name,description
-
-Add additional fields to the nodes in the graphql schema. use: <field_name>,<description>.
-Can be used more than once.
 
 ## Writing your own generator
 

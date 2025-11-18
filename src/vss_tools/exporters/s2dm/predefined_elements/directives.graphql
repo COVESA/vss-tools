@@ -1,0 +1,52 @@
+directive @vspec(
+  """The element from which the item in the GraphQL schema originates from."""
+  source: VspecElement,
+  """The type in the Vspec language (i.e., branch, attribute, sensor, actuator)."""
+  vspecType: VspecType,
+  """The comment as it appears in the comment key in the Vspec."""
+  comment: String,
+  """The default value as it appears in the default key in the Vspec."""
+  defaultValue: String
+) on FIELD_DEFINITION | OBJECT | ENUM | ENUM_VALUE
+
+"""A particular element in Vspec."""
+input VspecElement {
+  """Kind of Vspec element to which the name applies (e.g., UNIT_KEY)."""
+  kind: VspecElementKind!
+
+  """Original value (e.g., name) in vspec."""
+  value: String!
+
+  """Optional note about the mapping."""
+  note: String
+}
+
+"""Kind of element that is part of the mapping."""
+enum VspecElementKind {
+  """Unit key as appear in the units.yaml file in Vspec projects."""
+  UNIT
+  """Part of the labels definied with the instances key in yaml."""
+  INSTANCE_LABEL
+  """Part of the allowed values listed in yaml."""
+  ALLOWED_VALUE
+  """Quantity kind key as appears in the quantities.yaml file in Vspec projects."""
+  QUANTITY_KIND
+  """Fully Qualified Name (i.e., the path)"""
+  FQN
+}
+
+"""Vspec type in the tree."""
+enum VspecType {
+  """A nested structure that groups multiple properties."""
+  BRANCH
+  """A property whose value is considered static."""
+  ATTRIBUTE
+  """A property whose value is dynamic and can be read."""
+  SENSOR
+  """A property whose value is dynamic and can be read and written."""
+  ACTUATOR
+}
+
+directive @range(min: Float, max: Float) on FIELD_DEFINITION
+
+directive @instanceTag on OBJECT

@@ -36,6 +36,9 @@ def load_units_or_quantities(
             if k in data:
                 overwrite = True
             try:
+                # For VSSUnit, inject the key from the YAML dictionary key
+                if class_type == VSSUnit and isinstance(v, dict):
+                    v["key"] = k
                 val = class_type(**v)
                 if overwrite:
                     log.warning(
