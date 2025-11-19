@@ -1,0 +1,14 @@
+class A {
+
+	' sensor: A sensor.
+	' unit: km
+	sensor : float
+
+	' sensor: An attribute.
+	' unit: km
+	attribute : float
+
+	' sensor: An actuator.
+	' unit: km
+	actuator : float
+}

@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import re
 from enum import Enum
-from typing import Any
+from typing import Any, TypeAlias
 
 import jsonschema
 from pydantic import (
@@ -80,7 +80,7 @@ class VSSRaw(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def get_extra_attributes(self) -> list[str]:
-        defined_fields = self.model_fields.keys()
+        defined_fields = self.__class__.model_fields
         additional_fields = set(self.model_dump().keys()) - set(defined_fields)
         return list(additional_fields)
 
@@ -109,7 +109,7 @@ class VSSRaw(BaseModel):
 class VSSData(VSSRaw):
     model_config = ConfigDict(extra="allow")
     type: NodeType
-    description: str
+    description: str = ""
     comment: str | None = None
     delete: bool = False
     deprecation: str | None = None
@@ -125,6 +125,14 @@ class VSSData(VSSRaw):
         pattern = r"^0x[0-9A-Fa-f]{8}$"
         assert bool(re.match(pattern, v)), f"'{v}' is not a valid 'constUID'"
         return v
+
+    @model_validator(mode="after")
+    def ensure_description(self) -> Self:
+        """Give better explanation for empty description."""
+        assert (
+            self.description != ""
+        ), "All nodes in the final tree must have a description. Implicit branches are not allowed in final tree!"
+        return self
 
 
 class VSSDataBranch(VSSData):
@@ -176,17 +184,23 @@ class VSSQuantity(BaseModel):
     remark: str | None = None
 
 
+Number: TypeAlias = int | float
+Value: TypeAlias = str | int | float | bool
+ValueList: TypeAlias = list[Value]
+ValueListOrScalar: TypeAlias = ValueList | Value
+
+
 class VSSDataDatatype(VSSData):
     datatype: str
     arraysize: int | None = None
-    min: int | float | None = None
-    max: int | float | None = None
+    min: Number | None = None
+    max: Number | None = None
     # Field, used to allow definition of Regular Expression constraints
     # for string based property nodes.
     # Example: VSS - VehicleIdentification.VIN property
     pattern: str | None = None
     unit: str | None = None
-    allowed: list[str | int | float | bool] | None = None
+    allowed: ValueList | None = None
     default: Any = None
 
     @model_validator(mode="after")
@@ -200,21 +214,32 @@ class VSSDataDatatype(VSSData):
         return self
 
     def check_min_max_valid_datatype(self) -> Self:
-        if self.min or self.max:
+        if self.min is not None or self.max is not None:
             try:
                 Datatypes.is_subtype_of(self.datatype, Datatypes.NUMERIC[0])
             except DatatypesException:
                 raise ValueError(f"Cannot define min/max for datatype '{self.datatype}'")
-            if is_array(self.datatype):
-                raise ValueError("Cannot define min/max for array datatypes")
+            if self.min is not None:
+                assert Datatypes.is_datatype(self.min, self.datatype), f"min '{self.min}' is not an '{self.datatype}'"
+            if self.max is not None:
+                assert Datatypes.is_datatype(self.max, self.datatype), f"max '{self.max}' is not an '{self.datatype}'"
         return self
 
     def check_default_min_max(self) -> Self:
-        if self.default:
-            if self.min and self.default < self.min:
-                raise ValueError(f"'default' smaller than 'min': {self.default}<{self.min}")
-            if self.max and self.default > self.max:
-                raise ValueError(f"'default' greater than 'max': {self.default}>{self.min}")
+        if not self.default:
+            return self
+        values = [self.default]
+        if isinstance(self.default, list):
+            values = self.default
+
+        epsilon = 1e-6
+        for v in values:
+            if self.min is not None or self.max is not None:
+                v = round(v, 6)
+            if self.min is not None and v < self.min - epsilon:
+                raise ValueError(f"'default' smaller than 'min': {v}<{self.min}")
+            if self.max is not None and v > self.max + epsilon:
+                raise ValueError(f"'default' greater than 'max': {v}>{self.max}")
         return self
 
     def check_type_default_consistency(self) -> Self:
@@ -309,9 +334,12 @@ class VSSDataDatatype(VSSData):
         referenced in the unit if given
         """
         if self.unit:
-            assert Datatypes.get_type(self.datatype), f"Cannot use 'unit' with struct datatype: '{self.datatype}'"
+            assert Datatypes.get_type(self.datatype), f"Cannot use 'unit' with complex datatype: '{self.datatype}'"
+            allowed_datatypes = dynamic_units[self.unit].allowed_datatypes
+            if allowed_datatypes is None:
+                allowed_datatypes = []
             assert any(
-                Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in dynamic_units[self.unit]
+                Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in allowed_datatypes
             ), f"'{self.datatype}' is not allowed for unit '{self.unit}'"
         return self
 

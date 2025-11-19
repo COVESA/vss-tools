@@ -1,16 +1,16 @@
 package vss
 
 type A struct {
-	B B
+	B BI2
 }
-type B struct {
+type BI2 struct {
 	Row1 BI1
 	Row2 BI1
 }
 type BI1 struct {
-	Left BI2
-	Right BI2
+	Left B
+	Right B
 }
-type BI2 struct {
+type B struct {
 	C int8
 }

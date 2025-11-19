@@ -32,6 +32,10 @@ from vss_tools.vspec import deep_update
 SEPARATOR = "."
 
 
+class NoInstanceRootException(Exception):
+    pass
+
+
 class NotMergeableException(Exception):
     pass
 
@@ -84,8 +88,13 @@ class VSSNode(Node):  # type: ignore[misc]
         Updating the data fqn when getting reattached.
         We need the fqn in the data for validation purposes.
         """
-        log.debug(f"Got attached to parent='{parent.get_fqn()}', new fqn='{self.get_fqn()}'")
+        log.debug(f"Got attached to parent='{parent.get_fqn()}'")
+        self._update_fqn()
+
+    def _update_fqn(self) -> None:
         self.data.fqn = self.get_fqn(SEPARATOR)
+        for child in self.children:
+            child._update_fqn()
 
     def _post_detach(self, parent: VSSNode):
         log.debug(f"'{self.get_fqn()}', detached from parent='{parent.get_fqn()}'")
@@ -282,7 +291,7 @@ class VSSNode(Node):  # type: ignore[misc]
                     if not node.name.startswith("Is") and not node.name.startswith("Has"):
                         violations.append([node.get_fqn(), "Not starting with 'Is' or 'Has'"])
         if violations:
-            log.info(f"Naming violations: {len(violations)}")
+            log.info(f"Naming violations (before applying exceptions): {len(violations)}")
         return violations
 
     def get_extra_attributes(self, allowed: tuple[str, ...]) -> list[list[str]]:
@@ -296,7 +305,7 @@ class VSSNode(Node):  # type: ignore[misc]
                 if field not in allowed:
                     violations.append([node.get_fqn(), field])
         if violations:
-            log.warning(f"Attributes, violations={len(violations)}")
+            log.info(f"Attributes (before applying exceptions): {len(violations)}")
         return violations
 
     def as_flat_dict(self, with_extra_attributes: bool, extended_attributes: tuple[str, ...] = ()) -> dict[str, Any]:
@@ -310,6 +319,33 @@ class VSSNode(Node):  # type: ignore[misc]
             key = node.get_fqn()
             data[key] = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
         return data
+
+    def get_instance_root(self, depth: int = 0) -> tuple[VSSNode, int]:
+        """
+        Getting the next instance root and how many hops we need
+        """
+        if not isinstance(self.data, VSSDataBranch):
+            raise NoInstanceRootException()
+
+        # This not is not an instance. So we are technically the instance root
+        if not self.data.is_instance:
+            return self, depth
+
+        # Having `is_instance` but not parent is clearly a problem
+        if self.parent is None:
+            raise NoInstanceRootException()
+
+        return self.parent.get_instance_root(depth + 1)
+
+    def count_instance_children_depth(self) -> int:
+        """
+        Count how many levels of instance branches will be embedded
+        """
+        for child in self.children:
+            if isinstance(child.data, VSSDataBranch):
+                if child.data.is_instance:
+                    return 1 + child.count_instance_children_depth()
+        return 0
 
 
 def get_expected_parent(name: str) -> str | None:

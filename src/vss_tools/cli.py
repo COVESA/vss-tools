@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Contributors to COVESA
+# Copyright (c) 2025 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License 2.0 which is available at
@@ -40,6 +40,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "csv": "vss_tools.exporters.csv:cli",
         "ddsidl": "vss_tools.exporters.ddsidl:cli",
         "franca": "vss_tools.exporters.franca:cli",
+        "plantuml": "vss_tools.exporters.plantuml:cli",
         "graphql": "vss_tools.exporters.graphql:cli",
         "id": "vss_tools.exporters.id:cli",
         "json": "vss_tools.exporters.json:cli",
@@ -49,6 +50,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "tree": "vss_tools.exporters.tree:cli",
         "samm": "vss_tools.exporters.samm:cli",
         "go": "vss_tools.exporters.go:cli",
+        "ros2interface": "vss_tools.exporters.ros2interface:cli",
     },
 )
 @click.pass_context

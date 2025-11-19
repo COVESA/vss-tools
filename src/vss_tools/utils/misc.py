@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Contributors to COVESA
+# Copyright (c) 2025 Contributors to COVESA
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License 2.0 which is available at
@@ -31,3 +31,18 @@ def camel_back(st):
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", st)
     s2 = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
     return re.sub(r"_([a-z])", lambda x: x.group(1).upper(), s2)
+
+
+def str_to_screaming_snake_case(text: str) -> str:
+    """Converts a string to screaming snake case (i.e., CAPITAL LETTERS)"""
+    text = re.sub(r"[^a-zA-Z0-9]", " ", text)
+    words = text.split()
+    return "_".join(word.upper() for word in words)
+
+
+def to_snake(name: str) -> str:
+    # PascalCase -> snake_case, hyphens/spaces -> underscores, collapse
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+    s = re.sub(r"[^0-9a-zA-Z_]+", "_", s)
+    s = re.sub(r"_+", "_", s).strip("_")
+    return s.lower()

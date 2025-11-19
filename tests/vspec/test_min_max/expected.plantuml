@@ -1,0 +1,56 @@
+class A {
+
+	' sensor: No Min Max.
+	intNoMinMax : int8
+
+	' sensor: Only Max.
+	' interval (..32]
+	intOnlyMax : int8
+
+	' sensor: Only Min.
+	' interval [3..)
+	intOnlyMin : int8
+
+	' sensor: Min & Max.
+	' interval [3..6]
+	intMinMax : int8
+
+	' sensor: Max Zero.
+	' interval (..0]
+	intMaxZero : int8
+
+	' sensor: Min Zero.
+	' interval [0..)
+	intMinZero : int8
+
+	' sensor: No Min Max.
+	floatNoMinMax : float
+
+	' sensor: Only Max.
+	' interval (..32.3]
+	floatOnlyMax : float
+
+	' sensor: Only Min.
+	' interval [-2.5..)
+	floatOnlyMin : float
+
+	' sensor: Min & Max.
+	' interval [-165.56323..236723.4]
+	floatMinMax : float
+
+	' sensor: Max Zero.
+	' interval (..0.0]
+	floatMaxZero : float
+
+	' sensor: Min Zero.
+	' interval [0.0..)
+	floatMinZero : float
+
+	' sensor: Max Zero.
+	' interval (..0]
+	floatMaxZeroInt : float
+
+	' sensor: Min Zero.
+	' interval [0..)
+	floatMinZeroInt : float
+}

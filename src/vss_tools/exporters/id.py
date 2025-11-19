@@ -145,6 +145,7 @@ def export_node(data: dict[str, Any], node: VSSNode, id_counter, strict_mode: bo
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--validate-static-uid",
     type=click.Path(dir_okay=False, readable=True, exists=True, path_type=Path),
@@ -171,6 +172,7 @@ def cli(
     validate_static_uid: Path,
     validate_only: bool,
     case_sensitive: bool,
+    strict_exceptions: Path | None,
 ):
     """
     Export as IDs.
@@ -186,6 +188,7 @@ def cli(
         types=types,
         overlays=overlays,
         expand=expand,
+        strict_exceptions_file=strict_exceptions,
     )
     log.info("Generating vspec output including static UIDs...")
 
@@ -194,9 +197,7 @@ def cli(
     id_counter, _ = export_node(signals_yaml_dict, tree, id_counter, case_sensitive)
 
     if validate_static_uid:
-        log.info(
-            f"Now validating nodes, static UIDs, types, units and description with " f"file '{validate_static_uid}'"
-        )
+        log.info(f"Now validating nodes, static UIDs, types, units and description with file '{validate_static_uid}'")
 
         validation_tree, _ = get_trees(
             vspec=validate_static_uid,

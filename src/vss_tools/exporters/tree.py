@@ -44,12 +44,14 @@ def get_rendered_tree(tree: VSSNode, attributes: tuple[str]) -> str:
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.strict_exceptions_opt
 @click.option("--attr", help="Show VSSData attribute", multiple=True)
 def cli(
     vspec: Path,
     include_dirs: tuple[Path],
     extended_attributes: tuple[str],
     strict: bool,
+    strict_exceptions: Path | None,
     aborts: tuple[str],
     expand: bool,
     overlays: tuple[Path],
@@ -73,6 +75,7 @@ def cli(
         types=types,
         overlays=overlays,
         expand=expand,
+        strict_exceptions_file=strict_exceptions,
     )
 
     rendered_tree = get_rendered_tree(tree, attr)

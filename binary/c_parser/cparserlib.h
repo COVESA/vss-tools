@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #define UNKNOWN 0
 typedef enum {SENSOR=1, ACTUATOR, ATTRIBUTE, BRANCH, STRUCT, PROPERTY } nodeTypes_t;
 

@@ -65,19 +65,21 @@ def __get_version_vss(vss_tree: VSSNode) -> str:
 
         if vss_version_node:
             for v_child in vss_version_node.children:
+                # NOTE: Major, Minor and Patch Version fields are integers.
+                #       There is a fourth Version field: Label, which is a string and currently is not handled.
                 if (
                     v_child.name in ["Major", "Minor", "Patch"]
                     and hasattr(v_child.data, "default")
                     and type(v_child.data.default) is int
-                    and v_child.data.default > 1
                 ):
-                    match v_child.name:
-                        case "Major":
-                            major = v_child.data.default
-                        case "Minor":
-                            minor = v_child.data.default
-                        case "Patch":
-                            patch = v_child.data.default
+                    if v_child.name == "Major" and v_child.data.default > major:
+                        major = v_child.data.default
+
+                    if v_child.name == "Minor" and v_child.data.default > minor:
+                        minor = v_child.data.default
+
+                    if v_child.name == "Patch" and v_child.data.default > patch:
+                        patch = v_child.data.default
 
     return f"{major}.{minor}.{patch}"
 
@@ -158,6 +160,7 @@ Path to or name for the target folder, where generated aspect models (.ttl files
 @clo.units_opt
 @clo.types_opt
 @clo.types_output_opt
+@clo.strict_exceptions_opt
 def cli(
     vspec: Path,
     target_folder: Path,
@@ -170,13 +173,14 @@ def cli(
     units: tuple[Path],
     types: tuple[Path],
     types_output: Path,
+    strict_exceptions: Path | None,
     signals_file,
     output_namespace,
     split,
     split_depth,
 ) -> None:
     """
-    Export COVESA VSS to Eclipse Semantic Modeling Framework (ESMF) - Semantic Aspect Meta Model (SAMM) - .ttl files.
+    Export as Eclipse Semantic Modeling Framework (ESMF) - Semantic Aspect Meta Model (SAMM) - .ttl files.
     """
 
     log.info("Loading VSS Tree...\n")
@@ -189,7 +193,17 @@ def cli(
     #       Just keep in mind that this might lead to some additional logic,
     #       to make sure that each case is handled correctly.
     vss_tree, datatype_tree = get_trees(
-        vspec, include_dirs, aborts, strict, extended_attributes, quantities, units, types, overlays, False
+        vspec,
+        include_dirs,
+        aborts,
+        strict,
+        extended_attributes,
+        quantities,
+        units,
+        types,
+        overlays,
+        False,
+        strict_exceptions,
     )
 
     # Get the VSS version from the vss_tree::VersionVSS
@@ -269,8 +283,7 @@ def cli(
             )
         else:
             log.warning(
-                "VSS to ESMF - SAMM processing - COMPLETED\n\n"
-                "VSS tree was not converted because it is DEPRECATED.\n\n"
+                "VSS to ESMF - SAMM processing - COMPLETED\n\nVSS tree was not converted because it is DEPRECATED.\n\n"
             )
 
     else:

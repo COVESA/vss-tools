@@ -175,6 +175,7 @@ def print_messages(nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, a
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.strict_exceptions_opt
 @click.option(
     "--types-out-dir",
     help="Output directory for generated protos.",
@@ -200,6 +201,7 @@ def cli(
     types_out_dir: Path | None,
     static_uid: bool,
     add_optional: bool,
+    strict_exceptions: Path | None,
 ):
     """
     Export as protobuf.
@@ -215,6 +217,7 @@ def cli(
         units=units,
         types=types,
         overlays=overlays,
+        strict_exceptions_file=strict_exceptions,
     )
     if datatype_tree:
         if not types_out_dir:

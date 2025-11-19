@@ -40,5 +40,5 @@ def test_description_error(vspec_file: str, type_file: str, type_out_file: str, 
     assert process.returncode != 0
     log_content = log.read_text()
     print(log_content)
-    assert "'type': 'missing'" in log_content
+    assert "'type': 'assertion_error'" in log_content
     assert "1 model error(s):" in log_content
