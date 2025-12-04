@@ -96,6 +96,11 @@ def process_radial_stats(signals_data: dict[str, Any], output: Path) -> None:
         item = {"name": key}
         if "children" in value:
             item["children"] = []
+            # Copy type and description for branches too
+            if "type" in value:
+                item["type"] = value["type"]
+            if "description" in value:
+                item["description"] = value["description"]
             stack.extend(
                 {"key": child_key, "value": child_value, "parent": item["children"]}
                 for child_key, child_value in value["children"].items()
