@@ -116,6 +116,7 @@ directive_processor = GraphQLDirectiveProcessor()
 @clo.types_opt
 @clo.modular_opt
 @clo.flat_domains_opt
+@clo.strict_exceptions_opt
 def cli(
     vspec: Path,
     output: Path,
@@ -129,6 +130,7 @@ def cli(
     types: tuple[Path, ...],
     modular: bool,
     flat_domains: bool,
+    strict_exceptions: Path | None,
 ) -> None:
     """Export a VSS specification to S2DM GraphQL schema."""
     try:
@@ -143,6 +145,7 @@ def cli(
             types=types,
             overlays=overlays,
             expand=False,
+            strict_exceptions_file=strict_exceptions,
         )
 
         log.info("Generating S2DM GraphQL schema...")
