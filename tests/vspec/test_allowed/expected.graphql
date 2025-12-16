@@ -19,62 +19,62 @@ scalar UInt64
 """Branch A."""
 type A {
   """A float"""
-  float: A_Float_Enum
+  float: AFloat
 
   """An int"""
-  int: A_Int_Enum
+  int: AInt
 
   """A string"""
-  string: A_String_Enum
+  string: AString
 
   """A string array"""
-  stringArray: [A_StringArray_Enum]
+  stringArray: [AStringArray]
 }
 
-enum A_Float_Enum {
+enum AFloat {
   _1_1
   _2_54
   _3
 }
 
-enum A_Int_Enum {
+enum AInt {
   _1
   _2
   _3
 }
 
-enum A_String_Enum {
+enum AString {
   JANUARY
   FEBRUARY
 }
 
-enum A_StringArray_Enum {
+enum AStringArray {
   JANUARY
   FEBRUARY
   MARCH
 }
 
-enum Angularspeed_Unit_Enum {
+enum AngularSpeedUnit {
   DEGREE_PER_SECOND
 }
 
-enum Distance_Unit_Enum {
+enum DistanceUnit {
   METER
   MILLIMETER
 }
 
-enum Length_Unit_Enum {
+enum LengthUnit {
   KILOMETER
 }
 
-enum Relation_Unit_Enum {
+enum RelationUnit {
   PERCENT
 }
 
-enum Rotationalspeed_Unit_Enum {
+enum RotationalSpeedUnit {
   REVOLUTIONS_PER_MINUTE
 }
 
-enum Temperature_Unit_Enum {
+enum TemperatureUnit {
   DEGREE_CELSIUS
 }

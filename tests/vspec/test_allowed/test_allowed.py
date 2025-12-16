@@ -44,6 +44,6 @@ def run_exporter(exporter, argument, tmp_path):
 def test_allowed(tmp_path):
     # Run all "supported" exporters, i.e. not those in contrib
     # Exception is "binary", as it is assumed output may vary depending on target
-    exporters = ["apigear", "json", "ddsidl", "csv", "yaml", "franca", "graphql"]
+    exporters = ["apigear", "json", "ddsidl", "csv", "yaml", "franca"]
     for exporter in exporters:
         run_exporter(exporter, f" -u {TEST_UNITS} -q {TEST_QUANT}", tmp_path)

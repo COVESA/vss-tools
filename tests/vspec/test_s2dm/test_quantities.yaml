@@ -1,0 +1,14 @@
+# Subset of quantities for testing purposes taken from vss specification
+# <https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/quantities.yaml>
+
+length:
+  definition: Linear extent in space between any two points (ISO 80000-3:2019)
+  remark: Length does not need to be measured along a straight line.
+          Length is one of the seven base quantities in the International System of Units (ISO 80000-1).
+
+angle:
+  definition: TBD
+
+relation:
+  definition: Dimensionsless quantity for relation between two values of the same quantity.
+  remark: This quantity is not described in ISO 80000.

@@ -41,7 +41,6 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "ddsidl": "vss_tools.exporters.ddsidl:cli",
         "franca": "vss_tools.exporters.franca:cli",
         "plantuml": "vss_tools.exporters.plantuml:cli",
-        "graphql": "vss_tools.exporters.graphql:cli",
         "id": "vss_tools.exporters.id:cli",
         "json": "vss_tools.exporters.json:cli",
         "jsonschema": "vss_tools.exporters.jsonschema:cli",
@@ -51,6 +50,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "samm": "vss_tools.exporters.samm:cli",
         "go": "vss_tools.exporters.go:cli",
         "ros2interface": "vss_tools.exporters.ros2interface:cli",
+        "s2dm": "vss_tools.exporters.s2dm:cli",
     },
 )
 @click.pass_context

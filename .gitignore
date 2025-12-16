@@ -90,3 +90,7 @@ ENV/
 # IDE
 .idea
 .vscode
+
+# Test output files
+*_output.graphql
+test_output.graphql
