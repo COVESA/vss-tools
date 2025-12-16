@@ -81,8 +81,13 @@ def process_piechart_stats(data_metadata: pd.DataFrame, output: Path, old_chart:
 def process_radial_stats(signals_data: dict[str, Any], output: Path) -> None:
     """Process data for radial tree statistics."""
 
+    root_key: str | None
+    root_key = next(iter(signals_data))
+    if root_key is None:
+        raise KeyError("No root node with children found in signals data")
+
     children = []
-    stack = [{"key": key, "value": value, "parent": None} for key, value in signals_data["Vehicle"]["children"].items()]
+    stack = [{"key": key, "value": value, "parent": None} for key, value in signals_data[root_key]["children"].items()]
 
     while stack:
         current = stack.pop()
@@ -91,6 +96,11 @@ def process_radial_stats(signals_data: dict[str, Any], output: Path) -> None:
         item = {"name": key}
         if "children" in value:
             item["children"] = []
+            # Copy type and description for branches too
+            if "type" in value:
+                item["type"] = value["type"]
+            if "description" in value:
+                item["description"] = value["description"]
             stack.extend(
                 {"key": child_key, "value": child_value, "parent": item["children"]}
                 for child_key, child_value in value["children"].items()
@@ -113,8 +123,8 @@ def process_radial_stats(signals_data: dict[str, Any], output: Path) -> None:
             stack.extend(child for child in current["children"] if "children" in child)
 
     radial_tree_data = {
-        "name": "Vehicle",
-        "type": "Vehicle",
+        "name": root_key,
+        "type": root_key,
         "children": children,
     }
 

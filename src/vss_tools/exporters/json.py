@@ -54,6 +54,7 @@ def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attribu
 @click.option(
     "--stats-radial",
     type=click.Path(path_type=Path),
+    default=None,
     help="Generate radial tree statistics into following JSON file",
 )
 @click.pass_context
