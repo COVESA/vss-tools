@@ -80,20 +80,28 @@ def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str
                 if enum_file not in domain_files:
                     domain_files[enum_file] = []
                 domain_files[enum_file].append(type_name)
-            else:
-                # Domain-specific enums - create their own files in domain/
-                enum_file = f"domain/{type_name}.graphql"
-                domain_files[enum_file] = [type_name]
+            # Note: Domain-specific allowed value enums are NOT added to separate files
+            # They will be embedded in the type files that use them
+            # This is handled in write_domain_files()
 
     return domain_files
 
 
 def analyze_schema_for_nested_domains(schema: GraphQLSchema) -> dict[str, list[str]]:
     """
-    Analyze GraphQL schema and create nested domain structure based on type relationships.
+    Analyze GraphQL schema and create nested domain structure with _ prefix for root types.
 
     Groups related types into domain directories following the hierarchy.
-    Instance tags get their own files in instances/ directory.
+    Filenames use only the immediate type name (no parent prefix) since folder path provides context.
+    Root types in each folder use _ prefix to sort first.
+
+    Example:
+        Vehicle type -> domain/Vehicle/_Vehicle.graphql
+        Vehicle_Body type -> domain/Vehicle/Body.graphql
+        Vehicle_Cabin type -> domain/Vehicle/Cabin/_Cabin.graphql
+        Vehicle_Cabin_Door type -> domain/Vehicle/Cabin/Door.graphql
+        Vehicle_Cabin_Seat type -> domain/Vehicle/Cabin/Seat/_Seat.graphql
+        Vehicle_Cabin_Seat_Airbag type -> domain/Vehicle/Cabin/Seat/Airbag.graphql
 
     Returns:
         Dict mapping file paths to list of type names to include
@@ -104,7 +112,7 @@ def analyze_schema_for_nested_domains(schema: GraphQLSchema) -> dict[str, list[s
         # Fallback to flat structure if no Vehicle type
         return analyze_schema_for_flat_domains(schema)
 
-    # Group types by their name prefixes (Vehicle_Body -> domain/Vehicle/Body.graphql)
+    # Group types by their name prefixes
     type_groups: dict[str, list[str]] = {}
 
     for type_name, graphql_type in schema.type_map.items():
@@ -118,18 +126,44 @@ def analyze_schema_for_nested_domains(schema: GraphQLSchema) -> dict[str, list[s
                 if instance_file not in type_groups:
                     type_groups[instance_file] = []
                 type_groups[instance_file].append(type_name)
+            # Struct types go to structs/
+            elif type_name.startswith("VehicleDataTypes"):
+                struct_file = f"structs/{type_name}.graphql"
+                type_groups[struct_file] = [type_name]
             else:
                 # Extract domain hierarchy from type name
                 if "_" in type_name:
-                    # Vehicle_Body_Lights -> domain/Vehicle/Body/Lights.graphql
+                    # Vehicle_Cabin_Seat_Airbag -> domain/Vehicle/Cabin/Seat/Airbag.graphql
                     parts = type_name.split("_")
                     if len(parts) >= 2:
-                        # Build nested path: domain/Vehicle/Body/Lights.graphql
-                        domain_path = "domain/" + "/".join(parts[:-1]) + f"/{parts[-1]}.graphql"
+                        # Check if this is a "root" for its nesting level or a leaf
+                        # A type is a root if it has children (i.e., there's a type with this as prefix)
+                        # We determine this by checking if any type starts with this type's name + "_"
+                        type_prefix = type_name + "_"
+                        has_children = any(
+                            t.startswith(type_prefix) and is_object_type(schema.type_map[t])
+                            for t in schema.type_map.keys()
+                            if not t.startswith("__") and t != "Query"
+                        )
+
+                        if has_children:
+                            # This is a root for its folder level - create folder for it with _ prefix
+                            # e.g., Vehicle_Cabin -> domain/Vehicle/Cabin/_Cabin.graphql
+                            folder_path = "/".join(parts)
+                            filename = f"_{parts[-1]}.graphql"
+                        else:
+                            # This is a leaf - goes in parent folder without prefix
+                            # e.g., Vehicle_Cabin_Door -> domain/Vehicle/Cabin/Door.graphql
+                            folder_path = "/".join(parts[:-1])
+                            filename = f"{parts[-1]}.graphql"
+
+                        domain_path = f"domain/{folder_path}/{filename}"
                     else:
-                        domain_path = f"domain/{parts[0]}.graphql"
+                        # Single part type -> domain/TypeName/_TypeName.graphql
+                        domain_path = f"domain/{parts[0]}/_{parts[0]}.graphql"
                 else:
-                    domain_path = f"domain/{type_name}.graphql"
+                    # No underscore -> domain/TypeName/_TypeName.graphql
+                    domain_path = f"domain/{type_name}/_{type_name}.graphql"
 
                 if domain_path not in type_groups:
                     type_groups[domain_path] = []
@@ -159,22 +193,9 @@ def analyze_schema_for_nested_domains(schema: GraphQLSchema) -> dict[str, list[s
                 if enum_file not in type_groups:
                     type_groups[enum_file] = []
                 type_groups[enum_file].append(type_name)
-            else:
-                # Domain-specific enums - place in nested domain structure
-                if "_" in type_name:
-                    # Vehicle_Cabin_DriverPosition_Enum -> domain/vehicle/cabin/DriverPosition_Enum.graphql
-                    parts = type_name.split("_")
-                    if len(parts) >= 2:
-                        # Build nested path
-                        enum_path = "domain/" + "/".join(parts[:-1]) + f"/{parts[-1]}.graphql"
-                    else:
-                        enum_path = f"domain/{parts[0]}.graphql"
-                else:
-                    enum_path = f"domain/{type_name}.graphql"
-
-                if enum_path not in type_groups:
-                    type_groups[enum_path] = []
-                type_groups[enum_path].append(type_name)
+            # Note: Domain-specific allowed value enums are NOT added to separate files
+            # They will be embedded in the type files that use them
+            # This is handled in write_domain_files()
 
     return type_groups
 
@@ -200,23 +221,17 @@ def write_domain_files(
         if not type_names:
             continue
 
-        # Create domain file
         domain_file = output_dir / file_path
         domain_file.parent.mkdir(parents=True, exist_ok=True)
 
         # Special handling for directives file with schema enums
         if file_path == "other/directives.graphql":
-            # This file will be handled by write_common_files with schema enums included
-            # Skip processing it here to avoid duplication
             continue
         # Special handling for instance files
         if file_path.startswith("instances/"):
             content_parts = ["# Instance tag type and dimensional enums\n"]
-
-            # Separate instance tag types from dimensional enums
             instance_tag_types = []
             dimensional_enums = []
-
             for type_name in type_names:
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
@@ -224,20 +239,13 @@ def write_domain_files(
                         instance_tag_types.append(type_name)
                     elif is_enum_type(graphql_type) and "InstanceTag" in type_name:
                         dimensional_enums.append(type_name)
-
-            # Write instance tag types first
             for type_name in instance_tag_types:
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
                     type_sdl = print_type(graphql_type)
-
-                    # Add @instanceTag directive to instance tag types
                     if "InstanceTag" in type_name:
                         type_sdl = type_sdl.replace(f"type {type_name}", f"type {type_name} @instanceTag")
-
                     content_parts.append(type_sdl)
-
-            # Write dimensional enums after instance tag types
             for type_name in dimensional_enums:
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
@@ -246,11 +254,31 @@ def write_domain_files(
         else:
             # Regular domain files
             content_parts = ["# Domain-specific GraphQL types\n"]
-
             for type_name in type_names:
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
                     type_sdl = print_type(graphql_type)
+
+                    # Find allowed value enums used by this type
+                    allowed_enums_sdl = []
+                    if is_object_type(graphql_type):
+                        for field in graphql_type.fields.values():
+                            field_type = field.type
+                            # Unwrap NonNull and List
+                            while hasattr(field_type, "of_type"):
+                                field_type = field_type.of_type
+                            if is_enum_type(field_type):
+                                enum_type = field_type
+                                # Only include enums that are not built-in (i.e., allowed value enums)
+                                is_allowed_enum = (
+                                    enum_type.name in schema.type_map
+                                    and enum_type.name not in ["VspecElementKind", "VspecType"]
+                                )
+                                if is_allowed_enum:
+                                    enum_sdl = print_type(enum_type)
+                                    # Only add if not already present in this file
+                                    if enum_sdl not in allowed_enums_sdl:
+                                        allowed_enums_sdl.append(enum_sdl)
 
                     # Apply vspec directives if available
                     if directive_processor and hasattr(directive_processor, "add_directives_to_type"):
@@ -258,14 +286,16 @@ def write_domain_files(
                             enhanced_sdl = directive_processor.add_directives_to_type(
                                 type_sdl, type_name, vspec_comments
                             )
+                            # Place type definition first, then enums at the bottom
                             content_parts.append(enhanced_sdl)
+                            content_parts.extend(allowed_enums_sdl)
                         except (AttributeError, TypeError):
-                            # Fallback to plain SDL if directive processing fails
                             content_parts.append(type_sdl)
+                            content_parts.extend(allowed_enums_sdl)
                     else:
                         content_parts.append(type_sdl)
+                        content_parts.extend(allowed_enums_sdl)
 
-        # Write the file
         with open(domain_file, "w") as f:
             f.write("\n\n".join(content_parts))
 
