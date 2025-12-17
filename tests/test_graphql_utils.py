@@ -323,7 +323,8 @@ class TestGraphQLUtils:
         custom_directives = extract_custom_directives_from_schema(schema)
 
         # Should be empty since no custom directives defined
-        assert len(custom_directives) == 0
+        # But is 1 from graphql-core 3.2.7 onwards due to "oneOf"
+        assert len(custom_directives) == 1
 
     def test_load_predefined_schema_elements(self):
         """Test loading predefined schema elements (combined function)."""
