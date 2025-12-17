@@ -52,7 +52,6 @@ def run_exporter(directory, exporter, tmp_path):
     elif exporter in ["samm"]:
         cmd += f" --target-folder {output}"
     elif exporter in ["ros2interface"]:
-
         # Generate a topics file for test, shall not be checked in
         topics_file = directory / "ros_test_topics.txt"
         topics_file.write_text("# includes only branch A\n" "A.*", encoding="utf-8")
