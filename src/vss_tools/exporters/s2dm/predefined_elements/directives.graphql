@@ -1,51 +1,42 @@
+"""Annotation directive for Vspec mapping information."""
 directive @vspec(
-  """The element from which the item in the GraphQL schema originates from."""
-  source: VspecElement,
-  """The type in the Vspec language (i.e., branch, attribute, sensor, actuator)."""
-  vspecType: VspecType,
-  """The comment as it appears in the comment key in the Vspec."""
-  comment: String,
-  """The default value as it appears in the default key in the Vspec."""
-  defaultValue: String
-) on FIELD_DEFINITION | OBJECT | ENUM | ENUM_VALUE
+  """The element of the Vspec language to which the item in the GraphQL schema maps."""
+  element: VspecElement!,
+  """The Fully Qualified Name (FQN) of the related element in Vspec (aka., path). Example: Vehicle.Cabin.Door.Window.position"""
+  fqn: String
+  """Additional metadata associated with the mapping."""
+  metadata: [KeyValue]
+) on OBJECT | FIELD_DEFINITION | ENUM | ENUM_VALUE
 
-"""A particular element in Vspec."""
-input VspecElement {
-  """Kind of Vspec element to which the name applies (e.g., UNIT_KEY)."""
-  kind: VspecElementKind!
-
-  """Original value (e.g., name) in vspec."""
+"""Key-value pair for storing metadata."""
+input KeyValue {
+  key: String!
   value: String!
-
-  """Optional note about the mapping."""
-  note: String
 }
 
-"""Kind of element that is part of the mapping."""
-enum VspecElementKind {
-  """Unit key as appear in the units.yaml file in Vspec projects."""
-  UNIT
-  """Part of the labels definied with the instances key in yaml."""
-  INSTANCE_LABEL
-  """Part of the allowed values listed in yaml."""
-  ALLOWED_VALUE
-  """Quantity kind key as appears in the quantities.yaml file in Vspec projects."""
-  QUANTITY_KIND
-  """Fully Qualified Name (i.e., the path)"""
-  FQN
-}
-
-"""Vspec type in the tree."""
-enum VspecType {
-  """A nested structure that groups multiple properties."""
+"""Kinds of Vspec elements that can be annotated."""
+enum VspecElement {
+  """A groupping entity that contains multiple properties whose values are meant to be read and written independently."""
   BRANCH
-  """A property whose value is considered static."""
+  """A property of a Vspec branch whose value is considered static."""
   ATTRIBUTE
-  """A property whose value is dynamic and can be read."""
+  """A property of a Vspec branch whose value is dynamic and can be read."""
   SENSOR
-  """A property whose value is dynamic and can be read and written."""
+  """A property of a Vspec branch whose value is dynamic and can be read and written."""
   ACTUATOR
+  """A grouping entity that contains multiple properties whose values are meant to be read and written in a single operation."""
+  STRUCT
+  """A property specified inside a Vspec struct."""
+  STRUCT_PROPERTY
 }
+
+
+#enum FuelTypeEnum @vspec(element:"ATTRIBUTE", fqn:"Vehicle.Powertrain.FuelType", metadata:[{key:"allowed", value:"[GASOLINE, DIESEL, ELECTRIC, HYBRID]"}]) {
+#  GASOLINE
+#  DIESEL
+#  ELECTRIC
+#  HYBRID
+#}
 
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
 
