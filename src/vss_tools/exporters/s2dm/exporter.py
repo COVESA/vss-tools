@@ -108,7 +108,6 @@ directive_processor = GraphQLDirectiveProcessor()
 @clo.output_file_or_dir_opt
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
-@clo.extend_all_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
 @clo.overlays_opt
@@ -123,7 +122,6 @@ def cli(
     output: Path,
     include_dirs: tuple[Path, ...],
     extended_attributes: tuple[str, ...],
-    extend_all_attributes: bool,
     strict: bool,
     aborts: tuple[str, ...],
     overlays: tuple[Path, ...],
@@ -154,7 +152,7 @@ def cli(
 
         # Generate the schema
         schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
-            tree, data_type_tree, extended_attributes=extended_attributes, extend_all_attributes=extend_all_attributes
+            tree, data_type_tree, extended_attributes=extended_attributes
         )
 
         if modular:
@@ -192,7 +190,6 @@ def generate_s2dm_schema(
     tree: VSSNode,
     data_type_tree: VSSNode | None = None,
     extended_attributes: tuple[str, ...] = (),
-    extend_all_attributes: bool = False,
 ) -> tuple[
     GraphQLSchema,
     dict[str, dict[str, dict[str, str]]],
@@ -209,11 +206,8 @@ def generate_s2dm_schema(
         tree: The main VSS tree containing vehicle signals
         data_type_tree: Optional tree containing user-defined struct types
         extended_attributes: Tuple of extended attribute names requested via CLI flags.
-        extend_all_attributes: If True, include all extended attributes found in the model.
     """
-    branches_df, leaves_df = get_metadata_df(
-        tree, extended_attributes=extended_attributes, extend_all_attributes=extend_all_attributes
-    )
+    branches_df, leaves_df = get_metadata_df(tree, extended_attributes=extended_attributes)
     vspec_comments = _init_vspec_comments()
 
     # Create all types in logical order
@@ -222,12 +216,7 @@ def generate_s2dm_schema(
     allowed_enums, allowed_metadata = _create_allowed_enums(leaves_df)
 
     # Create struct types from data type tree
-    struct_types = _create_struct_types(
-        data_type_tree,
-        vspec_comments,
-        extended_attributes=extended_attributes,
-        extend_all_attributes=extend_all_attributes,
-    )
+    struct_types = _create_struct_types(data_type_tree, vspec_comments, extended_attributes=extended_attributes)
 
     # Combine all types
     types_registry = {**instance_types, **allowed_enums, **struct_types}
@@ -379,7 +368,6 @@ def _create_struct_types(
     data_type_tree: VSSNode | None,
     vspec_comments: dict[str, dict[str, Any]],
     extended_attributes: tuple[str, ...] = (),
-    extend_all_attributes: bool = False,
 ) -> dict[str, GraphQLObjectType]:
     """
     Convert VSS struct definitions to GraphQL object types.
@@ -391,7 +379,6 @@ def _create_struct_types(
         data_type_tree: VSS tree containing user-defined struct types
         vspec_comments: Dictionary to store struct metadata for @vspec directives
         extended_attributes: Tuple of extended attribute names requested via CLI flags
-        extend_all_attributes: If True, include all extended attributes found in the model
 
     Returns:
         Dictionary mapping struct type names to GraphQL object types
@@ -402,9 +389,7 @@ def _create_struct_types(
     struct_types: dict[str, GraphQLObjectType] = {}
 
     # Get metadata for the data type tree
-    branches_df, leaves_df = get_metadata_df(
-        data_type_tree, extended_attributes=extended_attributes, extend_all_attributes=extend_all_attributes
-    )
+    branches_df, leaves_df = get_metadata_df(data_type_tree, extended_attributes=extended_attributes)
 
     # Filter for struct nodes (type == "struct")
     struct_nodes = branches_df[branches_df["type"] == "struct"]
