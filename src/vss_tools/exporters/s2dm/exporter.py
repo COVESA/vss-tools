@@ -108,6 +108,7 @@ directive_processor = GraphQLDirectiveProcessor()
 @clo.output_file_or_dir_opt
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
+@clo.extend_all_attributes_opt
 @clo.strict_opt
 @clo.aborts_opt
 @clo.overlays_opt
@@ -122,6 +123,7 @@ def cli(
     output: Path,
     include_dirs: tuple[Path, ...],
     extended_attributes: tuple[str, ...],
+    extend_all_attributes: bool,
     strict: bool,
     aborts: tuple[str, ...],
     overlays: tuple[Path, ...],
@@ -151,7 +153,9 @@ def cli(
         log.info("Generating S2DM GraphQL schema...")
 
         # Generate the schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, data_type_tree, extended_attributes=extended_attributes, extend_all_attributes=extend_all_attributes
+        )
 
         if modular:
             # Handle directory or file path for modular output
@@ -187,6 +191,8 @@ def cli(
 def generate_s2dm_schema(
     tree: VSSNode,
     data_type_tree: VSSNode | None = None,
+    extended_attributes: tuple[str, ...] = (),
+    extend_all_attributes: bool = False,
 ) -> tuple[
     GraphQLSchema,
     dict[str, dict[str, dict[str, str]]],
@@ -202,8 +208,12 @@ def generate_s2dm_schema(
     Args:
         tree: The main VSS tree containing vehicle signals
         data_type_tree: Optional tree containing user-defined struct types
+        extended_attributes: Tuple of extended attribute names requested via CLI flags.
+        extend_all_attributes: If True, include all extended attributes found in the model.
     """
-    branches_df, leaves_df = get_metadata_df(tree)
+    branches_df, leaves_df = get_metadata_df(
+        tree, extended_attributes=extended_attributes, extend_all_attributes=extend_all_attributes
+    )
     vspec_comments = _init_vspec_comments()
 
     # Create all types in logical order
@@ -212,7 +222,12 @@ def generate_s2dm_schema(
     allowed_enums, allowed_metadata = _create_allowed_enums(leaves_df)
 
     # Create struct types from data type tree
-    struct_types = _create_struct_types(data_type_tree, vspec_comments)
+    struct_types = _create_struct_types(
+        data_type_tree,
+        vspec_comments,
+        extended_attributes=extended_attributes,
+        extend_all_attributes=extend_all_attributes,
+    )
 
     # Combine all types
     types_registry = {**instance_types, **allowed_enums, **struct_types}
@@ -363,6 +378,8 @@ def _resolve_datatype_to_graphql(datatype: str, types_registry: dict[str, Any]) 
 def _create_struct_types(
     data_type_tree: VSSNode | None,
     vspec_comments: dict[str, dict[str, Any]],
+    extended_attributes: tuple[str, ...] = (),
+    extend_all_attributes: bool = False,
 ) -> dict[str, GraphQLObjectType]:
     """
     Convert VSS struct definitions to GraphQL object types.
@@ -373,6 +390,8 @@ def _create_struct_types(
     Args:
         data_type_tree: VSS tree containing user-defined struct types
         vspec_comments: Dictionary to store struct metadata for @vspec directives
+        extended_attributes: Tuple of extended attribute names requested via CLI flags
+        extend_all_attributes: If True, include all extended attributes found in the model
 
     Returns:
         Dictionary mapping struct type names to GraphQL object types
@@ -383,7 +402,9 @@ def _create_struct_types(
     struct_types: dict[str, GraphQLObjectType] = {}
 
     # Get metadata for the data type tree
-    branches_df, leaves_df = get_metadata_df(data_type_tree)
+    branches_df, leaves_df = get_metadata_df(
+        data_type_tree, extended_attributes=extended_attributes, extend_all_attributes=extend_all_attributes
+    )
 
     # Filter for struct nodes (type == "struct")
     struct_nodes = branches_df[branches_df["type"] == "struct"]
@@ -503,6 +524,101 @@ def _parse_instances_simple(instances: list[Any]) -> list[list[str]]:
     return dimensions
 
 
+def _get_hoisted_fields(
+    child_branch_fqn: str,
+    child_branch_row: pd.Series,
+    leaves_df: pd.DataFrame,
+    types_registry: dict[str, Any],
+    unit_enums: dict[str, GraphQLEnumType],
+    vspec_comments: dict[str, dict[str, Any]],
+) -> dict[str, GraphQLField]:
+    """
+    Get fields that should be hoisted from an instantiated child branch to its parent.
+
+    When a branch has instances but some of its properties have instantiate=false,
+    those properties should be hoisted to the parent type with the naming pattern
+    {branchName}{PropertyName} (e.g., Door.SomeSignal -> doorSomeSignal).
+
+    Args:
+        child_branch_fqn: FQN of the child branch (e.g., "Vehicle.Cabin.Door")
+        child_branch_row: DataFrame row for the child branch
+        leaves_df: DataFrame of all leaf nodes
+        types_registry: Registry of GraphQL types
+        unit_enums: Dictionary of unit enums
+        vspec_comments: Dictionary for VSS metadata
+
+    Returns:
+        Dictionary of hoisted fields to add to parent type
+    """
+    hoisted = {}
+
+    # Only process branches with instances
+    if not child_branch_row.get("instances"):
+        return hoisted
+
+    # Get the branch name for generating hoisted field names
+    branch_name = child_branch_row["name"]
+
+    # Find leaves that are direct children of this branch
+    child_leaves = leaves_df[leaves_df["parent"] == child_branch_fqn]
+
+    for leaf_fqn, leaf_row in child_leaves.iterrows():
+        # OPTIMIZED: Check instantiate directly from DataFrame instead of tree lookup
+        instantiate = leaf_row.get("instantiate")
+        # Default to True if not present (standard VSS behavior)
+        if instantiate is False:  # Explicitly check for False, not just falsy
+            # This property should be hoisted to parent
+            leaf_name = leaf_row["name"]
+            
+            # Get the parent type name to construct the field path
+            parent_fqn = child_branch_row["parent"]
+            
+            # Check if there's a valid parent to hoist to
+            if parent_fqn is None or parent_fqn == "" or pd.isna(parent_fqn):
+                log.warning(
+                    f"Property '{leaf_fqn}' is defined for branch '{child_branch_fqn}' with instantiate=false, "
+                    f"but cannot be hoisted because '{child_branch_fqn}' has no parent branch. "
+                    f"The property will be omitted from the GraphQL schema."
+                )
+                continue
+
+            # Generate hoisted field name: {branchName}{PropertyName} in camelCase
+            hoisted_field_name = convert_name_for_graphql_schema(
+                f"{branch_name}_{leaf_name}", GraphQLElementType.FIELD, S2DM_CONVERSIONS
+            )
+
+            parent_type_name = convert_name_for_graphql_schema(
+                parent_fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS
+            )
+            field_path = f"{parent_type_name}.{hoisted_field_name}"
+
+            # Store metadata for the hoisted field
+            if leaf_type := leaf_row.get("type", "").upper():
+                if leaf_type in VSS_LEAF_TYPES:
+                    vspec_comments["field_vss_types"][field_path] = {"fqn": leaf_fqn, "vspec_type": leaf_type}
+            if comment := leaf_row.get("comment"):
+                vspec_comments["field_comments"][field_path] = comment
+
+            # Handle range constraints
+            min_val = leaf_row.get("min")
+            max_val = leaf_row.get("max")
+            if min_val is not None or max_val is not None:
+                range_data = {k: v for k, v in {"min": min_val, "max": max_val}.items() if v is not None}
+                vspec_comments["field_ranges"][field_path] = range_data
+
+            if deprecation := leaf_row.get("deprecation"):
+                vspec_comments["field_deprecated"][field_path] = deprecation
+
+            # Create the GraphQL field
+            field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
+            unit_args = _get_unit_args(leaf_row, unit_enums)
+            hoisted[hoisted_field_name] = GraphQLField(
+                field_type, args=unit_args, description=leaf_row.get("description", "")
+            )
+
+    return hoisted
+
+
 def _create_object_type(
     fqn: str,
     branches_df: pd.DataFrame,
@@ -516,6 +632,9 @@ def _create_object_type(
 
     Recursively builds the type hierarchy with system fields (id, instanceTag),
     leaf fields (sensors/actuators/attributes), and nested branches.
+    
+    Handles hoisting of non-instantiated properties from child branches with instances
+    to the parent type with the naming pattern {branchName}{PropertyName}.
     """
     branch_row = branches_df.loc[fqn]
     type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
@@ -537,6 +656,23 @@ def _create_object_type(
 
         # Leaf fields with inline metadata
         for child_fqn, leaf_row in leaves_df[leaves_df["parent"] == fqn].iterrows():
+            # Skip non-instantiated leaves if this branch has instances
+            # (they will be hoisted to parent by _get_hoisted_fields)
+            if branch_row.get("instances"):
+                # OPTIMIZED: Check instantiate directly from DataFrame
+                instantiate = leaf_row.get("instantiate")
+                if instantiate is False:  # Explicitly check for False
+                    # Check if this branch has a parent to hoist to
+                    parent_fqn = branch_row.get("parent")
+                    if parent_fqn is None or parent_fqn == "" or pd.isna(parent_fqn):
+                        # No parent to hoist to - log warning
+                        log.warning(
+                            f"Property '{child_fqn}' is defined for branch '{fqn}' with instantiate=false, "
+                            f"but cannot be hoisted because '{fqn}' has no parent branch. "
+                            f"The property will be omitted from the GraphQL schema."
+                        )
+                    continue  # Skip this leaf - it will be hoisted to parent (or omitted if no parent)
+
             field_name = convert_name_for_graphql_schema(leaf_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
             field_path = f"{type_name}.{field_name}"
 
@@ -568,6 +704,12 @@ def _create_object_type(
                 child_fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
             )
             types_registry[child_fqn] = child_type
+
+            # Check if child branch has non-instantiated properties that need to be hoisted
+            hoisted_fields = _get_hoisted_fields(
+                child_fqn, child_row, leaves_df, types_registry, unit_enums, vspec_comments
+            )
+            fields.update(hoisted_fields)
 
             if child_row.get("instances"):
                 fields[f"{field_name}_s"] = GraphQLField(GraphQLList(child_type))

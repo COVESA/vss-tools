@@ -452,3 +452,46 @@ class TestS2DMExporter:
         # Verify nested directory content
         seat_content = (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "_Seat.graphql").read_text()
         assert "Vehicle_Cabin_Seat" in seat_content
+
+    def test_non_instantiated_property_hoisting(self, tmp_path: Path):
+        """Test that properties with instantiate=false are hoisted to parent type."""
+        # Load the test vspec with non-instantiated properties
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_non_instantiated_props/test.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(),
+            units=(),
+            types=(),
+            overlays=(),
+            expand=False,  # S2DM exporter uses non-expanded mode
+        )
+
+        # Generate schema
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Verify that Vehicle_Cabin_Door type doesn't have someSignal
+        assert "type Vehicle_Cabin_Door @vspec" in schema_str
+        door_type_start = schema_str.find("type Vehicle_Cabin_Door @vspec")
+        door_type_end = schema_str.find("\n}", door_type_start) + 2  # Include closing brace
+        door_type_content = schema_str[door_type_start:door_type_end]
+        
+        # someSignal should NOT be on Door type
+        assert "someSignal" not in door_type_content
+        # But isOpen and isLocked should be
+        assert "isOpen" in door_type_content
+        assert "isLocked" in door_type_content
+
+        # Verify that Vehicle_Cabin type has doorSomeSignal (hoisted)
+        assert "type Vehicle_Cabin @vspec" in schema_str
+        cabin_type_start = schema_str.find("type Vehicle_Cabin @vspec")
+        cabin_type_end = schema_str.find("\n}", cabin_type_start) + 2  # Include closing brace
+        cabin_type_content = schema_str[cabin_type_start:cabin_type_end]
+        
+        # doorSomeSignal should be on Cabin type
+        assert "doorSomeSignal" in cabin_type_content
+        # And door_s array field should also be there
+        assert "door_s" in cabin_type_content
