@@ -241,16 +241,28 @@ def write_domain_files(
                         instance_tag_types.append(type_name)
                     elif is_enum_type(graphql_type) and "InstanceTag" in type_name:
                         dimensional_enums.append(type_name)
+
+            # Print instance tag types
             for type_name in instance_tag_types:
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
                     type_sdl = print_type(graphql_type)
                     content_parts.append(type_sdl)
+
+            # Print dimensional enums
             for type_name in dimensional_enums:
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
                     type_sdl = print_type(graphql_type)
                     content_parts.append(type_sdl)
+
+            # Add extend type block for the base type to add instanceTag field
+            # Extract base type name by removing "_InstanceTag" suffix
+            if instance_tag_types:
+                base_type_name = instance_tag_types[0].replace("_InstanceTag", "")
+                instance_tag_type_name = instance_tag_types[0]
+                extend_block = f"extend type {base_type_name} {{\n  instanceTag: {instance_tag_type_name}\n}}"
+                content_parts.append(extend_block)
 
             # Join all content parts and apply directives
             file_content = "\n\n".join(content_parts)
@@ -271,6 +283,20 @@ def write_domain_files(
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
                     type_sdl = print_type(graphql_type)
+
+                    # Remove instanceTag field from types with instances
+                    # It will be added via extend type in the instance tag file
+                    if is_object_type(graphql_type):
+                        object_type = cast(GraphQLObjectType, graphql_type)
+                        if "instanceTag" in object_type.fields:
+                            # Remove the instanceTag field line from SDL
+                            lines = type_sdl.split("\n")
+                            filtered_lines = []
+                            for line in lines:
+                                # Skip lines that define the instanceTag field
+                                if "instanceTag:" not in line:
+                                    filtered_lines.append(line)
+                            type_sdl = "\n".join(filtered_lines)
 
                     # Find allowed value enums used by this type
                     allowed_enums_sdl = []
