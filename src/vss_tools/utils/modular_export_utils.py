@@ -74,7 +74,7 @@ def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str
                 if instance_file not in domain_files:
                     domain_files[instance_file] = []
                 domain_files[instance_file].append(type_name)
-            elif type_name in ["VspecElementKind", "VspecType"]:
+            elif type_name in ["VspecElement"]:
                 # Schema meta enums go to directives file (they belong together)
                 enum_file = "other/directives.graphql"
                 if enum_file not in domain_files:
@@ -187,7 +187,7 @@ def analyze_schema_for_nested_domains(schema: GraphQLSchema) -> dict[str, list[s
                 if instance_file not in type_groups:
                     type_groups[instance_file] = []
                 type_groups[instance_file].append(type_name)
-            elif type_name in ["VspecElementKind", "VspecType"]:
+            elif type_name in ["VspecElement"]:
                 # Schema meta enums go to directives file (they belong together)
                 enum_file = "other/directives.graphql"
                 if enum_file not in type_groups:
@@ -270,10 +270,9 @@ def write_domain_files(
                             if is_enum_type(field_type):
                                 enum_type = field_type
                                 # Only include enums that are not built-in (i.e., allowed value enums)
-                                is_allowed_enum = (
-                                    enum_type.name in schema.type_map
-                                    and enum_type.name not in ["VspecElementKind", "VspecType"]
-                                )
+                                is_allowed_enum = enum_type.name in schema.type_map and enum_type.name not in [
+                                    "VspecElement",
+                                ]
                                 if is_allowed_enum:
                                     enum_sdl = print_type(enum_type)
                                     # Only add if not already present in this file
@@ -360,10 +359,10 @@ def write_common_files(
 
             directives_content.append(directive_def)
 
-        # Add schema enums that belong with directives (VspecElementKind, VspecType, etc.)
+        # Add schema enums that belong with directives (VspecElement, etc.)
         schema_enums = []
         for type_name, type_def in schema.type_map.items():
-            if isinstance(type_def, GraphQLEnumType) and type_name in ["VspecElementKind", "VspecType"]:
+            if isinstance(type_def, GraphQLEnumType) and type_name in ["VspecElement"]:
                 schema_enums.append(print_type(type_def))
 
         if schema_enums:

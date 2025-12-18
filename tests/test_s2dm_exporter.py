@@ -187,20 +187,24 @@ class TestS2DMExporter:
             schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
         )
 
-        # Check that field comments are captured
-        assert len(vspec_comments["field_comments"]) > 0
+        # Check that VSS types are tracked (element + fqn only, no comments)
+        assert len(vspec_comments["field_vss_types"]) > 0
+        assert len(vspec_comments["vss_types"]) > 0
 
-        # Check that type comments are captured
-        assert len(vspec_comments["type_comments"]) > 0
+        # Check that @vspec directive uses simplified format (element + fqn only)
+        # Comments should NOT be in the @vspec directive
+        assert "@vspec(element:" in schema_str
+        assert "fqn:" in schema_str
 
-        # Check that @vspec comment directives appear in the output with new consolidated format
-        assert 'comment: "Affects the property (SingleSeat.Position)."' in schema_str
+        # Check that comments are NOT included in @vspec directives
+        assert 'comment: "Affects the property' not in schema_str
 
-        # Check for specific field comment directive
-        assert "Affects the property (SingleSeat.Position)" in schema_str
-
-        # Check for type comment directive
-        assert "Seating is here considered as the part of the seat that supports the thighs" in schema_str
+        # Verify specific VSS type tracking
+        assert any("BRANCH" in str(v.get("element", "")) for v in vspec_comments["vss_types"].values())
+        assert any(
+            "ATTRIBUTE" in str(v.get("element", "")) or "SENSOR" in str(v.get("element", ""))
+            for v in vspec_comments["field_vss_types"].values()
+        )
 
     def test_range_and_deprecation_directives(self):
         """Test that @range and @deprecated directives are correctly generated for VSS constraints"""
@@ -235,12 +239,11 @@ class TestS2DMExporter:
         assert "@range(min:, max:" not in sdl
 
         # Check specific field combinations
-        # massage field should have @vspec with VSS type, @deprecated and @range
+        # massage field should have @vspec with element, @deprecated and @range
         import re
 
         massage_field_pattern = (
-            r"massage\([^)]*\):[^@]*@vspec\([^)]*vspecType: ACTUATOR[^)]*\)"
-            r"[^@]*@deprecated[^@]*@range\(min: 0, max: 100\)"
+            r"massage\([^)]*\):[^@]*@vspec\(element: ACTUATOR[^)]*\)" r"[^@]*@deprecated[^@]*@range\(min: 0, max: 100\)"
         )
         assert re.search(massage_field_pattern, sdl) is not None
 
@@ -438,7 +441,7 @@ class TestS2DMExporter:
         assert (output_dir / "domain" / "Vehicle" / "_Vehicle.graphql").exists()
         assert (output_dir / "domain" / "Vehicle" / "Cabin" / "_Cabin.graphql").exists()
         assert (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "_Seat.graphql").exists()
-        
+
         # Check that leaf types don't have _ prefix
         assert (output_dir / "domain" / "Vehicle" / "VehicleIdentification.graphql").exists()
         assert (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "Airbag.graphql").exists()
@@ -478,7 +481,7 @@ class TestS2DMExporter:
         door_type_start = schema_str.find("type Vehicle_Cabin_Door @vspec")
         door_type_end = schema_str.find("\n}", door_type_start) + 2  # Include closing brace
         door_type_content = schema_str[door_type_start:door_type_end]
-        
+
         # someSignal should NOT be on Door type
         assert "someSignal" not in door_type_content
         # But isOpen and isLocked should be
@@ -490,8 +493,10 @@ class TestS2DMExporter:
         cabin_type_start = schema_str.find("type Vehicle_Cabin @vspec")
         cabin_type_end = schema_str.find("\n}", cabin_type_start) + 2  # Include closing brace
         cabin_type_content = schema_str[cabin_type_start:cabin_type_end]
-        
-        # doorSomeSignal should be on Cabin type
-        assert "doorSomeSignal" in cabin_type_content
+
+        # someSignal should be on Cabin type (hoisted without branch prefix)
+        assert "someSignal" in cabin_type_content
+        # Verify it has the instantiate=false metadata
+        assert 'metadata: [{key: "instantiate", value: "false"}]' in cabin_type_content
         # And door_s array field should also be there
         assert "door_s" in cabin_type_content

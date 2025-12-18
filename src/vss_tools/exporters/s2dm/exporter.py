@@ -80,7 +80,7 @@ def get_s2dm_conversions() -> Dict[GraphQLElementType, Callable[[str], str]]:
 # Create the conversions dictionary
 S2DM_CONVERSIONS = get_s2dm_conversions()
 
-# VSS leaf types to track in field metadata (corresponds to VspecType enum in directives.graphql)
+# VSS leaf types to track in field metadata (corresponds to VspecElement enum in directives.graphql)
 # Note: BRANCH is excluded as it's handled separately for object types
 VSS_LEAF_TYPES = ["SENSOR", "ACTUATOR", "ATTRIBUTE"]
 
@@ -241,16 +241,24 @@ def generate_s2dm_schema(
 
 
 def _init_vspec_comments() -> dict[str, dict[str, Any]]:
-    """Initialize dictionary for storing VSS metadata that will be rendered as @vspec directives."""
+    """
+    Initialize dictionary for storing VSS metadata for directives.
+
+    - vss_types/field_vss_types: Used for @vspec directive (element + fqn only)
+    - field_ranges: Used for @range directive (min/max values)
+    - field_deprecated: Used for @deprecated directive (deprecation reasons)
+    """
     return {
-        "field_comments": {},
-        "type_comments": {},
-        "field_ranges": {},
-        "field_deprecated": {},
         "instance_tags": {},
         "instance_tag_types": {},
+        # type_name -> {"element": "BRANCH"|"STRUCT", "fqn": "..."}
         "vss_types": {},
+        # field_path -> {"element": "ATTRIBUTE"|"SENSOR"|"ACTUATOR"|"STRUCT_PROPERTY", "fqn": "..."}
         "field_vss_types": {},
+        # field_path -> {"min": value, "max": value} for @range directive
+        "field_ranges": {},
+        # field_path -> "deprecation reason" for @deprecated directive
+        "field_deprecated": {},
     }
 
 
@@ -310,6 +318,9 @@ def _create_allowed_enums(
 
     Args:
         leaves_df: DataFrame containing VSS leaf node metadata
+
+    Returns:
+        Tuple of (enums dictionary, metadata dictionary with fqn, vss_type, and allowed_values)
     """
     enums, metadata = {}, {}
 
@@ -318,7 +329,17 @@ def _create_allowed_enums(
             enum_name = f"{convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)}_Enum"
             values = {_clean_enum_name(str(v)): GraphQLEnumValue(v) for v in allowed}
             enums[enum_name] = GraphQLEnumType(enum_name, values, description=f"Allowed values for {fqn}.")
-            metadata[enum_name] = {"fqn": fqn, "allowed_values": {_clean_enum_name(str(v)): str(v) for v in allowed}}
+
+            # Get VSS type (ATTRIBUTE, SENSOR, or ACTUATOR)
+            vss_type = row.get("type", "").upper()
+            if vss_type not in VSS_LEAF_TYPES:
+                vss_type = "ATTRIBUTE"  # Default fallback
+
+            metadata[enum_name] = {
+                "fqn": fqn,
+                "vss_type": vss_type,
+                "allowed_values": {_clean_enum_name(str(v)): str(v) for v in allowed},
+            }
 
     return enums, metadata
 
@@ -410,26 +431,27 @@ def _create_struct_types(
             # All struct properties are non-null (!)
             fields[field_name] = GraphQLField(GraphQLNonNull(base_type), description=prop_row.get("description", ""))
 
-            # Store property metadata for @vspec directives
+            # Store property metadata for @vspec directives (element and fqn only)
             field_path = f"{type_name}.{field_name}"
-            if comment := prop_row.get("comment"):
-                vspec_comments["field_comments"][field_path] = comment
+            vspec_comments["field_vss_types"][field_path] = {"element": "STRUCT_PROPERTY", "fqn": prop_fqn}
 
-            # Handle range constraints for properties
-            min_val = prop_row.get("min")
-            max_val = prop_row.get("max")
-            if min_val is not None or max_val is not None:
-                range_data = {k: v for k, v in {"min": min_val, "max": max_val}.items() if v is not None}
-                vspec_comments["field_ranges"][field_path] = range_data
+            # Track ranges for @range directive
+            if pd.notna(prop_row.get("min")) or pd.notna(prop_row.get("max")):
+                vspec_comments["field_ranges"][field_path] = {
+                    "min": prop_row.get("min") if pd.notna(prop_row.get("min")) else None,
+                    "max": prop_row.get("max") if pd.notna(prop_row.get("max")) else None,
+                }
+
+            # Track deprecation for @deprecated directive
+            if pd.notna(prop_row.get("deprecation")) and prop_row.get("deprecation").strip():
+                vspec_comments["field_deprecated"][field_path] = prop_row["deprecation"]
 
         struct_types[type_name] = GraphQLObjectType(
             name=type_name, fields=fields, description=struct_row.get("description", "")
         )
 
-        # Track struct metadata for @vspec directives
-        vspec_comments["vss_types"][type_name] = {"fqn": fqn, "vspec_type": "STRUCT"}
-        if comment := struct_row.get("comment"):
-            vspec_comments["type_comments"][type_name] = comment
+        # Track struct metadata for @vspec directives (element and fqn only)
+        vspec_comments["vss_types"][type_name] = {"element": "STRUCT", "fqn": fqn}
 
     return struct_types
 
@@ -542,7 +564,7 @@ def _get_hoisted_fields(
         return hoisted
 
     # Get the branch name for generating hoisted field names
-    branch_name = child_branch_row["name"]
+    child_branch_row["name"]
 
     # Find leaves that are direct children of this branch
     child_leaves = leaves_df[leaves_df["parent"] == child_branch_fqn]
@@ -554,10 +576,10 @@ def _get_hoisted_fields(
         if instantiate is False:  # Explicitly check for False, not just falsy
             # This property should be hoisted to parent
             leaf_name = leaf_row["name"]
-            
+
             # Get the parent type name to construct the field path
             parent_fqn = child_branch_row["parent"]
-            
+
             # Check if there's a valid parent to hoist to
             if parent_fqn is None or parent_fqn == "" or pd.isna(parent_fqn):
                 log.warning(
@@ -569,30 +591,31 @@ def _get_hoisted_fields(
 
             # Generate hoisted field name: {branchName}{PropertyName} in camelCase
             hoisted_field_name = convert_name_for_graphql_schema(
-                f"{branch_name}_{leaf_name}", GraphQLElementType.FIELD, S2DM_CONVERSIONS
+                f"{leaf_name}", GraphQLElementType.FIELD, S2DM_CONVERSIONS
             )
 
-            parent_type_name = convert_name_for_graphql_schema(
-                parent_fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS
-            )
+            parent_type_name = convert_name_for_graphql_schema(parent_fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
             field_path = f"{parent_type_name}.{hoisted_field_name}"
 
-            # Store metadata for the hoisted field
+            # Store metadata for hoisted field (element, fqn, and instantiate=false indicator)
             if leaf_type := leaf_row.get("type", "").upper():
                 if leaf_type in VSS_LEAF_TYPES:
-                    vspec_comments["field_vss_types"][field_path] = {"fqn": leaf_fqn, "vspec_type": leaf_type}
-            if comment := leaf_row.get("comment"):
-                vspec_comments["field_comments"][field_path] = comment
+                    vspec_comments["field_vss_types"][field_path] = {
+                        "element": leaf_type,
+                        "fqn": leaf_fqn,
+                        "instantiate": False,  # Mark this as a hoisted non-instantiated field
+                    }
 
-            # Handle range constraints
-            min_val = leaf_row.get("min")
-            max_val = leaf_row.get("max")
-            if min_val is not None or max_val is not None:
-                range_data = {k: v for k, v in {"min": min_val, "max": max_val}.items() if v is not None}
-                vspec_comments["field_ranges"][field_path] = range_data
+            # Track ranges for @range directive
+            if pd.notna(leaf_row.get("min")) or pd.notna(leaf_row.get("max")):
+                vspec_comments["field_ranges"][field_path] = {
+                    "min": leaf_row.get("min") if pd.notna(leaf_row.get("min")) else None,
+                    "max": leaf_row.get("max") if pd.notna(leaf_row.get("max")) else None,
+                }
 
-            if deprecation := leaf_row.get("deprecation"):
-                vspec_comments["field_deprecated"][field_path] = deprecation
+            # Track deprecation for @deprecated directive
+            if pd.notna(leaf_row.get("deprecation")) and leaf_row.get("deprecation").strip():
+                vspec_comments["field_deprecated"][field_path] = leaf_row["deprecation"]
 
             # Create the GraphQL field
             field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
@@ -617,17 +640,12 @@ def _create_object_type(
 
     Recursively builds the type hierarchy with system fields (id, instanceTag),
     leaf fields (sensors/actuators/attributes), and nested branches.
-    
+
     Handles hoisting of non-instantiated properties from child branches with instances
     to the parent type with the naming pattern {branchName}{PropertyName}.
     """
     branch_row = branches_df.loc[fqn]
     type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
-
-    # Store type metadata
-    vspec_comments["vss_types"][type_name] = {"fqn": fqn, "vspec_type": "BRANCH"}
-    if comment := branch_row.get("comment"):
-        vspec_comments["type_comments"][type_name] = comment
 
     def get_fields() -> dict[str, GraphQLField]:
         fields = {}
@@ -661,22 +679,21 @@ def _create_object_type(
             field_name = convert_name_for_graphql_schema(leaf_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
             field_path = f"{type_name}.{field_name}"
 
-            # Store metadata inline
+            # Store VSS type metadata (element and fqn only)
             if leaf_type := leaf_row.get("type", "").upper():
                 if leaf_type in VSS_LEAF_TYPES:
-                    vspec_comments["field_vss_types"][field_path] = {"fqn": child_fqn, "vspec_type": leaf_type}
-            if comment := leaf_row.get("comment"):
-                vspec_comments["field_comments"][field_path] = comment
+                    vspec_comments["field_vss_types"][field_path] = {"element": leaf_type, "fqn": child_fqn}
 
-            # Handle range constraints
-            min_val = leaf_row.get("min")
-            max_val = leaf_row.get("max")
-            if min_val is not None or max_val is not None:
-                range_data = {k: v for k, v in {"min": min_val, "max": max_val}.items() if v is not None}
-                vspec_comments["field_ranges"][field_path] = range_data
+            # Track ranges for @range directive
+            if pd.notna(leaf_row.get("min")) or pd.notna(leaf_row.get("max")):
+                vspec_comments["field_ranges"][field_path] = {
+                    "min": leaf_row.get("min") if pd.notna(leaf_row.get("min")) else None,
+                    "max": leaf_row.get("max") if pd.notna(leaf_row.get("max")) else None,
+                }
 
-            if deprecation := leaf_row.get("deprecation"):
-                vspec_comments["field_deprecated"][field_path] = deprecation
+            # Track deprecation for @deprecated directive
+            if pd.notna(leaf_row.get("deprecation")) and leaf_row.get("deprecation").strip():
+                vspec_comments["field_deprecated"][field_path] = leaf_row["deprecation"]
 
             field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
             unit_args = _get_unit_args(leaf_row, unit_enums)
@@ -702,6 +719,9 @@ def _create_object_type(
                 fields[field_name] = GraphQLField(child_type)
 
         return fields
+
+    # Track branch metadata for @vspec directive (element and fqn only)
+    vspec_comments["vss_types"][type_name] = {"element": "BRANCH", "fqn": fqn}
 
     return GraphQLObjectType(name=type_name, fields=get_fields, description=branch_row.get("description", ""))
 

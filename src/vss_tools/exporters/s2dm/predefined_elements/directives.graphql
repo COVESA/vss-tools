@@ -28,6 +28,10 @@ enum VspecElement {
   STRUCT
   """A property specified inside a Vspec struct."""
   STRUCT_PROPERTY
+  """A quantity kind that groups units of the same physical quantity (e.g., length, temperature)."""
+  QUANTITY_KIND
+  """A unit of measurement."""
+  UNIT
 }
 
 
