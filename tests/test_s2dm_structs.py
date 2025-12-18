@@ -68,7 +68,7 @@ class TestS2DMStructs:
 
         # Check metadata
         assert nested_struct_name in vspec_comments["vss_types"]
-        assert vspec_comments["vss_types"][nested_struct_name]["vspec_type"] == "STRUCT"
+        assert vspec_comments["vss_types"][nested_struct_name]["element"] == "STRUCT"
 
     def test_struct_properties_are_non_null(self, struct_trees):
         """Test that all struct properties are non-null fields."""
@@ -227,7 +227,7 @@ class TestS2DMStructs:
 
         # Check that vspec metadata is stored
         assert nested_struct_name in vspec_comments["vss_types"]
-        assert vspec_comments["vss_types"][nested_struct_name]["vspec_type"] == "STRUCT"
+        assert vspec_comments["vss_types"][nested_struct_name]["element"] == "STRUCT"
 
     def test_struct_property_range_constraints(self, struct_trees):
         """Test that range constraints on struct properties are preserved."""
