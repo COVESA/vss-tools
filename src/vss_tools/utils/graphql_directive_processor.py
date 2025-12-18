@@ -265,7 +265,7 @@ class GraphQLDirectiveProcessor:
         return lines
 
     def _process_type_directives(self, lines: list[str], vspec_comments: dict) -> list[str]:
-        """Process type-level directives using templates (element + fqn only)."""
+        """Process type-level directives (element + fqn + optional metadata for instance tags)."""
         for i, line in enumerate(lines):
             if line.strip().startswith("type "):
                 type_line = line.strip()
@@ -278,24 +278,37 @@ class GraphQLDirectiveProcessor:
                 else:
                     continue
 
-                needs_instance_tag = type_name in vspec_comments.get("instance_tags", {})
+                instance_tag_info = vspec_comments.get("instance_tags", {}).get(type_name)
+                needs_instance_tag = instance_tag_info is not None
                 needs_vss_type = type_name in vspec_comments.get("vss_types", {})
 
                 if needs_instance_tag or needs_vss_type:
                     new_line = f"type {type_name}"
 
-                    # Add @vspec directive with element + fqn only
-                    if needs_vss_type and "@vspec" not in line:
+                    # Add @instanceTag directive first if needed
+                    if needs_instance_tag and "@instanceTag" not in line:
+                        new_line += " @instanceTag"
+
+                    # Add @vspec directive
+                    if needs_instance_tag and "@vspec" not in line:
+                        # Instance tag types get special metadata with instances
+                        element = instance_tag_info["element"]
+                        fqn = instance_tag_info["fqn"]
+                        instances = instance_tag_info["instances"]
+                        directive = (
+                            f'@vspec(element: {element}, fqn: "{fqn}", '
+                            f'metadata: [{{key: "instances", value: "{instances}"}}])'
+                        )
+                        new_line += f" {directive}"
+                    elif needs_vss_type and "@vspec" not in line:
+                        # Regular types get element + fqn only
                         vss_info = vspec_comments["vss_types"][type_name]
                         element = vss_info["element"]
                         fqn = vss_info["fqn"]
                         directive = f'@vspec(element: {element}, fqn: "{fqn}")'
                         new_line += f" {directive}"
 
-                    if needs_instance_tag and "@instanceTag" not in line:
-                        new_line += " @instanceTag"
-
                     new_line += " {"
-                    lines[i] = "  " + new_line  # Preserve original indentation
+                    lines[i] = new_line  # No extra indentation
 
         return lines

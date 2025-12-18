@@ -506,7 +506,12 @@ def _create_instance_types(
                 fields[f"dimension{i}"] = GraphQLField(types[enum_name])
 
             types[tag_name] = GraphQLObjectType(tag_name, fields)
-            vspec_comments["instance_tags"][tag_name] = True
+            # Store instance tag metadata for @vspec directive with instances information
+            vspec_comments["instance_tags"][tag_name] = {
+                "element": "BRANCH",
+                "fqn": fqn,
+                "instances": str(instances),  # Store original instances specification
+            }
             vspec_comments.setdefault("instance_tag_types", {})[base_name] = tag_name
 
     return types
