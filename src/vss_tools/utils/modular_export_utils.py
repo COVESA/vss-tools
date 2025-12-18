@@ -359,14 +359,26 @@ def write_common_files(
             args_parts = []
             for arg_name, arg in directive_obj.args.items():
                 arg_type_str = str(arg.type)
-                if arg.default_value is not None:
+
+                # Check if default_value is actually set (not None and not Undefined sentinel)
+                # GraphQL uses a special Undefined sentinel, check by string representation
+                has_default = arg.default_value is not None and str(arg.default_value) != "Undefined"
+
+                if has_default:
                     args_parts.append(f"  {arg_name}: {arg_type_str} = {arg.default_value}")
                 else:
                     args_parts.append(f"  {arg_name}: {arg_type_str}")
 
                 # Add description if available
                 if arg.description:
-                    args_parts[-1] = f'  """{arg.description}"""\n  {args_parts[-1].strip()}'
+                    # Use triple-quoted string for description, ensure proper formatting
+                    desc_lines = arg.description.split("\n")
+                    if len(desc_lines) == 1:
+                        args_parts[-1] = f'  """{arg.description}"""\n  {args_parts[-1].strip()}'
+                    else:
+                        # Multi-line description
+                        desc = "\n  ".join(desc_lines)
+                        args_parts[-1] = f'  """\n  {desc}\n  """\n  {args_parts[-1].strip()}'
 
             # Build locations string
             locations = " | ".join([loc.name for loc in directive_obj.locations])
