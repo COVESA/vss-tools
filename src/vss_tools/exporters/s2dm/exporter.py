@@ -335,10 +335,14 @@ def _create_allowed_enums(
             if vss_type not in VSS_LEAF_TYPES:
                 vss_type = "ATTRIBUTE"  # Default fallback
 
+            # Convert allowed values to use single quotes for GraphQL compatibility
+            # GraphQL requires: value: "['val1', 'val2']" (double quotes outside, single inside)
+            allowed_values_graphql = {_clean_enum_name(str(v)): str(v).replace('"', "'") for v in allowed}
+
             metadata[enum_name] = {
                 "fqn": fqn,
                 "vss_type": vss_type,
-                "allowed_values": {_clean_enum_name(str(v)): str(v) for v in allowed},
+                "allowed_values": allowed_values_graphql,
             }
 
     return enums, metadata

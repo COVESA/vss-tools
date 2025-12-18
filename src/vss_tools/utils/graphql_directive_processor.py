@@ -125,8 +125,9 @@ class GraphQLDirectiveProcessor:
             allowed_values_dict = enum_data.get("allowed_values", {})
 
             # Build the allowed values list for metadata
+            # GraphQL requires: value: "['val1', 'val2']" (double quotes outside, single quotes inside)
             allowed_values_list = list(allowed_values_dict.values())
-            allowed_str = ", ".join([f'"{v}"' for v in allowed_values_list])
+            allowed_str = ", ".join([f"'{v}'" for v in allowed_values_list])
 
             for i, line in enumerate(lines):
                 if line.strip().startswith(f"enum {enum_name}") and "@vspec" not in line:
