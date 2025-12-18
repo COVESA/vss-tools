@@ -11,9 +11,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from graphql import GraphQLEnumType, GraphQLSchema, is_enum_type, is_object_type, print_type
+from graphql import GraphQLEnumType, GraphQLObjectType, GraphQLSchema, is_enum_type, is_object_type, print_type
 
 
 def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str]]:
@@ -206,6 +206,7 @@ def write_domain_files(
     output_dir: Path,
     vspec_comments: dict[str, Any],
     directive_processor: Any,
+    allowed_enums_metadata: dict[str, Any],
 ) -> None:
     """
     Write domain-specific GraphQL files.
@@ -216,6 +217,7 @@ def write_domain_files(
         output_dir: Output directory
         vspec_comments: VSS comments for directive processing
         directive_processor: Processor for adding @vspec directives
+        allowed_enums_metadata: Metadata for allowed value enums
     """
     for file_path, type_names in domain_structure.items():
         if not type_names:
@@ -243,14 +245,25 @@ def write_domain_files(
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
                     type_sdl = print_type(graphql_type)
-                    if "InstanceTag" in type_name:
-                        type_sdl = type_sdl.replace(f"type {type_name}", f"type {type_name} @instanceTag")
                     content_parts.append(type_sdl)
             for type_name in dimensional_enums:
                 if type_name in schema.type_map:
                     graphql_type = schema.type_map[type_name]
                     type_sdl = print_type(graphql_type)
                     content_parts.append(type_sdl)
+
+            # Join all content parts and apply directives
+            file_content = "\n\n".join(content_parts)
+
+            # Apply vspec directives to instance tag files
+            if directive_processor and hasattr(directive_processor, "process_schema"):
+                lines = file_content.split("\n")
+                lines = directive_processor._process_type_directives(lines, vspec_comments)
+                file_content = "\n".join(lines)
+
+            with open(domain_file, "w") as f:
+                f.write(file_content)
+            continue
         else:
             # Regular domain files
             content_parts = ["# Domain-specific GraphQL types\n"]
@@ -262,7 +275,9 @@ def write_domain_files(
                     # Find allowed value enums used by this type
                     allowed_enums_sdl = []
                     if is_object_type(graphql_type):
-                        for field in graphql_type.fields.values():
+                        # Type guard ensures graphql_type is GraphQLObjectType here
+                        object_type = cast(GraphQLObjectType, graphql_type)
+                        for field in object_type.fields.values():
                             field_type = field.type
                             # Unwrap NonNull and List
                             while hasattr(field_type, "of_type"):
@@ -279,24 +294,29 @@ def write_domain_files(
                                     if enum_sdl not in allowed_enums_sdl:
                                         allowed_enums_sdl.append(enum_sdl)
 
-                    # Apply vspec directives if available
-                    if directive_processor and hasattr(directive_processor, "add_directives_to_type"):
-                        try:
-                            enhanced_sdl = directive_processor.add_directives_to_type(
-                                type_sdl, type_name, vspec_comments
-                            )
-                            # Place type definition first, then enums at the bottom
-                            content_parts.append(enhanced_sdl)
-                            content_parts.extend(allowed_enums_sdl)
-                        except (AttributeError, TypeError):
-                            content_parts.append(type_sdl)
-                            content_parts.extend(allowed_enums_sdl)
-                    else:
-                        content_parts.append(type_sdl)
-                        content_parts.extend(allowed_enums_sdl)
+                    # Place type definition first, then enums at the bottom
+                    content_parts.append(type_sdl)
+                    content_parts.extend(allowed_enums_sdl)
+
+        # Join all content parts
+        file_content = "\n\n".join(content_parts)
+
+        # Apply vspec directives to the entire file content if directive processor is available
+        if directive_processor and hasattr(directive_processor, "process_schema"):
+            # Process the SDL string to add directives
+            # We need to split into lines and process
+            lines = file_content.split("\n")
+            lines = directive_processor._process_allowed_enum_directives(lines, allowed_enums_metadata, set())
+            lines = directive_processor._process_field_directives(lines, vspec_comments)
+            lines = directive_processor._process_deprecated_directives(
+                lines, vspec_comments.get("field_deprecated", {})
+            )
+            lines = directive_processor._process_range_directives(lines, vspec_comments.get("field_ranges", {}))
+            lines = directive_processor._process_type_directives(lines, vspec_comments)
+            file_content = "\n".join(lines)
 
         with open(domain_file, "w") as f:
-            f.write("\n\n".join(content_parts))
+            f.write(file_content)
 
 
 def write_common_files(

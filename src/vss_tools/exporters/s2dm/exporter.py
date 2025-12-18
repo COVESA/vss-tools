@@ -562,7 +562,7 @@ def _get_hoisted_fields(
     Returns:
         Dictionary of hoisted fields to add to parent type
     """
-    hoisted = {}
+    hoisted: dict[str, GraphQLField] = {}
 
     # Only process branches with instances
     if not child_branch_row.get("instances"):
@@ -816,4 +816,6 @@ def write_modular_schema(
     else:
         domain_structure = analyze_schema_for_nested_domains(schema)
 
-    write_domain_files(domain_structure, schema, output_dir, vspec_comments, directive_processor)
+    write_domain_files(
+        domain_structure, schema, output_dir, vspec_comments, directive_processor, allowed_enums_metadata
+    )
