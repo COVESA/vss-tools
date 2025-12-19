@@ -12,8 +12,7 @@ from pathlib import Path
 
 import pytest
 from graphql import GraphQLList, GraphQLNonNull, GraphQLObjectType, is_object_type
-from vss_tools.exporters.s2dm import generate_s2dm_schema
-from vss_tools.exporters.s2dm.exporter import S2DM_CONVERSIONS
+from vss_tools.exporters.s2dm import S2DM_CONVERSIONS, generate_s2dm_schema
 from vss_tools.main import get_trees
 from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP
 from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
@@ -276,7 +275,7 @@ class TestS2DMStructsModular:
 
     def test_modular_output_structs_in_separate_folder(self, tmp_path):
         """Test that struct types are placed in structs/ folder for modular output."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load trees with structs
         tree, data_type_tree = get_trees(
@@ -324,7 +323,7 @@ class TestS2DMStructsModular:
 
     def test_modular_output_regular_types_not_in_structs_folder(self, tmp_path):
         """Test that regular object types are NOT placed in structs/ folder."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load trees with structs
         tree, data_type_tree = get_trees(

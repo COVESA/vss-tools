@@ -10,11 +10,11 @@ from pathlib import Path
 
 from graphql import build_schema, print_schema
 from vss_tools.exporters.s2dm import (
+    S2DM_CONVERSIONS,
     generate_s2dm_schema,
     get_metadata_df,
     print_schema_with_vspec_directives,
 )
-from vss_tools.exporters.s2dm.exporter import S2DM_CONVERSIONS
 from vss_tools.main import get_trees
 from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
@@ -362,7 +362,7 @@ class TestS2DMExporter:
 
     def test_modular_export_flat_domains(self, tmp_path):
         """Test modular export with flat domain structure."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load the example seat vspec
         tree, _ = get_trees(
@@ -409,7 +409,7 @@ class TestS2DMExporter:
 
     def test_modular_export_nested_domains(self, tmp_path):
         """Test modular export with nested domain structure."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load the example seat vspec
         tree, _ = get_trees(
