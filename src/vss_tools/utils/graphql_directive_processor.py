@@ -22,7 +22,7 @@ from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_g
 
 
 class GraphQLDirectiveProcessor:
-    """Processes GraphQL schema SDL to inject VSS-specific directives using templates."""
+    """Processes GraphQL schema SDL to inject VSS-specific directives for S2DM export using templates."""
 
     # Template definitions for directive types
     TEMPLATES = {

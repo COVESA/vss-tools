@@ -6,7 +6,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Utilities for modular GraphQL schema export."""
+"""Utilities for modular S2DM GraphQL schema export."""
 
 from __future__ import annotations
 

@@ -31,13 +31,13 @@ Elements in the generated GraphQL schema can include a `@vspec` directive that t
 
 ```graphql
 """All in-cabin components, including doors."""
-type Vehicle_Cabin @vspec(source: {kind: FQN, value: "Vehicle.Cabin"}, vspecType: BRANCH) {
+type Vehicle_Cabin @vspec(element: BRANCH, fqn: "Vehicle.Cabin") {
     """The position of the driver seat in row 1."""
     driverPosition: Vehicle_Cabin_DriverPosition_Enum
       @vspec(
-        source: {kind: FQN, value: "Vehicle.Cabin.DriverPosition"},
-        vspecType: ATTRIBUTE,
-        comment: "Driver seat position configuration"
+        element: ATTRIBUTE,
+        fqn: "Vehicle.Cabin.DriverPosition",
+        metadata: [{key: "comment", value: "Driver seat position configuration"}]
       )
 }
 ```
@@ -133,18 +133,18 @@ The exporter generates:
 
 ```graphql
 """High-level vehicle data."""
-type Vehicle @vspec(source: {kind: FQN, value: "Vehicle"}, vspecType: BRANCH) {
+type Vehicle @vspec(element: BRANCH, fqn: "Vehicle") {
   """Vehicle speed."""
   speed(unit: VelocityUnitEnum = "KILOMETERS_PER_HOUR"): Float @range(min: 0, max: 300) @vspec(
-    source: {kind: FQN, value: "Vehicle.Speed"},
-    vspecType: SENSOR
+    element: SENSOR,
+    fqn: "Vehicle.Speed"
   )
 }
 
-enum VelocityUnitEnum {
-  KILOMETERS_PER_HOUR @vspec(source: {kind: UNIT, value: "km/h"})
-  METERS_PER_SECOND @vspec(source: {kind: UNIT, value: "m/s"})
-  MILES_PER_HOUR @vspec(source: {kind: UNIT, value: "mph"})
+enum VelocityUnitEnum @vspec(element: QUANTITY_KIND, metadata: [{key: "quantity", value: "velocity"}]) {
+  KILOMETERS_PER_HOUR @vspec(element: UNIT, metadata: [{key: "unit", value: "km/h"}])
+  METERS_PER_SECOND @vspec(element: UNIT, metadata: [{key: "unit", value: "m/s"}])
+  MILES_PER_HOUR @vspec(element: UNIT, metadata: [{key: "unit", value: "mph"}])
 }
 ```
 

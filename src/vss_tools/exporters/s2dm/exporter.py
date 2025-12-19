@@ -230,15 +230,12 @@ def generate_s2dm_schema(
     dict[str, dict[str, Any]],
 ]:
     """
-    Generate complete S2DM GraphQL schema from VSS tree.
-
-    Creates unit enums, instance types, allowed value enums, struct types, and object types for all branches,
-    then assembles them into a GraphQL schema with custom directives.
+    Generate S2DM GraphQL schema from VSS tree.
 
     Args:
-        tree: The main VSS tree containing vehicle signals
-        data_type_tree: Optional tree containing user-defined struct types
-        extended_attributes: Tuple of extended attribute names requested via CLI flags.
+        tree: Main VSS tree with vehicle signals
+        data_type_tree: Optional user-defined struct types
+        extended_attributes: Extended attribute names from CLI flags
     """
     branches_df, leaves_df = get_metadata_df(tree, extended_attributes=extended_attributes)
     vspec_comments = _init_vspec_comments()
@@ -514,16 +511,12 @@ def _create_instance_types(
     """
     Create GraphQL types for VSS instance-based branches.
 
-    For branches with instance declarations (e.g., Row[1,2], ["Left", "Right"]),
-    generates instance tag enums and object types to represent the dimensional
-    structure of instances in the GraphQL schema.
-
     Args:
-        branches_df: DataFrame containing VSS branch node metadata
+        branches_df: VSS branch node metadata
         vspec_comments: Dictionary to store instance tag metadata
 
     Returns:
-        Dictionary mapping type names to GraphQL enum or object types
+        Mapping of type names to GraphQL enum or object types
     """
     types: dict[str, GraphQLEnumType | GraphQLObjectType] = {}
     for fqn, row in branches_df[branches_df["instances"].notna()].iterrows():
@@ -581,14 +574,12 @@ def _get_hoisted_fields(
     vspec_comments: dict[str, dict[str, Any]],
 ) -> dict[str, GraphQLField]:
     """
-    Get fields that should be hoisted from an instantiated child branch to its parent.
+    Get fields to hoist from an instantiated child branch to its parent.
 
-    When a branch has instances but some of its properties have instantiate=false,
-    those properties should be hoisted to the parent type with the naming pattern
-    {branchName}{PropertyName} (e.g., Door.SomeSignal -> doorSomeSignal).
+    Properties with instantiate=false are hoisted using pattern {branchName}{PropertyName}.
 
     Args:
-        child_branch_fqn: FQN of the child branch (e.g., "Vehicle.Cabin.Door")
+        child_branch_fqn: FQN of the child branch
         child_branch_row: DataFrame row for the child branch
         leaves_df: DataFrame of all leaf nodes
         types_registry: Registry of GraphQL types
@@ -596,7 +587,7 @@ def _get_hoisted_fields(
         vspec_comments: Dictionary for VSS metadata
 
     Returns:
-        Dictionary of hoisted fields to add to parent type
+        Hoisted fields to add to parent type
     """
     hoisted: dict[str, GraphQLField] = {}
 
@@ -678,11 +669,8 @@ def _create_object_type(
     """
     Create GraphQL object type for a VSS branch.
 
-    Recursively builds the type hierarchy with system fields (id, instanceTag),
-    leaf fields (sensors/actuators/attributes), and nested branches.
-
-    Handles hoisting of non-instantiated properties from child branches with instances
-    to the parent type with the naming pattern {branchName}{PropertyName}.
+    Builds type hierarchy with system fields, leaf fields, and nested branches.
+    Hoists non-instantiated properties from instance-based child branches.
     """
     branch_row = branches_df.loc[fqn]
     type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
