@@ -369,7 +369,7 @@ class TestS2DMStructsCLI:
         """Test that CLI works with --types option."""
         import subprocess
 
-        output_file = tmp_path / "cli_test_output.graphql"
+        output_dir = tmp_path / "cli_test_output"
 
         result = subprocess.run(
             [
@@ -383,20 +383,29 @@ class TestS2DMStructsCLI:
                 "--types",
                 "tests/vspec/test_structs/VehicleDataTypes.vspec",
                 "--output",
-                str(output_file),
+                str(output_dir),
             ],
             capture_output=True,
             text=True,
         )
 
         assert result.returncode == 0, f"CLI failed: {result.stderr}"
-        assert output_file.exists(), "Output file was not created"
+        assert output_dir.exists(), "Output directory was not created"
+
+        # Check that GraphQL file was created
+        output_file = output_dir / f"{output_dir.name}.graphql"
+        assert output_file.exists(), "GraphQL file was not created"
 
         # Verify struct types are in the output
         content = output_file.read_text()
         assert "type VehicleDataTypes_TestBranch1_NestedStruct" in content
         assert "type VehicleDataTypes_TestBranch1_ParentStruct" in content
         assert "x: Float!" in content  # Non-null field from struct
+
+        # Verify vspec_reference directory was created
+        assert (output_dir / "vspec_reference").exists(), "vspec_reference directory not created"
+        assert (output_dir / "vspec_reference" / "vspec_lookup_spec.yaml").exists(), "VSS lookup spec not created"
+        assert (output_dir / "vspec_reference" / "README.md").exists(), "README.md not created"
 
     def test_cli_modular_output_with_structs(self, tmp_path):
         """Test that CLI creates modular output with structs in separate folder."""

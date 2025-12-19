@@ -102,10 +102,45 @@ enum VelocityUnitEnum {
 ```
 
 ## Usage
-For up-to-date instructions, assuming the virtual environment is active, simply consult the help in the vss-tools CLI with this command:
+
+The S2DM exporter requires the output parameter to be a **directory path** (not a file). The output directory will contain the GraphQL schema file(s) and a `vspec_reference/` subdirectory with complete traceability information.
+
+For up-to-date instructions, consult the help:
 ```shell
 vspec export s2dm --help
 ```
+
+### Basic Usage
+
+```shell
+# Export to a directory (creates myOutput/ if it doesn't exist)
+vspec export s2dm --vspec spec.vspec --output myOutput/
+```
+
+**Output structure:**
+```
+myOutput/
+├── myOutput.graphql                # Complete GraphQL schema
+└── vspec_reference/
+    ├── README.md                   # Documentation and provenance info
+    ├── vspec_lookup_spec.yaml      # Complete VSS tree (fully expanded)
+    ├── vspec_units.yaml            # Units used (if provided via -u or implicit)
+    └── vspec_quantities.yaml       # Quantities used (if provided via -q or implicit)
+```
+
+### VSS Reference Files
+
+The `vspec_reference/` directory provides complete traceability:
+
+- **README.md** - Documents the vss-tools version used, describes each file, and provides a command to regenerate the schema
+- **vspec_lookup_spec.yaml** - Complete VSS specification tree (fully processed and expanded) in YAML format
+- **vspec_units.yaml** - Unit definitions used during generation (included if units were provided via `-u` flag or implicitly loaded)
+- **vspec_quantities.yaml** - Quantity definitions used during generation (included if quantities were provided via `-q` flag or implicitly loaded)
+
+These files allow you to:
+1. Trace GraphQL elements back to their VSS source using the FQN in `@vspec` directives
+2. Reproduce the exact GraphQL schema by re-running the exporter
+3. Understand which input files were used for generation
 
 
 
@@ -150,19 +185,25 @@ enum VelocityUnitEnum @vspec(element: QUANTITY_KIND, metadata: [{key: "quantity"
 
 ## Output Structures
 
-The S2DM exporter supports three output modes:
+The S2DM exporter supports three output modes. All modes generate a `vspec_reference/` directory for traceability.
 
 ### 1. Single File (Default)
 
-Generates one complete GraphQL schema file.
+Generates one complete GraphQL schema file in the output directory.
 
 ```bash
-vspec export s2dm --vspec spec.vspec --output schema.graphql
+vspec export s2dm --vspec spec.vspec --output myOutput/
 ```
 
 **Output:**
 ```
-schema.graphql    # Complete schema in one file
+myOutput/
+├── myOutput.graphql                # Complete schema
+└── vspec_reference/
+    ├── README.md                   # Provenance documentation
+    ├── vspec_lookup_spec.yaml      # VSS reference
+    ├── vspec_units.yaml            # (if units provided or implicit)
+    └── vspec_quantities.yaml       # (if quantities provided or implicit)
 ```
 
 **Use when:**
@@ -194,8 +235,13 @@ output_dir/
 │   ├── Vehicle_Cabin_Door.graphql
 │   ├── Vehicle_Cabin_Seat.graphql
 │   └── Vehicle_Cabin_Seat_Airbag.graphql
-└── instances/
-    └── Vehicle_Cabin_Seat_InstanceTag.graphql
+├── instances/
+│   └── Vehicle_Cabin_Seat_InstanceTag.graphql
+└── vspec_reference/
+    ├── README.md
+    ├── vspec_lookup_spec.yaml
+    ├── vspec_units.yaml            # (if units provided or implicit)
+    └── vspec_quantities.yaml       # (if quantities provided or implicit)
 ```
 
 **Characteristics:**
@@ -238,8 +284,13 @@ output_dir/
 │               ├── _Seat.graphql         # Root type (Vehicle_Cabin_Seat)
 │               ├── Airbag.graphql        # Child type (Vehicle_Cabin_Seat_Airbag)
 │               └── Occupant.graphql      # Child type (Vehicle_Cabin_Seat_Occupant)
-└── instances/
-    └── Vehicle_Cabin_Seat_InstanceTag.graphql
+├── instances/
+│   └── Vehicle_Cabin_Seat_InstanceTag.graphql
+└── vspec_reference/
+    ├── README.md
+    ├── vspec_lookup_spec.yaml
+    ├── vspec_units.yaml            # (if units provided or implicit)
+    └── vspec_quantities.yaml       # (if quantities provided or implicit)
 ```
 
 **Characteristics:**

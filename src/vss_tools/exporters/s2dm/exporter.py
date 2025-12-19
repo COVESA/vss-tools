@@ -136,6 +136,154 @@ def _build_field_path(type_name: str, field_name: str) -> str:
     return f"{type_name}.{field_name}"
 
 
+def _generate_vspec_reference(
+    tree: VSSNode,
+    data_type_tree: VSSNode | None,
+    output_dir: Path,
+    extended_attributes: tuple[str, ...],
+    vspec_file: Path,
+    units_files: tuple[Path, ...],
+    quantities_files: tuple[Path, ...],
+) -> None:
+    """
+    Generate VSS reference files alongside GraphQL output.
+    
+    Creates vspec_reference/ directory with VSS lookup spec and input files.
+    If units/quantities not provided via CLI, checks for implicit files.
+    
+    Args:
+        tree: Main VSS tree
+        data_type_tree: Optional data type tree
+        output_dir: Output directory
+        extended_attributes: Extended attributes to include
+        vspec_file: Path to vspec file (to find implicit units/quantities)
+        units_files: Unit files from CLI
+        quantities_files: Quantity files from CLI
+    """
+    import shutil
+
+    import yaml
+
+    from vss_tools.exporters.yaml import export_yaml
+
+    reference_dir = output_dir / "vspec_reference"
+    reference_dir.mkdir(exist_ok=True)
+
+    log.info(f"Generating VSS reference files in {reference_dir}/")
+
+    # Generate VSS lookup spec
+    vspec_file_out = reference_dir / "vspec_lookup_spec.yaml"
+    tree_data = tree.as_flat_dict(with_extra_attributes=False, extended_attributes=extended_attributes)
+    if data_type_tree:
+        tree_data["ComplexDataTypes"] = data_type_tree.as_flat_dict(
+            with_extra_attributes=False, extended_attributes=extended_attributes
+        )
+    export_yaml(vspec_file_out, tree_data)
+    log.info(f"  - VSS lookup spec: {vspec_file_out.name}")
+
+    # Determine actual units files used (explicit or implicit)
+    actual_units = units_files
+    if not actual_units:
+        implicit_units = vspec_file.parent / "units.yaml"
+        if implicit_units.exists():
+            actual_units = (implicit_units,)
+
+    # Copy/merge units files if any were used
+    if actual_units:
+        units_output = reference_dir / "vspec_units.yaml"
+        if len(actual_units) == 1:
+            shutil.copy2(actual_units[0], units_output)
+        else:
+            merged = {}
+            for f in actual_units:
+                with open(f) as inf:
+                    if data := yaml.safe_load(inf):
+                        merged.update(data)
+            with open(units_output, "w") as outf:
+                yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
+        log.info(f"  - Units file: {units_output.name}")
+
+    # Determine actual quantities files used (explicit or implicit)
+    actual_quantities = quantities_files
+    if not actual_quantities:
+        implicit_quantities = vspec_file.parent / "quantities.yaml"
+        if implicit_quantities.exists():
+            actual_quantities = (implicit_quantities,)
+
+    # Copy/merge quantities files if any were used
+    if actual_quantities:
+        quantities_output = reference_dir / "vspec_quantities.yaml"
+        if len(actual_quantities) == 1:
+            shutil.copy2(actual_quantities[0], quantities_output)
+        else:
+            merged = {}
+            for f in actual_quantities:
+                with open(f) as inf:
+                    if data := yaml.safe_load(inf):
+                        merged.update(data)
+            with open(quantities_output, "w") as outf:
+                yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
+        log.info(f"  - Quantities file: {quantities_output.name}")
+
+    # Generate README.md for provenance documentation
+    _generate_reference_readme(reference_dir, vspec_file, actual_units, actual_quantities)
+
+
+def _generate_reference_readme(
+    reference_dir: Path,
+    vspec_file: Path,
+    units_files: tuple[Path, ...] | None,
+    quantities_files: tuple[Path, ...] | None,
+) -> None:
+    """
+    Generate README.md documenting the provenance of reference files.
+    
+    Args:
+        reference_dir: Directory where reference files are stored
+        vspec_file: Original vspec input file
+        units_files: Units files used (explicit or implicit)
+        quantities_files: Quantities files used (explicit or implicit)
+    """
+    from importlib.metadata import version
+
+    try:
+        vss_tools_version = version("vss-tools")
+    except Exception:
+        vss_tools_version = "unknown"
+
+    readme_content = f"""
+    # VSS Reference Files
+    This directory contains the exact information used to generate the S2DM GraphQL schema.
+    - Version used: [vss-tools](https://github.com/COVESA/vss-tools) `{vss_tools_version}`.
+    - Execute `vspec export s2dm --help` in the tools for more details.
+    It could serve as a supporting reference for traceability or debugging.
+    
+    ## Files
+    * **vspec_lookup_spec.yaml** - Complete VSS specification tree (fully processed and expanded)."""
+
+    if units_files:
+        readme_content += """
+    * **vspec_units.yaml** - Unit definitions for VSS signals."""
+
+    if quantities_files:
+        readme_content += """
+    * **vspec_quantities.yaml** - Quantity definitions categorizing measurements."""
+
+    readme_content += """
+
+    ## Documentation
+    - [S2DM Exporter](https://github.com/COVESA/vss-tools/blob/master/docs/s2dm.md)
+    - [VSS Tools](https://github.com/COVESA/vss-tools)
+    - [COVESA VSS](https://github.com/COVESA/vehicle_signal_specification)
+    - [COVESA S2DM](https://covesa.github.io/s2dm)"""
+
+    readme_path = reference_dir / "README.md"
+    with open(readme_path, "w") as f:
+        f.write(readme_content)
+    
+    log.info(f"  - README: {readme_path.name}")
+
+
 @click.command()
 @clo.vspec_opt
 @clo.output_file_or_dir_opt
@@ -165,8 +313,36 @@ def cli(
     flat_domains: bool,
     strict_exceptions: Path | None,
 ) -> None:
-    """Export a VSS specification to S2DM GraphQL schema."""
+    """
+    Export a VSS specification to S2DM GraphQL schema.
+
+    Output must be a directory. Creates vspec_reference/ subdirectory with
+    VSS lookup spec and input files (units/quantities) for traceability.
+
+    Output structure:
+    - Default: outputDir/outputDir.graphql + vspec_reference/
+    - Modular: outputDir/{domain,instances,other}/ + vspec_reference/
+    """
     try:
+        # Validate that output path doesn't have a file extension (enforce directory name only)
+        if output.suffix:
+            log.error(f"Output path appears to be a file (has extension '{output.suffix}'): {output}")
+            log.error("Please provide a directory path (without file extension) for the S2DM export output.")
+            sys.exit(1)
+        
+        # Validate that output is not an existing file
+        if output.exists() and output.is_file():
+            log.error(f"Output path must be a directory, not a file: {output}")
+            log.error("Please provide a directory path for the S2DM export output.")
+            sys.exit(1)
+
+        # Create output directory if it doesn't exist
+        if not output.exists():
+            output.mkdir(parents=True, exist_ok=True)
+            log.info(f"Created output directory: {output}")
+
+        output_dir = output
+
         tree, data_type_tree = get_trees(
             vspec=vspec,
             include_dirs=include_dirs,
@@ -189,30 +365,24 @@ def cli(
         )
 
         if modular:
-            # Handle directory or file path for modular output
-            if output.is_dir():
-                output_dir = output
-            else:
-                output_dir = output.parent / output.stem if output.suffix else output
-            output_dir.mkdir(parents=True, exist_ok=True)
-
-            # Create modular_spec directory and write modular files
-            modular_spec_dir = output_dir
+            # Write modular files
             write_modular_schema(
-                schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, modular_spec_dir, flat_domains
+                schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir, flat_domains
             )
-            log.info(f"Modular files written to {modular_spec_dir}")
+            log.info(f"Modular GraphQL schema written to {output_dir}/")
         else:
-            # Single file export (default behavior)
+            # Single file export: write to outputDir/outputDir.graphql
+            graphql_file = output_dir / f"{output_dir.name}.graphql"
             full_schema_str = print_schema_with_vspec_directives(
                 schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
             )
-            # Ensure output is treated as a file
-            output.parent.mkdir(parents=True, exist_ok=True)
-            with open(output, "w") as outfile:
+            with open(graphql_file, "w") as outfile:
                 outfile.write(full_schema_str)
 
-            log.info(f"S2DM GraphQL schema written to {output}")
+            log.info(f"GraphQL schema written to {graphql_file}")
+
+        # Generate VSS reference files (will check for implicit files)
+        _generate_vspec_reference(tree, data_type_tree, output_dir, extended_attributes, vspec, units, quantities)
 
     except S2DMExporterException as e:
         log.error(e)
