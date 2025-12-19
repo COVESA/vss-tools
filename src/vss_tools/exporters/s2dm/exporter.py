@@ -103,6 +103,39 @@ InstanceTagDirective = CUSTOM_DIRECTIVES["instanceTag"]
 directive_processor = GraphQLDirectiveProcessor()
 
 
+# Helper functions
+
+
+def _get_vss_type_if_valid(row: pd.Series) -> str | None:
+    """
+    Get VSS type if valid (SENSOR, ACTUATOR, ATTRIBUTE), else None.
+
+    Args:
+        row: DataFrame row containing VSS node metadata
+
+    Returns:
+        VSS type string if valid, None otherwise
+    """
+    if vss_type := row.get("type", "").upper():
+        if vss_type in VSS_LEAF_TYPES:
+            return vss_type
+    return None
+
+
+def _build_field_path(type_name: str, field_name: str) -> str:
+    """
+    Build a field path from type name and field name.
+
+    Args:
+        type_name: GraphQL type name
+        field_name: GraphQL field name
+
+    Returns:
+        Field path in format "TypeName.fieldName"
+    """
+    return f"{type_name}.{field_name}"
+
+
 @click.command()
 @clo.vspec_opt
 @clo.output_file_or_dir_opt
@@ -436,7 +469,7 @@ def _create_struct_types(
             fields[field_name] = GraphQLField(GraphQLNonNull(base_type), description=prop_row.get("description", ""))
 
             # Store property metadata for @vspec directives (element and fqn only)
-            field_path = f"{type_name}.{field_name}"
+            field_path = _build_field_path(type_name, field_name)
             vspec_comments["field_vss_types"][field_path] = {"element": "STRUCT_PROPERTY", "fqn": prop_fqn}
 
             # Track ranges for @range directive
@@ -510,11 +543,10 @@ def _create_instance_types(
                 fields[f"dimension{i}"] = GraphQLField(types[enum_name])
 
             types[tag_name] = GraphQLObjectType(tag_name, fields)
-            # Store instance tag metadata for @vspec directive with instances information
             vspec_comments["instance_tags"][tag_name] = {
                 "element": "BRANCH",
                 "fqn": fqn,
-                "instances": str(instances),  # Store original instances specification
+                "instances": str(instances),
             }
             vspec_comments.setdefault("instance_tag_types", {})[base_name] = tag_name
 
@@ -604,16 +636,15 @@ def _get_hoisted_fields(
             )
 
             parent_type_name = convert_name_for_graphql_schema(parent_fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
-            field_path = f"{parent_type_name}.{hoisted_field_name}"
+            field_path = _build_field_path(parent_type_name, hoisted_field_name)
 
             # Store metadata for hoisted field (element, fqn, and instantiate=false indicator)
-            if leaf_type := leaf_row.get("type", "").upper():
-                if leaf_type in VSS_LEAF_TYPES:
-                    vspec_comments["field_vss_types"][field_path] = {
-                        "element": leaf_type,
-                        "fqn": leaf_fqn,
-                        "instantiate": False,  # Mark this as a hoisted non-instantiated field
-                    }
+            if leaf_type := _get_vss_type_if_valid(leaf_row):
+                vspec_comments["field_vss_types"][field_path] = {
+                    "element": leaf_type,
+                    "fqn": leaf_fqn,
+                    "instantiate": False,  # Mark this as a hoisted non-instantiated field
+                }
 
             # Track ranges for @range directive
             if pd.notna(leaf_row.get("min")) or pd.notna(leaf_row.get("max")):
@@ -686,12 +717,11 @@ def _create_object_type(
                     continue  # Skip this leaf - it will be hoisted to parent (or omitted if no parent)
 
             field_name = convert_name_for_graphql_schema(leaf_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
-            field_path = f"{type_name}.{field_name}"
+            field_path = _build_field_path(type_name, field_name)
 
             # Store VSS type metadata (element and fqn only)
-            if leaf_type := leaf_row.get("type", "").upper():
-                if leaf_type in VSS_LEAF_TYPES:
-                    vspec_comments["field_vss_types"][field_path] = {"element": leaf_type, "fqn": child_fqn}
+            if leaf_type := _get_vss_type_if_valid(leaf_row):
+                vspec_comments["field_vss_types"][field_path] = {"element": leaf_type, "fqn": child_fqn}
 
             # Track ranges for @range directive
             if pd.notna(leaf_row.get("min")) or pd.notna(leaf_row.get("max")):
