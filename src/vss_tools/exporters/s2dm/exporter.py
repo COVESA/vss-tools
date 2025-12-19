@@ -147,10 +147,10 @@ def _generate_vspec_reference(
 ) -> None:
     """
     Generate VSS reference files alongside GraphQL output.
-    
+
     Creates vspec_reference/ directory with VSS lookup spec and input files.
     If units/quantities not provided via CLI, checks for implicit files.
-    
+
     Args:
         tree: Main VSS tree
         data_type_tree: Optional data type tree
@@ -159,74 +159,118 @@ def _generate_vspec_reference(
         vspec_file: Path to vspec file (to find implicit units/quantities)
         units_files: Unit files from CLI
         quantities_files: Quantity files from CLI
+
+    Raises:
+        S2DMExporterException: If reference file generation fails
     """
-    import shutil
+    try:
+        import shutil
 
-    import yaml
+        import yaml
 
-    from vss_tools.exporters.yaml import export_yaml
+        from vss_tools.exporters.yaml import export_yaml
 
-    reference_dir = output_dir / "vspec_reference"
-    reference_dir.mkdir(exist_ok=True)
+        reference_dir = output_dir / "vspec_reference"
 
-    log.info(f"Generating VSS reference files in {reference_dir}/")
+        try:
+            reference_dir.mkdir(exist_ok=True)
+        except PermissionError as e:
+            raise S2DMExporterException(f"Permission denied creating reference directory: {reference_dir}") from e
+        except OSError as e:
+            raise S2DMExporterException(f"Failed to create reference directory {reference_dir}: {e}") from e
 
-    # Generate VSS lookup spec
-    vspec_file_out = reference_dir / "vspec_lookup_spec.yaml"
-    tree_data = tree.as_flat_dict(with_extra_attributes=False, extended_attributes=extended_attributes)
-    if data_type_tree:
-        tree_data["ComplexDataTypes"] = data_type_tree.as_flat_dict(
-            with_extra_attributes=False, extended_attributes=extended_attributes
-        )
-    export_yaml(vspec_file_out, tree_data)
-    log.info(f"  - VSS lookup spec: {vspec_file_out.name}")
+        log.info(f"Generating VSS reference files in {reference_dir}/")
 
-    # Determine actual units files used (explicit or implicit)
-    actual_units = units_files
-    if not actual_units:
-        implicit_units = vspec_file.parent / "units.yaml"
-        if implicit_units.exists():
-            actual_units = (implicit_units,)
+        # Generate VSS lookup spec
+        vspec_file_out = reference_dir / "vspec_lookup_spec.yaml"
+        try:
+            tree_data = tree.as_flat_dict(with_extra_attributes=False, extended_attributes=extended_attributes)
+            if data_type_tree:
+                tree_data["ComplexDataTypes"] = data_type_tree.as_flat_dict(
+                    with_extra_attributes=False, extended_attributes=extended_attributes
+                )
+            export_yaml(vspec_file_out, tree_data)
+            log.info(f"  - VSS lookup spec: {vspec_file_out.name}")
+        except Exception as e:
+            raise S2DMExporterException(f"Failed to generate VSS lookup spec {vspec_file_out}: {e}") from e
 
-    # Copy/merge units files if any were used
-    if actual_units:
-        units_output = reference_dir / "vspec_units.yaml"
-        if len(actual_units) == 1:
-            shutil.copy2(actual_units[0], units_output)
-        else:
-            merged = {}
-            for f in actual_units:
-                with open(f) as inf:
-                    if data := yaml.safe_load(inf):
-                        merged.update(data)
-            with open(units_output, "w") as outf:
-                yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
-        log.info(f"  - Units file: {units_output.name}")
+        # Determine actual units files used (explicit or implicit)
+        actual_units = units_files
+        if not actual_units:
+            implicit_units = vspec_file.parent / "units.yaml"
+            if implicit_units.exists():
+                actual_units = (implicit_units,)
 
-    # Determine actual quantities files used (explicit or implicit)
-    actual_quantities = quantities_files
-    if not actual_quantities:
-        implicit_quantities = vspec_file.parent / "quantities.yaml"
-        if implicit_quantities.exists():
-            actual_quantities = (implicit_quantities,)
+        # Copy/merge units files if any were used
+        if actual_units:
+            units_output = reference_dir / "vspec_units.yaml"
+            try:
+                if len(actual_units) == 1:
+                    shutil.copy2(actual_units[0], units_output)
+                else:
+                    merged = {}
+                    for f in actual_units:
+                        try:
+                            with open(f) as inf:
+                                if data := yaml.safe_load(inf):
+                                    merged.update(data)
+                        except yaml.YAMLError as e:
+                            raise S2DMExporterException(f"Invalid YAML in units file {f}: {e}") from e
+                        except FileNotFoundError:
+                            raise S2DMExporterException(f"Units file not found: {f}") from None
 
-    # Copy/merge quantities files if any were used
-    if actual_quantities:
-        quantities_output = reference_dir / "vspec_quantities.yaml"
-        if len(actual_quantities) == 1:
-            shutil.copy2(actual_quantities[0], quantities_output)
-        else:
-            merged = {}
-            for f in actual_quantities:
-                with open(f) as inf:
-                    if data := yaml.safe_load(inf):
-                        merged.update(data)
-            with open(quantities_output, "w") as outf:
-                yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
-        log.info(f"  - Quantities file: {quantities_output.name}")
+                    with open(units_output, "w") as outf:
+                        yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
 
-    # Generate README.md for provenance documentation
-    _generate_reference_readme(reference_dir, vspec_file, actual_units, actual_quantities)
+                log.info(f"  - Units file: {units_output.name}")
+            except S2DMExporterException:
+                raise
+            except (PermissionError, OSError) as e:
+                raise S2DMExporterException(f"Failed to write units file {units_output}: {e}") from e
+
+        # Determine actual quantities files used (explicit or implicit)
+        actual_quantities = quantities_files
+        if not actual_quantities:
+            implicit_quantities = vspec_file.parent / "quantities.yaml"
+            if implicit_quantities.exists():
+                actual_quantities = (implicit_quantities,)
+
+        # Copy/merge quantities files if any were used
+        if actual_quantities:
+            quantities_output = reference_dir / "vspec_quantities.yaml"
+            try:
+                if len(actual_quantities) == 1:
+                    shutil.copy2(actual_quantities[0], quantities_output)
+                else:
+                    merged = {}
+                    for f in actual_quantities:
+                        try:
+                            with open(f) as inf:
+                                if data := yaml.safe_load(inf):
+                                    merged.update(data)
+                        except yaml.YAMLError as e:
+                            raise S2DMExporterException(f"Invalid YAML in quantities file {f}: {e}") from e
+                        except FileNotFoundError:
+                            raise S2DMExporterException(f"Quantities file not found: {f}") from None
+
+                    with open(quantities_output, "w") as outf:
+                        yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
+
+                log.info(f"  - Quantities file: {quantities_output.name}")
+            except S2DMExporterException:
+                raise
+            except (PermissionError, OSError) as e:
+                raise S2DMExporterException(f"Failed to write quantities file {quantities_output}: {e}") from e
+
+        # Generate README.md for provenance documentation
+        _generate_reference_readme(reference_dir, vspec_file, actual_units, actual_quantities)
+
+    except S2DMExporterException:
+        # Re-raise our custom exceptions
+        raise
+    except Exception as e:
+        # Catch any unexpected errors and wrap them
+        raise S2DMExporterException(f"Unexpected error generating VSS reference files: {e}") from e
 
 
 def _generate_reference_readme(
@@ -237,39 +281,44 @@ def _generate_reference_readme(
 ) -> None:
     """
     Generate README.md documenting the provenance of reference files.
-    
+
     Args:
         reference_dir: Directory where reference files are stored
         vspec_file: Original vspec input file
         units_files: Units files used (explicit or implicit)
         quantities_files: Quantities files used (explicit or implicit)
+
+    Raises:
+        S2DMExporterException: If README generation fails
     """
-    from importlib.metadata import version
-
     try:
-        vss_tools_version = version("vss-tools")
-    except Exception:
-        vss_tools_version = "unknown"
+        from importlib.metadata import version
 
-    readme_content = f"""
+        try:
+            vss_tools_version = version("vss-tools")
+        except Exception:
+            vss_tools_version = "unknown"
+            log.warning("Could not determine vss-tools version")
+
+        readme_content = f"""
     # VSS Reference Files
     This directory contains the exact information used to generate the S2DM GraphQL schema.
     - Version used: [vss-tools](https://github.com/COVESA/vss-tools) `{vss_tools_version}`.
     - Execute `vspec export s2dm --help` in the tools for more details.
     It could serve as a supporting reference for traceability or debugging.
-    
+
     ## Files
     * **vspec_lookup_spec.yaml** - Complete VSS specification tree (fully processed and expanded)."""
 
-    if units_files:
-        readme_content += """
+        if units_files:
+            readme_content += """
     * **vspec_units.yaml** - Unit definitions for VSS signals."""
 
-    if quantities_files:
-        readme_content += """
+        if quantities_files:
+            readme_content += """
     * **vspec_quantities.yaml** - Quantity definitions categorizing measurements."""
 
-    readme_content += """
+        readme_content += """
 
     ## Documentation
     - [S2DM Exporter](https://github.com/COVESA/vss-tools/blob/master/docs/s2dm.md)
@@ -277,11 +326,19 @@ def _generate_reference_readme(
     - [COVESA VSS](https://github.com/COVESA/vehicle_signal_specification)
     - [COVESA S2DM](https://covesa.github.io/s2dm)"""
 
-    readme_path = reference_dir / "README.md"
-    with open(readme_path, "w") as f:
-        f.write(readme_content)
-    
-    log.info(f"  - README: {readme_path.name}")
+        readme_path = reference_dir / "README.md"
+
+        try:
+            with open(readme_path, "w") as f:
+                f.write(readme_content)
+            log.info(f"  - README: {readme_path.name}")
+        except (PermissionError, OSError) as e:
+            raise S2DMExporterException(f"Failed to write README file {readme_path}: {e}") from e
+
+    except S2DMExporterException:
+        raise
+    except Exception as e:
+        raise S2DMExporterException(f"Unexpected error generating README: {e}") from e
 
 
 @click.command()
@@ -329,7 +386,7 @@ def cli(
             log.error(f"Output path appears to be a file (has extension '{output.suffix}'): {output}")
             log.error("Please provide a directory path (without file extension) for the S2DM export output.")
             sys.exit(1)
-        
+
         # Validate that output is not an existing file
         if output.exists() and output.is_file():
             log.error(f"Output path must be a directory, not a file: {output}")
@@ -406,38 +463,48 @@ def generate_s2dm_schema(
         tree: Main VSS tree with vehicle signals
         data_type_tree: Optional user-defined struct types
         extended_attributes: Extended attribute names from CLI flags
+
+    Returns:
+        Tuple of (schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
+
+    Raises:
+        S2DMExporterException: If schema generation fails
     """
-    branches_df, leaves_df = get_metadata_df(tree, extended_attributes=extended_attributes)
-    vspec_comments = _init_vspec_comments()
+    try:
+        branches_df, leaves_df = get_metadata_df(tree, extended_attributes=extended_attributes)
+        vspec_comments = _init_vspec_comments()
 
-    # Create all types in logical order
-    unit_enums, unit_metadata = _create_unit_enums()
-    instance_types = _create_instance_types(branches_df, vspec_comments)
-    allowed_enums, allowed_metadata = _create_allowed_enums(leaves_df)
+        # Create all types in logical order
+        unit_enums, unit_metadata = _create_unit_enums()
+        instance_types = _create_instance_types(branches_df, vspec_comments)
+        allowed_enums, allowed_metadata = _create_allowed_enums(leaves_df)
 
-    # Create struct types from data type tree
-    struct_types = _create_struct_types(data_type_tree, vspec_comments, extended_attributes=extended_attributes)
+        # Create struct types from data type tree
+        struct_types = _create_struct_types(data_type_tree, vspec_comments, extended_attributes=extended_attributes)
 
-    # Combine all types
-    types_registry = {**instance_types, **allowed_enums, **struct_types}
+        # Combine all types
+        types_registry = {**instance_types, **allowed_enums, **struct_types}
 
-    # Create object types
-    for fqn in branches_df.index:
-        if fqn not in types_registry:
-            types_registry[fqn] = _create_object_type(
-                fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
-            )
+        # Create object types
+        for fqn in branches_df.index:
+            if fqn not in types_registry:
+                types_registry[fqn] = _create_object_type(
+                    fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
+                )
 
-    # Assemble schema
-    vehicle_type = types_registry.get("Vehicle", GraphQLString)
-    query = GraphQLObjectType("Query", {"vehicle": GraphQLField(vehicle_type)})
-    schema = GraphQLSchema(
-        query=query,
-        types=get_vss_scalar_types() + list(types_registry.values()) + list(unit_enums.values()),
-        directives=[VSpecDirective, RangeDirective, InstanceTagDirective],
-    )
+        # Assemble schema
+        vehicle_type = types_registry.get("Vehicle", GraphQLString)
+        query = GraphQLObjectType("Query", {"vehicle": GraphQLField(vehicle_type)})
+        schema = GraphQLSchema(
+            query=query,
+            types=get_vss_scalar_types() + list(types_registry.values()) + list(unit_enums.values()),
+            directives=[VSpecDirective, RangeDirective, InstanceTagDirective],
+        )
 
-    return schema, unit_metadata, allowed_metadata, vspec_comments
+        return schema, unit_metadata, allowed_metadata, vspec_comments
+
+    except Exception as e:
+        raise S2DMExporterException(f"Failed to generate S2DM schema: {e}") from e
 
 
 def _init_vspec_comments() -> dict[str, dict[str, Any]]:
@@ -1000,14 +1067,21 @@ def write_modular_schema(
         vspec_comments: Comments data for fields and types
         output_dir: Directory to write modular files to
         flat_domains: If True, create flat structure; if False, create nested structure
+
+    Raises:
+        S2DMExporterException: If writing modular files fails
     """
-    write_common_files(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir)
+    try:
+        write_common_files(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir)
 
-    if flat_domains:
-        domain_structure = analyze_schema_for_flat_domains(schema)
-    else:
-        domain_structure = analyze_schema_for_nested_domains(schema)
+        if flat_domains:
+            domain_structure = analyze_schema_for_flat_domains(schema)
+        else:
+            domain_structure = analyze_schema_for_nested_domains(schema)
 
-    write_domain_files(
-        domain_structure, schema, output_dir, vspec_comments, directive_processor, allowed_enums_metadata
-    )
+        write_domain_files(
+            domain_structure, schema, output_dir, vspec_comments, directive_processor, allowed_enums_metadata
+        )
+
+    except Exception as e:
+        raise S2DMExporterException(f"Failed to write modular schema files: {e}") from e
