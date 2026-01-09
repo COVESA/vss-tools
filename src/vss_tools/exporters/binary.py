@@ -40,7 +40,7 @@ from vss_tools.tree import VSSNode
 def allowedString(allowedList):
     allowedStr = ""
     for elem in allowedList:
-        allowedStr += hexAllowedLen(elem) + elem
+        allowedStr += hexAllowedLen(str(elem)) + str(elem)
     return allowedStr
 
 
