@@ -12,3 +12,29 @@ A.Int:
   datatype: uint16
   type: actuator
   description: An int
+
+A.AllowedFloat:
+  datatype: float
+  allowed:
+  - 1.1
+  - 2.54
+  - 3
+  description: A list of allowed floats
+  type: actuator
+
+A.AllowedInt:
+  datatype: uint16
+  allowed:
+  - 0
+  - 10
+  - 20
+  type: actuator
+  description: A list of allowed ints
+
+A.AllowedString:
+  datatype: string
+  allowed:
+  - A
+  - B
+  type: actuator
+  description: A list of allowed strings
