@@ -147,6 +147,11 @@ int main(int argc, char** argv) {
                     printf("Node type=%s\n", getTypeName(VSSgetType((long)(&(searchData[i]))->foundNodeHandles)));
                     printf("Node path=%s\n", (char*)(&(searchData[i]))->responsePaths);
                     printf("Node validation=%d\n", VSSgetValidation((long)(&(searchData[i]))->foundNodeHandles));
+                    int numberOfAllowedElements = VSSgetNumOfAllowedElements((long)(&(searchData[i]))->foundNodeHandles);
+                    printf("Node num of allowed values=%d\n", numberOfAllowedElements);
+                    for (int j = 0; j < numberOfAllowedElements; j++) {
+                        printf("Node allowed value=%s at index=%d\n", VSSgetAllowedElement((long)(&(searchData[i]))->foundNodeHandles, j), j);
+                    }
                 }
             }
             break;
