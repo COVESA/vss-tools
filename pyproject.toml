@@ -1,6 +1,6 @@
 [project]
 name = "vss-tools"
-version = "6.0.0-rc1"
+version = "6.0.0"
 description='COVESA Vehicle Signal Specification tooling.'
 readme = "README.md"
 requires-python = ">=3.10"
