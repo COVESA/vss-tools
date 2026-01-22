@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!IMPORTANT]
 > This document only contain changes introduced in VSS-Tools 3.0 or later
 
-## Unreleased (major)
+## 6.0
 
 ### Changed
 
@@ -20,10 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `plantuml` exporter
+- `ROS 2 Interface` exporter
+- `s2dm` exporter
 
 ### Removed
 
- - vspec2ttl removed.
+ - vspec2ttl removed
+- `graphql` exporter
 
 ## 5.0
 
