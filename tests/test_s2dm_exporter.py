@@ -10,11 +10,11 @@ from pathlib import Path
 
 from graphql import build_schema, print_schema
 from vss_tools.exporters.s2dm import (
+    S2DM_CONVERSIONS,
     generate_s2dm_schema,
     get_metadata_df,
     print_schema_with_vspec_directives,
 )
-from vss_tools.exporters.s2dm.exporter import S2DM_CONVERSIONS
 from vss_tools.main import get_trees
 from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
@@ -187,20 +187,24 @@ class TestS2DMExporter:
             schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
         )
 
-        # Check that field comments are captured
-        assert len(vspec_comments["field_comments"]) > 0
+        # Check that VSS types are tracked (element + fqn only, no comments)
+        assert len(vspec_comments["field_vss_types"]) > 0
+        assert len(vspec_comments["vss_types"]) > 0
 
-        # Check that type comments are captured
-        assert len(vspec_comments["type_comments"]) > 0
+        # Check that @vspec directive uses simplified format (element + fqn only)
+        # Comments should NOT be in the @vspec directive
+        assert "@vspec(element:" in schema_str
+        assert "fqn:" in schema_str
 
-        # Check that @vspec comment directives appear in the output with new consolidated format
-        assert 'comment: "Affects the property (SingleSeat.Position)."' in schema_str
+        # Check that comments are NOT included in @vspec directives
+        assert 'comment: "Affects the property' not in schema_str
 
-        # Check for specific field comment directive
-        assert "Affects the property (SingleSeat.Position)" in schema_str
-
-        # Check for type comment directive
-        assert "Seating is here considered as the part of the seat that supports the thighs" in schema_str
+        # Verify specific VSS type tracking
+        assert any("BRANCH" in str(v.get("element", "")) for v in vspec_comments["vss_types"].values())
+        assert any(
+            "ATTRIBUTE" in str(v.get("element", "")) or "SENSOR" in str(v.get("element", ""))
+            for v in vspec_comments["field_vss_types"].values()
+        )
 
     def test_range_and_deprecation_directives(self):
         """Test that @range and @deprecated directives are correctly generated for VSS constraints"""
@@ -235,12 +239,11 @@ class TestS2DMExporter:
         assert "@range(min:, max:" not in sdl
 
         # Check specific field combinations
-        # massage field should have @vspec with VSS type, @deprecated and @range
+        # massage field should have @vspec with element, @deprecated and @range
         import re
 
         massage_field_pattern = (
-            r"massage\([^)]*\):[^@]*@vspec\([^)]*vspecType: ACTUATOR[^)]*\)"
-            r"[^@]*@deprecated[^@]*@range\(min: 0, max: 100\)"
+            r"massage\([^)]*\):[^@]*@vspec\(element: ACTUATOR[^)]*\)" r"[^@]*@deprecated[^@]*@range\(min: 0, max: 100\)"
         )
         assert re.search(massage_field_pattern, sdl) is not None
 
@@ -359,7 +362,7 @@ class TestS2DMExporter:
 
     def test_modular_export_flat_domains(self, tmp_path):
         """Test modular export with flat domain structure."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load the example seat vspec
         tree, _ = get_trees(
@@ -406,7 +409,7 @@ class TestS2DMExporter:
 
     def test_modular_export_nested_domains(self, tmp_path):
         """Test modular export with nested domain structure."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load the example seat vspec
         tree, _ = get_trees(
@@ -434,10 +437,14 @@ class TestS2DMExporter:
         assert (output_dir / "other" / "directives.graphql").exists()
         assert (output_dir / "other" / "queries.graphql").exists()
 
-        # Check that nested structure was created in domain/ directory
-        assert (output_dir / "domain" / "Vehicle.graphql").exists()
-        assert (output_dir / "domain" / "Vehicle" / "Cabin.graphql").exists()
-        assert (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat.graphql").exists()
+        # Check that nested structure was created with _ prefix for root types
+        assert (output_dir / "domain" / "Vehicle" / "_Vehicle.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle" / "Cabin" / "_Cabin.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "_Seat.graphql").exists()
+
+        # Check that leaf types don't have _ prefix
+        assert (output_dir / "domain" / "Vehicle" / "VehicleIdentification.graphql").exists()
+        assert (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "Airbag.graphql").exists()
 
         # Check that enum directory structure was created in other/ directory
         assert (output_dir / "other" / "units.graphql").exists()
@@ -446,5 +453,50 @@ class TestS2DMExporter:
         assert (output_dir / "instances" / "Vehicle_Cabin_Seat_InstanceTag.graphql").exists()
 
         # Verify nested directory content
-        seat_content = (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat.graphql").read_text()
+        seat_content = (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "_Seat.graphql").read_text()
         assert "Vehicle_Cabin_Seat" in seat_content
+
+    def test_non_instantiated_property_hoisting(self, tmp_path: Path):
+        """Test that properties with instantiate=false are hoisted to parent type."""
+        # Load the test vspec with non-instantiated properties
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_non_instantiated_props/test.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(),
+            units=(),
+            types=(),
+            overlays=(),
+            expand=False,  # S2DM exporter uses non-expanded mode
+        )
+
+        # Generate schema
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Verify that Vehicle_Cabin_Door type doesn't have someSignal
+        assert "type Vehicle_Cabin_Door @vspec" in schema_str
+        door_type_start = schema_str.find("type Vehicle_Cabin_Door @vspec")
+        door_type_end = schema_str.find("\n}", door_type_start) + 2  # Include closing brace
+        door_type_content = schema_str[door_type_start:door_type_end]
+
+        # someSignal should NOT be on Door type
+        assert "someSignal" not in door_type_content
+        # But isOpen and isLocked should be
+        assert "isOpen" in door_type_content
+        assert "isLocked" in door_type_content
+
+        # Verify that Vehicle_Cabin type has doorSomeSignal (hoisted)
+        assert "type Vehicle_Cabin @vspec" in schema_str
+        cabin_type_start = schema_str.find("type Vehicle_Cabin @vspec")
+        cabin_type_end = schema_str.find("\n}", cabin_type_start) + 2  # Include closing brace
+        cabin_type_content = schema_str[cabin_type_start:cabin_type_end]
+
+        # someSignal should be on Cabin type (hoisted without branch prefix)
+        assert "someSignal" in cabin_type_content
+        # Verify it has the instantiate=false metadata
+        assert 'metadata: [{key: "instantiate", value: "false"}]' in cabin_type_content
+        # And door_s array field should also be there
+        assert "door_s" in cabin_type_content

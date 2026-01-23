@@ -52,6 +52,7 @@ class TestPandasUtils:
             "max",
             "allowed",
             "default",
+            "instantiate",
         ]
 
         assert list(branches_df.columns) == expected_branch_headers

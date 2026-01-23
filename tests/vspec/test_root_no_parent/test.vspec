@@ -1,0 +1,18 @@
+Door:
+  type: branch
+  instances:
+    - Row[1,2]
+    - ["Left", "Right"]
+  description: Door branch at root level.
+
+# This cannot be hoisted - Door has no parent!
+Door.Kind:
+  type: attribute
+  datatype: string
+  instantiate: false
+  description: Door kind - cannot be hoisted.
+
+Door.IsOpen:
+  type: actuator
+  datatype: boolean
+  description: Is door open or closed?
