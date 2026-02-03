@@ -1,0 +1,36 @@
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Cabin:
+  type: branch
+  description: All in-cabin components, controls, and features.
+
+Vehicle.Cabin.Door:
+  type: branch
+  instances:
+    - Row[1,2]
+    - ["Left", "Right"]
+  description: All doors, including windows and switches.
+
+# This signal applies to the Door concept, not to individual door instances
+Vehicle.Cabin.Door.SomeSignal:
+  type: attribute
+  datatype: uint8
+  instantiate: false
+  myExtendedKeyword1: "custom value 1"
+  myExtendedKeyword2: 42
+  description: A door signal that should not be instantiated.
+
+# These properties DO instantiate - they apply to each door instance
+Vehicle.Cabin.Door.IsOpen:
+  type: actuator
+  datatype: boolean
+  myExtendedKeyword1: "value for IsOpen"
+  description: Is door open or closed?
+
+Vehicle.Cabin.Door.IsLocked:
+  type: actuator
+  datatype: boolean
+  myExtendedKeyword2: 99
+  description: Is door locked or unlocked?

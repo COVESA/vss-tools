@@ -12,8 +12,7 @@ from pathlib import Path
 
 import pytest
 from graphql import GraphQLList, GraphQLNonNull, GraphQLObjectType, is_object_type
-from vss_tools.exporters.s2dm import generate_s2dm_schema
-from vss_tools.exporters.s2dm.exporter import S2DM_CONVERSIONS
+from vss_tools.exporters.s2dm import S2DM_CONVERSIONS, generate_s2dm_schema
 from vss_tools.main import get_trees
 from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP
 from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
@@ -68,7 +67,7 @@ class TestS2DMStructs:
 
         # Check metadata
         assert nested_struct_name in vspec_comments["vss_types"]
-        assert vspec_comments["vss_types"][nested_struct_name]["vspec_type"] == "STRUCT"
+        assert vspec_comments["vss_types"][nested_struct_name]["element"] == "STRUCT"
 
     def test_struct_properties_are_non_null(self, struct_trees):
         """Test that all struct properties are non-null fields."""
@@ -227,7 +226,7 @@ class TestS2DMStructs:
 
         # Check that vspec metadata is stored
         assert nested_struct_name in vspec_comments["vss_types"]
-        assert vspec_comments["vss_types"][nested_struct_name]["vspec_type"] == "STRUCT"
+        assert vspec_comments["vss_types"][nested_struct_name]["element"] == "STRUCT"
 
     def test_struct_property_range_constraints(self, struct_trees):
         """Test that range constraints on struct properties are preserved."""
@@ -276,7 +275,7 @@ class TestS2DMStructsModular:
 
     def test_modular_output_structs_in_separate_folder(self, tmp_path):
         """Test that struct types are placed in structs/ folder for modular output."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load trees with structs
         tree, data_type_tree = get_trees(
@@ -324,7 +323,7 @@ class TestS2DMStructsModular:
 
     def test_modular_output_regular_types_not_in_structs_folder(self, tmp_path):
         """Test that regular object types are NOT placed in structs/ folder."""
-        from vss_tools.exporters.s2dm.exporter import write_modular_schema
+        from vss_tools.exporters.s2dm import write_modular_schema
 
         # Load trees with structs
         tree, data_type_tree = get_trees(
@@ -369,7 +368,7 @@ class TestS2DMStructsCLI:
         """Test that CLI works with --types option."""
         import subprocess
 
-        output_file = tmp_path / "cli_test_output.graphql"
+        output_dir = tmp_path / "cli_test_output"
 
         result = subprocess.run(
             [
@@ -383,20 +382,29 @@ class TestS2DMStructsCLI:
                 "--types",
                 "tests/vspec/test_structs/VehicleDataTypes.vspec",
                 "--output",
-                str(output_file),
+                str(output_dir),
             ],
             capture_output=True,
             text=True,
         )
 
         assert result.returncode == 0, f"CLI failed: {result.stderr}"
-        assert output_file.exists(), "Output file was not created"
+        assert output_dir.exists(), "Output directory was not created"
+
+        # Check that GraphQL file was created
+        output_file = output_dir / f"{output_dir.name}.graphql"
+        assert output_file.exists(), "GraphQL file was not created"
 
         # Verify struct types are in the output
         content = output_file.read_text()
         assert "type VehicleDataTypes_TestBranch1_NestedStruct" in content
         assert "type VehicleDataTypes_TestBranch1_ParentStruct" in content
         assert "x: Float!" in content  # Non-null field from struct
+
+        # Verify vspec_reference directory was created
+        assert (output_dir / "vspec_reference").exists(), "vspec_reference directory not created"
+        assert (output_dir / "vspec_reference" / "vspec_lookup_spec.yaml").exists(), "VSS lookup spec not created"
+        assert (output_dir / "vspec_reference" / "README.md").exists(), "README.md not created"
 
     def test_cli_modular_output_with_structs(self, tmp_path):
         """Test that CLI creates modular output with structs in separate folder."""
