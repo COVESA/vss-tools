@@ -1,0 +1,10 @@
+# Simple test vspec file
+Test:
+  type: branch
+  description: Test branch
+
+Test.Flow:
+  datatype: float
+  type: sensor
+  unit: g/s
+  description: A test sensor with mass flow
