@@ -117,28 +117,53 @@ class GraphQLDirectiveProcessor:
         Process allowed value enum directives.
 
         Annotates the enum type itself with @vspec(element, fqn, metadata),
-        but does NOT annotate individual enum values.
+        and annotates individual enum values that were modified with @vspec(metadata).
         """
         for enum_name, enum_data in allowed_enums_metadata.items():
             fqn = enum_data.get("fqn", "")
             vss_type = enum_data.get("vss_type", "ATTRIBUTE")
             allowed_values_dict = enum_data.get("allowed_values", {})
+            modified_values = enum_data.get("modified_values", {})
 
             # Build the allowed values list for metadata
             # GraphQL requires: value: "['val1', 'val2']" (double quotes outside, single quotes inside)
             allowed_values_list = list(allowed_values_dict.values())
             allowed_str = ", ".join([f"'{v}'" for v in allowed_values_list])
 
+            in_target_enum = False
             for i, line in enumerate(lines):
-                if line.strip().startswith(f"enum {enum_name}") and "@vspec" not in line:
-                    # Annotate the enum type (not individual values)
-                    # Format: @vspec(element: ATTRIBUTE, fqn: "...", metadata: [{key: "allowed", value: "[...]"}])
-                    directive = (
-                        f'@vspec(element: {vss_type}, fqn: "{fqn}", '
-                        f'metadata: [{{key: "allowed", value: "[{allowed_str}]"}}])'
-                    )
-                    lines[i] = line.replace(" {", f" {directive} {{")
-                    break
+                if line.strip().startswith(f"enum {enum_name}"):
+                    if "@vspec" not in line:
+                        # Annotate the enum type
+                        directive = (
+                            f'@vspec(element: {vss_type}, fqn: "{fqn}", '
+                            f'metadata: [{{key: "allowed", value: "[{allowed_str}]"}}])'
+                        )
+                        lines[i] = line.replace(" {", f" {directive} {{")
+                    in_target_enum = True
+                    continue
+                elif line.strip().startswith("enum ") and in_target_enum:
+                    in_target_enum = False
+                    continue
+                elif line.strip() == "}" and in_target_enum:
+                    in_target_enum = False
+                    continue
+
+                # Process individual enum values that were modified
+                if in_target_enum and line.strip() and not line.strip().startswith('"'):
+                    stripped_line = line.strip()
+
+                    for enum_value_name, original_value in modified_values.items():
+                        enum_value_key = f"{enum_name}.{enum_value_name}"
+                        if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_values:
+                            if "@vspec" not in line:
+                                indent = line[: len(line) - len(line.lstrip())]
+                                # Annotate modified enum value with original value in metadata
+                                directive = f'@vspec(metadata: [{{key: "originalName", value: "{original_value}"}}])'
+                                lines[i] = f"{indent}{enum_value_name} {directive}"
+
+                            processed_values.add(enum_value_key)
+                            break
 
         return lines
 
