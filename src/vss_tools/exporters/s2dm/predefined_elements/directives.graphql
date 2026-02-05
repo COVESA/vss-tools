@@ -1,7 +1,7 @@
 """Annotation directive for Vspec mapping information."""
 directive @vspec(
   """The element of the Vspec language to which the item in the GraphQL schema maps."""
-  element: VspecElement!,
+  element: VspecElement,
   """The Fully Qualified Name (FQN) of the related element in Vspec (aka., path). Example: Vehicle.Cabin.Door.Window.position"""
   fqn: String
   """Additional metadata associated with the mapping."""

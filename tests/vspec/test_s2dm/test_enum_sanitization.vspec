@@ -1,0 +1,38 @@
+#
+# S2DM test file for enum value sanitization with spaces
+#
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Cabin:
+  type: branch
+  description: Cabin related signals.
+
+Vehicle.Cabin.LightMode:
+  datatype: string
+  type: actuator
+  allowed: ['some value', 'SOME VALUE', 'another-value', 'YET_ANOTHER']
+  description: Light mode with values containing spaces.
+
+Vehicle.Cabin.SeatPosition:
+  datatype: string
+  type: sensor
+  allowed: ['front left', 'front right', 'rear left', 'rear right']
+  description: Seat position descriptors with spaces.
+
+Vehicle.Cabin.AirflowDirection:
+  datatype: string
+  type: actuator
+  allowed: ['up and down', 'left-right', 'CIRCULAR']
+  description: Airflow direction with mixed case and spaces.
+
+Vehicle.Status:
+  type: branch
+  description: Status related signals.
+
+Vehicle.Status.Priority:
+  datatype: uint8
+  type: attribute
+  allowed: [1, 2, 3]
+  description: Priority level without spaces (should not be modified).

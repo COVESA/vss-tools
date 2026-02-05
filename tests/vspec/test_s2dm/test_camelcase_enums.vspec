@@ -1,0 +1,36 @@
+#
+# S2DM test file for camelCase enum value sanitization
+#
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Component:
+  type: branch
+  description: Component related signals.
+
+Vehicle.Component.Type:
+  datatype: string
+  type: attribute
+  allowed: ['AAA', 'BBB', 'CCC', 'DDD', 'AbCd']
+  description: Component type with mixed case values including AbCd.
+
+Vehicle.Connection:
+  type: branch
+  description: Connection related signals.
+
+Vehicle.Connection.Protocol:
+  datatype: string
+  type: sensor
+  allowed: ['HTTPSProtocol', 'TCPProtocol', 'UDPProtocol']
+  description: Connection protocol with camelCase values.
+
+Vehicle.Status:
+  type: branch
+  description: Status related signals.
+
+Vehicle.Status.Code:
+  datatype: string
+  type: attribute
+  allowed: ['IOError', 'XMLParser', 'someAPIKey']
+  description: Status codes with various camelCase patterns.

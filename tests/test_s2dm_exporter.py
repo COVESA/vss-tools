@@ -8,6 +8,7 @@
 
 from pathlib import Path
 
+import pytest
 from graphql import build_schema, print_schema
 from vss_tools.exporters.s2dm import (
     S2DM_CONVERSIONS,
@@ -347,8 +348,8 @@ class TestS2DMExporter:
 
         # Check for float field with allowed values [1.0, 2.5, 4.0, 5.0]
         assert "Vehicle_Performance_Rating_Enum" in schema_sdl
-        assert "_1" in schema_sdl  # 1.0 becomes _1
-        assert "_2_DOT_5" in schema_sdl  # 2.5 should use _DOT_
+        assert "_1_0" in schema_sdl  # 1.0 becomes _1_0
+        assert "_2_5" in schema_sdl  # 2.5 becomes _2_5
         assert "_4" in schema_sdl
         assert "_5" in schema_sdl
 
@@ -500,3 +501,169 @@ class TestS2DMExporter:
         assert 'metadata: [{key: "instantiate", value: "false"}]' in cabin_type_content
         # And door_s array field should also be there
         assert "door_s" in cabin_type_content
+
+    def test_enum_value_sanitization_with_spaces(self):
+        """Test that enum values with spaces are properly sanitized and annotated."""
+        from vss_tools.exporters.s2dm.type_builders import _sanitize_enum_value_for_graphql
+
+        # Test the sanitization function
+        assert _sanitize_enum_value_for_graphql("some value") == ("SOME_VALUE", True)
+        assert _sanitize_enum_value_for_graphql("SOME VALUE") == ("SOME_VALUE", True)
+        assert _sanitize_enum_value_for_graphql("another-value") == ("ANOTHER_VALUE", True)
+        assert _sanitize_enum_value_for_graphql("YET_ANOTHER") == ("YET_ANOTHER", False)
+        assert _sanitize_enum_value_for_graphql("front left") == ("FRONT_LEFT", True)
+        assert _sanitize_enum_value_for_graphql("1value") == ("_1VALUE", True)
+
+    def test_enum_sanitization_in_schema_generation(self):
+        """Test that enum values with spaces generate proper schema with metadata."""
+        # Load the test vspec with spaces in enum values
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_enum_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, _, allowed_metadata, _ = generate_s2dm_schema(tree)
+
+        # Check that schema is valid
+        assert schema is not None
+
+        # Check that enum type for LightMode exists
+        light_mode_enum_name = "Vehicle_Cabin_LightMode_Enum"
+        assert light_mode_enum_name in schema.type_map
+
+        # Check metadata includes modified values
+        assert light_mode_enum_name in allowed_metadata
+        metadata = allowed_metadata[light_mode_enum_name]
+        assert "modified_values" in metadata
+
+        # Verify specific modifications
+        modified = metadata["modified_values"]
+        assert "SOME_VALUE" in modified
+        assert modified["SOME_VALUE"] in ["some value", "SOME VALUE"]  # One of them
+        assert "ANOTHER_VALUE" in modified
+        assert modified["ANOTHER_VALUE"] == "another-value"
+
+        # YET_ANOTHER should not be in modified (no modification needed)
+        assert "YET_ANOTHER" not in modified
+
+    def test_enum_sanitization_schema_output_with_directives(self):
+        """Test that the schema output includes proper @vspec directives for modified enum values."""
+        # Load the test vspec with spaces in enum values
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_enum_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Check that enum type has @vspec directive with element
+        assert "enum Vehicle_Cabin_LightMode_Enum @vspec" in schema_str
+
+        # Check that modified enum values have @vspec directives with originalName metadata
+        # "some value" -> SOME_VALUE
+        assert (
+            'SOME_VALUE @vspec(metadata: [{key: "originalName", value: "some value"}])' in schema_str
+            or 'SOME_VALUE @vspec(metadata: [{key: "originalName", value: "SOME VALUE"}])' in schema_str
+        )
+
+        # "another-value" -> ANOTHER_VALUE
+        assert 'ANOTHER_VALUE @vspec(metadata: [{key: "originalName", value: "another-value"}])' in schema_str
+
+        # YET_ANOTHER should not have originalName metadata (wasn't modified)
+        assert 'YET_ANOTHER @vspec(metadata: [{key: "originalName"' not in schema_str
+
+        # Check SeatPosition enum
+        assert "enum Vehicle_Cabin_SeatPosition_Enum @vspec" in schema_str
+        assert 'FRONT_LEFT @vspec(metadata: [{key: "originalName", value: "front left"}])' in schema_str
+        assert 'FRONT_RIGHT @vspec(metadata: [{key: "originalName", value: "front right"}])' in schema_str
+
+    def test_enum_camelcase_sanitization(self):
+        """Test that camelCase enum values are properly converted using caseconverter."""
+        from vss_tools.exporters.s2dm.type_builders import _sanitize_enum_value_for_graphql
+
+        # Test camelCase word boundary detection
+        test_cases = [
+            ("PbCa", "PB_CA", True),  # Mixed case acronyms
+            ("HTTPSConnection", "HTTPS_CONNECTION", True),  # Acronym + word
+            ("someAPIKey", "SOME_API_KEY", True),  # word + acronym + word
+            ("XMLParser", "XML_PARSER", True),  # Acronym + word
+            ("myValue", "MY_VALUE", True),  # Simple camelCase
+            ("IOError", "IO_ERROR", True),  # Two-letter acronym
+            ("AGM", "AGM", False),  # Already uppercase, no change
+            ("EFB", "EFB", False),  # Already uppercase, no change
+            ("already_snake", "ALREADY_SNAKE", True),  # snake_case to SCREAMING_SNAKE_CASE
+            ("ALREADY_SCREAMING", "ALREADY_SCREAMING", False),  # No change needed
+            ("mixed-Case", "MIXED_CASE", True),  # Mixed with hyphen
+            ("some value", "SOME_VALUE", True),  # Spaces
+            ("value.with.dots", "VALUE_WITH_DOTS", True),  # Dots
+            ("123value", "_123VALUE", True),  # Starts with number
+        ]
+
+        error_cases = [
+            "",  # Empty string
+            "   ",  # Whitespace only
+        ]
+
+        for input_val, expected_output, expected_modified in test_cases:
+            result, was_modified = _sanitize_enum_value_for_graphql(input_val)
+            assert result == expected_output, f"Failed for '{input_val}': expected '{expected_output}', got '{result}'"
+            assert was_modified == expected_modified, f"Failed modification flag for '{input_val}'"
+
+        for input_val in error_cases:
+            with pytest.raises(ValueError):
+                _sanitize_enum_value_for_graphql(input_val)
+
+    def test_camelcase_enums_schema_generation(self):
+        """Test that camelCase enum values in vspec generate proper schema with directives."""
+        # Load the test vspec with camelCase enum values
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_camelcase_enums.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Check Component.Type enum with AbCd
+        assert "enum Vehicle_Component_Type_Enum @vspec" in schema_str
+
+        # AbCd should be converted to AB_CD with originalName annotation
+        assert 'AB_CD @vspec(metadata: [{key: "originalName", value: "AbCd"}])' in schema_str
+
+        # AAA, BBB, CCC, DDD should not have originalName (no change needed)
+        assert 'AAA @vspec(metadata: [{key: "originalName"' not in schema_str
+        assert 'BBB @vspec(metadata: [{key: "originalName"' not in schema_str
+
+        # Check Connection.Protocol enum
+        assert "enum Vehicle_Connection_Protocol_Enum @vspec" in schema_str
+        assert 'HTTPS_PROTOCOL @vspec(metadata: [{key: "originalName", value: "HTTPSProtocol"}])' in schema_str
+        assert 'TCP_PROTOCOL @vspec(metadata: [{key: "originalName", value: "TCPProtocol"}])' in schema_str
+        assert 'UDP_PROTOCOL @vspec(metadata: [{key: "originalName", value: "UDPProtocol"}])' in schema_str
+
+        # Check Status.Code enum
+        assert "enum Vehicle_Status_Code_Enum @vspec" in schema_str
+        assert 'IO_ERROR @vspec(metadata: [{key: "originalName", value: "IOError"}])' in schema_str
+        assert 'XML_PARSER @vspec(metadata: [{key: "originalName", value: "XMLParser"}])' in schema_str
+        assert 'SOME_API_KEY @vspec(metadata: [{key: "originalName", value: "someAPIKey"}])' in schema_str
