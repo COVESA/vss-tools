@@ -18,8 +18,10 @@ This module contains all type creation logic for S2DM schema generation:
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
+import caseconverter
 import pandas as pd
 from graphql import (
     GraphQLArgument,
@@ -171,29 +173,85 @@ def create_allowed_enums(
     for fqn, row in leaves_df[leaves_df["allowed"].notna()].iterrows():
         if allowed := row.get("allowed"):
             enum_name = f"{convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)}_Enum"
-            values = {_clean_enum_name(str(v)): GraphQLEnumValue(v) for v in allowed}
+
+            # Track values and their modifications
+            values = {}
+            modified_values = {}
+
+            for v in allowed:
+                sanitized, was_modified = _sanitize_enum_value_for_graphql(str(v))
+                values[sanitized] = GraphQLEnumValue(v)
+
+                # Track if value was modified for metadata annotation
+                if was_modified:
+                    modified_values[sanitized] = str(v)
+
             enums[enum_name] = GraphQLEnumType(enum_name, values, description=f"Allowed values for {fqn}.")
 
             vss_type = row.get("type", "").upper()
             if vss_type not in VSS_LEAF_TYPES:
                 vss_type = "ATTRIBUTE"
 
-            allowed_values_graphql = {_clean_enum_name(str(v)): str(v).replace('"', "'") for v in allowed}
+            allowed_values_graphql = {
+                _sanitize_enum_value_for_graphql(str(v))[0]: str(v).replace('"', "'") for v in allowed
+            }
 
             metadata[enum_name] = {
                 "fqn": fqn,
                 "vss_type": vss_type,
                 "allowed_values": allowed_values_graphql,
+                "modified_values": modified_values,  # Store modified values for directive annotations
             }
 
     return enums, metadata
 
 
-def _clean_enum_name(value: str) -> str:
-    """Sanitize enum value names for GraphQL."""
-    if value[0].isdigit():
-        value = f"_{value}"
-    return value.replace(".", "_DOT_").replace("-", "_DASH_")
+def _sanitize_enum_value_for_graphql(original_value: str) -> tuple[str, bool]:
+    """
+    Sanitize enum value for GraphQL schema compliance.
+
+    Converts values with spaces, camelCase, or other invalid characters to valid GraphQL enum values.
+    Uses caseconverter to properly handle camelCase word boundaries.
+
+    Examples:
+        "some value" -> "SOME_VALUE"
+        "SOME VALUE" -> "SOME_VALUE"
+        "PbCa" -> "PB_CA"
+        "HTTPSConnection" -> "HTTPS_CONNECTION"
+        "value-with-dash" -> "VALUE_WITH_DASH"
+
+    Args:
+        original_value: The original enum value from VSS
+
+    Returns:
+        Tuple of (sanitized_value, was_modified)
+        - sanitized_value: Valid GraphQL enum value name
+        - was_modified: True if the value was changed, False otherwise
+    """
+
+    # Handle empty or whitespace-only strings
+    if not original_value or not original_value.strip():
+        raise ValueError(f"Cannot create GraphQL enum value from empty or whitespace-only string: {original_value!r}")
+
+    # Replace with underscore all the special characters that are not allowed in GraphQL enum names
+    sanitized = re.sub(r"[^a-zA-Z0-9_]", "_", original_value)
+
+    # Convert to caseconverter MACRO_CASE (i.e., SCREAMING_SNAKE_CASE)
+    if re.search(r"[A-Z]{2,}", sanitized) and re.search(r"[a-z]", sanitized):
+        words: list[str] = []
+        for segment in sanitized.split("_"):
+            words.extend(re.findall(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|[0-9]+", segment))
+        sanitized = "_".join(caseconverter.macrocase(word, strip_punctuation=False) for word in words if word)
+    else:
+        sanitized = caseconverter.macrocase(sanitized, strip_punctuation=False)
+
+    # Handle enum values starting with digits
+    sanitized = f"_{sanitized}" if sanitized[0].isdigit() else sanitized
+
+    # Check if modification occurred
+    was_modified = sanitized != original_value
+
+    return sanitized, was_modified
 
 
 def create_struct_types(

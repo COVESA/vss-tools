@@ -44,6 +44,8 @@ type Vehicle_Cabin @vspec(element: BRANCH, fqn: "Vehicle.Cabin") {
 In this example, the metadata shows that the `Vehicle_Cabin` type was derived from the Fully-Qualified Name (FQN) `Vehicle.Cabin`, and that is was a `BRANCH`.
 Likewise, the `driverPosition` was derived from `Vehicle.Cabin.DriverPosition` and it was an `ATTRIBUTE`.
 
+The `@vspec` directive is also used to annotate original names when they have been modified for GraphQL compliance (for example, see [Enum Value Sanitization](#enum-value-sanitization)).
+
 ### VSS Data Types Support
 The exporter handles all `vspec` data types as follows:
 - **Strings** → GraphQL String
@@ -51,6 +53,25 @@ The exporter handles all `vspec` data types as follows:
 - **Booleans** → GraphQL Boolean
 - **Arrays** → GraphQL Lists
 - **Allowed values** → GraphQL Enums
+
+#### Enum Value Sanitization
+
+GraphQL enum values must follow strict naming rules (alphanumeric + underscore only, cannot start with a digit). The S2DM exporter automatically sanitizes VSS enum values to comply with GraphQL requirements:
+
+- **Spaces & special characters** → Converted to underscores (`"some value"` → `SOME_VALUE`)
+- **CamelCase** → Converted to SCREAMING_SNAKE_CASE (`"HTTPSProtocol"` → `HTTPS_PROTOCOL`)
+- **Leading digits** → Prefixed with underscore (`"123abc"` → `_123ABC`)
+
+When enum values are modified, the original VSS value is preserved using `@vspec` metadata:
+
+```graphql
+enum Vehicle_Connection_Protocol_Enum @vspec(element: SENSOR, fqn: "Vehicle.Connection.Protocol", metadata: [{key: "allowed", value: "['HTTPSProtocol', 'TCPProtocol']"}]) {
+  HTTPS_PROTOCOL @vspec(metadata: [{key: "originalName", value: "HTTPSProtocol"}])
+  TCP_PROTOCOL @vspec(metadata: [{key: "originalName", value: "TCPProtocol"}])
+}
+```
+
+This ensures complete traceability between the VSS source and the generated GraphQL schema.
 
 ### VSS Instances Become GraphQL Structures
 When your `vspec` has instances (like multiple seats), the exporter creates proper GraphQL types:
