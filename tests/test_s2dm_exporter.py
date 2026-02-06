@@ -457,6 +457,43 @@ class TestS2DMExporter:
         seat_content = (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "_Seat.graphql").read_text()
         assert "Vehicle_Cabin_Seat" in seat_content
 
+    def test_modular_export_instance_enum_directives(self, tmp_path):
+        """Test that instance dimension enums get @vspec directives in modular export."""
+        from vss_tools.exporters.s2dm import write_modular_schema
+
+        # Load test vspec with instances that need sanitization
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_instance_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+
+        # Test modular export with flat domains
+        output_dir = tmp_path / "modular_instance_test"
+        write_modular_schema(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir, flat_domains=True
+        )
+
+        # Check that instance files were created
+        instance_file = output_dir / "instances" / "Vehicle_Cabin_Seat_InstanceTag.graphql"
+        assert instance_file.exists()
+
+        # Verify that instance dimension enums have @vspec directives with originalName
+        instance_content = instance_file.read_text()
+
+        # Check for sanitized enum values with @vspec directives
+        assert 'DRIVER_SIDE @vspec(metadata: [{key: "originalName", value: "DriverSide"}])' in instance_content
+        assert 'PASSENGER_SIDE @vspec(metadata: [{key: "originalName", value: "PassengerSide"}])' in instance_content
+
     def test_non_instantiated_property_hoisting(self, tmp_path: Path):
         """Test that properties with instantiate=false are hoisted to parent type."""
         # Load the test vspec with non-instantiated properties
@@ -702,3 +739,42 @@ class TestS2DMExporter:
         assert 'FRONT_RIGHT @vspec(metadata: [{key: "originalName", value: "FrontRight"}])' in schema_str
         assert 'REAR_LEFT @vspec(metadata: [{key: "originalName", value: "RearLeft"}])' in schema_str
         assert 'REAR_RIGHT @vspec(metadata: [{key: "originalName", value: "RearRight"}])' in schema_str
+
+    def test_extended_attributes_in_metadata(self):
+        """Test that extended attributes are captured and added to @vspec metadata."""
+        # Load the test vspec with extended attributes
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_extended_attributes.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=("source", "quality", "calibration", "customMetadata", "anotherAttribute"),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(
+            tree, extended_attributes=("source", "quality", "calibration", "customMetadata", "anotherAttribute")
+        )
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Check Vehicle.Speed has source and quality in metadata
+        assert "speed(unit: RelationUnitEnum = PERCENT): Float" in schema_str
+        assert '@vspec(element: SENSOR, fqn: "Vehicle.Speed"' in schema_str
+        assert '{key: "source", value: "ecu0xAA"}' in schema_str
+        assert '{key: "quality", value: "100"}' in schema_str
+
+        # Check Vehicle.Temperature has source, quality, and calibration
+        assert "temperature(unit: AngleUnitEnum = DEGREE): Int16" in schema_str
+        assert '@vspec(element: SENSOR, fqn: "Vehicle.Temperature"' in schema_str
+        assert '{key: "source", value: "ecu0xBB"}' in schema_str
+        assert '{key: "quality", value: "95"}' in schema_str
+        assert '{key: "calibration", value: "factory"}' in schema_str
+
+        # Check Vehicle.Info.Model has customMetadata and anotherAttribute
+        assert "model: String" in schema_str
+        assert '@vspec(element: ATTRIBUTE, fqn: "Vehicle.Info.Model"' in schema_str
+        assert '{key: "customMetadata", value: "test_value"}' in schema_str
+        assert '{key: "anotherAttribute", value: "42"}' in schema_str

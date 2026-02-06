@@ -237,13 +237,24 @@ class GraphQLDirectiveProcessor:
                     continue
 
                 if in_type and line.strip().startswith(f"{field_name}") and "@vspec" not in line:
-                    # Build directive with element (mandatory), fqn, and optional metadata
+                    # Build metadata array from extended attributes
+                    metadata_entries = []
+
+                    # Add instantiate metadata if present
                     if instantiate is False:
-                        # Add metadata for hoisted non-instantiated fields
-                        directive = (
-                            f'@vspec(element: {element}, fqn: "{fqn}", '
-                            f'metadata: [{{key: "instantiate", value: "false"}}])'
-                        )
+                        metadata_entries.append('{key: "instantiate", value: "false"}')
+
+                    # Add extended attributes metadata
+                    for key, value in vss_info.items():
+                        if key not in ["element", "fqn", "instantiate"]:
+                            # Escape quotes in value
+                            escaped_value = str(value).replace('"', '\\\\"')
+                            metadata_entries.append(f'{{key: "{key}", value: "{escaped_value}"}}')
+
+                    # Build directive
+                    if metadata_entries:
+                        metadata_str = ", ".join(metadata_entries)
+                        directive = f'@vspec(element: {element}, fqn: "{fqn}", metadata: [{metadata_str}])'
                     else:
                         # Standard directive without metadata
                         directive = f'@vspec(element: {element}, fqn: "{fqn}")'
@@ -375,11 +386,25 @@ class GraphQLDirectiveProcessor:
                         )
                         new_line += f" {directive}"
                     elif needs_vss_type and "@vspec" not in line:
-                        # Regular types get element + fqn only
+                        # Regular types get element + fqn + extended attributes metadata
                         vss_info = vspec_comments["vss_types"][type_name]
                         element = vss_info["element"]
                         fqn = vss_info["fqn"]
-                        directive = f'@vspec(element: {element}, fqn: "{fqn}")'
+
+                        # Build metadata array from extended attributes
+                        metadata_entries = []
+                        for key, value in vss_info.items():
+                            if key not in ["element", "fqn"]:
+                                # Escape quotes in value
+                                escaped_value = str(value).replace('"', '\\\\"')
+                                metadata_entries.append(f'{{key: "{key}", value: "{escaped_value}"}}')
+
+                        # Build directive
+                        if metadata_entries:
+                            metadata_str = ", ".join(metadata_entries)
+                            directive = f'@vspec(element: {element}, fqn: "{fqn}", metadata: [{metadata_str}])'
+                        else:
+                            directive = f'@vspec(element: {element}, fqn: "{fqn}")'
                         new_line += f" {directive}"
 
                     new_line += " {"
