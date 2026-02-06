@@ -82,8 +82,33 @@ The exporter handles all `vspec` data types as follows:
 - **Strings** → GraphQL String
 - **Numbers** → GraphQL Int, Float, or custom scalars (Int8, UInt16, etc.)
 - **Booleans** → GraphQL Boolean
-- **Arrays** → GraphQL Lists
+- **Arrays** → GraphQL Lists (with natural plural field names)
 - **Allowed values** → GraphQL Enums
+
+#### List Field Names (Automatic Pluralization)
+
+When VSS branches have instances (like `Seat` with multiple rows/positions), the parent type gets a list field. The S2DM exporter automatically generates **natural plural names** using the inflect library:
+
+- `seat` → `seats: [Vehicle_Cabin_Seat]`
+- `door` → `doors: [Vehicle_Cabin_Door]`
+- `window` → `windows: [Vehicle_Cabin_Window]`
+- `battery` → `batteries: [Vehicle_Battery]`
+- `mirror` → `mirrors: [Vehicle_Body_Mirror]`
+
+This improves GraphQL schema readability by following common naming conventions instead of using mechanical suffixes like `_s`.
+
+**Example:**
+```graphql
+type Vehicle_Cabin {
+  """Cabin seats for passengers."""
+  seats: [Vehicle_Cabin_Seat]
+
+  """Cabin doors."""
+  doors: [Vehicle_Cabin_Door]
+}
+```
+
+**Tracking:** All pluralized field names are logged to `vspec_reference/pluralized_field_names.yaml` showing the original VSS FQN, the plural field name used, and its location in the GraphQL schema.
 
 #### Enum Value Sanitization
 
@@ -112,6 +137,46 @@ enum Vehicle_Cabin_Seat_InstanceTag_Dimension2 {
 ```
 
 This ensures complete traceability between the VSS source and the generated GraphQL schema.
+
+### GraphQL Naming Convention Warnings
+
+GraphQL best practices recommend using **singular names for types** (e.g., `User` not `Users`, `Product` not `Products`). The S2DM exporter automatically detects VSS branches with plural names and generates warnings to help identify potential naming convention violations.
+
+**Detection:** The exporter uses the inflect library to identify potential plural type names. It maintains a whitelist of known exceptions (acronyms like "ADAS", "ABS", Latin words like "Status", "Chassis") to reduce false positives.
+
+**Warning Output:** When plural type names are detected, two files are generated in `vspec_reference/`:
+
+1. **`plural_type_warnings.yaml`** - Lists all detected plural type names:
+   ```yaml
+   # WARNING: These elements in the reference model seem to have a plural name...
+
+   Vehicle.Cabin.Lights:
+     singular: Light
+     currentNameInGraphQLModel: Vehicle_Cabin_Lights
+
+   Vehicle.Body.Mirrors:
+     singular: Mirror
+     currentNameInGraphQLModel: Vehicle_Body_Mirrors
+
+   # Whitelisted words (excluded from plural detection):
+   whitelisted_non_plurals:
+     - ADAS
+     - ABS
+     - Status
+     - Chassis
+     # ... etc
+   ```
+
+2. **Console warnings:** During export, warnings are logged for immediate visibility:
+   ```
+   WARNING: Type 'Vehicle_Cabin_Lights' uses potential plural name 'Lights'.
+            Suggested singular: 'Light' (VSS FQN: Vehicle.Cabin.Lights)
+   ```
+
+**Review Process:** These warnings help VSS maintainers identify:
+- **True plurals** - VSS branches that should be renamed to singular form
+- **False positives** - Words that end in 's' but aren't actually plural (add to whitelist)
+- **Acceptable exceptions** - Cases where plural names are intentional
 
 ### VSS Instances Become GraphQL Structures
 When your `vspec` has instances (like multiple seats), the exporter creates proper GraphQL types:
@@ -186,7 +251,9 @@ myOutput/
     ├── README.md                   # Documentation and provenance info
     ├── vspec_lookup_spec.yaml      # Complete VSS tree (fully expanded)
     ├── vspec_units.yaml            # Units used (if provided via -u or implicit)
-    └── vspec_quantities.yaml       # Quantities used (if provided via -q or implicit)
+    ├── vspec_quantities.yaml       # Quantities used (if provided via -q or implicit)
+    ├── plural_type_warnings.yaml   # Plural type names detected (if any)
+    └── pluralized_field_names.yaml # Fields changed to plural form (if any instances)
 ```
 
 ### VSS Reference Files
@@ -197,11 +264,14 @@ The `vspec_reference/` directory provides complete traceability:
 - **vspec_lookup_spec.yaml** - Complete VSS specification tree (fully processed and expanded) in YAML format
 - **vspec_units.yaml** - Unit definitions used during generation (included if units were provided via `-u` flag or implicitly loaded)
 - **vspec_quantities.yaml** - Quantity definitions used during generation (included if quantities were provided via `-q` flag or implicitly loaded)
+- **plural_type_warnings.yaml** - VSS branches with plural type names that may violate GraphQL naming conventions (generated if any detected)
+- **pluralized_field_names.yaml** - Fields whose names were changed to plural form for list fields (generated if any instances exist)
 
 These files allow you to:
 1. Trace GraphQL elements back to their VSS source using the FQN in `@vspec` directives
 2. Reproduce the exact GraphQL schema by re-running the exporter
 3. Understand which input files were used for generation
+4. Review naming convention warnings and pluralization changes
 
 
 

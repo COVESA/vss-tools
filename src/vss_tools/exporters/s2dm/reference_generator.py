@@ -34,6 +34,7 @@ def generate_vspec_reference(
     vspec_file: Path,
     units_files: tuple[Path, ...],
     quantities_files: tuple[Path, ...],
+    mapping_metadata: dict[str, dict] | None = None,
 ) -> None:
     """
     Generate VSS reference files alongside GraphQL output.
@@ -49,6 +50,7 @@ def generate_vspec_reference(
         vspec_file: Path to vspec file (to find implicit units/quantities)
         units_files: Unit files from CLI
         quantities_files: Quantity files from CLI
+        mapping_metadata: Optional metadata including plural type warnings
 
     Raises:
         S2DMExporterException: If reference file generation fails
@@ -152,8 +154,58 @@ def generate_vspec_reference(
             except (PermissionError, OSError) as e:
                 raise S2DMExporterException(f"Failed to write quantities file {quantities_output}: {e}") from e
 
+        # Write plural type warnings if any were collected
+        if mapping_metadata and mapping_metadata.get("plural_type_warnings"):
+            warnings_output = reference_dir / "plural_type_warnings.yaml"
+            try:
+                with open(warnings_output, "w") as f:
+                    # Write header comment
+                    f.write(
+                        "# WARNING: These elements in the reference model seem to have a plural name, "
+                        "while GraphQL best practices suggest the use of the singular form for type names.\n"
+                    )
+                    f.write("# Consider replacing plural forms and whitelisting false positives.\n\n")
+
+                    # Write each warning as FQN with nested fields
+                    for warning in mapping_metadata["plural_type_warnings"]:
+                        f.write(f"{warning['fqn']}:\n")
+                        f.write(f"  suggested_singular: {warning['suggested_singular']}\n")
+                        f.write(f"  current_name_in_graphql_model: {warning['type_name']}\n")
+                        f.write("\n")
+
+                warning_count = len(mapping_metadata["plural_type_warnings"])
+                log.info(f"  - Plural warnings: {warnings_output.name} ({warning_count} warning(s))")
+            except (PermissionError, OSError) as e:
+                raise S2DMExporterException(f"Failed to write plural warnings file {warnings_output}: {e}") from e
+
+        # Write pluralized field names if any were collected
+        if mapping_metadata and mapping_metadata.get("pluralized_field_names"):
+            pluralized_output = reference_dir / "pluralized_field_names.yaml"
+            try:
+                with open(pluralized_output, "w") as f:
+                    # Write header comment
+                    f.write(
+                        "# Following names were changed to their plural form as they resolve to an output type "
+                        "with a List type modifier.\n\n"
+                    )
+
+                    # Write each pluralized field as FQN with nested fields
+                    for entry in mapping_metadata["pluralized_field_names"]:
+                        f.write(f"{entry['fqn']}:\n")
+                        f.write(f"  plural_field_name: {entry['plural_field_name']}\n")
+                        f.write(f"  path_in_graphql_model: {entry['path_in_graphql_model']}\n")
+                        f.write("\n")
+
+                log.info(
+                    f"  - Pluralized fields: {pluralized_output.name} "
+                    f"({len(mapping_metadata['pluralized_field_names'])} field(s))"
+                )
+            except (PermissionError, OSError) as e:
+                raise S2DMExporterException(f"Failed to write pluralized fields file {pluralized_output}: {e}") from e
+
         # Generate README.md for provenance documentation
-        generate_reference_readme(reference_dir, vspec_file, actual_units, actual_quantities)
+        has_plural_warnings = mapping_metadata and bool(mapping_metadata.get("plural_type_warnings"))
+        generate_reference_readme(reference_dir, vspec_file, actual_units, actual_quantities, has_plural_warnings)
 
     except S2DMExporterException:
         # Re-raise our custom exceptions
@@ -168,6 +220,7 @@ def generate_reference_readme(
     vspec_file: Path,
     units_files: tuple[Path, ...] | None,
     quantities_files: tuple[Path, ...] | None,
+    has_plural_warnings: bool = False,
 ) -> None:
     """
     Generate README.md documenting the provenance of reference files.
@@ -177,6 +230,7 @@ def generate_reference_readme(
         vspec_file: Original vspec input file
         units_files: Units files used (explicit or implicit)
         quantities_files: Quantities files used (explicit or implicit)
+        has_plural_warnings: Whether plural type warnings were generated
 
     Raises:
         S2DMExporterException: If README generation fails
@@ -210,6 +264,10 @@ It could serve as a supporting reference for traceability or debugging.
         if quantities_files:
             readme_content += """
 * **vspec_quantities.yaml** - Quantity definitions categorizing measurements."""
+
+        if has_plural_warnings:
+            readme_content += """
+* **plural_type_warnings.txt** - VSS branches with plural type names (GraphQL prefers singular)."""
 
         readme_content += """
 
