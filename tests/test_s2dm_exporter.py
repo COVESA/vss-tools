@@ -16,6 +16,7 @@ from vss_tools.exporters.s2dm import (
     get_metadata_df,
     print_schema_with_vspec_directives,
 )
+from vss_tools.exporters.s2dm.type_builders import _sanitize_enum_value_for_graphql
 from vss_tools.main import get_trees
 from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
@@ -308,8 +309,8 @@ class TestS2DMExporter:
         assert "id: ID!" in sdl
 
         # Verify the complete structure matches the reference pattern
-        # The seat should be a list field (seat_s) because it has instances
-        assert "seat_s: [Vehicle_Cabin_Seat]" in sdl
+        # The seat should be a list field (seats) with natural plural because it has instances
+        assert "seats: [Vehicle_Cabin_Seat]" in sdl
 
     def test_allowed_value_enums_generation(self):
         """Test that allowed value enums are generated correctly."""
@@ -536,13 +537,11 @@ class TestS2DMExporter:
         assert "someSignal" in cabin_type_content
         # Verify it has the instantiate=false metadata
         assert 'metadata: [{key: "instantiate", value: "false"}]' in cabin_type_content
-        # And door_s array field should also be there
-        assert "door_s" in cabin_type_content
+        # And doors array field should also be there (natural plural)
+        assert "doors" in cabin_type_content
 
     def test_enum_value_sanitization_with_spaces(self):
-        """Test that enum values with spaces are properly sanitized and annotated."""
-        from vss_tools.exporters.s2dm.type_builders import _sanitize_enum_value_for_graphql
-
+        """Test that enum values with spaces are sanitized correctly."""
         # Test the sanitization function
         assert _sanitize_enum_value_for_graphql("some value") == ("SOME_VALUE", True)
         assert _sanitize_enum_value_for_graphql("SOME VALUE") == ("SOME_VALUE", True)
