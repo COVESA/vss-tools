@@ -54,6 +54,9 @@ class GraphQLDirectiveProcessor:
 
         lines = self._process_unit_enum_directives(lines, unit_enums_metadata, processed_enum_values)
         lines = self._process_allowed_enum_directives(lines, allowed_enums_metadata, processed_enum_values)
+        lines = self._process_instance_dimension_enum_directives(
+            lines, vspec_comments.get("instance_dimension_enums", {}), processed_enum_values
+        )
         lines = self._process_field_directives(lines, vspec_comments)
         lines = self._process_deprecated_directives(lines, vspec_comments.get("field_deprecated", {}))
         lines = self._process_range_directives(lines, vspec_comments.get("field_ranges", {}))
@@ -159,6 +162,51 @@ class GraphQLDirectiveProcessor:
                             if "@vspec" not in line:
                                 indent = line[: len(line) - len(line.lstrip())]
                                 # Annotate modified enum value with original value in metadata
+                                directive = f'@vspec(metadata: [{{key: "originalName", value: "{original_value}"}}])'
+                                lines[i] = f"{indent}{enum_value_name} {directive}"
+
+                            processed_values.add(enum_value_key)
+                            break
+
+        return lines
+
+    def _process_instance_dimension_enum_directives(
+        self, lines: list[str], instance_dimension_enums: dict, processed_values: set
+    ) -> list[str]:
+        """
+        Process instance dimension enum directives.
+
+        Annotates enum values that were modified during sanitization with their original names.
+        """
+        for enum_name, enum_data in instance_dimension_enums.items():
+            modified_values = enum_data.get("modified_values", {})
+            if not modified_values:
+                continue
+
+            in_target_enum = False
+
+            for i, line in enumerate(lines):
+                # Detect enum start
+                if line.strip().startswith(f"enum {enum_name}"):
+                    in_target_enum = True
+                    continue
+                elif line.strip().startswith("enum ") and in_target_enum:
+                    in_target_enum = False
+                    continue
+                elif line.strip() == "}" and in_target_enum:
+                    in_target_enum = False
+                    continue
+
+                # Process enum values within target enum
+                if in_target_enum and line.strip() and not line.strip().startswith('"'):
+                    stripped_line = line.strip()
+
+                    for enum_value_name, original_value in modified_values.items():
+                        enum_value_key = f"{enum_name}.{enum_value_name}"
+
+                        if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_values:
+                            if "@vspec" not in line:
+                                indent = line[: len(line) - len(line.lstrip())]
                                 directive = f'@vspec(metadata: [{{key: "originalName", value: "{original_value}"}}])'
                                 lines[i] = f"{indent}{enum_value_name} {directive}"
 

@@ -1,0 +1,28 @@
+# Test vspec for instance dimension enum sanitization
+
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Cabin:
+  type: branch
+  description: Cabin information.
+  instances:
+    - Row[1,2]
+
+Vehicle.Cabin.Seat:
+  type: branch
+  description: Seat information.
+  instances:
+    - ["DriverSide", "PassengerSide"]
+
+Vehicle.Cabin.Seat.Position:
+  type: branch
+  description: Seat position.
+  instances:
+    - ["FrontLeft", "FrontRight", "RearLeft", "RearRight"]
+
+Vehicle.Cabin.Seat.Position.IsOccupied:
+  datatype: boolean
+  type: actuator
+  description: Is the seat position occupied.

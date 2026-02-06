@@ -667,3 +667,38 @@ class TestS2DMExporter:
         assert 'IO_ERROR @vspec(metadata: [{key: "originalName", value: "IOError"}])' in schema_str
         assert 'XML_PARSER @vspec(metadata: [{key: "originalName", value: "XMLParser"}])' in schema_str
         assert 'SOME_API_KEY @vspec(metadata: [{key: "originalName", value: "someAPIKey"}])' in schema_str
+
+    def test_instance_dimension_enum_sanitization(self):
+        """Test that instance dimension enum values are properly sanitized and annotated."""
+        # Load the test vspec with instances that need sanitization
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_instance_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Check that Row instance enum is created and values are sanitized
+        assert "enum Vehicle_Cabin_InstanceTag_Dimension1" in schema_str
+        assert 'ROW1 @vspec(metadata: [{key: "originalName", value: "Row1"}])' in schema_str
+        assert 'ROW2 @vspec(metadata: [{key: "originalName", value: "Row2"}])' in schema_str
+
+        # Check that DriverSide/PassengerSide instance enum is created and values are sanitized
+        assert "enum Vehicle_Cabin_Seat_InstanceTag_Dimension1" in schema_str
+        assert 'DRIVER_SIDE @vspec(metadata: [{key: "originalName", value: "DriverSide"}])' in schema_str
+        assert 'PASSENGER_SIDE @vspec(metadata: [{key: "originalName", value: "PassengerSide"}])' in schema_str
+
+        # Check that FrontLeft/FrontRight/RearLeft/RearRight instance enum is created and values are sanitized
+        assert "enum Vehicle_Cabin_Seat_Position_InstanceTag_Dimension1" in schema_str
+        assert 'FRONT_LEFT @vspec(metadata: [{key: "originalName", value: "FrontLeft"}])' in schema_str
+        assert 'FRONT_RIGHT @vspec(metadata: [{key: "originalName", value: "FrontRight"}])' in schema_str
+        assert 'REAR_LEFT @vspec(metadata: [{key: "originalName", value: "RearLeft"}])' in schema_str
+        assert 'REAR_RIGHT @vspec(metadata: [{key: "originalName", value: "RearRight"}])' in schema_str
