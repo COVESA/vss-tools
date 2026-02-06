@@ -22,6 +22,7 @@ import re
 from typing import Any
 
 import caseconverter
+import inflect
 import pandas as pd
 from graphql import (
     GraphQLArgument,
@@ -62,6 +63,42 @@ def _extract_extended_attributes(row: pd.Series, extended_attributes: tuple[str,
         if ext_attr in row.index and pd.notna(row.get(ext_attr)):
             extracted[ext_attr] = row[ext_attr]
     return extracted
+
+
+# Initialize inflect engine for pluralization (singleton)
+_inflect_engine = inflect.engine()
+
+
+def _check_and_collect_plural_type_name(
+    converted_type_name: str, fqn: str, original_name: str, plural_name_warnings: dict[str, dict[str, Any]]
+) -> None:
+    """
+    Check if a name appears to be plural and collect for reporting.
+
+    Uses inflect library to detect potential plural forms. Reports all cases where
+    a singular form is detected, without filtering. This allows downstream tools
+    to decide which cases are true issues vs. acceptable exceptions.
+
+    Args:
+        converted_type_name: The converted type name (for schema)
+        fqn: The fully qualified VSS name for context
+        original_name: The original VSS branch/struct name (before conversion)
+        plural_name_warnings: Dictionary to store metadata (adds to "plural_type_warnings" key)
+    """
+    # Check if inflect detects a singular form
+    # Returns False if already singular, or the singular form if plural
+    singular = _inflect_engine.singular_noun(original_name)
+
+    if singular:
+        plural_name_warnings.setdefault("plural_type_warnings", []).append(
+            {"type_name": converted_type_name, "fqn": fqn, "plural_word": original_name, "suggested_singular": singular}
+        )
+
+        # Also log to console for immediate visibility
+        log.warning(
+            f"Type '{converted_type_name}' uses potential plural name '{original_name}'. "
+            f"Suggested singular: '{singular}' (VSS FQN: {fqn})"
+        )
 
 
 def create_unit_enums() -> tuple[dict[str, GraphQLEnumType], dict[str, dict[str, dict[str, str]]]]:
@@ -415,7 +452,12 @@ def create_object_type(
         GraphQL object type for the branch
     """
     branch_row = branches_df.loc[fqn]
+    original_name = branch_row["name"]
     type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+
+    # Check if branch name is plural and collect for reporting
+    # Pass original VSS branch name (before any conversion)
+    _check_and_collect_plural_type_name(type_name, fqn, original_name, vspec_comments)
 
     def get_fields() -> dict[str, GraphQLField]:
         fields = {}
@@ -478,7 +520,15 @@ def create_object_type(
             fields.update(hoisted_fields)
 
             if child_row.get("instances"):
-                fields[f"{field_name}_s"] = GraphQLField(GraphQLList(child_type))
+                # Use natural plural form for list fields (using inflect directly)
+                plural_field_name = _inflect_engine.plural(field_name)
+                fields[plural_field_name] = GraphQLField(GraphQLList(child_type))
+
+                # Collect pluralized field name for reporting
+                field_path = build_field_path(type_name, plural_field_name)
+                vspec_comments.setdefault("pluralized_field_names", []).append(
+                    {"fqn": child_fqn, "plural_field_name": plural_field_name, "path_in_graphql_model": field_path}
+                )
             else:
                 fields[field_name] = GraphQLField(child_type)
 
