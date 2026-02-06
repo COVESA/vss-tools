@@ -100,7 +100,7 @@ def generate_s2dm_schema(
         for fqn in branches_df.index:
             if fqn not in types_registry:
                 types_registry[fqn] = create_object_type(
-                    fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
+                    fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments, extended_attributes
                 )
 
         # Assemble complete schema

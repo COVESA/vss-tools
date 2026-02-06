@@ -270,6 +270,9 @@ def write_domain_files(
             # Apply vspec directives to instance tag files
             if directive_processor and hasattr(directive_processor, "process_schema"):
                 lines = file_content.split("\n")
+                lines = directive_processor._process_instance_dimension_enum_directives(
+                    lines, vspec_comments.get("instance_dimension_enums", {}), set()
+                )
                 lines = directive_processor._process_type_directives(lines, vspec_comments)
                 file_content = "\n".join(lines)
 

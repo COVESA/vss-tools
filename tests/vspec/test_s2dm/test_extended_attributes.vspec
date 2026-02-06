@@ -1,0 +1,33 @@
+# Test vspec for extended attributes in S2DM exporter
+
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Speed:
+  datatype: float
+  type: sensor
+  unit: percent
+  description: Vehicle speed.
+  source: ecu0xAA
+  quality: 100
+
+Vehicle.Temperature:
+  datatype: int16
+  type: sensor
+  unit: degrees
+  description: Ambient temperature.
+  source: ecu0xBB
+  quality: 95
+  calibration: factory
+
+Vehicle.Info:
+  type: branch
+  description: Vehicle information.
+
+Vehicle.Info.Model:
+  datatype: string
+  type: attribute
+  description: Vehicle model.
+  customMetadata: test_value
+  anotherAttribute: 42
