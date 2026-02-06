@@ -110,6 +110,8 @@ def create_instance_types(
         Mapping of type names to GraphQL enum or object types
     """
     types: dict[str, GraphQLEnumType | GraphQLObjectType] = {}
+    vspec_comments.setdefault("instance_dimension_enums", {})
+
     for fqn, row in branches_df[branches_df["instances"].notna()].iterrows():
         if instances := row.get("instances"):
             base_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
@@ -119,11 +121,28 @@ def create_instance_types(
             fields = {}
             for i, values in enumerate(dimensions, 1):
                 enum_name = f"{tag_name}_Dimension{i}"
+
+                # Sanitize enum values and track modifications
+                enum_values = {}
+                modified_values = {}
+
+                for v in values:
+                    sanitized, was_modified = _sanitize_enum_value_for_graphql(str(v))
+                    enum_values[sanitized] = GraphQLEnumValue(v)
+
+                    if was_modified:
+                        modified_values[sanitized] = str(v)
+
                 types[enum_name] = GraphQLEnumType(
                     enum_name,
-                    {v: GraphQLEnumValue(v) for v in values},
+                    enum_values,
                     description=f"Dimensional enum for VSS instance dimension {i}.",
                 )
+
+                # Store metadata for directive processor
+                if modified_values:
+                    vspec_comments["instance_dimension_enums"][enum_name] = {"modified_values": modified_values}
+
                 fields[f"dimension{i}"] = GraphQLField(types[enum_name])
 
             types[tag_name] = GraphQLObjectType(tag_name, fields)
