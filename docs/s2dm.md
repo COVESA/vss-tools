@@ -46,6 +46,37 @@ Likewise, the `driverPosition` was derived from `Vehicle.Cabin.DriverPosition` a
 
 The `@vspec` directive is also used to annotate original names when they have been modified for GraphQL compliance (for example, see [Enum Value Sanitization](#enum-value-sanitization)).
 
+#### Extended Attributes
+
+If the VSpec model uses extended attributes (custom metadata), the exporter add them to `@vspec` metadata annotations.
+
+**Example VSS with extended attributes `source` and `quality`:**
+```yaml
+Vehicle.Speed:
+  datatype: float
+  type: sensor
+  unit: km/h
+  source: ecu0xAA        # Extended attribute
+  quality: 100           # Extended attribute
+```
+
+**Generated GraphQL:**
+```graphql
+type Vehicle {
+  speed(unit: VelocityUnitEnum = KILOMETERS_PER_HOUR): Float
+    @vspec(
+      element: SENSOR,
+      fqn: "Vehicle.Speed",
+      metadata: [
+        {key: "source", value: "ecu0xAA"},
+        {key: "quality", value: "100"}
+      ]
+    )
+}
+```
+
+Extended attributes work on all VSS elements: branches, sensors, actuators, attributes, and structs.
+
 ### VSS Data Types Support
 The exporter handles all `vspec` data types as follows:
 - **Strings** → GraphQL String
