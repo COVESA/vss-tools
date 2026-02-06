@@ -62,12 +62,21 @@ GraphQL enum values must follow strict naming rules (alphanumeric + underscore o
 - **CamelCase** → Converted to SCREAMING_SNAKE_CASE (`"HTTPSProtocol"` → `HTTPS_PROTOCOL`)
 - **Leading digits** → Prefixed with underscore (`"123abc"` → `_123ABC`)
 
-When enum values are modified, the original VSS value is preserved using `@vspec` metadata:
+When enum values are modified, the original VSS value is preserved using `@vspec` metadata for complete traceability. This applies to both **allowed value enums** and **instance dimension enums**.
 
+**Allowed Value Enum Example:**
 ```graphql
 enum Vehicle_Connection_Protocol_Enum @vspec(element: SENSOR, fqn: "Vehicle.Connection.Protocol", metadata: [{key: "allowed", value: "['HTTPSProtocol', 'TCPProtocol']"}]) {
   HTTPS_PROTOCOL @vspec(metadata: [{key: "originalName", value: "HTTPSProtocol"}])
   TCP_PROTOCOL @vspec(metadata: [{key: "originalName", value: "TCPProtocol"}])
+}
+```
+
+**Instance Dimension Enum Example:**
+```graphql
+enum Vehicle_Cabin_Seat_InstanceTag_Dimension2 {
+  DRIVER_SIDE @vspec(metadata: [{key: "originalName", value: "DriverSide"}])
+  PASSENGER_SIDE @vspec(metadata: [{key: "originalName", value: "PassengerSide"}])
 }
 ```
 
@@ -84,13 +93,13 @@ type Vehicle_Cabin_Seat_InstanceTag @instanceTag {
 }
 
 enum Vehicle_Cabin_Seat_InstanceTag_Dimension1 {
-  Row1
-  Row2
+  ROW1 @vspec(metadata: [{key: "originalName", value: "Row1"}])
+  ROW2 @vspec(metadata: [{key: "originalName", value: "Row2"}])
 }
 
 enum Vehicle_Cabin_Seat_InstanceTag_Dimension2 {
-  DriverSide
-  PassengerSide
+  DRIVER_SIDE @vspec(metadata: [{key: "originalName", value: "DriverSide"}])
+  PASSENGER_SIDE @vspec(metadata: [{key: "originalName", value: "PassengerSide"}])
 }
 ```
 Such an structure is then usable by any other type like:
