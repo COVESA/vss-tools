@@ -15,12 +15,13 @@ from typing import Callable, Dict
 
 from caseconverter import DELIMITERS, pascalcase
 
-from vss_tools.utils.graphql_utils import (
+from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
+
+from .graphql_utils import (
     DEFAULT_CONVERSIONS,
     GraphQLElementType,
     load_predefined_schema_elements,
 )
-from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
 
 # VSS leaf types to track in field metadata (corresponds to VspecElement enum in directives.graphql)
 # Note: BRANCH is excluded as it's handled separately for object types
