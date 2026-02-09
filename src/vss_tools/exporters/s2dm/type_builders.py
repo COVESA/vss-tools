@@ -19,7 +19,7 @@ This module contains all type creation logic for S2DM schema generation:
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, cast
 
 import caseconverter
 import inflect
@@ -39,11 +39,11 @@ from graphql import (
 from vss_tools import log
 from vss_tools.datatypes import dynamic_units
 from vss_tools.tree import VSSNode, expand_string
-from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP
-from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from vss_tools.utils.pandas_utils import get_metadata_df
 
 from .constants import S2DM_CONVERSIONS, VSS_LEAF_TYPES
+from .graphql_scalars import VSS_DATATYPE_MAP
+from .graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from .metadata_tracker import build_field_path
 
 
@@ -70,7 +70,7 @@ _inflect_engine = inflect.engine()
 
 
 def _check_and_collect_plural_type_name(
-    converted_type_name: str, fqn: str, original_name: str, plural_name_warnings: dict[str, dict[str, Any]]
+    converted_type_name: str, fqn: str, original_name: str, plural_name_warnings: dict[str, Any]
 ) -> None:
     """
     Check if a name appears to be plural and collect for reporting.
@@ -90,7 +90,8 @@ def _check_and_collect_plural_type_name(
     singular = _inflect_engine.singular_noun(original_name)
 
     if singular:
-        plural_name_warnings.setdefault("plural_type_warnings", []).append(
+        warnings_list = cast(list[dict[str, Any]], plural_name_warnings.setdefault("plural_type_warnings", []))
+        warnings_list.append(
             {"type_name": converted_type_name, "fqn": fqn, "plural_word": original_name, "suggested_singular": singular}
         )
 
@@ -152,7 +153,7 @@ def _get_quantity_units() -> dict[str, dict[str, dict[str, str]]]:
 
 
 def create_instance_types(
-    branches_df: pd.DataFrame, vspec_comments: dict[str, dict[str, Any]]
+    branches_df: pd.DataFrame, vspec_comments: dict[str, Any]
 ) -> dict[str, GraphQLEnumType | GraphQLObjectType]:
     """
     Create GraphQL types for VSS instance-based branches.
@@ -330,7 +331,7 @@ def _sanitize_enum_value_for_graphql(original_value: str) -> tuple[str, bool]:
 
 def create_struct_types(
     data_type_tree: VSSNode | None,
-    vspec_comments: dict[str, dict[str, Any]],
+    vspec_comments: dict[str, Any],
     extended_attributes: tuple[str, ...] = (),
 ) -> dict[str, GraphQLObjectType]:
     """
@@ -430,7 +431,7 @@ def create_object_type(
     leaves_df: pd.DataFrame,
     types_registry: dict[str, Any],
     unit_enums: dict[str, GraphQLEnumType],
-    vspec_comments: dict[str, dict[str, Any]],
+    vspec_comments: dict[str, Any],
     extended_attributes: tuple[str, ...] = (),
 ) -> GraphQLObjectType:
     """
@@ -526,7 +527,8 @@ def create_object_type(
 
                 # Collect pluralized field name for reporting
                 field_path = build_field_path(type_name, plural_field_name)
-                vspec_comments.setdefault("pluralized_field_names", []).append(
+                pluralized_list = cast(list[dict[str, Any]], vspec_comments.setdefault("pluralized_field_names", []))
+                pluralized_list.append(
                     {"fqn": child_fqn, "plural_field_name": plural_field_name, "path_in_graphql_model": field_path}
                 )
             else:

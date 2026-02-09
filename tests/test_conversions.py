@@ -12,7 +12,11 @@ from caseconverter import DELIMITERS, pascalcase
 
 sys.path.insert(0, "src")
 
-from vss_tools.utils.graphql_utils import DEFAULT_CONVERSIONS, GraphQLElementType, convert_name_for_graphql_schema
+from vss_tools.exporters.s2dm.graphql_utils import (
+    DEFAULT_CONVERSIONS,
+    GraphQLElementType,
+    convert_name_for_graphql_schema,
+)
 from vss_tools.utils.string_conversion_utils import handle_fqn_conversion
 
 print("=== Creating S2DM conversions in same scope ===")

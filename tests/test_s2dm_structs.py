@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from graphql import GraphQLList, GraphQLNonNull, GraphQLObjectType, is_object_type
 from vss_tools.exporters.s2dm import S2DM_CONVERSIONS, generate_s2dm_schema
+from vss_tools.exporters.s2dm.graphql_scalars import VSS_DATATYPE_MAP
+from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from vss_tools.main import get_trees
-from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP
-from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
 
 class TestS2DMStructs:

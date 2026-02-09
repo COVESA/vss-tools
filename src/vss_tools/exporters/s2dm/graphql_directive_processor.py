@@ -18,7 +18,7 @@ from string import Template
 
 from graphql import GraphQLSchema, print_schema
 
-from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
+from .graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
 
 class GraphQLDirectiveProcessor:
