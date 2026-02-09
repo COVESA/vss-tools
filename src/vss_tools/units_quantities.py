@@ -18,6 +18,10 @@ class MalformedDictException(Exception):
     pass
 
 
+class DuplicatedUnitException(Exception):
+    pass
+
+
 def load_units_or_quantities(
     files: list[Path], class_type: type[VSSUnit | VSSQuantity]
 ) -> dict[str, VSSUnit | VSSQuantity]:
@@ -30,8 +34,7 @@ def load_units_or_quantities(
         log.info(f"Loaded '{class_type.__name__}', file={file.absolute()}, elements={len(content)}")
         for k, v in content.items():
             if v is None:
-                log.error(f"'{class_type.__name__}', '{k}' is 'None'")
-                raise MalformedDictException()
+                raise MalformedDictException(f"'{class_type.__name__}', '{k}' is 'None'")
             overwrite = False
             if k in data:
                 overwrite = True
@@ -58,38 +61,23 @@ def load_units(unit_files: list[Path]) -> dict[str, VSSUnit]:
 
 def _validate_unique_unit_descriptions(units: dict[str, VSSUnit]) -> None:
     """
-    Validate that unit descriptions are unique within each quantity.
+    Validate that unit descriptions are globally unique.
 
     Args:
         units: Dictionary of loaded units
 
     Raises:
-        MalformedDictException: If duplicate unit descriptions are found within a quantity
+        DuplicatedUnitException: If duplicate unit descriptions are found
     """
-    # Group units by quantity and track unit descriptions
-    quantity_unit_descriptions: dict[str, dict[str, str]] = {}
-
-    for unit_key, unit_data in units.items():
-        quantity = unit_data.quantity
-        unit_description = unit_data.unit
-
-        if not unit_description:
+    # <unit>: <first-key-using-it>
+    unit_defs: dict[str, str] = {}
+    for key, value in units.items():
+        unit = value.unit
+        if not unit:
             continue
-
-        if quantity not in quantity_unit_descriptions:
-            quantity_unit_descriptions[quantity] = {}
-
-        # Check for duplicate unit descriptions within the same quantity
-        if unit_description in quantity_unit_descriptions[quantity]:
-            existing_key = quantity_unit_descriptions[quantity][unit_description]
-            log.error(
-                f"Duplicate unit description '{unit_description}' found for quantity '{quantity}'. "
-                f"Unit key '{unit_key}' conflicts with existing unit key '{existing_key}'. "
-                f"Each unit within a quantity must have a unique description."
-            )
-            raise MalformedDictException(f"Duplicate unit description '{unit_description}' for quantity '{quantity}'")
-
-        quantity_unit_descriptions[quantity][unit_description] = unit_key
+        if unit in unit_defs:
+            raise DuplicatedUnitException(f"Duplicated unit: '{value.unit}'. Used by: {[unit_defs[unit], key]}")
+        unit_defs[unit] = key
 
 
 def load_quantities(quantities: list[Path]) -> dict[str, VSSQuantity]:

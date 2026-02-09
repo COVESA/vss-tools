@@ -24,7 +24,7 @@ from vss_tools.model import (
 )
 from vss_tools.strict import StrictExceptions, StrictOption, load_strict_exceptions
 from vss_tools.tree import ModelValidationException, VSSNode, add_struct_schemas, build_tree
-from vss_tools.units_quantities import load_quantities, load_units
+from vss_tools.units_quantities import DuplicatedUnitException, MalformedDictException, load_quantities, load_units
 from vss_tools.vspec import InvalidSpecDuplicatedEntryException, InvalidSpecException, load_vspec
 
 
@@ -201,7 +201,7 @@ def get_trees(
         log.info(f"User defined extra attributes: {extended_attributes}")
     try:
         load_quantities_and_units(quantities, units, vspec.parent)
-    except ModelValidationException as e:
+    except (ModelValidationException, DuplicatedUnitException, MalformedDictException) as e:
         log.critical(e)
         exit(1)
 
