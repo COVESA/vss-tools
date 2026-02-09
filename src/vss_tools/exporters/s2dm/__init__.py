@@ -46,6 +46,7 @@ from .schema_generator import (
 @clo.types_opt
 @clo.modular_opt
 @clo.flat_domains_opt
+@clo.fqn_type_names_opt
 @clo.strict_exceptions_opt
 def cli(
     vspec: Path,
@@ -60,6 +61,7 @@ def cli(
     types: tuple[Path, ...],
     modular: bool,
     flat_domains: bool,
+    fqn_type_names: bool,
     strict_exceptions: Path | None,
 ) -> None:
     """
@@ -110,7 +112,7 @@ def cli(
 
         # Generate the schema
         schema, unit_enums_metadata, allowed_enums_metadata, mapping_metadata = generate_s2dm_schema(
-            tree, data_type_tree, extended_attributes=extended_attributes
+            tree, data_type_tree, extended_attributes=extended_attributes, use_short_names=not fqn_type_names
         )
 
         if modular:

@@ -138,6 +138,108 @@ enum Vehicle_Cabin_Seat_InstanceTag_Dimension2 {
 
 This ensures complete traceability between the VSS source and the generated GraphQL schema.
 
+### GraphQL Type Naming: Short Names with Collision Resolution
+
+**By default**, the S2DM exporter generates **clean, short GraphQL type names** using the last segment of the VSS path:
+
+- `Vehicle.Cabin.Door.Window` → `type Window`
+- `Vehicle.Body.Lights` → `type Lights`
+- `Vehicle.Chassis.Axle` → `type Axle`
+
+This improves readability and follows GraphQL best practices for concise type names.
+
+#### Progressive Qualification for Name Collisions
+
+Since VSS does not enforce branch name uniqueness (only Fully Qualified Names are unique), the exporter uses **progressive qualification** when collisions are detected:
+
+1. **Try short name first**: `Window`
+2. **If collision, add parent**: `Door_Window`, `Windshield_Window`
+3. **If still collision, add more ancestors**: `Cabin_Door_Window`, `Body_Windshield_Window`
+4. **Last resort: use full FQN**: `Vehicle_Cabin_Door_Window`
+
+**Example from real VSS collisions:**
+
+```graphql
+# Vehicle.Cabin.Door.Shade and Vehicle.Cabin.Sunroof.Shade both have short name "Shade"
+# Resolution: qualify with parent name
+type Door_Shade @vspec(element: BRANCH, fqn: "Vehicle.Cabin.Door.Shade") {
+  position: Int
+}
+
+type Sunroof_Shade @vspec(element: BRANCH, fqn: "Vehicle.Cabin.Sunroof.Shade") {
+  position: Int
+}
+```
+
+**Console Output:** During export, collision statistics are logged:
+
+```
+[INFO] Short name collision resolution:
+  ✓ 245 types use short names (no collisions)
+  ⚠ 8 types qualified with parent (e.g., Parent_Name)
+  ⚠ 2 types qualified with multiple ancestors (e.g., GrandParent_Parent_Name)
+  → See vspec_reference/short_name_collisions.yaml for 5 collision groups
+```
+
+**Collision Report:** The `vspec_reference/short_name_collisions.yaml` file documents all name collisions and resolutions in a compact format:
+
+```yaml
+# Short Name Collision Resolution Report
+#
+# This file documents how VSS branch names were converted to GraphQL type names.
+# Resolution strategy: Progressive parent qualification
+#   1. Try short name (e.g., 'Window')
+#   2. If collision: add parent (e.g., 'Door_Window', 'Windshield_Window')
+#   3. If still collision: add more ancestors (e.g., 'Cabin_Door_Window')
+#   4. Last resort: use full FQN with underscores
+
+summary:
+  total_branches: 137
+  no_collisions: 120
+  parent_qualified: 15
+  multi_ancestor_qualified: 2
+  full_fqn_fallback: 0
+
+# Collisions resolved by adding immediate parent name (e.g., Parent_Name)
+parent_qualified:
+  - { fqn: Vehicle.Body.Windshield.Shade, type: Windshield_Shade }
+  - { fqn: Vehicle.Cabin.Door.Shade, type: Door_Shade }
+  - { fqn: Vehicle.Cabin.Sunroof.Shade, type: Sunroof_Shade }
+
+# Collisions resolved by adding multiple ancestor names (e.g., GrandParent_Parent_Name)
+multi_ancestor_qualified:
+  - { fqn: Vehicle.Powertrain.Engine.Brake, type: Engine_Brake }
+  - { fqn: Vehicle.Chassis.Axle.Wheel.Brake, type: Axle_Wheel_Brake }
+
+# Detailed collision groups: branches that share the same short name
+collision_groups:
+  Axle:  # 4 branches share this name
+    - { fqn: Vehicle.Chassis.Axle, type: Chassis_Axle }
+    - { fqn: Vehicle.Trailer.Axle, type: Trailer_Axle }
+    - { fqn: Vehicle.Chassis.Axle.Wheel.Axle, type: Wheel_Axle }
+    - { fqn: Vehicle.Body.Hood.Axle, type: Hood_Axle }
+  Shade:  # 2 branches share this name
+    - { fqn: Vehicle.Cabin.Door.Shade, type: Door_Shade }
+    - { fqn: Vehicle.Cabin.Sunroof.Shade, type: Sunroof_Shade }
+```
+
+#### Opting Out: Full FQN Names
+
+To use traditional fully-qualified names with underscores (legacy behavior), use the `--fqn-type-names` flag:
+
+```bash
+vspec export s2dm --vspec spec.vspec --output myOutput/ --fqn-type-names
+```
+
+This generates:
+- `Vehicle.Cabin.Door.Window` → `type Vehicle_Cabin_Door_Window`
+- `Vehicle.Body.Lights` → `type Vehicle_Body_Lights`
+
+**When to use `--fqn-type-names`:**
+- You need backward compatibility with existing schemas
+- Your tooling expects the old naming convention
+- You prefer explicit full paths over short names
+
 ### GraphQL Naming Convention Warnings
 
 GraphQL best practices recommend using **singular names for types** (e.g., `User` not `Users`, `Product` not `Products`). The S2DM exporter automatically detects VSS branches with plural names and generates warnings to help identify potential naming convention violations.
@@ -152,11 +254,11 @@ GraphQL best practices recommend using **singular names for types** (e.g., `User
 
    Vehicle.Cabin.Lights:
      singular: Light
-     currentNameInGraphQLModel: Vehicle_Cabin_Lights
+     currentNameInGraphQLModel: Lights  # or Vehicle_Cabin_Lights if using --fqn-type-names
 
    Vehicle.Body.Mirrors:
      singular: Mirror
-     currentNameInGraphQLModel: Vehicle_Body_Mirrors
+     currentNameInGraphQLModel: Mirrors  # or Vehicle_Body_Mirrors if using --fqn-type-names
 
    # Whitelisted words (excluded from plural detection):
    whitelisted_non_plurals:
@@ -169,7 +271,7 @@ GraphQL best practices recommend using **singular names for types** (e.g., `User
 
 2. **Console warnings:** During export, warnings are logged for immediate visibility:
    ```
-   WARNING: Type 'Vehicle_Cabin_Lights' uses potential plural name 'Lights'.
+   WARNING: Type 'Lights' uses potential plural name 'Lights'.
             Suggested singular: 'Light' (VSS FQN: Vehicle.Cabin.Lights)
    ```
 
@@ -252,6 +354,7 @@ myOutput/
     ├── vspec_lookup_spec.yaml      # Complete VSS tree (fully expanded)
     ├── vspec_units.yaml            # Units used (if provided via -u or implicit)
     ├── vspec_quantities.yaml       # Quantities used (if provided via -q or implicit)
+    ├── short_name_collisions.yaml  # Name collision resolutions (if any detected)
     ├── plural_type_warnings.yaml   # Plural type names detected (if any)
     └── pluralized_field_names.yaml # Fields changed to plural form (if any instances)
 ```
@@ -264,6 +367,7 @@ The `vspec_reference/` directory provides complete traceability:
 - **vspec_lookup_spec.yaml** - Complete VSS specification tree (fully processed and expanded) in YAML format
 - **vspec_units.yaml** - Unit definitions used during generation (included if units were provided via `-u` flag or implicitly loaded)
 - **vspec_quantities.yaml** - Quantity definitions used during generation (included if quantities were provided via `-q` flag or implicitly loaded)
+- **short_name_collisions.yaml** - Branch name collisions and progressive qualification resolutions (generated if collisions detected)
 - **plural_type_warnings.yaml** - VSS branches with plural type names that may violate GraphQL naming conventions (generated if any detected)
 - **pluralized_field_names.yaml** - Fields whose names were changed to plural form for list fields (generated if any instances exist)
 
@@ -313,6 +417,8 @@ enum VelocityUnitEnum @vspec(element: QUANTITY_KIND, metadata: [{key: "quantity"
   MILES_PER_HOUR @vspec(element: UNIT, metadata: [{key: "unit", value: "mph"}])
 }
 ```
+
+**Note:** Type names use short names by default (`Vehicle` instead of `Vehicle`). For types deeper in the tree like `Vehicle.Cabin.Door.Window`, the short name `Window` is used unless a collision is detected. Use `--fqn-type-names` to get fully-qualified names like `Vehicle_Cabin_Door_Window`.
 
 ## Output Structures
 

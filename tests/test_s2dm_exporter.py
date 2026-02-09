@@ -84,7 +84,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
 
         # Check that schema is valid
         assert schema is not None
@@ -123,7 +123,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema(schema)
 
         # Check that output contains expected elements
@@ -151,7 +151,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema(schema)
 
         # Check that unit enums are generated
@@ -184,7 +184,9 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
         schema_str = print_schema_with_vspec_directives(
             schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
         )
@@ -222,7 +224,9 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
         sdl = print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
 
         # Test @deprecated directive for massage field
@@ -268,7 +272,9 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
         sdl = print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
 
         # Test that instance tag type is created
@@ -330,7 +336,7 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
         schema_sdl = print_schema(schema)
 
         # Check that allowed value enums were generated
@@ -380,7 +386,9 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
 
         # Test modular export with flat domains (default)
         output_dir = tmp_path / "modular_flat"
@@ -427,7 +435,9 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
 
         # Test modular export with nested domains
         output_dir = tmp_path / "modular_nested"
@@ -476,7 +486,9 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
 
         # Test modular export with flat domains
         output_dir = tmp_path / "modular_instance_test"
@@ -512,7 +524,7 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
         # Verify that Vehicle_Cabin_Door type doesn't have someSignal
@@ -565,7 +577,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, _, allowed_metadata, _ = generate_s2dm_schema(tree)
+        schema, _, allowed_metadata, _ = generate_s2dm_schema(tree, use_short_names=False)
 
         # Check that schema is valid
         assert schema is not None
@@ -604,7 +616,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
         # Check that enum type has @vspec directive with element
@@ -679,7 +691,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
         # Check Component.Type enum with AbCd
@@ -719,7 +731,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
         # Check that Row instance enum is created and values are sanitized
