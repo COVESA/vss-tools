@@ -178,6 +178,111 @@ def generate_vspec_reference(
             except (PermissionError, OSError) as e:
                 raise S2DMExporterException(f"Failed to write plural warnings file {warnings_output}: {e}") from e
 
+        # Write short name collisions only if short names were actually used
+        # (short_name_mapping will be None when --fqn-type-names is used)
+        if mapping_metadata and mapping_metadata.get("short_name_mapping") is not None:
+            collisions_output = reference_dir / "short_name_collisions.yaml"
+            try:
+                with open(collisions_output, "w") as f:
+                    # Write header comment
+                    f.write("# Short Name Collision Resolution Report\n")
+                    f.write("#\n")
+                    f.write("# This file documents how VSS branch names were converted to GraphQL type names.\n")
+                    f.write("# Resolution strategy: Progressive parent qualification\n")
+                    f.write("#   1. Try short name (e.g., 'Window')\n")
+                    f.write("#   2. If collision: add parent (e.g., 'Door_Window', 'Windshield_Window')\n")
+                    f.write("#   3. If still collision: add more ancestors (e.g., 'Cabin_Door_Window')\n")
+                    f.write("#   4. Last resort: use full FQN with underscores\n\n")
+
+                    collision_list = mapping_metadata.get("short_name_collisions", [])
+                    name_mapping = mapping_metadata.get("short_name_mapping", {})
+                    stats = mapping_metadata.get("short_name_stats", {})
+
+                    # Organize FQNs by resolution strategy
+                    parent_qualified_fqns = []
+                    multi_qualified_fqns = []
+                    full_fqn_fqns = []
+
+                    for fqn, assigned_name in name_mapping.items():
+                        fqn_parts = fqn.split(".")
+                        short_name = fqn_parts[-1]
+
+                        if assigned_name == short_name:
+                            # No collision - skip (we'll only report collisions)
+                            continue
+                        elif assigned_name == "_".join(fqn_parts):
+                            # Full FQN used
+                            full_fqn_fqns.append(fqn)
+                        else:
+                            # Qualified name - check depth
+                            assigned_parts = assigned_name.split("_")
+                            if len(assigned_parts) == 2:
+                                # Parent-qualified (e.g., Parent_Name)
+                                parent_qualified_fqns.append(fqn)
+                            else:
+                                # Multi-ancestor qualified
+                                multi_qualified_fqns.append(fqn)
+
+                    # Write summary section
+                    f.write("summary:\n")
+                    f.write(f"  total_branches: {len(name_mapping)}\n")
+                    f.write(f"  no_collisions: {stats.get('no_collision', 0)}\n")
+                    f.write(f"  parent_qualified: {stats.get('parent_qualified', 0)}\n")
+                    f.write(f"  multi_ancestor_qualified: {stats.get('multi_parent_qualified', 0)}\n")
+                    f.write(f"  full_fqn_fallback: {stats.get('full_fqn', 0)}\n\n")
+
+                    # Section 1: Parent-qualified names
+                    if parent_qualified_fqns:
+                        f.write("# Collisions resolved by adding immediate parent name (e.g., Parent_Name)\n")
+                        f.write("parent_qualified:\n")
+                        for fqn in sorted(parent_qualified_fqns):
+                            assigned_name = name_mapping[fqn]
+                            f.write(f"  - {{ fqn: {fqn}, type: {assigned_name} }}\n")
+                        f.write("\n")
+
+                    # Section 2: Multi-ancestor qualified names
+                    if multi_qualified_fqns:
+                        f.write(
+                            "# Collisions resolved by adding multiple ancestor names (e.g., GrandParent_Parent_Name)\n"
+                        )
+                        f.write("multi_ancestor_qualified:\n")
+                        for fqn in sorted(multi_qualified_fqns):
+                            assigned_name = name_mapping[fqn]
+                            f.write(f"  - {{ fqn: {fqn}, type: {assigned_name} }}\n")
+                        f.write("\n")
+
+                    # Section 3: Full FQN names (last resort)
+                    if full_fqn_fqns:
+                        f.write("# Even with qualification, collisions persisted - using full FQN\n")
+                        f.write("full_fqn_fallback:\n")
+                        for fqn in sorted(full_fqn_fqns):
+                            assigned_name = name_mapping[fqn]
+                            f.write(f"  - {{ fqn: {fqn}, type: {assigned_name} }}\n")
+                        f.write("\n")
+
+                    # Section 4: Collision groups (detailed view by short name)
+                    if collision_list:
+                        f.write("# Detailed collision groups: branches that share the same short name\n")
+                        f.write("collision_groups:\n")
+                        for collision in sorted(collision_list, key=lambda x: x["short_name"]):
+                            short_name = collision["short_name"]
+                            f.write(f"  {short_name}:  # {collision['collision_count']} branches share this name\n")
+                            for fqn in sorted(collision["fqns"]):
+                                assigned_name = collision["assigned_names"][fqn]
+                                f.write(f"    - {{ fqn: {fqn}, type: {assigned_name} }}\n")
+                        f.write("\n")
+
+                total_count = len(name_mapping) if name_mapping else 0
+                collision_count = len(collision_list) if collision_list else 0
+                log.info(
+                    f"  - Short name resolution: {collisions_output.name} ({total_count} branches, "
+                    + f"{collision_count} collision groups)"
+                )
+            except (PermissionError, OSError) as e:
+                raise S2DMExporterException(
+                    f"Failed to write short name collisions file {collisions_output}: {e}"
+                ) from e
+
         # Write pluralized field names if any were collected
         if mapping_metadata and mapping_metadata.get("pluralized_field_names"):
             pluralized_output = reference_dir / "pluralized_field_names.yaml"
