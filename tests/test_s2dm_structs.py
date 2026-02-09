@@ -48,7 +48,7 @@ class TestS2DMStructs:
     def test_struct_types_are_created(self, struct_trees):
         """Test that struct types are converted to GraphQL object types."""
         tree, data_type_tree = struct_trees
-        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Check that struct types exist in the schema
         nested_struct_name = convert_name_for_graphql_schema(
@@ -72,7 +72,7 @@ class TestS2DMStructs:
     def test_struct_properties_are_non_null(self, struct_trees):
         """Test that all struct properties are non-null fields."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get NestedStruct type
         nested_struct_name = convert_name_for_graphql_schema(
@@ -88,7 +88,7 @@ class TestS2DMStructs:
     def test_struct_properties_have_correct_types(self, struct_trees):
         """Test that struct properties map to correct GraphQL types."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get NestedStruct type
         nested_struct_name = convert_name_for_graphql_schema(
@@ -115,7 +115,7 @@ class TestS2DMStructs:
     def test_nested_struct_references(self, struct_trees):
         """Test that structs can reference other structs."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get ParentStruct type
         parent_struct_name = convert_name_for_graphql_schema(
@@ -147,7 +147,7 @@ class TestS2DMStructs:
     def test_struct_array_properties(self, struct_trees):
         """Test that struct array properties are correctly handled."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get ParentStruct type
         parent_struct_name = convert_name_for_graphql_schema(
@@ -181,7 +181,7 @@ class TestS2DMStructs:
     def test_signal_with_struct_datatype(self, struct_trees):
         """Test that signals can use struct datatypes."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get the TestRoot type
         root_type_name = convert_name_for_graphql_schema("TestRoot", GraphQLElementType.TYPE, S2DM_CONVERSIONS)
@@ -212,7 +212,7 @@ class TestS2DMStructs:
     def test_struct_metadata_and_comments(self, struct_trees):
         """Test that struct metadata and comments are preserved."""
         tree, data_type_tree = struct_trees
-        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get struct type name
         nested_struct_name = convert_name_for_graphql_schema(
@@ -231,7 +231,7 @@ class TestS2DMStructs:
     def test_struct_property_range_constraints(self, struct_trees):
         """Test that range constraints on struct properties are preserved."""
         tree, data_type_tree = struct_trees
-        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get struct type name
         nested_struct_name = convert_name_for_graphql_schema(
@@ -252,7 +252,7 @@ class TestS2DMStructs:
     def test_primitive_property_in_struct(self, struct_trees):
         """Test that primitive (non-struct) properties work correctly."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get ParentStruct type
         parent_struct_name = convert_name_for_graphql_schema(
@@ -292,7 +292,9 @@ class TestS2DMStructsModular:
         )
 
         # Generate schema
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(
+            tree, data_type_tree, use_short_names=False
+        )
 
         # Write modular output
         output_dir = tmp_path / "modular_output"
@@ -340,7 +342,9 @@ class TestS2DMStructsModular:
         )
 
         # Generate schema
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(
+            tree, data_type_tree, use_short_names=False
+        )
 
         # Write modular output
         output_dir = tmp_path / "modular_output"
