@@ -101,15 +101,15 @@ def generate_vspec_reference(
                     shutil.copy2(actual_units[0], units_output)
                 else:
                     merged = {}
-                    for f in actual_units:
+                    for unit_file in actual_units:
                         try:
-                            with open(f) as inf:
+                            with open(unit_file) as inf:
                                 if data := yaml.safe_load(inf):
                                     merged.update(data)
                         except yaml.YAMLError as e:
-                            raise S2DMExporterException(f"Invalid YAML in units file {f}: {e}") from e
+                            raise S2DMExporterException(f"Invalid YAML in units file {unit_file}: {e}") from e
                         except FileNotFoundError:
-                            raise S2DMExporterException(f"Units file not found: {f}") from None
+                            raise S2DMExporterException(f"Units file not found: {unit_file}") from None
 
                     with open(units_output, "w") as outf:
                         yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
@@ -135,15 +135,15 @@ def generate_vspec_reference(
                     shutil.copy2(actual_quantities[0], quantities_output)
                 else:
                     merged = {}
-                    for f in actual_quantities:
+                    for qty_file in actual_quantities:
                         try:
-                            with open(f) as inf:
+                            with open(qty_file) as inf:
                                 if data := yaml.safe_load(inf):
                                     merged.update(data)
                         except yaml.YAMLError as e:
-                            raise S2DMExporterException(f"Invalid YAML in quantities file {f}: {e}") from e
+                            raise S2DMExporterException(f"Invalid YAML in quantities file {qty_file}: {e}") from e
                         except FileNotFoundError:
-                            raise S2DMExporterException(f"Quantities file not found: {f}") from None
+                            raise S2DMExporterException(f"Quantities file not found: {qty_file}") from None
 
                     with open(quantities_output, "w") as outf:
                         yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
@@ -204,7 +204,7 @@ def generate_vspec_reference(
                 raise S2DMExporterException(f"Failed to write pluralized fields file {pluralized_output}: {e}") from e
 
         # Generate README.md for provenance documentation
-        has_plural_warnings = mapping_metadata and bool(mapping_metadata.get("plural_type_warnings"))
+        has_plural_warnings = bool(mapping_metadata and mapping_metadata.get("plural_type_warnings"))
         generate_reference_readme(reference_dir, vspec_file, actual_units, actual_quantities, has_plural_warnings)
 
     except S2DMExporterException:

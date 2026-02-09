@@ -16,9 +16,9 @@ from vss_tools.exporters.s2dm import (
     get_metadata_df,
     print_schema_with_vspec_directives,
 )
+from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from vss_tools.exporters.s2dm.type_builders import _sanitize_enum_value_for_graphql
 from vss_tools.main import get_trees
-from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
 
 class TestS2DMExporter:

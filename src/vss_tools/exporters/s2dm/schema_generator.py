@@ -22,18 +22,18 @@ from typing import Any
 from graphql import GraphQLField, GraphQLObjectType, GraphQLSchema, GraphQLString
 
 from vss_tools.tree import VSSNode
-from vss_tools.utils.graphql_directive_processor import GraphQLDirectiveProcessor
-from vss_tools.utils.graphql_scalars import get_vss_scalar_types
-from vss_tools.utils.modular_export_utils import (
+from vss_tools.utils.pandas_utils import get_metadata_df
+
+from .constants import CUSTOM_DIRECTIVES, S2DMExporterException
+from .graphql_directive_processor import GraphQLDirectiveProcessor
+from .graphql_scalars import get_vss_scalar_types
+from .metadata_tracker import init_vspec_comments
+from .modular_export_utils import (
     analyze_schema_for_flat_domains,
     analyze_schema_for_nested_domains,
     write_common_files,
     write_domain_files,
 )
-from vss_tools.utils.pandas_utils import get_metadata_df
-
-from .constants import CUSTOM_DIRECTIVES, S2DMExporterException
-from .metadata_tracker import init_vspec_comments
 from .type_builders import (
     create_allowed_enums,
     create_instance_types,

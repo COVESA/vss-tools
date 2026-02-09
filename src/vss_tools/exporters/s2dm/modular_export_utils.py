@@ -367,7 +367,7 @@ def write_common_files(
     """
     from graphql import is_scalar_type, print_type
 
-    from vss_tools.utils.graphql_utils import extract_custom_directives_from_schema
+    from .graphql_utils import extract_custom_directives_from_schema
 
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
