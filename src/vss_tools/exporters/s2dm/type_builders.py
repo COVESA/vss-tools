@@ -153,7 +153,7 @@ def _get_quantity_units() -> dict[str, dict[str, dict[str, str]]]:
 
 
 def create_instance_types(
-    branches_df: pd.DataFrame, vspec_comments: dict[str, Any]
+    branches_df: pd.DataFrame, vspec_comments: dict[str, Any], short_name_mapping: dict[str, str] | None = None
 ) -> dict[str, GraphQLEnumType | GraphQLObjectType]:
     """
     Create GraphQL types for VSS instance-based branches.
@@ -161,6 +161,7 @@ def create_instance_types(
     Args:
         branches_df: VSS branch node metadata
         vspec_comments: Dictionary to store instance tag metadata
+        short_name_mapping: Optional mapping from FQN to short type names
 
     Returns:
         Mapping of type names to GraphQL enum or object types
@@ -170,7 +171,11 @@ def create_instance_types(
 
     for fqn, row in branches_df[branches_df["instances"].notna()].iterrows():
         if instances := row.get("instances"):
-            base_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+            # Use short name if mapping exists, otherwise fall back to FQN conversion
+            if short_name_mapping and fqn in short_name_mapping:
+                base_name = short_name_mapping[fqn]
+            else:
+                base_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
             tag_name = f"{base_name}_InstanceTag"
 
             dimensions = _parse_instances_simple(instances)
@@ -333,6 +338,7 @@ def create_struct_types(
     data_type_tree: VSSNode | None,
     vspec_comments: dict[str, Any],
     extended_attributes: tuple[str, ...] = (),
+    short_name_mapping: dict[str, str] | None = None,
 ) -> dict[str, GraphQLObjectType]:
     """
     Convert VSS struct definitions to GraphQL object types.
@@ -341,6 +347,7 @@ def create_struct_types(
         data_type_tree: VSS tree containing user-defined struct types
         vspec_comments: Dictionary to store struct metadata
         extended_attributes: Extended attribute names from CLI
+        short_name_mapping: Optional mapping from FQN to short type names
 
     Returns:
         Dictionary mapping struct type names to GraphQL object types
@@ -353,7 +360,11 @@ def create_struct_types(
     struct_nodes = branches_df[branches_df["type"] == "struct"]
 
     for fqn, struct_row in struct_nodes.iterrows():
-        type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+        # Use short name if mapping exists, otherwise fall back to FQN conversion
+        if short_name_mapping and fqn in short_name_mapping:
+            type_name = short_name_mapping[fqn]
+        else:
+            type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
         properties = leaves_df[leaves_df["parent"] == fqn]
 
         fields = {}
@@ -433,6 +444,7 @@ def create_object_type(
     unit_enums: dict[str, GraphQLEnumType],
     vspec_comments: dict[str, Any],
     extended_attributes: tuple[str, ...] = (),
+    short_name_mapping: dict[str, str] | None = None,
 ) -> GraphQLObjectType:
     """
     Create GraphQL object type for a VSS branch.
@@ -448,13 +460,18 @@ def create_object_type(
         unit_enums: Unit enum types
         vspec_comments: Metadata tracking dictionary
         extended_attributes: Extended attribute names from CLI
+        short_name_mapping: Optional mapping from FQN to short type names
 
     Returns:
         GraphQL object type for the branch
     """
     branch_row = branches_df.loc[fqn]
     original_name = branch_row["name"]
-    type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+    # Use short name if mapping exists, otherwise fall back to FQN conversion
+    if short_name_mapping and fqn in short_name_mapping:
+        type_name = short_name_mapping[fqn]
+    else:
+        type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
 
     # Check if branch name is plural and collect for reporting
     # Pass original VSS branch name (before any conversion)

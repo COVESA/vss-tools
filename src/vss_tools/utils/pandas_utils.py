@@ -92,3 +92,150 @@ def get_metadata_df(root: VSSNode, extended_attributes: tuple[str, ...] = ()) ->
         log.debug(f"  Extended attributes found: {', '.join(sorted(found_extended_attrs))}")
 
     return branches_df, leaves_df
+
+
+def detect_and_resolve_short_name_collisions(
+    branches_df: pd.DataFrame,
+) -> tuple[dict[str, str], list[dict[str, any]], dict[str, int]]:
+    """
+    Detect name collisions in branch names and resolve using progressive parent qualification.
+
+    Uses a progressive qualification strategy:
+    1. Try short name (e.g., "Window")
+    2. If collision, try parent.name (e.g., "Door_Window")
+    3. If still collision, try grandparent.parent.name, etc.
+    4. As last resort, use full FQN with underscores
+
+    Args:
+        branches_df: DataFrame with branch metadata (must have 'name' and 'parent' columns, FQN as index)
+
+    Returns:
+        tuple: (fqn_to_short_name_mapping, collision_warnings, statistics)
+               - fqn_to_short_name_mapping: Dict mapping FQN to assigned GraphQL type name
+               - collision_warnings: List of collision details for reporting
+               - statistics: Dict with counts for each resolution strategy
+
+    Example:
+        >>> df = pd.DataFrame({
+        ...     'name': ['Window', 'Window', 'Seat'],
+        ...     'parent': ['Vehicle.Cabin.Door', 'Vehicle.Body.Windshield', 'Vehicle.Cabin']
+        ... }, index=['Vehicle.Cabin.Door.Window', 'Vehicle.Body.Windshield.Window', 'Vehicle.Cabin.Seat'])
+        >>> mapping, warnings, stats = detect_and_resolve_short_name_collisions(df)
+        >>> mapping
+        {'Vehicle.Cabin.Door.Window': 'Door_Window', 'Vehicle.Body.Windshield.Window': 'Windshield_Window', ...}
+    """
+    from collections import defaultdict
+
+    # Sort by FQN for deterministic processing
+    sorted_df = branches_df.sort_index()
+
+    # Track assigned names to detect collisions
+    assigned_names: dict[str, str] = {}  # short_name -> fqn (currently using this name)
+    fqn_to_short_name: dict[str, str] = {}  # fqn -> assigned short name
+    collision_groups: dict[str, list[str]] = defaultdict(list)  # short_name -> list of colliding FQNs
+
+    # First pass: detect collisions at the short name level
+    short_name_groups = sorted_df.groupby("name")
+    for short_name, group in short_name_groups:
+        fqns = list(group.index)
+        if len(fqns) > 1:
+            collision_groups[short_name] = fqns
+
+    # Track statistics
+    stats = {
+        "no_collision": 0,  # Clean short names
+        "parent_qualified": 0,  # Needed parent.name
+        "multi_parent_qualified": 0,  # Needed grandparent.parent.name or deeper
+        "full_fqn": 0,  # Had to use full FQN
+    }
+
+    # Second pass: assign names using progressive qualification
+    for fqn in sorted_df.index:
+        short_name = sorted_df.loc[fqn, "name"]
+
+        # No collision - use short name directly
+        if short_name not in collision_groups:
+            fqn_to_short_name[fqn] = short_name
+            assigned_names[short_name] = fqn
+            stats["no_collision"] += 1
+            continue
+
+        # Collision detected - try progressive qualification
+        assigned_name = _resolve_collision_with_qualification(
+            fqn, short_name, sorted_df.loc[fqn, "parent"], assigned_names, stats
+        )
+        fqn_to_short_name[fqn] = assigned_name
+        assigned_names[assigned_name] = fqn
+
+    # Build collision warnings for reporting
+    collision_warnings = []
+    for short_name, fqns in collision_groups.items():
+        warning = {
+            "short_name": short_name,
+            "collision_count": len(fqns),
+            "fqns": fqns,
+            "assigned_names": {fqn: fqn_to_short_name[fqn] for fqn in fqns},
+        }
+        collision_warnings.append(warning)
+
+    # Log statistics
+    len(sorted_df)
+    log.info("Short name collision resolution:")
+    log.info(f"  ✓ {stats['no_collision']} types use short names (no collisions)")
+    if stats["parent_qualified"] > 0:
+        log.info(f"  ⚠ {stats['parent_qualified']} types qualified with parent (e.g., Parent_Name)")
+    if stats["multi_parent_qualified"] > 0:
+        log.info(f"  ⚠ {stats['multi_parent_qualified']} types qualified with multiple nested parents")
+    if stats["full_fqn"] > 0:
+        log.warning(f"  ⚠ {stats['full_fqn']} types use full FQN due to deep collisions")
+
+    if collision_warnings:
+        log.info(f"  → See vspec_reference/short_name_collisions.yaml for {len(collision_warnings)} collision groups")
+
+    # Return mapping, warnings, and statistics for detailed reporting
+    return fqn_to_short_name, collision_warnings, stats
+
+
+def _resolve_collision_with_qualification(
+    fqn: str, short_name: str, parent_fqn: str, assigned_names: dict[str, str], stats: dict[str, int]
+) -> str:
+    """
+    Resolve a name collision by progressively adding parent qualifiers.
+
+    Tries: parent.name, grandparent.parent.name, ..., full FQN
+
+    Args:
+        fqn: The fully qualified name to resolve
+        short_name: The base short name (last segment of FQN)
+        parent_fqn: The parent's FQN
+        assigned_names: Dict of already assigned names (to detect further collisions)
+        stats: Statistics dict to update
+
+    Returns:
+        The assigned qualified name
+    """
+    # Build list of parent segments for progressive qualification
+    fqn_parts = fqn.split(".")
+    if len(fqn_parts) == 1:
+        # Root node, no qualification possible - use as-is (shouldn't happen in collision scenario)
+        stats["no_collision"] += 1
+        return short_name
+
+    # Try progressive qualification: parent.name, grandparent.parent.name, etc.
+    for depth in range(1, len(fqn_parts)):
+        # Take last 'depth + 1' segments (depth parents + name)
+        qualified_parts = fqn_parts[-(depth + 1) :]
+        candidate_name = "_".join(qualified_parts)
+
+        # Check if this qualified name is available
+        if candidate_name not in assigned_names:
+            if depth == 1:
+                stats["parent_qualified"] += 1
+            else:
+                stats["multi_parent_qualified"] += 1
+            return candidate_name
+
+    # All qualified names taken - use full FQN as last resort
+    full_fqn_name = "_".join(fqn_parts)
+    stats["full_fqn"] += 1
+    return full_fqn_name

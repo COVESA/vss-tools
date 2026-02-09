@@ -189,3 +189,10 @@ flat_domains_opt = option(
     default=True,  # Default to flat for simplicity
     show_default=True,
 )
+
+fqn_type_names_opt = option(
+    "--fqn-type-names/--short-type-names",
+    help="Use fully qualified names for GraphQL types (default: use short names with collision resolution).",
+    default=False,
+    show_default=True,
+)
