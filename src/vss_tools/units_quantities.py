@@ -18,6 +18,10 @@ class MalformedDictException(Exception):
     pass
 
 
+class DuplicatedUnitException(Exception):
+    pass
+
+
 def load_units_or_quantities(
     files: list[Path], class_type: type[VSSUnit | VSSQuantity]
 ) -> dict[str, VSSUnit | VSSQuantity]:
@@ -30,8 +34,7 @@ def load_units_or_quantities(
         log.info(f"Loaded '{class_type.__name__}', file={file.absolute()}, elements={len(content)}")
         for k, v in content.items():
             if v is None:
-                log.error(f"'{class_type.__name__}', '{k}' is 'None'")
-                raise MalformedDictException()
+                raise MalformedDictException(f"'{class_type.__name__}', '{k}' is 'None'")
             overwrite = False
             if k in data:
                 overwrite = True
@@ -51,7 +54,30 @@ def load_units_or_quantities(
 
 
 def load_units(unit_files: list[Path]) -> dict[str, VSSUnit]:
-    return load_units_or_quantities(unit_files, VSSUnit)  # type: ignore[return-value]
+    units: dict[str, VSSUnit] = load_units_or_quantities(unit_files, VSSUnit)  # type: ignore[assignment]
+    _validate_unique_unit_descriptions(units)
+    return units
+
+
+def _validate_unique_unit_descriptions(units: dict[str, VSSUnit]) -> None:
+    """
+    Validate that unit descriptions are globally unique.
+
+    Args:
+        units: Dictionary of loaded units
+
+    Raises:
+        DuplicatedUnitException: If duplicate unit descriptions are found
+    """
+    # <unit>: <first-key-using-it>
+    unit_defs: dict[str, str] = {}
+    for key, value in units.items():
+        unit = value.unit
+        if not unit:
+            continue
+        if unit in unit_defs:
+            raise DuplicatedUnitException(f"Duplicated unit: '{value.unit}'. Used by: {[unit_defs[unit], key]}")
+        unit_defs[unit] = key
 
 
 def load_quantities(quantities: list[Path]) -> dict[str, VSSQuantity]:
