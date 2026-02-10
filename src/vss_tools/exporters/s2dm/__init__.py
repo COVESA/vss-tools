@@ -46,6 +46,7 @@ from .schema_generator import (
 @clo.types_opt
 @clo.modular_opt
 @clo.flat_domains_opt
+@clo.fqn_type_names_opt
 @clo.strict_exceptions_opt
 def cli(
     vspec: Path,
@@ -60,6 +61,7 @@ def cli(
     types: tuple[Path, ...],
     modular: bool,
     flat_domains: bool,
+    fqn_type_names: bool,
     strict_exceptions: Path | None,
 ) -> None:
     """
@@ -109,21 +111,21 @@ def cli(
         log.info("Generating S2DM GraphQL schema...")
 
         # Generate the schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
-            tree, data_type_tree, extended_attributes=extended_attributes
+        schema, unit_enums_metadata, allowed_enums_metadata, mapping_metadata = generate_s2dm_schema(
+            tree, data_type_tree, extended_attributes=extended_attributes, use_short_names=not fqn_type_names
         )
 
         if modular:
             # Write modular files
             write_modular_schema(
-                schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir, flat_domains
+                schema, unit_enums_metadata, allowed_enums_metadata, mapping_metadata, output_dir, flat_domains
             )
             log.info(f"Modular GraphQL schema written to {output_dir}/")
         else:
             # Single file export: write to outputDir/outputDir.graphql
             graphql_file = output_dir / f"{output_dir.name}.graphql"
             full_schema_str = print_schema_with_vspec_directives(
-                schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
+                schema, unit_enums_metadata, allowed_enums_metadata, mapping_metadata
             )
             with open(graphql_file, "w") as outfile:
                 outfile.write(full_schema_str)
@@ -131,7 +133,9 @@ def cli(
             log.info(f"GraphQL schema written to {graphql_file}")
 
         # Generate VSS reference files (will check for implicit files)
-        generate_vspec_reference(tree, data_type_tree, output_dir, extended_attributes, vspec, units, quantities)
+        generate_vspec_reference(
+            tree, data_type_tree, output_dir, extended_attributes, vspec, units, quantities, mapping_metadata
+        )
 
     except S2DMExporterException as e:
         log.error(e)

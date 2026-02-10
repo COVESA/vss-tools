@@ -270,6 +270,9 @@ def write_domain_files(
             # Apply vspec directives to instance tag files
             if directive_processor and hasattr(directive_processor, "process_schema"):
                 lines = file_content.split("\n")
+                lines = directive_processor._process_instance_dimension_enum_directives(
+                    lines, vspec_comments.get("instance_dimension_enums", {}), set()
+                )
                 lines = directive_processor._process_type_directives(lines, vspec_comments)
                 file_content = "\n".join(lines)
 
@@ -364,7 +367,7 @@ def write_common_files(
     """
     from graphql import is_scalar_type, print_type
 
-    from vss_tools.utils.graphql_utils import extract_custom_directives_from_schema
+    from .graphql_utils import extract_custom_directives_from_schema
 
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)

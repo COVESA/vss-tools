@@ -22,18 +22,18 @@ from typing import Any
 from graphql import GraphQLField, GraphQLObjectType, GraphQLSchema, GraphQLString
 
 from vss_tools.tree import VSSNode
-from vss_tools.utils.graphql_directive_processor import GraphQLDirectiveProcessor
-from vss_tools.utils.graphql_scalars import get_vss_scalar_types
-from vss_tools.utils.modular_export_utils import (
+from vss_tools.utils.pandas_utils import detect_and_resolve_short_name_collisions, get_metadata_df
+
+from .constants import CUSTOM_DIRECTIVES, S2DMExporterException
+from .graphql_directive_processor import GraphQLDirectiveProcessor
+from .graphql_scalars import get_vss_scalar_types
+from .metadata_tracker import init_vspec_comments
+from .modular_export_utils import (
     analyze_schema_for_flat_domains,
     analyze_schema_for_nested_domains,
     write_common_files,
     write_domain_files,
 )
-from vss_tools.utils.pandas_utils import get_metadata_df
-
-from .constants import CUSTOM_DIRECTIVES, S2DMExporterException
-from .metadata_tracker import init_vspec_comments
 from .type_builders import (
     create_allowed_enums,
     create_instance_types,
@@ -55,6 +55,7 @@ def generate_s2dm_schema(
     tree: VSSNode,
     data_type_tree: VSSNode | None = None,
     extended_attributes: tuple[str, ...] = (),
+    use_short_names: bool = True,
 ) -> tuple[
     GraphQLSchema,
     dict[str, dict[str, dict[str, str]]],
@@ -66,14 +67,17 @@ def generate_s2dm_schema(
 
     Orchestrates the complete schema generation process:
     1. Extract metadata from VSS tree
-    2. Create unit enums, instance types, allowed value enums, struct types
-    3. Create object types for all branches
-    4. Assemble complete GraphQL schema
+    2. Optionally detect and resolve short name collisions
+    3. Create unit enums, instance types, allowed value enums, struct types
+    4. Create object types for all branches
+    5. Assemble complete GraphQL schema
 
     Args:
         tree: Main VSS tree with vehicle signals
         data_type_tree: Optional user-defined struct types
         extended_attributes: Extended attribute names from CLI flags
+        use_short_names: If True, use short names with collision resolution (default: True).
+                        If False, use fully qualified names with underscores.
 
     Returns:
         Tuple of (schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
@@ -85,13 +89,33 @@ def generate_s2dm_schema(
         branches_df, leaves_df = get_metadata_df(tree, extended_attributes=extended_attributes)
         vspec_comments = init_vspec_comments()
 
+        # Detect and resolve short name collisions if requested
+        short_name_mapping: dict[str, str] | None = None
+        if use_short_names:
+            short_name_mapping, collision_warnings, collision_stats = detect_and_resolve_short_name_collisions(
+                branches_df
+            )
+            vspec_comments["short_name_mapping"] = short_name_mapping
+            vspec_comments["short_name_collisions"] = collision_warnings
+            vspec_comments["short_name_stats"] = collision_stats
+        else:
+            # When using FQN names, store empty mapping to indicate FQN mode
+            vspec_comments["short_name_mapping"] = None
+            vspec_comments["short_name_collisions"] = []
+            vspec_comments["short_name_stats"] = {}
+
         # Create all types in logical order
         unit_enums, unit_metadata = create_unit_enums()
-        instance_types = create_instance_types(branches_df, vspec_comments)
+        instance_types = create_instance_types(branches_df, vspec_comments, short_name_mapping)
         allowed_enums, allowed_metadata = create_allowed_enums(leaves_df)
 
         # Create struct types from data type tree
-        struct_types = create_struct_types(data_type_tree, vspec_comments, extended_attributes=extended_attributes)
+        struct_types = create_struct_types(
+            data_type_tree,
+            vspec_comments,
+            extended_attributes=extended_attributes,
+            short_name_mapping=short_name_mapping,
+        )
 
         # Combine all types
         types_registry = {**instance_types, **allowed_enums, **struct_types}
@@ -100,7 +124,14 @@ def generate_s2dm_schema(
         for fqn in branches_df.index:
             if fqn not in types_registry:
                 types_registry[fqn] = create_object_type(
-                    fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
+                    fqn,
+                    branches_df,
+                    leaves_df,
+                    types_registry,
+                    unit_enums,
+                    vspec_comments,
+                    extended_attributes,
+                    short_name_mapping,
                 )
 
         # Assemble complete schema

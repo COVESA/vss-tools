@@ -17,6 +17,7 @@ dependencies = [
     "graphene>=3.4.3",
     "pandas>=2.2.3",
     "case-converter>=1.2.0",
+    "inflect>=7.4.0",
 ]
 authors = [
 {name="COVESA VSS", email="covesa-dev@covesa.global"}
