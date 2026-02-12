@@ -19,6 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 from graphql import GraphQLField, GraphQLObjectType, GraphQLSchema, GraphQLString
 
 from vss_tools.tree import VSSNode
@@ -89,11 +90,18 @@ def generate_s2dm_schema(
         branches_df, leaves_df = get_metadata_df(tree, extended_attributes=extended_attributes)
         vspec_comments = init_vspec_comments()
 
+        # Combine branches from both main tree and data type tree for joint collision detection
+        # since they share the same GraphQL type namespace
+        combined_branches_df = branches_df
+        if data_type_tree:
+            struct_branches_df, _ = get_metadata_df(data_type_tree, extended_attributes=extended_attributes)
+            combined_branches_df = pd.concat([branches_df, struct_branches_df], axis=0, verify_integrity=True)
+
         # Detect and resolve short name collisions if requested
         short_name_mapping: dict[str, str] | None = None
         if use_short_names:
             short_name_mapping, collision_warnings, collision_stats = detect_and_resolve_short_name_collisions(
-                branches_df
+                combined_branches_df
             )
             vspec_comments["short_name_mapping"] = short_name_mapping
             vspec_comments["short_name_collisions"] = collision_warnings

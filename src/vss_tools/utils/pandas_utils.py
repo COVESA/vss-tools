@@ -4,6 +4,8 @@ Pandas utilities for VSS tree processing.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 from anytree import PreOrderIter
 
@@ -96,7 +98,7 @@ def get_metadata_df(root: VSSNode, extended_attributes: tuple[str, ...] = ()) ->
 
 def detect_and_resolve_short_name_collisions(
     branches_df: pd.DataFrame,
-) -> tuple[dict[str, str], list[dict[str, any]], dict[str, int]]:
+) -> tuple[dict[str, str], list[dict[str, Any]], dict[str, int]]:
     """
     Detect name collisions in branch names and resolve using progressive parent qualification.
 
@@ -150,19 +152,37 @@ def detect_and_resolve_short_name_collisions(
     }
 
     # Second pass: assign names using progressive qualification
-    for fqn in sorted_df.index:
-        short_name = sorted_df.loc[fqn, "name"]
+    # For branches with collisions, process by depth (shallowest first) to prioritize root-level branches
+    # For branches without collisions, process alphabetically
 
-        # No collision - use short name directly
-        if short_name not in collision_groups:
-            fqn_to_short_name[fqn] = short_name
-            assigned_names[short_name] = fqn
-            stats["no_collision"] += 1
-            continue
+    # Separate colliding and non-colliding branches
+    colliding_fqns = set()
+    for fqns in collision_groups.values():
+        colliding_fqns.update(fqns)
 
-        # Collision detected - try progressive qualification
+    non_colliding_df = sorted_df[~sorted_df.index.isin(colliding_fqns)]
+    colliding_df = sorted_df[sorted_df.index.isin(colliding_fqns)].copy()
+
+    # Add depth column for colliding branches (count dots in FQN)
+    colliding_df["depth"] = colliding_df.index.str.count(r"\.")
+
+    # Sort colliding branches by depth first (shallowest gets priority), then alphabetically
+    colliding_df = colliding_df.sort_values(["depth", colliding_df.index.name or "fqn"])
+
+    # Process non-colliding branches first (they get clean short names)
+    for fqn in non_colliding_df.index:
+        short_name = non_colliding_df.loc[fqn, "name"]
+        fqn_to_short_name[fqn] = short_name
+        assigned_names[short_name] = fqn
+        stats["no_collision"] += 1
+
+    # Then process colliding branches (depth priority means shallowest gets short name first)
+    for fqn in colliding_df.index:
+        short_name = colliding_df.loc[fqn, "name"]
+
+        # Try progressive qualification
         assigned_name = _resolve_collision_with_qualification(
-            fqn, short_name, sorted_df.loc[fqn, "parent"], assigned_names, stats
+            fqn, short_name, colliding_df.loc[fqn, "parent"], assigned_names, stats
         )
         fqn_to_short_name[fqn] = assigned_name
         assigned_names[assigned_name] = fqn
