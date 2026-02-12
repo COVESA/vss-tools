@@ -1,0 +1,48 @@
+# Struct type definitions that collide with main tree branch names
+# These will share the same GraphQL type namespace
+
+VehicleDataTypes:
+  type: branch
+  description: Root for struct definitions
+
+VehicleDataTypes.Window:
+  type: struct
+  description: Window info struct - collides with Vehicle.Body.Window and Vehicle.Cabin.Window
+
+VehicleDataTypes.Window.height:
+  datatype: float
+  type: property
+  description: Window height in cm
+
+VehicleDataTypes.Window.width:
+  datatype: float
+  type: property
+  description: Window width in cm
+
+VehicleDataTypes.Status:
+  type: struct
+  description: Status struct - collides with Vehicle.Powertrain.Status
+
+VehicleDataTypes.Status.code:
+  datatype: int32
+  type: property
+  description: Status code
+
+VehicleDataTypes.Status.message:
+  datatype: string
+  type: property
+  description: Status message
+
+VehicleDataTypes.Sensor:
+  type: struct
+  description: Sensor struct - unique, no collision
+
+VehicleDataTypes.Sensor.value:
+  datatype: float
+  type: property
+  description: Sensor value
+
+VehicleDataTypes.Sensor.timestamp:
+  datatype: uint64
+  type: property
+  description: Timestamp in ms
