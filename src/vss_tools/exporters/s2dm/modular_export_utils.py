@@ -206,6 +206,7 @@ def write_domain_files(
     output_dir: Path,
     vspec_comments: dict[str, Any],
     directive_processor: Any,
+    unit_enums_metadata: dict[str, Any],
     allowed_enums_metadata: dict[str, Any],
 ) -> None:
     """
@@ -217,6 +218,7 @@ def write_domain_files(
         output_dir: Output directory
         vspec_comments: VSS comments for directive processing
         directive_processor: Processor for adding @vspec directives
+        unit_enums_metadata: Metadata for unit enums
         allowed_enums_metadata: Metadata for allowed value enums
     """
     for file_path, type_names in domain_structure.items():
@@ -335,6 +337,9 @@ def write_domain_files(
             # Process the SDL string to add directives
             # We need to split into lines and process
             lines = file_content.split("\n")
+            # Process unit enum directives for units file
+            if file_path == "other/units.graphql":
+                lines = directive_processor._process_unit_enum_directives(lines, unit_enums_metadata, set())
             lines = directive_processor._process_allowed_enum_directives(lines, allowed_enums_metadata, set())
             lines = directive_processor._process_field_directives(lines, vspec_comments)
             lines = directive_processor._process_deprecated_directives(
