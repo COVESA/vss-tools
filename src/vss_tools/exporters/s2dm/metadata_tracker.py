@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 
-def init_vspec_comments() -> dict[str, dict[str, Any]]:
+def init_vspec_comments() -> dict[str, Any]:
     """
     Initialize dictionary for storing VSS metadata for directives.
 
