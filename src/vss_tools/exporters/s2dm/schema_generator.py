@@ -108,7 +108,7 @@ def generate_s2dm_schema(
             vspec_comments["short_name_stats"] = collision_stats
         else:
             # When using FQN names, store empty mapping to indicate FQN mode
-            vspec_comments["short_name_mapping"] = None
+            vspec_comments["short_name_mapping"] = {}
             vspec_comments["short_name_collisions"] = []
             vspec_comments["short_name_stats"] = {}
 
