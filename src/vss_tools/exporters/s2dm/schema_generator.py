@@ -236,7 +236,13 @@ def write_modular_schema(
 
         # Write domain-specific files
         write_domain_files(
-            domain_structure, schema, output_dir, vspec_comments, directive_processor, allowed_enums_metadata
+            domain_structure,
+            schema,
+            output_dir,
+            vspec_comments,
+            directive_processor,
+            unit_enums_metadata,
+            allowed_enums_metadata,
         )
 
     except Exception as e:
