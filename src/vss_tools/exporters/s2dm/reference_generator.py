@@ -19,6 +19,7 @@ Creates vspec_reference/ directory containing:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, cast
 
 from vss_tools import log
 from vss_tools.tree import VSSNode
@@ -194,7 +195,9 @@ def generate_vspec_reference(
                     f.write("#   3. If still collision: add more ancestors (e.g., 'Cabin_Door_Window')\n")
                     f.write("#   4. Last resort: use full FQN with underscores\n\n")
 
-                    collision_list = mapping_metadata.get("short_name_collisions", [])
+                    collision_list: list[dict[str, Any]] = cast(
+                        list[dict[str, Any]], mapping_metadata.get("short_name_collisions", [])
+                    )
                     name_mapping = mapping_metadata.get("short_name_mapping", {})
                     stats = mapping_metadata.get("short_name_stats", {})
 
