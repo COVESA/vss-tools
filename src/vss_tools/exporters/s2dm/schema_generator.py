@@ -22,6 +22,7 @@ from typing import Any
 import pandas as pd
 from graphql import GraphQLField, GraphQLObjectType, GraphQLSchema, GraphQLString
 
+from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType
 from vss_tools.tree import VSSNode
 from vss_tools.utils.pandas_utils import detect_and_resolve_short_name_collisions, get_metadata_df
 
@@ -108,7 +109,7 @@ def generate_s2dm_schema(
             vspec_comments["short_name_stats"] = collision_stats
         else:
             # When using FQN names, store empty mapping to indicate FQN mode
-            vspec_comments["short_name_mapping"] = {}
+            vspec_comments["short_name_mapping"] = None
             vspec_comments["short_name_collisions"] = []
             vspec_comments["short_name_stats"] = {}
 
@@ -143,8 +144,13 @@ def generate_s2dm_schema(
                 )
 
         # Assemble complete schema
-        vehicle_type = types_registry.get("Vehicle", GraphQLString)
-        query = GraphQLObjectType("Query", {"vehicle": GraphQLField(vehicle_type)})
+        from .graphql_utils import sanitize_graphql_name
+
+        root_type_name = sanitize_graphql_name(tree.name, element_type=GraphQLElementType.TYPE)
+        root_type = types_registry.get(root_type_name, GraphQLString)
+        query = GraphQLObjectType(
+            "Query", {sanitize_graphql_name(tree.name, element_type=GraphQLElementType.FIELD): GraphQLField(root_type)}
+        )
         schema = GraphQLSchema(
             query=query,
             types=get_vss_scalar_types() + list(types_registry.values()) + list(unit_enums.values()),
