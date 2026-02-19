@@ -269,6 +269,59 @@ class TestS2DMStructs:
         assert isinstance(z_property_type, GraphQLNonNull)
         assert z_property_type.of_type == VSS_DATATYPE_MAP["double"]
 
+    def test_signal_with_struct_datatype_short_names(self, struct_trees):
+        """Test that signals correctly reference structs when using short names (default mode)."""
+        tree, data_type_tree = struct_trees
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=True)
+
+        # Get the TestRoot type
+        root_type = schema.type_map["TestRoot"]  # Short name mode
+
+        # Get struct type names (should be short names)
+        parent_struct_name = "ParentStruct"
+        nested_struct_name = "NestedStruct"
+
+        # Verify struct types exist with short names
+        assert parent_struct_name in schema.type_map
+        assert nested_struct_name in schema.type_map
+
+        # Check fields
+        assert isinstance(root_type, GraphQLObjectType)
+        fields = root_type.fields
+
+        # ParentStructSensor should reference ParentStruct (short name)
+        assert "parentStructSensor" in fields
+        parent_sensor_type = fields["parentStructSensor"].type
+        assert (
+            parent_sensor_type == schema.type_map[parent_struct_name]
+        ), f"Expected ParentStruct but got {parent_sensor_type}"
+
+        # NestedStructSensor should reference NestedStruct (short name)
+        assert "nestedStructSensor" in fields
+        nested_sensor_type = fields["nestedStructSensor"].type
+        assert (
+            nested_sensor_type == schema.type_map[nested_struct_name]
+        ), f"Expected NestedStruct but got {nested_sensor_type}"
+
+    def test_struct_in_property_short_names(self, struct_trees):
+        """Test that struct properties correctly reference other structs with short names."""
+        tree, data_type_tree = struct_trees
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=True)
+
+        # Get ParentStruct type (short name)
+        parent_struct_type = schema.type_map["ParentStruct"]
+        nested_struct_type = schema.type_map["NestedStruct"]
+
+        # Check that x_property and y_property reference NestedStruct
+        assert isinstance(parent_struct_type, GraphQLObjectType)
+        fields = parent_struct_type.fields
+
+        # x_property should reference NestedStruct
+        assert "xProperty" in fields
+        x_property_type = fields["xProperty"].type
+        assert isinstance(x_property_type, GraphQLNonNull)
+        assert x_property_type.of_type == nested_struct_type, f"Expected NestedStruct but got {x_property_type.of_type}"
+
 
 class TestS2DMStructsModular:
     """Test class for modular output with struct support."""

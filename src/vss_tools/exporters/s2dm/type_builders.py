@@ -370,7 +370,7 @@ def create_struct_types(
         fields = {}
         for prop_fqn, prop_row in properties.iterrows():
             field_name = convert_name_for_graphql_schema(prop_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
-            base_type = _get_graphql_type_for_property(prop_row, struct_types)
+            base_type = _get_graphql_type_for_property(prop_row, struct_types, short_name_mapping)
             fields[field_name] = GraphQLField(GraphQLNonNull(base_type), description=prop_row.get("description", ""))
 
             field_path = build_field_path(type_name, field_name)
@@ -402,38 +402,70 @@ def create_struct_types(
     return struct_types
 
 
-def _get_graphql_type_for_property(prop_row: pd.Series, struct_types: dict[str, GraphQLObjectType]) -> Any:
+def _get_graphql_type_for_property(
+    prop_row: pd.Series, struct_types: dict[str, GraphQLObjectType], short_name_mapping: dict[str, str] | None = None
+) -> Any:
     """Map VSS property datatype to GraphQL type."""
     datatype = prop_row.get("datatype", "string")
-    return resolve_datatype_to_graphql(datatype, struct_types)
+    return resolve_datatype_to_graphql(datatype, struct_types, short_name_mapping)
 
 
-def resolve_datatype_to_graphql(datatype: str, types_registry: dict[str, Any]) -> Any:
+def resolve_datatype_to_graphql(
+    datatype: str, types_registry: dict[str, Any], short_name_mapping: dict[str, str] | None = None
+) -> Any:
     """
     Resolve a VSS datatype string to its corresponding GraphQL type.
 
     Args:
         datatype: VSS datatype string (e.g., "uint8", "MyStruct", "MyStruct[]")
         types_registry: Dictionary of custom types
+        short_name_mapping: Optional mapping from FQN to short type names
 
     Returns:
         Corresponding GraphQL type
+
+    Raises:
+        ValueError: If datatype references a struct that doesn't exist in types_registry
     """
-    if datatype.endswith("[]"):
-        base_datatype = datatype[:-2]
+    is_array = datatype.endswith("[]")
+    base_datatype = datatype[:-2] if is_array else datatype
+
+    # First check if it's a primitive type
+    if base_datatype in VSS_DATATYPE_MAP:
+        base_type = VSS_DATATYPE_MAP[base_datatype]
+        if is_array:
+            return GraphQLList(GraphQLNonNull(base_type))
+        return base_type
+
+    # Not a primitive, so it should be a struct type
+    # Try to resolve using short_name_mapping first if available
+    struct_type_name = None
+    if short_name_mapping and base_datatype in short_name_mapping:
+        struct_type_name = short_name_mapping[base_datatype]
+    else:
+        # Fall back to FQN conversion
         struct_type_name = convert_name_for_graphql_schema(base_datatype, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
 
-        if struct_type_name in types_registry:
-            return GraphQLList(GraphQLNonNull(types_registry[struct_type_name]))
-
-        base_type = VSS_DATATYPE_MAP.get(base_datatype, GraphQLString)
-        return GraphQLList(GraphQLNonNull(base_type))
-
-    struct_type_name = convert_name_for_graphql_schema(datatype, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
     if struct_type_name in types_registry:
-        return types_registry[struct_type_name]
+        struct_type = types_registry[struct_type_name]
+        if is_array:
+            return GraphQLList(GraphQLNonNull(struct_type))
+        return struct_type
 
-    return VSS_DATATYPE_MAP.get(datatype, GraphQLString)
+    # Type not found - this is a translation error
+    available_structs = [
+        name for name in types_registry.keys() if not name.endswith("_Enum") and not name.endswith("UnitEnum")
+    ]
+    log.error(
+        f"Failed to resolve datatype '{datatype}' to GraphQL type. "
+        f"This datatype is not a primitive and doesn't match any struct type in the registry. "
+        f"Available struct types: {available_structs}. "
+        f"Check that the struct is defined in your types vspec file."
+    )
+    raise ValueError(
+        f"Cannot resolve datatype '{datatype}': not a primitive type and not found in types registry. "
+        f"Available struct types: {available_structs}"
+    )
 
 
 def create_object_type(
@@ -520,7 +552,7 @@ def create_object_type(
             if pd.notna(leaf_row.get("deprecation")) and leaf_row.get("deprecation").strip():
                 vspec_comments["field_deprecated"][field_path] = leaf_row["deprecation"]
 
-            field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
+            field_type = get_graphql_type_for_leaf(leaf_row, types_registry, short_name_mapping)
             unit_args = _get_unit_args(leaf_row, unit_enums)
             fields[field_name] = GraphQLField(field_type, args=unit_args, description=leaf_row.get("description", ""))
 
@@ -657,7 +689,9 @@ def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) 
     return {"unit": GraphQLArgument(type_=unit_enum, default_value=unit)}
 
 
-def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry: dict[str, Any] | None = None) -> Any:
+def get_graphql_type_for_leaf(
+    leaf_row: pd.Series, types_registry: dict[str, Any] | None = None, short_name_mapping: dict[str, str] | None = None
+) -> Any:
     """Map VSS leaf to GraphQL type."""
     if types_registry:
         try:
@@ -675,6 +709,6 @@ def get_graphql_type_for_leaf(leaf_row: pd.Series, types_registry: dict[str, Any
     datatype = leaf_row.get("datatype", "string")
 
     if types_registry:
-        return resolve_datatype_to_graphql(datatype, types_registry)
+        return resolve_datatype_to_graphql(datatype, types_registry, short_name_mapping)
 
     return VSS_DATATYPE_MAP.get(datatype, GraphQLString)
