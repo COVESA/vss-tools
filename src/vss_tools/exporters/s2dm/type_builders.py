@@ -558,9 +558,25 @@ def create_object_type(
 
         # Branch fields
         for child_fqn, child_row in branches_df[branches_df["parent"] == fqn].iterrows():
+            # Check if child branch is empty (has no children)
+            has_leaf_children = not leaves_df[leaves_df["parent"] == child_fqn].empty
+            has_branch_children = not branches_df[branches_df["parent"] == child_fqn].empty
+
+            if not has_leaf_children and not has_branch_children:
+                # Skip creating field for empty branches
+                log.debug(f"Skipping field for empty branch '{child_fqn}' in type '{type_name}'")
+                continue
+
             field_name = convert_name_for_graphql_schema(child_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
             child_type = types_registry.get(child_fqn) or create_object_type(
-                child_fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments, extended_attributes
+                child_fqn,
+                branches_df,
+                leaves_df,
+                types_registry,
+                unit_enums,
+                vspec_comments,
+                extended_attributes,
+                short_name_mapping,
             )
             types_registry[child_fqn] = child_type
 
