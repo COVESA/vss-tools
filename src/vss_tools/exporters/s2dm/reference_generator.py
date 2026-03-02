@@ -311,9 +311,40 @@ def generate_vspec_reference(
             except (PermissionError, OSError) as e:
                 raise S2DMExporterException(f"Failed to write pluralized fields file {pluralized_output}: {e}") from e
 
+        # Write skipped empty branches if any were collected
+        if mapping_metadata and mapping_metadata.get("skipped_empty_branches"):
+            not_mapped_output = reference_dir / "not_mapped.yaml"
+            try:
+                with open(not_mapped_output, "w") as f:
+                    # Write header comment
+                    f.write("# Branches Skipped During S2DM Export\n")
+                    f.write("#\n")
+                    f.write("# This file lists VSS branches that were not mapped to GraphQL types because\n")
+                    f.write("# they have no children (no properties or sub-branches). Empty branches cannot\n")
+                    f.write("# be represented as GraphQL types since GraphQL requires types to have at least\n")
+                    f.write("# one field.\n")
+                    f.write("#\n")
+                    f.write("# To include these branches in the schema, add properties or sub-branches to them\n")
+                    f.write("# in the VSS specification.\n\n")
+
+                    f.write("skipped_empty_branches:\n")
+                    for entry in mapping_metadata["skipped_empty_branches"]:
+                        f.write(f"  - fqn: {entry['fqn']}\n")
+                        f.write(f"    graphql_type_name: {entry['graphql_type_name']}\n")
+                        f.write(f"    reason: {entry['reason']}\n")
+                        f.write("\n")
+
+                count = len(mapping_metadata["skipped_empty_branches"])
+                log.info(f"  - Not mapped (empty branches): {not_mapped_output.name} ({count} branch(es))")
+            except (PermissionError, OSError) as e:
+                raise S2DMExporterException(f"Failed to write not mapped file {not_mapped_output}: {e}") from e
+
         # Generate README.md for provenance documentation
         has_plural_warnings = bool(mapping_metadata and mapping_metadata.get("plural_type_warnings"))
-        generate_reference_readme(reference_dir, vspec_file, actual_units, actual_quantities, has_plural_warnings)
+        has_skipped_branches = bool(mapping_metadata and mapping_metadata.get("skipped_empty_branches"))
+        generate_reference_readme(
+            reference_dir, vspec_file, actual_units, actual_quantities, has_plural_warnings, has_skipped_branches
+        )
 
     except S2DMExporterException:
         # Re-raise our custom exceptions
@@ -329,6 +360,7 @@ def generate_reference_readme(
     units_files: tuple[Path, ...] | None,
     quantities_files: tuple[Path, ...] | None,
     has_plural_warnings: bool = False,
+    has_skipped_branches: bool = False,
 ) -> None:
     """
     Generate README.md documenting the provenance of reference files.
@@ -339,6 +371,7 @@ def generate_reference_readme(
         units_files: Units files used (explicit or implicit)
         quantities_files: Quantities files used (explicit or implicit)
         has_plural_warnings: Whether plural type warnings were generated
+        has_skipped_branches: Whether empty branches were skipped during export
 
     Raises:
         S2DMExporterException: If README generation fails
@@ -376,6 +409,10 @@ It could serve as a supporting reference for traceability or debugging.
         if has_plural_warnings:
             readme_content += """
 * **plural_type_warnings.txt** - VSS branches with plural type names (GraphQL prefers singular)."""
+
+        if has_skipped_branches:
+            readme_content += """
+* **not_mapped.yaml** - VSS branches skipped during export (empty branches with no children)."""
 
         readme_content += """
 
