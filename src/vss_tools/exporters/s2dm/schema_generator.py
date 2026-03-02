@@ -22,11 +22,12 @@ from typing import Any
 import pandas as pd
 from graphql import GraphQLField, GraphQLObjectType, GraphQLSchema, GraphQLString
 
-from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType
+from vss_tools import log
+from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from vss_tools.tree import VSSNode
 from vss_tools.utils.pandas_utils import detect_and_resolve_short_name_collisions, get_metadata_df
 
-from .constants import CUSTOM_DIRECTIVES, S2DMExporterException
+from .constants import CUSTOM_DIRECTIVES, S2DM_CONVERSIONS, S2DMExporterException
 from .graphql_directive_processor import GraphQLDirectiveProcessor
 from .graphql_scalars import get_vss_scalar_types
 from .metadata_tracker import init_vspec_comments
@@ -132,6 +133,33 @@ def generate_s2dm_schema(
         # Create object types for all branches
         for fqn in branches_df.index:
             if fqn not in types_registry:
+                # Check if branch is empty (has no children)
+                node = tree.get_node_with_fqn(fqn)
+                if node is None:
+                    log.error(f"Branch '{fqn}' not found in tree but present in DataFrame. Skipping.")
+                    continue
+
+                if node.is_leaf:
+                    # Branch has no children - skip creating empty type
+                    # Use same logic as create_object_type for type name
+                    if short_name_mapping and fqn in short_name_mapping:
+                        type_name = short_name_mapping[fqn]
+                    else:
+                        type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+                    log.warning(
+                        f"Branch '{fqn}' (GraphQL type: '{type_name}') was skipped because "
+                        f"the reference vspec does not define any sub-elements inside."
+                    )
+                    # Track skipped branch for reporting
+                    vspec_comments["skipped_empty_branches"].append(
+                        {
+                            "fqn": fqn,
+                            "graphql_type_name": type_name,
+                            "reason": "Empty branch (no children)",
+                        }
+                    )
+                    continue
+
                 types_registry[fqn] = create_object_type(
                     fqn,
                     branches_df,

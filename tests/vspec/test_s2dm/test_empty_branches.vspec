@@ -1,0 +1,27 @@
+# Test vspec with empty branches to verify they are skipped during S2DM export
+
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.EmptyBranch:
+  type: branch
+  description: A branch that does not have any sub-elements.
+
+Vehicle.HasContent:
+  type: branch
+  description: A branch that has some elements inside.
+
+Vehicle.HasContent.Speed:
+  type: sensor
+  datatype: float
+  unit: percent
+  description: Vehicle speed.
+
+Vehicle.AnotherEmpty:
+  type: branch
+  description: Another empty branch for testing.
+
+Vehicle.HasContent.EmptyNested:
+  type: branch
+  description: An empty branch nested inside a non-empty branch.

@@ -789,3 +789,165 @@ class TestS2DMExporter:
         assert '@vspec(element: ATTRIBUTE, fqn: "Vehicle.Info.Model"' in schema_str
         assert '{key: "customMetadata", value: "test_value"}' in schema_str
         assert '{key: "anotherAttribute", value: "42"}' in schema_str
+
+    def test_empty_branches_are_skipped(self, caplog):
+        """Test that empty branches (branches with no children) are skipped during export."""
+        # Load vspec with empty branches
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=True)
+
+        # Check that empty branches are NOT in the schema type_map
+        assert "EmptyBranch" not in schema.type_map
+        assert "AnotherEmpty" not in schema.type_map
+        assert "EmptyNested" not in schema.type_map
+
+        # Check that non-empty branches ARE in the schema
+        assert "Vehicle" in schema.type_map
+        assert "HasContent" in schema.type_map
+
+        # Generate the actual GraphQL SDL output
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Verify empty types don't appear in the SDL output
+        assert "type EmptyBranch" not in schema_str
+        assert "type AnotherEmpty" not in schema_str
+        assert "type EmptyNested" not in schema_str
+
+        # Verify non-empty types DO appear in the SDL output
+        assert "type Vehicle" in schema_str
+        assert "type HasContent" in schema_str
+
+        # Verify HasContent has the expected speed field
+        assert "speed" in schema_str.lower()
+
+        # Check that warnings were logged for empty branches
+        assert "Vehicle.EmptyBranch" in caplog.text
+        assert "was skipped because the reference vspec does not define any sub-elements inside" in caplog.text
+        assert "Vehicle.AnotherEmpty" in caplog.text
+        assert "Vehicle.HasContent.EmptyNested" in caplog.text
+
+    def test_empty_branches_skipped_with_fqn_names(self, caplog, tmp_path):
+        """Test that empty branches are skipped when using FQN names (use_short_names=False)."""
+        # Load vspec with empty branches
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema with FQN names
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
+
+        # Check that empty branches are NOT in the schema type_map (FQN format)
+        assert "Vehicle_EmptyBranch" not in schema.type_map
+        assert "Vehicle_AnotherEmpty" not in schema.type_map
+        assert "Vehicle_HasContent_EmptyNested" not in schema.type_map
+
+        # Check that non-empty branches ARE in the schema
+        assert "Vehicle" in schema.type_map
+        assert "Vehicle_HasContent" in schema.type_map
+
+        # Generate the actual GraphQL SDL output
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Write to file for debugging
+        output_file = tmp_path / "test_empty_branches_fqn.graphql"
+        output_file.write_text(schema_str)
+
+        # Verify empty types don't appear in the SDL output (FQN format)
+        assert "type Vehicle_EmptyBranch" not in schema_str
+        assert "type Vehicle_AnotherEmpty" not in schema_str
+        assert "type Vehicle_HasContent_EmptyNested" not in schema_str
+
+        # Verify non-empty types DO appear in the SDL output
+        assert "type Vehicle " in schema_str or "type Vehicle {" in schema_str or "type Vehicle\n" in schema_str
+        assert "type Vehicle_HasContent" in schema_str
+
+        # Check that warnings were logged for empty branches
+        assert "Vehicle.EmptyBranch" in caplog.text
+        assert "Vehicle.AnotherEmpty" in caplog.text
+        assert "Vehicle.HasContent.EmptyNested" in caplog.text
+
+    def test_empty_branches_reported_in_not_mapped_yaml(self, tmp_path):
+        """Test that empty branches are reported in vspec_reference/not_mapped.yaml."""
+        from vss_tools.exporters.s2dm import generate_vspec_reference
+
+        # Load vspec with empty branches
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema (captures skipped branches in vspec_comments)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=True)
+
+        # Verify that skipped branches were tracked
+        assert "skipped_empty_branches" in vspec_comments
+        skipped = vspec_comments["skipped_empty_branches"]
+        assert len(skipped) == 3
+
+        # Verify the FQNs of skipped branches
+        skipped_fqns = [entry["fqn"] for entry in skipped]
+        assert "Vehicle.EmptyBranch" in skipped_fqns
+        assert "Vehicle.AnotherEmpty" in skipped_fqns
+        assert "Vehicle.HasContent.EmptyNested" in skipped_fqns
+
+        # Generate vspec_reference with the metadata
+        generate_vspec_reference(
+            tree=tree,
+            data_type_tree=None,
+            output_dir=tmp_path,
+            extended_attributes=(),
+            vspec_file=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            units_files=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            quantities_files=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            mapping_metadata=vspec_comments,
+        )
+
+        # Verify not_mapped.yaml was created
+        not_mapped_file = tmp_path / "vspec_reference" / "not_mapped.yaml"
+        assert not_mapped_file.exists()
+
+        # Verify contents of not_mapped.yaml
+        content = not_mapped_file.read_text()
+        assert "skipped_empty_branches:" in content
+        assert "Vehicle.EmptyBranch" in content
+        assert "Vehicle.AnotherEmpty" in content
+        assert "Vehicle.HasContent.EmptyNested" in content
+        assert "Empty branch (no children)" in content
+
+        # Verify header comments are present
+        assert "Branches Skipped During S2DM Export" in content
+        assert "no children (no properties or sub-branches)" in content
+
+        # Verify README mentions the file
+        readme_file = tmp_path / "vspec_reference" / "README.md"
+        assert readme_file.exists()
+        readme_content = readme_file.read_text()
+        assert "not_mapped.yaml" in readme_content
+        assert "empty branches" in readme_content.lower()
