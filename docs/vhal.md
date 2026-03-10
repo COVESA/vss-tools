@@ -12,7 +12,7 @@ The Android VHAL property ID is composed of 4 parts (0xGATTDDDD):
 
 This mapper can create all group of properties defined in
 [VehiclePropertyGroup](https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehiclePropertyGroup.aidl)
-and one additional we call VSS to demonstrate the possibility of a VSS specific scope (group).
+and one additional we call OEM to demonstrate the possibility of a OEM specific scope (group).
 
 ## Property Change Mode
 
@@ -69,44 +69,14 @@ CONTINUOUS
 ]
 ```
 
-## Examples
+## Generator Example
 
-To generate SYSTEM properties use the following command. With SYSTEM properties we need to make sure not to conflict
-with existing ones in the platform, therefore the use of `--min-property-id` is needed when generating the map file
-for the first time:
+This example is meant to be used with the OEM VHAL (see [aosp_vendor_car](https://github.com/COVESA/aosp_vendor_car)
+and [aosp_platform-manifest](https://github.com/COVESA/aosp_platform-manifest) repository for more details). It also
+assumes `ANDROID_BUILD_TOP` environment variable pointing to the root of AOSP workspace where the output files will be
+generated.
 
-```bash
-vspec export vhal \
- --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
- --min-property-id 32768 \
- --vhal-map vss_to_android_property_map.json \
- --continuous-change-mode vss_continuous.json \
- --output-dir /path/to/output
-```
-
-To only update SYSTEM properties, i.e. ignore all newly added VSS nodes to the spec add `--no-extend-new` argument:
-
-```bash
-vspec export vhal \
- --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
- --vhal-map vss_to_android_property_map.json \
- --continuous-change-mode vss_continuous.json \
- --output-dir /path/to/output \
- --no-extend-new
-```
-
-To generate VENDOR properties use the argument `--property-group 2`:
-
-```bash
-vspec export vhal \
- --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
- --property-group 2 \
- --vhal-map vss_to_android_property_map.json \
- --continuous-change-mode vss_continuous.json \
- --output-dir /path/to/output
-```
-
-To generate VHAL properties in custom VSS group use the argument `--property-group 4`:
+To generate VHAL properties in OEM group use the argument `--property-group 4`:
 
 ```bash
 vspec export vhal \
@@ -114,5 +84,15 @@ vspec export vhal \
  --property-group 4 \
  --vhal-map vss_to_android_property_map.json \
  --continuous-list-change-mode vss_continuous.json \
- --output-dir /path/to/output/
+ --aosp-workspace-path $ANDROID_BUILD_TOP
 ```
+
+While you can use this generator to generate `SYSTEM` (`--property-group 1`) or `VENDOR` (`--property-group 2`)
+properties, the main purpose of this tool is to generate `OEM` (`--property-group 4`) properties for the Android
+Automotive platform.
+
+With SYSTEM properties you need to make sure not to conflict
+with existing ones in the platform, therefore the use of `--min-property-id` is needed when generating the map file
+for the first time.
+
+To only update properties, i.e., ignore all newly added VSS nodes to the spec add `--no-extend-new` argument.

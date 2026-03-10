@@ -39,7 +39,7 @@
   },
   {
     "name": "CURB_WEIGHT",
-    "propertyId": 1094058012,
+    "propertyId": 1094713372,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -58,7 +58,7 @@
   },
   {
     "name": "CURRENT_LOCATION_ALTITUDE",
-    "propertyId": 1098907692,
+    "propertyId": 1096810540,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -106,7 +106,7 @@
   },
   {
     "name": "CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_X",
-    "propertyId": 1093926959,
+    "propertyId": 1094713391,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -125,7 +125,7 @@
   },
   {
     "name": "CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_Y",
-    "propertyId": 1093926960,
+    "propertyId": 1094713392,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -144,7 +144,7 @@
   },
   {
     "name": "CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_Z",
-    "propertyId": 1093926961,
+    "propertyId": 1094713393,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -163,7 +163,7 @@
   },
   {
     "name": "CURRENT_LOCATION_HEADING",
-    "propertyId": 1098907690,
+    "propertyId": 1096810538,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -182,7 +182,7 @@
   },
   {
     "name": "CURRENT_LOCATION_HORIZONTAL_ACCURACY",
-    "propertyId": 1098907691,
+    "propertyId": 1096810539,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -201,7 +201,7 @@
   },
   {
     "name": "CURRENT_LOCATION_LATITUDE",
-    "propertyId": 1098907688,
+    "propertyId": 1096810536,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -220,7 +220,7 @@
   },
   {
     "name": "CURRENT_LOCATION_LONGITUDE",
-    "propertyId": 1098907689,
+    "propertyId": 1096810537,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -258,7 +258,7 @@
   },
   {
     "name": "CURRENT_LOCATION_VERTICAL_ACCURACY",
-    "propertyId": 1098907693,
+    "propertyId": 1096810541,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -277,7 +277,7 @@
   },
   {
     "name": "CURRENT_OVERALL_WEIGHT",
-    "propertyId": 1094058011,
+    "propertyId": 1094713371,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -296,7 +296,7 @@
   },
   {
     "name": "EMISSIONS_CO2",
-    "propertyId": 1093926938,
+    "propertyId": 1094713370,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -315,7 +315,7 @@
   },
   {
     "name": "GROSS_WEIGHT",
-    "propertyId": 1094058013,
+    "propertyId": 1094713373,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -334,7 +334,7 @@
   },
   {
     "name": "HEIGHT",
-    "propertyId": 1094058017,
+    "propertyId": 1094713377,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -391,7 +391,7 @@
   },
   {
     "name": "LENGTH",
-    "propertyId": 1094058016,
+    "propertyId": 1094713376,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -436,7 +436,7 @@
   },
   {
     "name": "MAX_TOW_BALL_WEIGHT",
-    "propertyId": 1094058015,
+    "propertyId": 1094713375,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -455,7 +455,7 @@
   },
   {
     "name": "MAX_TOW_WEIGHT",
-    "propertyId": 1094058014,
+    "propertyId": 1094713374,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -617,7 +617,7 @@
   },
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_SPEED",
-    "propertyId": 1094058039,
+    "propertyId": 1094713399,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -814,7 +814,7 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_RANGE",
-    "propertyId": 1094844483,
+    "propertyId": 1094713411,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -833,7 +833,7 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_REFUEL_PORT_POSITION",
-    "propertyId": 1091633227,
+    "propertyId": 1091567691,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -865,7 +865,7 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_RELATIVE_LEVEL",
-    "propertyId": 1093795906,
+    "propertyId": 1094713410,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -884,7 +884,7 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_SUPPORTED_FUEL",
-    "propertyId": 1091633214,
+    "propertyId": 1091567678,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -920,7 +920,7 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_SUPPORTED_FUEL_TYPES",
-    "propertyId": 1091633213,
+    "propertyId": 1091567677,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -967,7 +967,7 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_TIME_REMAINING",
-    "propertyId": 1094844484,
+    "propertyId": 1094713412,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -986,7 +986,7 @@
   },
   {
     "name": "POWERTRAIN_RANGE",
-    "propertyId": 1094844467,
+    "propertyId": 1094713395,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -1005,7 +1005,7 @@
   },
   {
     "name": "POWERTRAIN_TIME_REMAINING",
-    "propertyId": 1094844468,
+    "propertyId": 1094713396,
     "areaId": 0,
     "access": 1,
     "changeMode": 1,
@@ -1047,7 +1047,7 @@
   },
   {
     "name": "ROOF_LOAD",
-    "propertyId": 1093926936,
+    "propertyId": 1094713368,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -1199,7 +1199,7 @@
   },
   {
     "name": "TURNING_DIAMETER",
-    "propertyId": 1094058021,
+    "propertyId": 1094713381,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -1389,7 +1389,7 @@
   },
   {
     "name": "VEHICLE_IDENTIFICATION_VEHICLE_SEATING_CAPACITY",
-    "propertyId": 1094057996,
+    "propertyId": 1094713356,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -1446,7 +1446,7 @@
   },
   {
     "name": "VEHICLE_IDENTIFICATION_YEAR",
-    "propertyId": 1094057989,
+    "propertyId": 1094713349,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -1465,7 +1465,7 @@
   },
   {
     "name": "WIDTH_EXCLUDING_MIRRORS",
-    "propertyId": 1094058018,
+    "propertyId": 1094713378,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -1484,7 +1484,7 @@
   },
   {
     "name": "WIDTH_FOLDED_MIRRORS",
-    "propertyId": 1094058020,
+    "propertyId": 1094713380,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,
@@ -1503,7 +1503,7 @@
   },
   {
     "name": "WIDTH_INCLUDING_MIRRORS",
-    "propertyId": 1094058019,
+    "propertyId": 1094713379,
     "areaId": 0,
     "access": 1,
     "changeMode": 0,

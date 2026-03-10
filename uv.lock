@@ -105,15 +105,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bump2version"
-version = "1.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/29/2a/688aca6eeebfe8941235be53f4da780c6edee05dbbea5d7abaa3aab6fad2/bump2version-1.0.1.tar.gz", hash = "sha256:762cb2bfad61f4ec8e2bdf452c7c267416f8c70dd9ecb1653fd0bbb01fa936e6", size = 36236, upload-time = "2020-10-07T18:38:40.119Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/e3/fa60c47d7c344533142eb3af0b73234ef8ea3fb2da742ab976b947e717df/bump2version-1.0.1-py2.py3-none-any.whl", hash = "sha256:37f927ea17cde7ae2d7baf832f8e80ce3777624554a653006c9144f8017fe410", size = 22030, upload-time = "2020-10-07T18:38:38.148Z" },
-]
-
-[[package]]
 name = "certifi"
 version = "2025.11.12"
 source = { registry = "https://pypi.org/simple" }
@@ -468,18 +459,6 @@ wheels = [
 ]
 
 [[package]]
-name = "deprecation"
-version = "2.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/d3/8ae2869247df154b64c1884d7346d412fed0c49df84db635aab2d1c40e62/deprecation-2.1.0.tar.gz", hash = "sha256:72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff", size = 173788, upload-time = "2020-04-20T14:23:38.738Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/02/c3/253a89ee03fc9b9682f1541728eb66db7db22148cd94f89ab22528cd1e1b/deprecation-2.1.0-py2.py3-none-any.whl", hash = "sha256:a10811591210e1fb0e768a8c25517cabeabcba6f0bf96564f8ff45189f90b14a", size = 11178, upload-time = "2020-04-20T14:23:36.581Z" },
-]
-
-[[package]]
 name = "distlib"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -635,7 +614,7 @@ name = "importlib-metadata"
 version = "8.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
 wheels = [
@@ -2025,10 +2004,8 @@ dependencies = [
     { name = "case-converter" },
     { name = "click" },
     { name = "dataclasses-json" },
-    { name = "deprecation" },
     { name = "graphene" },
     { name = "graphql-core" },
-    { name = "importlib-metadata" },
     { name = "jsonschema" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -2036,7 +2013,6 @@ dependencies = [
     { name = "rdflib" },
     { name = "rich" },
     { name = "rich-click" },
-    { name = "ruff" },
 ]
 
 [package.dev-dependencies]
@@ -2059,10 +2035,8 @@ requires-dist = [
     { name = "case-converter", specifier = ">=1.2.0" },
     { name = "click", specifier = ">=8.1.7" },
     { name = "dataclasses-json", specifier = ">=0.6.7" },
-    { name = "deprecation", specifier = ">=2.1.0" },
     { name = "graphene", specifier = ">=3.4.3" },
     { name = "graphql-core", specifier = ">=3.2.5" },
-    { name = "importlib-metadata", specifier = ">=8.5.0" },
     { name = "jsonschema", specifier = ">=4.23.0" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pydantic", specifier = ">=2.9.2" },
@@ -2070,7 +2044,6 @@ requires-dist = [
     { name = "rdflib", specifier = ">=7.1.1" },
     { name = "rich", specifier = ">=13.9.4" },
     { name = "rich-click", specifier = ">=1.8.3" },
-    { name = "ruff", specifier = ">=0.7.3" },
 ]
 
 [package.metadata.requires-dev]

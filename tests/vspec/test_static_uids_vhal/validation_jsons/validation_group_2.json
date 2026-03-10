@@ -2,7 +2,7 @@
   {
     "name": "AVERAGE_SPEED",
     "propertyId": 559939607,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "km/h",
@@ -21,7 +21,7 @@
   {
     "name": "CARGO_VOLUME",
     "propertyId": 559939609,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "l",
@@ -39,8 +39,8 @@
   },
   {
     "name": "CURB_WEIGHT",
-    "propertyId": 557187100,
-    "areaId": 0,
+    "propertyId": 557842460,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "kg",
@@ -58,8 +58,8 @@
   },
   {
     "name": "CURRENT_LOCATION_ALTITUDE",
-    "propertyId": 562036780,
-    "areaId": 0,
+    "propertyId": 559939628,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "m",
@@ -78,7 +78,7 @@
   {
     "name": "CURRENT_LOCATION_GNSSRECEIVER_FIX_TYPE",
     "propertyId": 554696750,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -106,8 +106,8 @@
   },
   {
     "name": "CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_X",
-    "propertyId": 557056047,
-    "areaId": 0,
+    "propertyId": 557842479,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -125,8 +125,8 @@
   },
   {
     "name": "CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_Y",
-    "propertyId": 557056048,
-    "areaId": 0,
+    "propertyId": 557842480,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -144,8 +144,8 @@
   },
   {
     "name": "CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_Z",
-    "propertyId": 557056049,
-    "areaId": 0,
+    "propertyId": 557842481,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -163,8 +163,8 @@
   },
   {
     "name": "CURRENT_LOCATION_HEADING",
-    "propertyId": 562036778,
-    "areaId": 0,
+    "propertyId": 559939626,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "degrees",
@@ -182,8 +182,8 @@
   },
   {
     "name": "CURRENT_LOCATION_HORIZONTAL_ACCURACY",
-    "propertyId": 562036779,
-    "areaId": 0,
+    "propertyId": 559939627,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "m",
@@ -201,8 +201,8 @@
   },
   {
     "name": "CURRENT_LOCATION_LATITUDE",
-    "propertyId": 562036776,
-    "areaId": 0,
+    "propertyId": 559939624,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "degrees",
@@ -220,8 +220,8 @@
   },
   {
     "name": "CURRENT_LOCATION_LONGITUDE",
-    "propertyId": 562036777,
-    "areaId": 0,
+    "propertyId": 559939625,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "degrees",
@@ -240,7 +240,7 @@
   {
     "name": "CURRENT_LOCATION_TIMESTAMP",
     "propertyId": 554696743,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "iso8601",
@@ -258,8 +258,8 @@
   },
   {
     "name": "CURRENT_LOCATION_VERTICAL_ACCURACY",
-    "propertyId": 562036781,
-    "areaId": 0,
+    "propertyId": 559939629,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "m",
@@ -277,8 +277,8 @@
   },
   {
     "name": "CURRENT_OVERALL_WEIGHT",
-    "propertyId": 557187099,
-    "areaId": 0,
+    "propertyId": 557842459,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "kg",
@@ -296,8 +296,8 @@
   },
   {
     "name": "EMISSIONS_CO2",
-    "propertyId": 557056026,
-    "areaId": 0,
+    "propertyId": 557842458,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "g/km",
@@ -315,8 +315,8 @@
   },
   {
     "name": "GROSS_WEIGHT",
-    "propertyId": 557187101,
-    "areaId": 0,
+    "propertyId": 557842461,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "kg",
@@ -334,8 +334,8 @@
   },
   {
     "name": "HEIGHT",
-    "propertyId": 557187105,
-    "areaId": 0,
+    "propertyId": 557842465,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -354,7 +354,7 @@
   {
     "name": "IS_BROKEN_DOWN",
     "propertyId": 555745301,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -373,7 +373,7 @@
   {
     "name": "IS_MOVING",
     "propertyId": 555745302,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -391,8 +391,8 @@
   },
   {
     "name": "LENGTH",
-    "propertyId": 557187104,
-    "areaId": 0,
+    "propertyId": 557842464,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -411,7 +411,7 @@
   {
     "name": "LOW_VOLTAGE_SYSTEM_STATE",
     "propertyId": 554696718,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -436,8 +436,8 @@
   },
   {
     "name": "MAX_TOW_BALL_WEIGHT",
-    "propertyId": 557187103,
-    "areaId": 0,
+    "propertyId": 557842463,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "kg",
@@ -455,8 +455,8 @@
   },
   {
     "name": "MAX_TOW_WEIGHT",
-    "propertyId": 557187102,
-    "areaId": 0,
+    "propertyId": 557842462,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "kg",
@@ -475,7 +475,7 @@
   {
     "name": "POWERTRAIN_ACCUMULATED_BRAKING_ENERGY",
     "propertyId": 559939634,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "kWh",
@@ -494,7 +494,7 @@
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_ENGINE_COOLANT_LEVEL",
     "propertyId": 554696764,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -517,7 +517,7 @@
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_ENGINE_COOLANT_TEMPERATURE",
     "propertyId": 559939643,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "celsius",
@@ -536,7 +536,7 @@
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_ENGINE_OIL_CAPACITY",
     "propertyId": 559939640,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "l",
@@ -555,7 +555,7 @@
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_ENGINE_OIL_LEVEL",
     "propertyId": 554696761,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -580,7 +580,7 @@
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_ENGINE_OIL_TEMPERATURE",
     "propertyId": 559939642,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "celsius",
@@ -599,7 +599,7 @@
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_IS_RUNNING",
     "propertyId": 555745334,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -617,8 +617,8 @@
   },
   {
     "name": "POWERTRAIN_COMBUSTION_ENGINE_SPEED",
-    "propertyId": 557187127,
-    "areaId": 0,
+    "propertyId": 557842487,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "rpm",
@@ -637,7 +637,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_ABSOLUTE_LEVEL",
     "propertyId": 559939649,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "l",
@@ -656,7 +656,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_AVERAGE_CONSUMPTION",
     "propertyId": 559939654,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "l/100km",
@@ -675,7 +675,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_CONSUMPTION_SINCE_LAST_REFUEL",
     "propertyId": 559939656,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "l",
@@ -694,7 +694,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_CONSUMPTION_SINCE_START",
     "propertyId": 559939655,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "l",
@@ -713,7 +713,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_HYBRID_TYPE",
     "propertyId": 554696767,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -739,7 +739,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_INSTANT_CONSUMPTION",
     "propertyId": 559939653,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "l/100km",
@@ -758,7 +758,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_IS_ENGINE_STOP_START_ENABLED",
     "propertyId": 555745353,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -777,7 +777,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_IS_FUEL_LEVEL_LOW",
     "propertyId": 555745354,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -796,9 +796,9 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_IS_FUEL_PORT_FLAP_OPEN",
     "propertyId": 555745356,
-    "areaId": 0,
+    "areaId": 7,
     "access": 3,
-    "changeMode": 0,
+    "changeMode": 1,
     "unit": "",
     "source": "Vehicle.Powertrain.FuelSystem.IsFuelPortFlapOpen",
     "formula": null,
@@ -814,8 +814,8 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_RANGE",
-    "propertyId": 557973571,
-    "areaId": 0,
+    "propertyId": 557842499,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "m",
@@ -833,8 +833,8 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_REFUEL_PORT_POSITION",
-    "propertyId": 554762315,
-    "areaId": 0,
+    "propertyId": 554696779,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -865,8 +865,8 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_RELATIVE_LEVEL",
-    "propertyId": 556924994,
-    "areaId": 0,
+    "propertyId": 557842498,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "percent",
@@ -884,8 +884,8 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_SUPPORTED_FUEL",
-    "propertyId": 554762302,
-    "areaId": 0,
+    "propertyId": 554696766,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -920,8 +920,8 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_SUPPORTED_FUEL_TYPES",
-    "propertyId": 554762301,
-    "areaId": 0,
+    "propertyId": 554696765,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -949,7 +949,7 @@
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_TANK_CAPACITY",
     "propertyId": 559939648,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "l",
@@ -967,8 +967,8 @@
   },
   {
     "name": "POWERTRAIN_FUEL_SYSTEM_TIME_REMAINING",
-    "propertyId": 557973572,
-    "areaId": 0,
+    "propertyId": 557842500,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "s",
@@ -986,8 +986,8 @@
   },
   {
     "name": "POWERTRAIN_RANGE",
-    "propertyId": 557973555,
-    "areaId": 0,
+    "propertyId": 557842483,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "m",
@@ -1005,8 +1005,8 @@
   },
   {
     "name": "POWERTRAIN_TIME_REMAINING",
-    "propertyId": 557973556,
-    "areaId": 0,
+    "propertyId": 557842484,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "s",
@@ -1025,7 +1025,7 @@
   {
     "name": "POWERTRAIN_TYPE",
     "propertyId": 554696757,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1047,8 +1047,8 @@
   },
   {
     "name": "ROOF_LOAD",
-    "propertyId": 557056024,
-    "areaId": 0,
+    "propertyId": 557842456,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "kg",
@@ -1067,7 +1067,7 @@
   {
     "name": "SPEED",
     "propertyId": 559939599,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "km/h",
@@ -1086,7 +1086,7 @@
   {
     "name": "START_TIME",
     "propertyId": 554696722,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "iso8601",
@@ -1105,7 +1105,7 @@
   {
     "name": "TRAILER_IS_CONNECTED",
     "propertyId": 555745318,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "",
@@ -1124,7 +1124,7 @@
   {
     "name": "TRAVELED_DISTANCE",
     "propertyId": 559939600,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "km",
@@ -1143,7 +1143,7 @@
   {
     "name": "TRAVELED_DISTANCE_SINCE_START",
     "propertyId": 559939601,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "km",
@@ -1162,7 +1162,7 @@
   {
     "name": "TRIP_DURATION",
     "propertyId": 559939603,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 1,
     "unit": "s",
@@ -1181,9 +1181,9 @@
   {
     "name": "TRIP_METER_READING",
     "propertyId": 559939604,
-    "areaId": 0,
+    "areaId": 7,
     "access": 3,
-    "changeMode": 0,
+    "changeMode": 1,
     "unit": "km",
     "source": "Vehicle.TripMeterReading",
     "formula": null,
@@ -1199,8 +1199,8 @@
   },
   {
     "name": "TURNING_DIAMETER",
-    "propertyId": 557187109,
-    "areaId": 0,
+    "propertyId": 557842469,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -1219,7 +1219,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_BODY_TYPE",
     "propertyId": 554696710,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1238,7 +1238,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_BRAND",
     "propertyId": 554696707,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1257,7 +1257,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_DATE_VEHICLE_FIRST_REGISTERED",
     "propertyId": 554696711,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "iso8601",
@@ -1276,7 +1276,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_LICENSE_PLATE",
     "propertyId": 554696712,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1295,7 +1295,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_MEETS_EMISSION_STANDARD",
     "propertyId": 554696713,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1314,7 +1314,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_MODEL",
     "propertyId": 554696708,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1333,7 +1333,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_PRODUCTION_DATE",
     "propertyId": 554696714,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "iso8601",
@@ -1352,7 +1352,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_VEHICLE_EXTERIOR_COLOR",
     "propertyId": 554696717,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1371,7 +1371,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_VEHICLE_MODEL_DATE",
     "propertyId": 554696715,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "iso8601",
@@ -1389,8 +1389,8 @@
   },
   {
     "name": "VEHICLE_IDENTIFICATION_VEHICLE_SEATING_CAPACITY",
-    "propertyId": 557187084,
-    "areaId": 0,
+    "propertyId": 557842444,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1409,7 +1409,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_VIN",
     "propertyId": 554696705,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1428,7 +1428,7 @@
   {
     "name": "VEHICLE_IDENTIFICATION_WMI",
     "propertyId": 554696706,
-    "areaId": 0,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1446,8 +1446,8 @@
   },
   {
     "name": "VEHICLE_IDENTIFICATION_YEAR",
-    "propertyId": 557187077,
-    "areaId": 0,
+    "propertyId": 557842437,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "",
@@ -1465,8 +1465,8 @@
   },
   {
     "name": "WIDTH_EXCLUDING_MIRRORS",
-    "propertyId": 557187106,
-    "areaId": 0,
+    "propertyId": 557842466,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -1484,8 +1484,8 @@
   },
   {
     "name": "WIDTH_FOLDED_MIRRORS",
-    "propertyId": 557187108,
-    "areaId": 0,
+    "propertyId": 557842468,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
@@ -1503,8 +1503,8 @@
   },
   {
     "name": "WIDTH_INCLUDING_MIRRORS",
-    "propertyId": 557187107,
-    "areaId": 0,
+    "propertyId": 557842467,
+    "areaId": 7,
     "access": 1,
     "changeMode": 0,
     "unit": "mm",
