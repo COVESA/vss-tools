@@ -133,19 +133,31 @@ def vss_properties_group_4_update() -> List[VehicleMappingItem]:
 
 @pytest.fixture(scope="session")
 def java_property_ids_code() -> str:
-    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "VehiclePropertyIdsVss.java", "r") as file:
+    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "VehiclePropertyIdsOem.java", "r") as file:
         return file.read()
 
 
 @pytest.fixture(scope="session")
 def java_permissions_code() -> str:
-    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "VssPermissions.java", "r") as file:
+    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "OemPermissions.java", "r") as file:
         return file.read()
 
 
 @pytest.fixture(scope="session")
 def aidl_code() -> str:
-    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "VehiclePropertyVss.aidl", "r") as file:
+    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "VehiclePropertyOem.aidl", "r") as file:
+        return file.read()
+
+
+@pytest.fixture(scope="session")
+def car_service_android_manifest_code() -> str:
+    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "AndroidManifest.xml", "r") as file:
+        return file.read()
+
+
+@pytest.fixture(scope="session")
+def car_service_strings_code() -> str:
+    with open(Path(__file__).resolve().parents[0] / "validation_jsons" / "strings.xml", "r") as file:
         return file.read()
 
 
@@ -215,3 +227,13 @@ def test_java_permissions_code(java_permissions_code: str, vhal_mapper_group_4: 
 def test_aidl_code(aidl_code: str, vhal_mapper_group_4: VhalMapper):
     actual_code = vhal_mapper_group_4.generate_aidl_file()
     assert aidl_code == actual_code
+
+
+def test_car_service_android_manifest(car_service_android_manifest_code: str, vhal_mapper_group_4: VhalMapper):
+    actual_code, _ = vhal_mapper_group_4.generate_xml_files()
+    assert car_service_android_manifest_code.rstrip() == actual_code.rstrip()
+
+
+def test_car_service_strings(car_service_strings_code: str, vhal_mapper_group_4: VhalMapper):
+    _, actual_code = vhal_mapper_group_4.generate_xml_files()
+    assert car_service_strings_code.rstrip() == actual_code.rstrip()
