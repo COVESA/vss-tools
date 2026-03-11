@@ -35,13 +35,6 @@ enum VspecElement {
 }
 
 
-#enum FuelTypeEnum @vspec(element:"ATTRIBUTE", fqn:"Vehicle.Powertrain.FuelType", metadata:[{key:"allowed", value:"[GASOLINE, DIESEL, ELECTRIC, HYBRID]"}]) {
-#  GASOLINE
-#  DIESEL
-#  ELECTRIC
-#  HYBRID
-#}
-
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
 
 directive @instanceTag on OBJECT

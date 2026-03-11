@@ -29,7 +29,6 @@ from graphql import (
     GraphQLEnumType,
     GraphQLEnumValue,
     GraphQLField,
-    GraphQLID,
     GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,
@@ -45,25 +44,6 @@ from .constants import S2DM_CONVERSIONS, VSS_LEAF_TYPES
 from .graphql_scalars import VSS_DATATYPE_MAP
 from .graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from .metadata_tracker import build_field_path
-
-
-def _extract_extended_attributes(row: pd.Series, extended_attributes: tuple[str, ...]) -> dict[str, Any]:
-    """
-    Extract extended attributes from a DataFrame row.
-
-    Args:
-        row: pandas Series (DataFrame row) containing VSS node data
-        extended_attributes: Tuple of extended attribute names to extract
-
-    Returns:
-        Dictionary containing only the extended attributes that exist and are not NA
-    """
-    extracted = {}
-    for ext_attr in extended_attributes:
-        if ext_attr in row.index and pd.notna(row.get(ext_attr)):
-            extracted[ext_attr] = row[ext_attr]
-    return extracted
-
 
 # Initialize inflect engine for pluralization (singleton)
 _inflect_engine = inflect.engine()
@@ -375,10 +355,6 @@ def create_struct_types(
 
             field_path = build_field_path(type_name, field_name)
             field_metadata = {"element": "STRUCT_PROPERTY", "fqn": prop_fqn}
-
-            # Capture extended attributes if present
-            field_metadata.update(_extract_extended_attributes(prop_row, extended_attributes))
-
             vspec_comments["field_vss_types"][field_path] = field_metadata
 
             if pd.notna(prop_row.get("min")) or pd.notna(prop_row.get("max")):
@@ -394,10 +370,7 @@ def create_struct_types(
             name=type_name, fields=fields, description=struct_row.get("description", "")
         )
 
-        # Store type-level metadata including extended attributes
-        type_metadata = {"element": "STRUCT", "fqn": fqn}
-        type_metadata.update(_extract_extended_attributes(struct_row, extended_attributes))
-        vspec_comments["vss_types"][type_name] = type_metadata
+        vspec_comments["vss_types"][type_name] = {"element": "STRUCT", "fqn": fqn}
 
     return struct_types
 
@@ -513,8 +486,6 @@ def create_object_type(
         fields = {}
 
         # System fields
-        if type_name == "Vehicle" or branch_row.get("instances"):
-            fields["id"] = GraphQLField(GraphQLNonNull(GraphQLID))
         if instance_tag_type := vspec_comments.get("instance_tag_types", {}).get(type_name):
             if instance_tag_type in types_registry:
                 fields["instanceTag"] = GraphQLField(types_registry[instance_tag_type])
@@ -536,12 +507,7 @@ def create_object_type(
             field_path = build_field_path(type_name, field_name)
 
             if leaf_type := _get_vss_type_if_valid(leaf_row):
-                field_metadata = {"element": leaf_type, "fqn": child_fqn}
-
-                # Capture extended attributes if present
-                field_metadata.update(_extract_extended_attributes(leaf_row, extended_attributes))
-
-                vspec_comments["field_vss_types"][field_path] = field_metadata
+                vspec_comments["field_vss_types"][field_path] = {"element": leaf_type, "fqn": child_fqn}
 
             if pd.notna(leaf_row.get("min")) or pd.notna(leaf_row.get("max")):
                 vspec_comments["field_ranges"][field_path] = {
@@ -597,14 +563,15 @@ def create_object_type(
                     {"fqn": child_fqn, "plural_field_name": plural_field_name, "path_in_graphql_model": field_path}
                 )
             else:
+                field_path = build_field_path(type_name, field_name)
                 fields[field_name] = GraphQLField(child_type)
+
+            # Annotate field with @vspec directive (shared for both cases)
+            vspec_comments["field_vss_types"][field_path] = {"element": "BRANCH", "fqn": child_fqn}
 
         return fields
 
-    # Store type-level metadata including extended attributes
-    type_metadata = {"element": "BRANCH", "fqn": fqn}
-    type_metadata.update(_extract_extended_attributes(branch_row, extended_attributes))
-    vspec_comments["vss_types"][type_name] = type_metadata
+    vspec_comments["vss_types"][type_name] = {"element": "BRANCH", "fqn": fqn}
 
     return GraphQLObjectType(name=type_name, fields=get_fields, description=branch_row.get("description", ""))
 
@@ -647,16 +614,11 @@ def get_hoisted_fields(
             field_path = build_field_path(parent_type_name, hoisted_field_name)
 
             if leaf_type := _get_vss_type_if_valid(leaf_row):
-                field_metadata = {
+                vspec_comments["field_vss_types"][field_path] = {
                     "element": leaf_type,
                     "fqn": leaf_fqn,
                     "instantiate": False,
                 }
-
-                # Capture extended attributes if present
-                field_metadata.update(_extract_extended_attributes(leaf_row, extended_attributes))
-
-                vspec_comments["field_vss_types"][field_path] = field_metadata
 
             if pd.notna(leaf_row.get("min")) or pd.notna(leaf_row.get("max")):
                 vspec_comments["field_ranges"][field_path] = {
