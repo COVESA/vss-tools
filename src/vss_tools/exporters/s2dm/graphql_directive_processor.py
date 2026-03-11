@@ -70,8 +70,8 @@ class GraphQLDirectiveProcessor:
         """
         Process unit enum directives.
 
-        Annotates enum type with @vspec(element: QUANTITY_KIND, metadata: [{key: "quantity", value: "..."}])
-        and individual enum values with @vspec(element: UNIT, metadata: [{key: "unit", value: "..."}])
+        Annotates enum type with @vspec(element: QUANTITY_KIND)
+        and individual enum values with @vspec(element: UNIT).
         """
         for quantity, units_data in unit_enums_metadata.items():
             enum_name = f"{convert_name_for_graphql_schema(quantity, GraphQLElementType.TYPE)}UnitEnum"
@@ -80,11 +80,7 @@ class GraphQLDirectiveProcessor:
             for i, line in enumerate(lines):
                 if line.strip().startswith(f"enum {enum_name}"):
                     if "@vspec" not in line:
-                        # Annotate enum type with QUANTITY_KIND
-                        directive = (
-                            f"@vspec(element: QUANTITY_KIND, " f'metadata: [{{key: "quantity", value: "{quantity}"}}])'
-                        )
-                        lines[i] = line.replace(" {", f" {directive} {{")
+                        lines[i] = line.replace(" {", " @vspec(element: QUANTITY_KIND) {")
                     in_target_enum = True
                     continue
                 elif line.strip().startswith("enum ") and in_target_enum:
@@ -105,9 +101,7 @@ class GraphQLDirectiveProcessor:
                         if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_values:
                             if "@vspec" not in line:
                                 indent = line[: len(line) - len(line.lstrip())]
-                                # Annotate enum value with UNIT
-                                directive = f'@vspec(element: UNIT, metadata: [{{key: "unit", value: "{unit_key}"}}])'
-                                lines[i] = f"{indent}{enum_value_name} {directive}"
+                                lines[i] = f"{indent}{enum_value_name} @vspec(element: UNIT)"
 
                             processed_values.add(enum_value_key)
                             break
@@ -119,29 +113,19 @@ class GraphQLDirectiveProcessor:
         """
         Process allowed value enum directives.
 
-        Annotates the enum type itself with @vspec(element, fqn, metadata),
-        and annotates individual enum values that were modified with @vspec(metadata).
+        Annotates the enum type itself with @vspec(element, fqn).
+        Annotates individual enum values that were sanitized with @vspec(metadata: originalName).
         """
         for enum_name, enum_data in allowed_enums_metadata.items():
             fqn = enum_data.get("fqn", "")
             vss_type = enum_data.get("vss_type", "ATTRIBUTE")
-            allowed_values_dict = enum_data.get("allowed_values", {})
             modified_values = enum_data.get("modified_values", {})
-
-            # Build the allowed values list for metadata
-            # GraphQL requires: value: "['val1', 'val2']" (double quotes outside, single quotes inside)
-            allowed_values_list = list(allowed_values_dict.values())
-            allowed_str = ", ".join([f"'{v}'" for v in allowed_values_list])
 
             in_target_enum = False
             for i, line in enumerate(lines):
                 if line.strip().startswith(f"enum {enum_name}"):
                     if "@vspec" not in line:
-                        # Annotate the enum type
-                        directive = (
-                            f'@vspec(element: {vss_type}, fqn: "{fqn}", '
-                            f'metadata: [{{key: "allowed", value: "[{allowed_str}]"}}])'
-                        )
+                        directive = f'@vspec(element: {vss_type}, fqn: "{fqn}")'
                         lines[i] = line.replace(" {", f" {directive} {{")
                     in_target_enum = True
                     continue
@@ -216,13 +200,12 @@ class GraphQLDirectiveProcessor:
         return lines
 
     def _process_field_directives(self, lines: list[str], vspec_comments: dict) -> list[str]:
-        """Process consolidated field @vspec directives (element + fqn + optional metadata)."""
-        # Process VSS type information (element + fqn + metadata)
+        """Process consolidated field @vspec directives (element + fqn + optional instantiate metadata)."""
         for field_path, vss_info in vspec_comments.get("field_vss_types", {}).items():
             type_name, field_name = field_path.split(".", 1)  # Use maxsplit=1 to handle field names with dots
             element = vss_info["element"]
             fqn = vss_info["fqn"]
-            instantiate = vss_info.get("instantiate")  # Check if this is a hoisted non-instantiated field
+            instantiate = vss_info.get("instantiate")  # Only False for hoisted non-instantiated fields
 
             in_type = False
             for i, line in enumerate(lines):
@@ -237,26 +220,12 @@ class GraphQLDirectiveProcessor:
                     continue
 
                 if in_type and line.strip().startswith(f"{field_name}") and "@vspec" not in line:
-                    # Build metadata array from extended attributes
-                    metadata_entries = []
-
-                    # Add instantiate metadata if present
                     if instantiate is False:
-                        metadata_entries.append('{key: "instantiate", value: "false"}')
-
-                    # Add extended attributes metadata
-                    for key, value in vss_info.items():
-                        if key not in ["element", "fqn", "instantiate"]:
-                            # Escape quotes in value
-                            escaped_value = str(value).replace('"', '\\\\"')
-                            metadata_entries.append(f'{{key: "{key}", value: "{escaped_value}"}}')
-
-                    # Build directive
-                    if metadata_entries:
-                        metadata_str = ", ".join(metadata_entries)
-                        directive = f'@vspec(element: {element}, fqn: "{fqn}", metadata: [{metadata_str}])'
+                        directive = (
+                            f'@vspec(element: {element}, fqn: "{fqn}", '
+                            + 'metadata: [{key: "instantiate", value: "false"}])'
+                        )
                     else:
-                        # Standard directive without metadata
                         directive = f'@vspec(element: {element}, fqn: "{fqn}")'
 
                     lines[i] = line.rstrip() + f" {directive}"
@@ -376,36 +345,14 @@ class GraphQLDirectiveProcessor:
 
                     # Add @vspec directive
                     if needs_instance_tag and "@vspec" not in line:
-                        # Instance tag types get special metadata with instances
                         element = instance_tag_info["element"]
                         fqn = instance_tag_info["fqn"]
-                        instances = instance_tag_info["instances"]
-                        directive = (
-                            f'@vspec(element: {element}, fqn: "{fqn}", '
-                            f'metadata: [{{key: "instances", value: "{instances}"}}])'
-                        )
-                        new_line += f" {directive}"
+                        new_line += f' @vspec(element: {element}, fqn: "{fqn}")'
                     elif needs_vss_type and "@vspec" not in line:
-                        # Regular types get element + fqn + extended attributes metadata
                         vss_info = vspec_comments["vss_types"][type_name]
                         element = vss_info["element"]
                         fqn = vss_info["fqn"]
-
-                        # Build metadata array from extended attributes
-                        metadata_entries = []
-                        for key, value in vss_info.items():
-                            if key not in ["element", "fqn"]:
-                                # Escape quotes in value
-                                escaped_value = str(value).replace('"', '\\\\"')
-                                metadata_entries.append(f'{{key: "{key}", value: "{escaped_value}"}}')
-
-                        # Build directive
-                        if metadata_entries:
-                            metadata_str = ", ".join(metadata_entries)
-                            directive = f'@vspec(element: {element}, fqn: "{fqn}", metadata: [{metadata_str}])'
-                        else:
-                            directive = f'@vspec(element: {element}, fqn: "{fqn}")'
-                        new_line += f" {directive}"
+                        new_line += f' @vspec(element: {element}, fqn: "{fqn}")'
 
                     new_line += " {"
                     lines[i] = new_line  # No extra indentation

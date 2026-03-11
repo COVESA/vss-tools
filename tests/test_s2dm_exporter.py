@@ -751,8 +751,12 @@ class TestS2DMExporter:
         assert 'REAR_LEFT @vspec(metadata: [{key: "originalName", value: "RearLeft"}])' in schema_str
         assert 'REAR_RIGHT @vspec(metadata: [{key: "originalName", value: "RearRight"}])' in schema_str
 
-    def test_extended_attributes_in_metadata(self):
-        """Test that extended attributes are captured and added to @vspec metadata."""
+    def test_extended_attributes_not_in_schema_metadata(self):
+        """Test that extended attributes are not annotated in @vspec schema metadata.
+
+        Extended attributes are available via the sidecar vspec lookup, so they are
+        intentionally omitted from the schema to keep it minimal.
+        """
         # Load the test vspec with extended attributes
         tree, _ = get_trees(
             vspec=Path("tests/vspec/test_s2dm/test_extended_attributes.vspec"),
@@ -771,24 +775,19 @@ class TestS2DMExporter:
         )
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
-        # Check Vehicle.Speed has source and quality in metadata
+        # Fields are still annotated with element + fqn
         assert "speed(unit: RelationUnitEnum = PERCENT): Float" in schema_str
         assert '@vspec(element: SENSOR, fqn: "Vehicle.Speed"' in schema_str
-        assert '{key: "source", value: "ecu0xAA"}' in schema_str
-        assert '{key: "quality", value: "100"}' in schema_str
-
-        # Check Vehicle.Temperature has source, quality, and calibration
-        assert "temperature(unit: AngleUnitEnum = DEGREE): Int16" in schema_str
         assert '@vspec(element: SENSOR, fqn: "Vehicle.Temperature"' in schema_str
-        assert '{key: "source", value: "ecu0xBB"}' in schema_str
-        assert '{key: "quality", value: "95"}' in schema_str
-        assert '{key: "calibration", value: "factory"}' in schema_str
-
-        # Check Vehicle.Info.Model has customMetadata and anotherAttribute
         assert "model: String" in schema_str
         assert '@vspec(element: ATTRIBUTE, fqn: "Vehicle.Info.Model"' in schema_str
-        assert '{key: "customMetadata", value: "test_value"}' in schema_str
-        assert '{key: "anotherAttribute", value: "42"}' in schema_str
+
+        # Extended attributes are NOT annotated in @vspec metadata (available via sidecar instead)
+        assert '{key: "source"' not in schema_str
+        assert '{key: "quality"' not in schema_str
+        assert '{key: "calibration"' not in schema_str
+        assert '{key: "customMetadata"' not in schema_str
+        assert '{key: "anotherAttribute"' not in schema_str
 
     def test_empty_branches_are_skipped(self, caplog):
         """Test that empty branches (branches with no children) are skipped during export."""
