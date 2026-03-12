@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+
+message A {
+  string StringWithAllowed = 1;
+  uint32 UInt8WithMinMax = 2;
+  string DeprecatedString = 3;
+  float DescOnly = 4;
+  uint32 NoMetadata = 5;
+}
+

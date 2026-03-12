@@ -15,6 +15,7 @@ This example assumes that you checked out the COVESA VSS repository next to the 
 ```bash
 --static-uid          Expect staticUID attribute in the vspec input and use it as field number.
 --add-optional        Set each field to optional
+--include-comments    Include descriptions and metadata as comments in the generated proto files
 ```
 
 ## Field Numbers and Backwards Compatibility
@@ -95,3 +96,28 @@ For the incrementally assigned field numbers, we only need a few bits per number
 In proto3, one can mark a field as `optional` to change the behavior of how to deal with values that are not present during the encoding. By default, the fields are not optional, and you can use the flag `--add-optional` to make all fields optional.
 
 See the [Protocol Buffers Language Guide](https://protobuf.dev/programming-guides/proto3/#field-labels) for the implications of using `optional`.
+
+## Include comments
+
+By default, the generated proto files do not contain any comments. Use the `--include-comments` flag to include VSS descriptions and metadata as protobuf comments above each message and field.
+
+The comment block includes the node's description followed by any additional metadata such as allowed values, min/max, default, unit, deprecation, and comment.
+
+For example, given a vspec entry:
+
+```yaml
+Media.Played.Source:
+  datatype: string
+  type: actuator
+  allowed: ['UNKNOWN', 'SIRIUS_XM', 'AM', 'FM', 'DAB', 'TV', 'CD', 'DVD', 'AUX', 'USB', 'DISK', 'BLUETOOTH', 'INTERNET', 'VOICE', 'BEEP']
+  description: Media selected for playback
+```
+
+The generated proto output with `--include-comments` would be:
+
+```proto
+  // Media selected for playback
+  //
+  // Allowed: ['UNKNOWN', 'SIRIUS_XM', 'AM', 'FM', 'DAB', 'TV', 'CD', 'DVD', 'AUX', 'USB', 'DISK', 'BLUETOOTH', 'INTERNET', 'VOICE', 'BEEP']
+  string Source = 1;
+```
