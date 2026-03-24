@@ -74,7 +74,7 @@ jobs:
           vspec export s2dm --help
       - name: Test that generated DDSIDL is correct
         run: |
-          pip install cyclonedds
+          pip install cyclonedds==0.10.5
           cd tests/ddsidl
           vspec export ddsidl -u ../vspec/test_units.yaml -s test.vspec -o test.idl -q ../vspec/test_quantities.yaml
           idlc -l py test.idl
