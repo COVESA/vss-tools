@@ -211,6 +211,22 @@ class VSSDataDatatype(VSSData):
         return self
 
     @model_validator(mode="after")
+    def check_enum(self) -> Self:
+        if not self.enum:
+            return self
+
+        key_pattern = r"[A-Z_]"
+
+        values = set()
+        for key, value in self.enum.items():
+            assert value not in values, f"Duplicated enum value: '{value}'"
+            values.add(value)
+
+            assert re.match(key_pattern, key), f"Invalid enum key: '{key}'"
+
+        return self
+
+    @model_validator(mode="after")
     def check_type_arraysize_consistency(self) -> Self:
         """
         Checks that arraysize is only set when
