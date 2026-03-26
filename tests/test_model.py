@@ -62,6 +62,9 @@ from vss_tools.model import VSSDataDatatype
         ({"datatype": "int8[]", "enum": {"A": 1, "B": 2}, "default": [1]}, True),
         ({"datatype": "int8", "enum": {"A": 1, "B": 1}}, False),
         ({"datatype": "int8", "enum": {"123": 1}}, False),
+        ({"datatype": "int8", "enum": {"_A": 1}}, False),
+        ({"datatype": "int8", "enum": {"A_": 1}}, True),
+        ({"datatype": "int8", "enum": {"A123": 1}}, True),
     ],
 )
 def test_vss_data_datatype(data: dict[str, Any], ok: bool) -> None:

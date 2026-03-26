@@ -215,7 +215,7 @@ class VSSDataDatatype(VSSData):
         if not self.enum:
             return self
 
-        key_pattern = r"[A-Z_]"
+        key_pattern = r"[A-Z][A-Z_0-9]*"
 
         values = set()
         for key, value in self.enum.items():
