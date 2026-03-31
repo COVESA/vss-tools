@@ -1,0 +1,34 @@
+A:
+  type: branch
+  description: A is a test branch
+
+A.StringWithAllowed:
+  datatype: string
+  type: actuator
+  allowed: ['VALUE_A', 'VALUE_B', 'VALUE_C']
+  description: A string with allowed values
+
+A.UInt8WithMinMax:
+  datatype: uint8
+  type: sensor
+  unit: percent
+  min: 0
+  max: 100
+  description: A uint8 with min and max
+
+A.DeprecatedString:
+  datatype: string
+  type: sensor
+  description: A deprecated node
+  deprecation: Use A.StringWithAllowed instead
+
+A.DescOnly:
+  datatype: float
+  type: sensor
+  unit: mm
+  description: Only a description
+
+A.NoMetadata:
+  datatype: uint32
+  type: sensor
+  description: A node with no extra metadata

@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+
+// A is a test branch
+message A {
+  // A string with allowed values
+  //
+  // Allowed: ['VALUE_A', 'VALUE_B', 'VALUE_C']
+  string StringWithAllowed = 1;
+  // A uint8 with min and max
+  //
+  // Min: 0
+  // Max: 100
+  // Unit: percent
+  uint32 UInt8WithMinMax = 2;
+  // A deprecated node
+  //
+  // Deprecation: Use A.StringWithAllowed instead
+  string DeprecatedString = 3;
+  // Only a description
+  //
+  // Unit: mm
+  float DescOnly = 4;
+  // A node with no extra metadata
+  uint32 NoMetadata = 5;
+}
+
