@@ -201,8 +201,30 @@ class VSSDataDatatype(VSSData):
     # Example: VSS - VehicleIdentification.VIN property
     pattern: str | None = None
     unit: str | None = None
+    enum: dict[str, int] | None = None
     allowed: ValueList | None = None
     default: Any = None
+
+    @model_validator(mode="after")
+    def check_allowed_enum_conflict(self) -> Self:
+        assert not (self.allowed and self.enum), "Cannot use 'allowed' and 'enum'"
+        return self
+
+    @model_validator(mode="after")
+    def check_enum(self) -> Self:
+        if not self.enum:
+            return self
+
+        key_pattern = r"[A-Z][A-Z_0-9]*"
+
+        values = set()
+        for key, value in self.enum.items():
+            assert value not in values, f"Duplicated enum value: '{value}'"
+            values.add(value)
+
+            assert re.match(key_pattern, key), f"Invalid enum key: '{key}'"
+
+        return self
 
     @model_validator(mode="after")
     def check_type_arraysize_consistency(self) -> Self:
@@ -276,23 +298,24 @@ class VSSDataDatatype(VSSData):
                     assert Datatypes.is_datatype(v, self.datatype), f"'{v}' is not of type '{self.datatype}'"
         return self
 
-    def check_default_values_allowed(self) -> Self:
+    def check_default_values_in_enum(self) -> Self:
         """
         Checks that the given default values
-        are in the allowed list
+        are valid enums
         """
-        if self.default and self.allowed:
+        if self.default and self.enum:
             values = self.default
             if not isinstance(self.default, list):
                 values = [self.default]
-            for v in values:  # type: ignore
-                assert v in self.allowed, f"default value '{v}' is not in 'allowed' list"
+            for v in values:
+                assert v in self.enum.values(), f"default value '{v}' is not a valid enum value"
         return self
 
     def check_allowed_datatype_consistency(self) -> Self:
         """
         Checks that allowed values are valid
         datatypes
+        Checks datatypes to be int when using `enum`
         """
         if self.allowed:
             assert Datatypes.get_type(self.datatype), "'allowed' cannot be used with struct datatype"
@@ -309,13 +332,58 @@ class VSSDataDatatype(VSSData):
             assert self.allowed is None, err
         return self
 
+    def check_default_values_in_allowed(self) -> Self:
+        """
+        Checks that the given default values
+        are in 'allowed'
+        """
+        if self.default and self.allowed:
+            values = self.default
+            if not isinstance(self.default, list):
+                values = [self.default]
+            for v in values:
+                assert v in self.allowed, f"default value '{v}' is not in 'allowed' list"
+        return self
+
+    def check_enum_datatypes(self) -> Self:
+        """
+        Checks datatypes to be int when using `enum`
+        """
+        if self.enum:
+            # Returns None on struct types
+            assert Datatypes.get_type(self.datatype), "'enum' cannot be used with struct datatype"
+
+            # Check whether datatype is an int type
+            check = self.datatype
+            if is_array(self.datatype):
+                check = check.rstrip("[]")
+
+            assert Datatypes.is_subtype_of(check, Datatypes.INT[0]), "'datatype' needs to be an int when using 'enum'"
+
+            # Check enum values matching the 'datatype'
+            for v in self.enum.values():
+                assert Datatypes.is_datatype(v, check), f"enum value '{v}' is not of type '{self.datatype}'"
+
+        return self
+
+    @model_validator(mode="after")
+    def check_enum_min_max_conflict(self) -> Self:
+        err = "'min/max' and 'enum' cannot be used together"
+        if self.enum is not None:
+            assert self.min is None and self.max is None, err
+        if self.min is not None or self.max is not None:
+            assert self.enum is None, err
+        return self
+
     @model_validator(mode="after")
     def check_datatype(self) -> Self:
         assert self.datatype in get_all_datatypes(self.fqn), f"'{self.datatype}' is not a valid datatype"
         self.datatype = resolve_datatype(self.datatype, self.fqn)
         self = self.check_type_default_consistency()
+        self = self.check_enum_datatypes()
         self = self.check_allowed_datatype_consistency()
-        self = self.check_default_values_allowed()
+        self = self.check_default_values_in_enum()
+        self = self.check_default_values_in_allowed()
         self = self.check_min_max_valid_datatype()
         self = self.check_default_min_max()
         return self
@@ -351,7 +419,8 @@ class VSSDataDatatype(VSSData):
 
         1. defined only for string typed nodes i.e., STRING and STRING_ARRAY
         2. if default value(s) is provided, each default matching the specified pattern
-        3. if allowed value(s) is provided, each allowed matching the specified pattern
+        3. that 'enum' is not used
+        4. if allowed value(s) is provided, each allowed matching the specified pattern
         """
         if self.pattern:
             # Datatypes.TUPLE[0] is the string name of the type.
@@ -377,6 +446,8 @@ class VSSDataDatatype(VSSData):
 
             if self.allowed:
                 check_value_match(self.allowed, "allowed", self.pattern)
+
+            assert self.enum is None, "'enum' cannot be used together with 'pattern'"
 
         return self
 
