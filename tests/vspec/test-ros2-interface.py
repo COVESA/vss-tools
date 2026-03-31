@@ -1165,7 +1165,7 @@ A.Speed:
     assert "datatype: float" in text
 
 
-def test_ros2_struct_timestamp_uses_timestamp_vspec_file(tmp_path):
+def test_ros2_struct_timestamp_uses_types_tree(tmp_path):
     vspec = """\
 A:
   type: branch
@@ -1175,22 +1175,25 @@ A.Speed:
   datatype: float
   description: Vehicle speed.
 """
-    timestamp_vspec = tmp_path / "Timestamp.vspec"
-    timestamp_vspec.write_text(
+    # A types file must have a root namespace (bare structs at root fail RootTypesException).
+    types_vspec = tmp_path / "CustomTypes.vspec"
+    types_vspec.write_text(
         """\
-Timestamp:
+CustomTypes:
+  type: branch
+  description: Custom type definitions.
+
+CustomTypes.Timestamp:
   type: struct
   description: A point in time.
 
-Timestamp.seconds:
+CustomTypes.Timestamp.seconds:
   type: property
-  unit: unix-time
   datatype: int64
   description: Unix epoch seconds.
 
-Timestamp.nanoseconds:
+CustomTypes.Timestamp.nanoseconds:
   type: property
-  unit: ns
   datatype: int64
   min: 0
   max: 999999999
@@ -1205,8 +1208,10 @@ Timestamp.nanoseconds:
         tmp_path,
         mode="leaf",
         extra_args=[
-            "--timestamp-vspec",
-            str(timestamp_vspec),
+            "--types",
+            str(types_vspec),
+            "--timestamp-name",
+            "Timestamp",
             "--srv",
             "get",
             "--srv-use-msg",
@@ -1244,7 +1249,8 @@ Timestamp.nanoseconds:
     assert "Timestamp.nanoseconds:" not in transformed_text
 
 
-def test_ros2_struct_timestamp_auto_detects_from_custom_vspec(tmp_path):
+def test_ros2_struct_timestamp_fallback_defaults(tmp_path):
+    """When no --types file is provided the exporter falls back to built-in timestamp defaults."""
     vspec = """\
 A:
   type: branch
@@ -1258,7 +1264,6 @@ A.Speed:
         vspec,
         tmp_path,
         mode="leaf",
-        extra_args=["--include-dirs", str(INCLUDE_DIR)],
     )
     msg = pkg_dir / "msg" / "ASpeed.msg"
     assert msg.is_file(), f"Missing {msg}"

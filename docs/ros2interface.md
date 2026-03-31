@@ -66,7 +66,7 @@ OutputFolder
   - `both`:
     - creates both the Get<MSG>.srv and Set<MSG>.srv files
 - `--srv-use-msg / --no-srv-use-msg`: In services, use the generated message as a nested field (default: `--srv-use-msg`); otherwise flatten fields.
-- `--timestamp-vspec <file>`: Optional VSS file containing a custom `Timestamp` struct definition. When provided, its schema overrides the auto-detected timestamp fields in `.msg` and `.srv` files. If omitted, the exporter auto-detects a `Timestamp` struct from the vspec include path or falls back to built-in defaults (`int64 timestamp_seconds` + `int64 timestamp_nanoseconds`).
+- `--timestamp-name <name>`: Tail name (or FQN) of the timestamp struct to look up in the types tree loaded via `--types` (default: `Timestamp`).
 - `--output-vspec <file>`: Optional path to write a transformed VSS model alongside the ROS 2 package. See [VSS with Timestamp](#transformed-vss-vspec----output-vspec) in the Output section.
 
 ### Topic/Signal Selection
@@ -90,6 +90,19 @@ Following patterns are supported:
   - Name: `Speed`
 
 ## Output
+
+### Timestamp fields
+
+Timestamp fields are derived from the types tree, the exporter looks up the struct named by `--timestamp-name` (default: `Timestamp`) among the types loaded via `--types` parameter.
+If found, the struct's direct `property` children become the leading timestamp fields in every `.msg` and `.srv` file.
+When the struct is **not** found in the types tree (or no `--types` parameter value provided, or the name does not match), the exporter falls back to built-in Timestamp defaults:
+
+```
+int64 timestamp_seconds
+int64 timestamp_nanoseconds
+```
+
+to use `--types` parameter, pass it like: `--types VehicleDataTypes.vspec` (the exporter finds `Timestamp` by tail name automatically).
 
 ### Messages (`.msg`)
 
@@ -149,7 +162,7 @@ Vehicle.Speed.value:
   unit: km/h
 ```
 
-The `VehicleDataTypes.Timestamp` struct (declared in `VehicleDataTypes.vspec` / `spec/include/Timestamp.vspec`) is **not** re-emitted in the output — it is expected to already be part of the VSS model.
+The `VehicleDataTypes.Timestamp` struct (declared in `VehicleDataTypes.vspec` / `spec/include/Timestamp.vspec`) is **not** re-emitted in the output, it already is a part of the VSS model.
 
 ## Examples
 
@@ -178,22 +191,23 @@ vspec export ros2interface \
   --srv get \
   --topics '*.Speed'
 ```
-- Export with a custom Timestamp.vspec schema:
+- Export with a custom timestamp struct from the types tree:
 
 ```bash
 vspec export ros2interface \
   --vspec spec/VehicleSignalSpecification.vspec \
   -I spec \
+  --types path/to/MyTypes.vspec \
   --output ./out \
   --package-name vss_interfaces \
   --mode leaf \
   --srv both --srv-use-msg \
-  --timestamp-vspec path/to/Timestamp.vspec
+  --timestamp-name Timestamp
 ```
 - Exports and writes a transformed VSS model.
   - Each signal becomes <Signal>.time (datatype: VehicleDataTypes.Timestamp)
   - and <Signal>.value carrying the original datatype.
-  - VehicleDataTypes.Timestamp is NOT re-emitted — it must already exist in the VSS model.
+  - VehicleDataTypes.Timestamp is NOT re-emitted — it already exists in the VSS model.
 
 ```bash
 vspec export ros2interface \
@@ -221,7 +235,7 @@ Adjust paths accordingly if your layout differs.
 vspec export ros2interface \
   --vspec ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
   -I ../vehicle_signal_specification/spec/include \
-  --types ../vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
+  --types ../vehicle_signal_specification/spec/VehicleDataTypes.vspec \
   -q ../vehicle_signal_specification/spec/quantities.yaml \
   -u ../vehicle_signal_specification/spec/units.yaml \
   --output ./output \
@@ -230,6 +244,7 @@ vspec export ros2interface \
   --srv both --srv-use-msg \
   --topics Vehicle.Speed \
   --output-vspec ./out/transformed.vspec
+  --timestamp-name Timestamp
 ```
 
 ## Usage
@@ -238,12 +253,13 @@ vspec export ros2interface \
 vspec export ros2interface \
   --vspec spec/VehicleSignalSpecification.vspec \
   -I spec \
+  --types spec/VehicleDataTypes.vspec \
   --output ./out \
   --package-name vss_interfaces \
   --mode aggregate|leaf \
   --srv get|set|both \
   [--srv-use-msg | --no-srv-use-msg] \
-  [--timestamp-vspec path/to/Timestamp.vspec] \
+  [--timestamp-name Timestamp] \
   [--topics PATTERN ...] \
   [--exclude-topics PATTERN ...] \
   [--topics-file patterns.txt] \

@@ -77,6 +77,7 @@ import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.datatypes import is_array
 from vss_tools.main import get_trees  # stable API used by CLI
+from vss_tools.model import VSSDataProperty, VSSDataStruct
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import to_snake  # type: ignore
 
@@ -90,15 +91,12 @@ class TimestampComponent:
     ros_name: str
     ros_type: str
     comment: str
-    vspec_entry: dict[str, object]
 
 
 @dataclass
 class TimestampSchema:
     struct_name: str
-    struct_entry: dict[str, object]
     components: list[TimestampComponent]
-    source_path: Path
 
 
 def load_vspec_tree(
@@ -109,8 +107,8 @@ def load_vspec_tree(
     types_files: Tuple[Path, ...],
     overlays_files: Tuple[Path, ...],
     expand: bool,
-) -> VSSNode:
-    root, _ = get_trees(
+) -> Tuple[VSSNode, VSSNode | None]:
+    root, types_root = get_trees(
         vspec=vspec_file,
         include_dirs=include_dirs,
         quantities=quantities_files,
@@ -119,7 +117,7 @@ def load_vspec_tree(
         overlays=overlays_files,
         expand=expand,
     )
-    return root
+    return root, types_root
 
 
 # ------------------------------ Naming & type mapping --------------------------------------
@@ -161,123 +159,48 @@ def map_vss_to_ros_field(datatype: str, arraysize: int | None) -> str:
     return ros_base
 
 
-def _load_yaml_mapping(path: Path) -> dict[str, object] | None:
-    try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
-        return None
-    if isinstance(data, dict):
-        return data
-    return None
-
-
-def _timestamp_component_comment(entry: dict[str, object]) -> str:
-    desc = entry.get("description")
-    unit = entry.get("unit")
-    parts: list[str] = []
-    if isinstance(desc, str) and desc:
-        parts.append(desc)
-    if isinstance(unit, str) and unit:
-        parts.append(f"unit={unit}")
-    return "; ".join(parts)
-
-
-def _extract_timestamp_schema_from_vspec(path: Path) -> TimestampSchema | None:
-    raw = _load_yaml_mapping(path)
-    if not raw:
+def resolve_timestamp_schema(
+    types_root: VSSNode | None,
+    struct_name: str = "Timestamp",
+) -> TimestampSchema | None:
+    """Find a struct by tail name (or FQN) in the types tree and build a TimestampSchema from it."""
+    if types_root is None:
         return None
 
-    struct_names = [
-        key
-        for key, value in raw.items()
-        if isinstance(key, str) and isinstance(value, dict) and value.get("type") == "struct"
-    ]
-    if not struct_names:
-        return None
-
-    ordered_struct_names = ["Timestamp", *[name for name in struct_names if name != "Timestamp"]]
-    for struct_name in ordered_struct_names:
-        if struct_name not in raw:
+    for node in PreOrderIter(types_root):
+        if not isinstance(node.get_vss_data(), VSSDataStruct):
             continue
-        prefix = f"{struct_name}."
+        fqn = node.get_fqn()
+        tail = fqn.split(".")[-1]
+        if tail != struct_name and fqn != struct_name:
+            continue
+
         components: list[TimestampComponent] = []
-
-        for key, value in raw.items():
-            if not isinstance(key, str) or not key.startswith(prefix) or not isinstance(value, dict):
+        for child in node.children:
+            child_data = child.get_vss_data()
+            if not isinstance(child_data, VSSDataProperty):
                 continue
-            datatype = value.get("datatype")
-            if not isinstance(datatype, str):
-                continue
-            if "." in key[len(prefix) :]:
-                continue
-
-            component_name = key[len(prefix) :]
-            arraysize_raw = value.get("arraysize")
-            arraysize = arraysize_raw if isinstance(arraysize_raw, int) else None
             try:
-                ros_type = map_vss_to_ros_field(datatype, arraysize)
+                ros_type = map_vss_to_ros_field(child_data.datatype, child_data.arraysize)
             except KeyError:
                 continue
-
+            parts: list[str] = []
+            if child_data.description:
+                parts.append(child_data.description)
+            if child_data.unit:
+                parts.append(f"unit={child_data.unit}")
             components.append(
                 TimestampComponent(
-                    name=component_name,
-                    ros_name=f"timestamp_{component_name}",
+                    name=child.name,
+                    ros_name=f"timestamp_{child.name}",
                     ros_type=ros_type,
-                    comment=_timestamp_component_comment(value),
-                    vspec_entry=dict(value),
+                    comment="; ".join(parts),
                 )
             )
 
         if components:
-            struct_entry_raw = raw.get(struct_name)
-            struct_entry = dict(struct_entry_raw) if isinstance(struct_entry_raw, dict) else {"type": "struct"}
-            return TimestampSchema(
-                struct_name=struct_name,
-                struct_entry=struct_entry,
-                components=components,
-                source_path=path,
-            )
-
-    return None
-
-
-def _candidate_timestamp_vspec_paths(
-    vspec: Path,
-    include_dirs: Tuple[Path, ...],
-    timestamp_vspec: Optional[Path],
-) -> list[Path]:
-    candidates: list[Path] = []
-    if timestamp_vspec:
-        candidates.append(timestamp_vspec)
-    candidates.append(vspec)
-    for include_dir in include_dirs:
-        for name in ("Timestamp.vspec", "timestamp.vspec"):
-            candidate = include_dir / name
-            if candidate.is_file():
-                candidates.append(candidate)
-
-    deduped: list[Path] = []
-    seen: set[Path] = set()
-    for candidate in candidates:
-        resolved = candidate.resolve()
-        if resolved in seen:
-            continue
-        seen.add(resolved)
-        deduped.append(candidate)
-    return deduped
-
-
-def resolve_timestamp_schema(
-    vspec: Path,
-    include_dirs: Tuple[Path, ...],
-    timestamp_vspec: Optional[Path],
-) -> TimestampSchema | None:
-    for candidate in _candidate_timestamp_vspec_paths(vspec, include_dirs, timestamp_vspec):
-        schema = _extract_timestamp_schema_from_vspec(candidate)
-        if schema is not None:
-            log.info("Using timestamp schema '%s' from %s", schema.struct_name, candidate)
-            return schema
+            log.info("Using timestamp schema '%s' from types tree", fqn)
+            return TimestampSchema(struct_name=fqn, components=components)
 
     return None
 
@@ -660,7 +583,6 @@ def _to_yaml_safe(value: object) -> object:
 def write_transformed_struct_vspec(
     output_vspec: Path,
     leaves: Sequence[Tuple[VSSNode, object]],
-    timestamp_schema: TimestampSchema | None = None,
 ) -> None:
     """Write a transformed VSS vspec where each selected leaf is expressed as a struct
     with a ``time`` property referencing ``VehicleDataTypes.Timestamp`` and a ``value``
@@ -762,11 +684,14 @@ def render_set_srv(pkg_name: str, msg_name: str, fields: list[dict[str, str]], u
     help="Whether services should nest the generated .msg as a field. If disabled, fields are flattened.",
 )
 @click.option(
-    "--timestamp-vspec",
-    type=click.Path(path_type=Path, dir_okay=False, exists=True),
+    "--timestamp-name",
+    default="Timestamp",
+    show_default=True,
     help=(
-        "Optional VSS file containing a timestamp struct definition (e.g., Timestamp). "
-        "When provided, the schema defined in this file overrides the auto-detected timestamp fields."
+        "Tail name (or FQN) of the timestamp struct to look up in the types tree (--types). "
+        "Defaults to 'Timestamp', which matches VehicleDataTypes.Timestamp. "
+        "If not found in the types tree, built-in defaults (int64 timestamp_seconds / int64 timestamp_nanoseconds)"
+        "are used."
     ),
 )
 @click.option(
@@ -815,7 +740,7 @@ def cli(
     mode: str,
     srv: str,
     srv_use_msg: bool,
-    timestamp_vspec: Optional[Path],
+    timestamp_name: str,
     topics: Tuple[str, ...],
     exclude_topics: Tuple[str, ...],
     topics_file: Optional[Path],
@@ -823,7 +748,7 @@ def cli(
     output_vspec: Optional[Path],
 ):
     log.info("Loading VSS…")
-    root = load_vspec_tree(
+    root, types_root = load_vspec_tree(
         vspec_file=vspec,
         include_dirs=include_dirs,
         units_files=units,
@@ -863,13 +788,9 @@ def cli(
 
     # Build messages from VSS (optionally using the preselected leaves)
     log.info("Generating ROS 2 .msg files… mode=%s", mode)
-    timestamp_schema = resolve_timestamp_schema(
-        vspec=vspec,
-        include_dirs=include_dirs,
-        timestamp_vspec=timestamp_vspec,
-    )
+    timestamp_schema = resolve_timestamp_schema(types_root, timestamp_name)
     if timestamp_schema is None:
-        log.info("No timestamp schema file found; using built-in struct timestamp defaults.")
+        log.info("Struct '%s' not found in types tree; using built-in timestamp defaults.", timestamp_name)
 
     if mode.lower() == "leaf":
         msgs = generate_msgs_leaf(
@@ -886,7 +807,7 @@ def cli(
 
     selected_leaves_for_output = preselected if preselected is not None else all_leaves
     if output_vspec:
-        write_transformed_struct_vspec(output_vspec, selected_leaves_for_output, timestamp_schema=timestamp_schema)
+        write_transformed_struct_vspec(output_vspec, selected_leaves_for_output)
         log.info("Wrote transformed VSS model to %s", output_vspec)
 
     # Prepare output dirs
