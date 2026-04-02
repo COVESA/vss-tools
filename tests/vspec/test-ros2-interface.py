@@ -1252,7 +1252,7 @@ CustomTypes.Timestamp.nanoseconds:
 
 
 def test_ros2_struct_timestamp_fallback_defaults(tmp_path):
-    """When no --types file is provided the exporter falls back to built-in timestamp defaults."""
+    """When no --types file is provided, built-in timestamp defaults (int64 fields) are used."""
     vspec = """\
 A:
   type: branch
@@ -1276,3 +1276,66 @@ A.Speed:
     assert "int32 timestamp_sec" not in text
     assert "uint32 timestamp_nanosec" not in text
     assert "uint64 timestamp" not in text
+
+
+def test_ros2_types_without_timestamp_struct_fqn_raises_error(tmp_path):
+    """Error is raised when --types is provided but --timestamp-struct-fqn is omitted."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    types_vspec = tmp_path / "CustomTypes.vspec"
+    types_vspec.write_text(
+        """\
+CustomTypes:
+  type: branch
+  description: Custom type definitions.
+
+CustomTypes.Timestamp:
+  type: struct
+  description: A point in time.
+
+CustomTypes.Timestamp.seconds:
+  type: property
+  datatype: int64
+  description: Unix epoch seconds.
+
+CustomTypes.Timestamp.nanoseconds:
+  type: property
+  datatype: int64
+  description: Nanosecond offset.
+""",
+        encoding="utf-8",
+    )
+
+    vspec_file = tmp_path / "test.vspec"
+    vspec_file.write_text(vspec, encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            "vspec",
+            "export",
+            EXPORTER,
+            "--units",
+            str(TEST_UNITS),
+            "--quantities",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec_file),
+            "--output",
+            str(tmp_path / "out.ros2"),
+            "--types",
+            str(types_vspec),
+            # intentionally omitting --timestamp-struct-fqn
+        ],
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode != 0, "Expected a non-zero exit code when --types is given without --timestamp-struct-fqn"
+    combined = result.stdout + result.stderr
+    assert "timestamp-struct-fqn" in combined, "Error message should mention --timestamp-struct-fqn"

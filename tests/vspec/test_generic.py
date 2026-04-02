@@ -55,7 +55,7 @@ def run_exporter(directory, exporter, tmp_path):
         cmd += f" --target-folder {output}"
     elif exporter in ["ros2interface"]:
         # Generate a topics file for test, shall not be checked in
-        topics_file = directory / "ros_test_topics.txt"
+        topics_file = tmp_path / "ros_test_topics.txt"
         topics_file.write_text("# includes only branch A\n" "A.*", encoding="utf-8")
 
         cmd += f" --output {output}"
@@ -63,7 +63,7 @@ def run_exporter(directory, exporter, tmp_path):
         cmd += "  --mode aggregate --srv both --expand --srv-use-msg --exclude-topics Z.*"
         cmd += "  --topics-case-sensitive --topics name:Uint16 --topics Uint32"
         cmd += "  --topics *:Float --topics regex:^A\\.Int16\\..*$ --topics Uint32"
-        cmd += "  --output-vspec ./out/transformed.vspec --package-name vss_interfaces"
+        cmd += f"  --output-vspec {tmp_path / 'transformed.vspec'} --package-name vss_interfaces"
     else:
         cmd += f" --output {output}"
 
