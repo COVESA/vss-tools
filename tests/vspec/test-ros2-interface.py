@@ -1147,6 +1147,8 @@ A.Speed:
             str(transformed),
             "--include-dirs",
             str(INCLUDE_DIR),
+            "--timestamp-struct-fqn",
+            "MyTypes.Timestamp",
         ],
     )
 
@@ -1158,7 +1160,7 @@ A.Speed:
     assert "Timestamp.nanoseconds:" not in text
     assert "A.Speed:" in text
     assert "A.Speed.time:" in text
-    assert "datatype: VehicleDataTypes.Timestamp" in text
+    assert "datatype: MyTypes.Timestamp" in text
     assert "A.Speed.time.seconds:" not in text
     assert "A.Speed.time.nanoseconds:" not in text
     assert "A.Speed.value:" in text
@@ -1210,8 +1212,8 @@ CustomTypes.Timestamp.nanoseconds:
         extra_args=[
             "--types",
             str(types_vspec),
-            "--timestamp-name",
-            "Timestamp",
+            "--timestamp-struct-fqn",
+            "CustomTypes.Timestamp",
             "--srv",
             "get",
             "--srv-use-msg",
@@ -1241,7 +1243,7 @@ CustomTypes.Timestamp.nanoseconds:
     assert "int64 end_time_nanoseconds" in srv_text
 
     assert "type: property" in transformed_text
-    assert "datatype: VehicleDataTypes.Timestamp" in transformed_text
+    assert "datatype: CustomTypes.Timestamp" in transformed_text
     assert "A.Speed.time:" in transformed_text
     assert "A.Speed.time.seconds:" not in transformed_text
     assert "A.Speed.time.nanoseconds:" not in transformed_text

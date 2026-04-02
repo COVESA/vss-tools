@@ -66,7 +66,7 @@ OutputFolder
   - `both`:
     - creates both the Get<MSG>.srv and Set<MSG>.srv files
 - `--srv-use-msg / --no-srv-use-msg`: In services, use the generated message as a nested field (default: `--srv-use-msg`); otherwise flatten fields.
-- `--timestamp-name <name>`: Tail name (or FQN) of the timestamp struct to look up in the types tree loaded via `--types` (default: `Timestamp`).
+- `--timestamp-struct-fqn <fqn>`: Full FQN of the timestamp struct in the types tree loaded via `--types`. If not provided or not found, falls back to built-in defaults.
 - `--output-vspec <file>`: Optional path to write a transformed VSS model alongside the ROS 2 package. See [VSS with Timestamp](#transformed-vss-vspec----output-vspec) in the Output section.
 
 ### Topic/Signal Selection
@@ -93,16 +93,14 @@ Following patterns are supported:
 
 ### Timestamp fields
 
-Timestamp fields are derived from the types tree, the exporter looks up the struct named by `--timestamp-name` (default: `Timestamp`) among the types loaded via `--types` parameter.
+Timestamp fields come from the struct identified by `--timestamp-name` in the types tree loaded via `--types`.
 If found, the struct's direct `property` children become the leading timestamp fields in every `.msg` and `.srv` file.
-When the struct is **not** found in the types tree (or no `--types` parameter value provided, or the name does not match), the exporter falls back to built-in Timestamp defaults:
+When the struct is **not** found (or `--timestamp-name` is not provided, or no `--types` file is given), the exporter falls back to built-in defaults:
 
 ```
 int64 timestamp_seconds
 int64 timestamp_nanoseconds
 ```
-
-to use `--types` parameter, pass it like: `--types VehicleDataTypes.vspec` (the exporter finds `Timestamp` by tail name automatically).
 
 ### Messages (`.msg`)
 
@@ -151,18 +149,18 @@ Vehicle:
 Vehicle.Speed:
   type: struct
 
-Vehicle.Speed.time:
+Vehicle.Speed.Timestamp:
   type: property
-  datatype: VehicleDataTypes.Timestamp   # references the canonical type in VehicleDataTypes.vspec
+  datatype: <timestamp-struct-fqn>   # the FQN given via --timestamp-struct-fqn
 
-Vehicle.Speed.value:
+Vehicle.Speed.Value:
   type: sensor
   datatype: float
   description: Vehicle speed.
   unit: km/h
 ```
 
-The `VehicleDataTypes.Timestamp` struct (declared in `VehicleDataTypes.vspec` / `spec/include/Timestamp.vspec`) is **not** re-emitted in the output, it already is a part of the VSS model.
+The timestamp struct itself is **not** re-emitted — it is expected to already be present in the types tree.
 
 ## Examples
 
@@ -202,12 +200,12 @@ vspec export ros2interface \
   --package-name vss_interfaces \
   --mode leaf \
   --srv both --srv-use-msg \
-  --timestamp-name Timestamp
+  --timestamp-struct-fqn MyTypes.Timestamp
 ```
 - Exports and writes a transformed VSS model.
-  - Each signal becomes <Signal>.time (datatype: VehicleDataTypes.Timestamp)
-  - and <Signal>.value carrying the original datatype.
-  - VehicleDataTypes.Timestamp is NOT re-emitted — it already exists in the VSS model.
+  - Each signal becomes `<Signal>.time` with datatype set to the FQN given via `--timestamp-name`
+  - and `<Signal>.value` carrying the original datatype.
+  - The timestamp struct itself is NOT re-emitted.
 
 ```bash
 vspec export ros2interface \
@@ -243,8 +241,8 @@ vspec export ros2interface \
   --mode leaf \
   --srv both --srv-use-msg \
   --topics Vehicle.Speed \
-  --output-vspec ./out/transformed.vspec
-  --timestamp-name Timestamp
+  --output-vspec ./out/transformed.vspec \
+  --timestamp-struct-fqn VehicleDataTypes.Timestamp
 ```
 
 ## Usage
@@ -253,13 +251,13 @@ vspec export ros2interface \
 vspec export ros2interface \
   --vspec spec/VehicleSignalSpecification.vspec \
   -I spec \
-  --types spec/VehicleDataTypes.vspec \
+  --types spec/MyTypes.vspec \
   --output ./out \
   --package-name vss_interfaces \
   --mode aggregate|leaf \
   --srv get|set|both \
   [--srv-use-msg | --no-srv-use-msg] \
-  [--timestamp-name Timestamp] \
+  [--timestamp-struct-fqn <fqn>] \
   [--topics PATTERN ...] \
   [--exclude-topics PATTERN ...] \
   [--topics-file patterns.txt] \
