@@ -64,7 +64,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from enum import Enum
 from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Callable, Iterable, Optional, Sequence, Tuple
@@ -160,7 +159,7 @@ def resolve_timestamp_schema(
 
     node = types_root.get_node_with_fqn(fqn)
     if node is None or not isinstance(node.get_vss_data(), VSSDataStruct):
-        return None
+        raise ValueError(f"--timestamp-struct-fqn '{fqn}' was not found in the types tree or is not a struct.")
 
     components: list[TimestampProperty] = []
     for child in node.children:
@@ -535,22 +534,6 @@ def render_get_srv(
     return render_srv_file(request, response, header)
 
 
-def _to_yaml_safe(value: object) -> object:
-    if isinstance(value, Enum):
-        return _to_yaml_safe(value.value)
-    if hasattr(value, "value"):
-        return _to_yaml_safe(getattr(value, "value"))
-    if value is None or isinstance(value, (str, int, float, bool)):
-        return value
-    if isinstance(value, dict):
-        return {str(k): _to_yaml_safe(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple, set)):
-        return [_to_yaml_safe(v) for v in value]
-    if isinstance(value, Path):
-        return str(value)
-    return str(value)
-
-
 def write_transformed_struct_vspec(
     output_vspec: Path,
     leaves: Sequence[Tuple[VSSNode, object]],
@@ -562,7 +545,7 @@ def write_transformed_struct_vspec(
     """
     entries: dict[str, dict[str, object]] = {}
 
-    for node, data in sorted(leaves, key=lambda x: x[0].get_fqn()):
+    for node, _ in sorted(leaves, key=lambda x: x[0].get_fqn()):
         fqn = node.get_fqn()
         parts = fqn.split(".")
 
@@ -579,24 +562,20 @@ def write_transformed_struct_vspec(
                 "datatype": timestamp_struct_fqn,
             }
 
+        raw = node.get_vss_data().model_dump(mode="json")
         value_node: dict[str, object] = {
             "type": "sensor",
-            "datatype": _to_yaml_safe(getattr(data, "datatype", "string")),
+            "datatype": raw.get("datatype", "string"),
         }
-
-        arraysize = getattr(data, "arraysize", None)
-        if arraysize is not None:
-            value_node["arraysize"] = _to_yaml_safe(arraysize)
-
-        for key in ("description", "unit", "min", "max", "allowed"):
-            value = getattr(data, key, None)
-            if value is not None:
-                value_node[key] = _to_yaml_safe(value)
+        for key in ("arraysize", "description", "unit", "min", "max", "allowed"):
+            v = raw.get(key)
+            if v is not None and v != []:
+                value_node[key] = v
 
         entries[f"{fqn}.value"] = value_node
 
     output_vspec.parent.mkdir(parents=True, exist_ok=True)
-    parts = [yaml.safe_dump({k: _to_yaml_safe(v)}, sort_keys=False).rstrip("\n") for k, v in entries.items()]
+    parts = [yaml.safe_dump({k: v}, sort_keys=False).rstrip("\n") for k, v in entries.items()]
     output_vspec.write_text("\n\n".join(parts) + "\n", encoding="utf-8")
 
 
@@ -658,8 +637,8 @@ def render_set_srv(pkg_name: str, msg_name: str, fields: list[dict[str, str]], u
     show_default=False,
     help=(
         "Full FQN of the timestamp struct in the types tree (--types) to use for timestamp fields. "
-        "If not provided or not found in the types tree, built-in defaults "
-        "(int64 timestamp_seconds / int64 timestamp_nanoseconds) are used."
+        "If not provided, built-in defaults (int64 timestamp_seconds / int64 timestamp_nanoseconds) are used. "
+        "If provided but not found in the types tree (or --types is missing), an error is raised."
     ),
 )
 @click.option(
@@ -756,10 +735,13 @@ def cli(
 
     # Build messages from VSS (optionally using the preselected leaves)
     log.info("Generating ROS 2 .msg files… mode=%s", mode)
-    timestamp_schema = resolve_timestamp_schema(types_root, timestamp_struct_fqn)
-    if timestamp_schema is None:
-        log.info("Struct '%s' not found in types tree; using built-in timestamp defaults.", timestamp_struct_fqn)
-        timestamp_schema = DEFAULT_TIMESTAMP
+    if types_root is not None and not timestamp_struct_fqn:
+        raise click.UsageError(
+            "--types was provided but --timestamp-struct-fqn was not. "
+            "Please specify the FQN of the timestamp struct in the types tree "
+            "(e.g., --timestamp-struct-fqn 'MyPkg.Timestamp')."
+        )
+    timestamp_schema = resolve_timestamp_schema(types_root, timestamp_struct_fqn) or DEFAULT_TIMESTAMP
 
     if mode.lower() == "leaf":
         msgs = generate_msgs_leaf(

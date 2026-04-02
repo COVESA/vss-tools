@@ -11,7 +11,6 @@ import pathlib
 import subprocess
 import sys
 import tempfile
-from enum import Enum
 from pathlib import Path
 
 import pytest
@@ -204,7 +203,6 @@ def test_ros2interface_helper_functions():
         TopicMatcher,
         _compile_rule,
         _read_patterns_file,
-        _to_yaml_safe,
         build_timestamp_fields,
         map_vss_to_ros_field,
         render_get_srv,
@@ -244,14 +242,6 @@ def test_ros2interface_helper_functions():
     assert "Allowed" in render_msg_file("X", [{"type": "uint8", "name": "v", "comment": ""}], [], ["Allowed: a"])
 
     assert build_timestamp_fields()[0]["name"] == "timestamp_seconds"
-
-    class _E(Enum):
-        A = 42
-
-    assert _to_yaml_safe(_E.A) == 42
-    assert _to_yaml_safe({"k": Path("/x")}) == {"k": "/x"}
-    assert _to_yaml_safe([Path("/a"), 1]) == ["/a", 1]
-    assert isinstance(_to_yaml_safe(object()), str)
 
     fields = [{"type": "uint8", "name": "val", "comment": "desc"}]
     srv = render_get_srv("pkg", "Msg", fields, use_msg=False)
