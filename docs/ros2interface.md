@@ -95,14 +95,14 @@ Following patterns are supported:
 
 Timestamp fields come from the struct identified by `--timestamp-struct-fqn` in the types tree loaded via `--types`.
 If found, the struct's direct `property` children become the leading timestamp fields in every `.msg` and `.srv` file.
-When the struct is **not** provided (or `--timestamp-struct-fqn` is not provided and no `--types` file is given), the exporter falls back to built-in defaults:
+When --timestamp-struct-fqn is not provided, the exporter falls back to built-in defaults; and if the struct is not found, an error is raised.
 
 |`--types`|`--timestamp-struct-fqn`|Result|
 |-|-|-|
-|none|none|`DEFAULT_TIMESTAMP` (built-in int64 fields) *|
-|none|any|click.UsageError|
-|any|none|`DEFAULT_TIMESTAMP` (built-in int64 fields) *|
-|any|any|uses that struct(if not found, raise VauleError)|
+|none|none|use built-in defaults|
+|none|any|Error(invalid option combination)|
+|any|none|use built-in defaults|
+|any|any|use that struct(if not found, Error)|
 
 ```
 int64 timestamp_seconds
