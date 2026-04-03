@@ -739,9 +739,10 @@ def cli(
         raise click.UsageError("if --timestamp-struct-fqn is provided, --types must also be provided.")
     elif not timestamp_struct_fqn:
         timestamp_schema = DEFAULT_TIMESTAMP
-    else:
+    elif types_root is not None and timestamp_struct_fqn is not None:
         timestamp_schema = resolve_timestamp_schema(types_root, timestamp_struct_fqn)
-        assert timestamp_schema is not None
+    else:
+        raise click.UsageError("Provided --timestamp-struct-fqn and --types are not valid.")
 
     if mode.lower() == "leaf":
         msgs = generate_msgs_leaf(
