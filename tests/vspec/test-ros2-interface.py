@@ -1159,11 +1159,11 @@ A.Speed:
     assert "Timestamp.seconds:" not in text
     assert "Timestamp.nanoseconds:" not in text
     assert "A.Speed:" in text
-    assert "A.Speed.time:" in text
+    assert "A.Speed.Time:" in text
     assert "datatype: MyTypes.Timestamp" in text
-    assert "A.Speed.time.seconds:" not in text
-    assert "A.Speed.time.nanoseconds:" not in text
-    assert "A.Speed.value:" in text
+    assert "A.Speed.Time.seconds:" not in text
+    assert "A.Speed.Time.nanoseconds:" not in text
+    assert "A.Speed.Value:" in text
     assert "datatype: float" in text
 
 
@@ -1244,9 +1244,9 @@ CustomTypes.Timestamp.nanoseconds:
 
     assert "type: property" in transformed_text
     assert "datatype: CustomTypes.Timestamp" in transformed_text
-    assert "A.Speed.time:" in transformed_text
-    assert "A.Speed.time.seconds:" not in transformed_text
-    assert "A.Speed.time.nanoseconds:" not in transformed_text
+    assert "A.Speed.Time:" in transformed_text
+    assert "A.Speed.Time.seconds:" not in transformed_text
+    assert "A.Speed.Time.nanoseconds:" not in transformed_text
     assert "Timestamp.seconds:" not in transformed_text
     assert "Timestamp.nanoseconds:" not in transformed_text
 

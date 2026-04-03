@@ -93,9 +93,9 @@ Following patterns are supported:
 
 ### Timestamp fields
 
-Timestamp fields come from the struct identified by `--timestamp-name` in the types tree loaded via `--types`.
+Timestamp fields come from the struct identified by `--timestamp-struct-fqn` in the types tree loaded via `--types`.
 If found, the struct's direct `property` children become the leading timestamp fields in every `.msg` and `.srv` file.
-When the struct is **not** found (or `--timestamp-name` is not provided, or no `--types` file is given), the exporter falls back to built-in defaults:
+When the struct is **not** found (or `--timestamp-struct-fqn` is not provided, or no `--types` file is given), the exporter falls back to built-in defaults:
 
 ```
 int64 timestamp_seconds
@@ -203,7 +203,7 @@ vspec export ros2interface \
   --timestamp-struct-fqn MyTypes.Timestamp
 ```
 - Exports and writes a transformed VSS model.
-  - Each signal becomes `<Signal>.time` with datatype set to the FQN given via `--timestamp-name`
+  - Each signal becomes `<Signal>.time` with datatype set to the FQN given via `--timestamp-struct-fqn`
   - and `<Signal>.value` carrying the original datatype.
   - The timestamp struct itself is NOT re-emitted.
 

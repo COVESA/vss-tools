@@ -557,7 +557,7 @@ def write_transformed_struct_vspec(
             "type": "struct",
         }
         if timestamp_struct_fqn:
-            entries[f"{fqn}.time"] = {
+            entries[f"{fqn}.Time"] = {
                 "type": "property",
                 "datatype": timestamp_struct_fqn,
             }
@@ -572,7 +572,7 @@ def write_transformed_struct_vspec(
             if v is not None and v != []:
                 value_node[key] = v
 
-        entries[f"{fqn}.value"] = value_node
+        entries[f"{fqn}.Value"] = value_node
 
     output_vspec.parent.mkdir(parents=True, exist_ok=True)
     parts = [yaml.safe_dump({k: v}, sort_keys=False).rstrip("\n") for k, v in entries.items()]
