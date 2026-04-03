@@ -66,7 +66,7 @@ OutputFolder
   - `both`:
     - creates both the Get<MSG>.srv and Set<MSG>.srv files
 - `--srv-use-msg / --no-srv-use-msg`: In services, use the generated message as a nested field (default: `--srv-use-msg`); otherwise flatten fields.
-- `--timestamp-struct-fqn <fqn>`: Full FQN of the timestamp struct in the types tree loaded via `--types`. If not provided or not found, falls back to built-in defaults.
+- `--timestamp-struct-fqn <fqn>`: Full FQN of the timestamp struct in the types tree loaded via `--types`. If not provided, falls back to built-in defaults.
 - `--output-vspec <file>`: Optional path to write a transformed VSS model alongside the ROS 2 package. See [VSS with Timestamp](#transformed-vss-vspec----output-vspec) in the Output section.
 
 ### Topic/Signal Selection
@@ -95,7 +95,14 @@ Following patterns are supported:
 
 Timestamp fields come from the struct identified by `--timestamp-struct-fqn` in the types tree loaded via `--types`.
 If found, the struct's direct `property` children become the leading timestamp fields in every `.msg` and `.srv` file.
-When the struct is **not** found (or `--timestamp-struct-fqn` is not provided, or no `--types` file is given), the exporter falls back to built-in defaults:
+When the struct is **not** provided (or `--timestamp-struct-fqn` is not provided and no `--types` file is given), the exporter falls back to built-in defaults:
+
+|`--types`|`--timestamp-struct-fqn`|Result|
+|-|-|-|
+|none|none|`DEFAULT_TIMESTAMP` (built-in int64 fields) *|
+|none|any|click.UsageError|
+|any|none|`DEFAULT_TIMESTAMP` (built-in int64 fields) *|
+|any|any|uses that struct(if not found, raise VauleError)|
 
 ```
 int64 timestamp_seconds

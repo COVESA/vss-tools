@@ -735,13 +735,12 @@ def cli(
 
     # Build messages from VSS (optionally using the preselected leaves)
     log.info("Generating ROS 2 .msg files… mode=%s", mode)
-    if types_root is not None and not timestamp_struct_fqn:
-        raise click.UsageError(
-            "--types was provided but --timestamp-struct-fqn was not. "
-            "Please specify the FQN of the timestamp struct in the types tree "
-            "(e.g., --timestamp-struct-fqn 'MyPkg.Timestamp')."
-        )
-    timestamp_schema = resolve_timestamp_schema(types_root, timestamp_struct_fqn) or DEFAULT_TIMESTAMP
+    if types_root is None and timestamp_struct_fqn:
+        raise click.UsageError("if --timestamp-struct-fqn is provided, --types must also be provided.")
+    elif not timestamp_struct_fqn:
+        timestamp_schema = DEFAULT_TIMESTAMP
+    else:
+        timestamp_schema = resolve_timestamp_schema(types_root, timestamp_struct_fqn)
 
     if mode.lower() == "leaf":
         msgs = generate_msgs_leaf(
