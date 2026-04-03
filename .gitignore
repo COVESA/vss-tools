@@ -78,6 +78,10 @@ celerybeat-schedule
 venv/
 ENV/
 
+#test output files
+out/
+output/
+
 # Spyder project settings
 .spyderproject
 
