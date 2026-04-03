@@ -741,6 +741,7 @@ def cli(
         timestamp_schema = DEFAULT_TIMESTAMP
     else:
         timestamp_schema = resolve_timestamp_schema(types_root, timestamp_struct_fqn)
+        assert timestamp_schema is not None
 
     if mode.lower() == "leaf":
         msgs = generate_msgs_leaf(
