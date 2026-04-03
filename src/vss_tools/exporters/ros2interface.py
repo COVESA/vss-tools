@@ -66,7 +66,7 @@ import re
 from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Sequence, Tuple
+from typing import Callable, Iterable, Optional, Sequence, Tuple, cast
 
 import rich_click as click
 import yaml
@@ -740,7 +740,7 @@ def cli(
     elif not timestamp_struct_fqn:
         timestamp_schema = DEFAULT_TIMESTAMP
     elif types_root is not None and timestamp_struct_fqn is not None:
-        timestamp_schema = resolve_timestamp_schema(types_root, timestamp_struct_fqn)
+        timestamp_schema = cast(Timestamp, resolve_timestamp_schema(types_root, timestamp_struct_fqn))
     else:
         raise click.UsageError("Provided --timestamp-struct-fqn and --types are not valid.")
 
