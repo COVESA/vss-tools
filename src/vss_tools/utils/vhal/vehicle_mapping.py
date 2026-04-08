@@ -6,15 +6,19 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from dataclasses import dataclass
 from typing import List, Optional, Union
 
-from dataclasses_json import LetterCase, dataclass_json
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(frozen=True)
-class VehicleMappingItem:
+class VehicleMappingItem(BaseModel):
+    model_config = ConfigDict(
+        frozen=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
     """
     Represents a single vehicle mapping item.
 

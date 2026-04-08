@@ -15,6 +15,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+from pydantic import TypeAdapter
+
 from vss_tools.model import NodeType
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
@@ -159,7 +161,7 @@ class VhalMapper:
         :returns: List of mapping items.
         """
         with open(file_path) as file:
-            data = VehicleMappingItem.schema().loads(file.read(), many=True)  # type: ignore
+            data = TypeAdapter(List[VehicleMappingItem]).validate_json(file.read())
             self.__next_vhal_id = max(list(map(lambda item: item.vhal_id + 1, data)) + [self.__next_vhal_id])
             if (
                 VhalPropertyGroup.get(self.__group) == VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_SYSTEM
@@ -244,7 +246,7 @@ class VhalMapper:
         """
         result = self.get()
         with open(file_path, "w") as file:
-            json_data = VehicleMappingItem.schema().dumps(result, many=True, indent=indent)  # type: ignore
+            json_data = TypeAdapter(List[VehicleMappingItem]).dump_json(result, by_alias=True, indent=indent).decode()
             file.write(json_data)
 
     def generate_java_files(self, output_file_path: Path, permissions_file_path: Path) -> Tuple[str, str]:
