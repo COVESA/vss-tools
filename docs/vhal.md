@@ -26,6 +26,9 @@ ON_CHANGE
 
 CONTINUOUS
 : used for VSS node types ACTUATOR and SENSOR if the path of that VSS node is present in JSON file provided by `--continuous-change-mode`.
+  This is because the generator has no way to determine if a VSS node of type ACTUATOR or SENSOR should be ON_CHANGE or
+  CONTINUOUS. It relies on the user to provide that information by listing the paths of those VSS nodes that should be
+  generated with CONTINUOUS change mode in a JSON file (see below).
 
 ### Continuous Change Mode List Example
 
@@ -76,7 +79,12 @@ and [aosp_platform-manifest](https://github.com/COVESA/aosp_platform-manifest) r
 assumes `ANDROID_BUILD_TOP` environment variable pointing to the root of AOSP workspace where the output files will be
 generated.
 
-To generate VHAL properties in OEM group use the argument `--property-group 4`:
+Use `--property-group 4` to generate OEM VHAL properties. For ACTUATOR and SENSOR nodes that should use CONTINUOUS
+change mode, pass a JSON path list via `--continuous-change-mode` (see example above).
+
+The generator creates or updates the map file from `--vhal-map` and generates Java/AIDL sources in `ANDROID_BUILD_TOP`.
+On first run, the map file is created; later runs append new mappings without removing existing ones, so you can rerun
+safely as VSS evolves.
 
 ```bash
 vspec export vhal \
@@ -104,3 +112,4 @@ data. For this purpose it is not required that those vspec test files are up-to-
 need to be updated when the upstream vspec files change. They test the generator with a fixed set of VSS nodes and their
 corresponding expected generated properties. If you want to add more test cases, you can add more vspec files or update
 existing ones in that directory.
+
