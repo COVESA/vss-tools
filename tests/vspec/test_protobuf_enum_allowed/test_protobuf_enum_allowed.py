@@ -18,8 +18,6 @@ import filecmp
 import subprocess
 from pathlib import Path
 
-import pytest
-
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
 TEST_QUANT = HERE / ".." / "test_quantities.yaml"
