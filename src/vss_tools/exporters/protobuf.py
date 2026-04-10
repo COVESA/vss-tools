@@ -18,6 +18,7 @@ from anytree import findall
 
 import vss_tools.cli_options as clo
 from vss_tools import log
+from vss_tools.datatypes import Datatypes
 from vss_tools.main import get_trees
 from vss_tools.model import (
     VSSData,
@@ -25,7 +26,6 @@ from vss_tools.model import (
     VSSDataDatatype,
     VSSDataStruct,
 )
-from vss_tools.datatypes import Datatypes
 from vss_tools.tree import VSSNode
 
 PATH_DELIMITER = "."
