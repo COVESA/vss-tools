@@ -162,14 +162,45 @@ def write_comment(fd: TextIOWrapper, node: VSSNode, indent: str = "  "):
             fd.write(f"{indent}// {line}\n")
 
 
+def _enum_type_name(field_name: str) -> str:
+    """Return the nested enum type name for a string field with allowed values."""
+    return f"{field_name}Enum"
+
+
+def _write_nested_enum(fd: TextIOWrapper, field_name: str, allowed: list, indent: str = "  ") -> None:
+    """Write a nested proto3 enum for a string field constrained to allowed values.
+
+    Proto3 requires the first enum value to equal 0.  We assign values in the
+    order they appear in the VSS `allowed` list, starting from 0.
+    """
+    enum_name = _enum_type_name(field_name)
+    fd.write(f"{indent}enum {enum_name} {{\n")
+    for idx, val in enumerate(allowed):
+        fd.write(f"{indent}  {val} = {idx};\n")
+    fd.write(f"{indent}}}\n")
+
+
 def print_messages(
     nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, add_optional: bool, include_comments: bool
 ):
+    # Pass 1: write nested enum definitions for every string field with allowed values.
+    for node in nodes:
+        if isinstance(node.data, VSSDataDatatype):
+            base = node.data.datatype.strip("[]")
+            if base == "string" and node.data.allowed:
+                _write_nested_enum(fd, node.name, node.data.allowed)
+
+    # Pass 2: write field declarations.
     usedKeys: dict[int, str] = {}
     for i, node in enumerate(nodes, 1):
         if isinstance(node.data, VSSDataDatatype):
             dt_val = node.data.datatype
-            data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
+            base = dt_val.strip("[]")
+            if base == "string" and node.data.allowed:
+                # Replace plain string with the nested enum type.
+                data_type = _enum_type_name(node.name)
+            else:
+                data_type = mapped.get(base, base)
             if dt_val.endswith("[]"):
                 data_type = "repeated " + data_type
             elif add_optional:

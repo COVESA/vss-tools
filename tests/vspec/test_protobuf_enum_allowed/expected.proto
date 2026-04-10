@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+
+message A {
+  enum SourceEnum {
+    UNKNOWN = 0;
+    AM = 1;
+    FM = 2;
+    BLUETOOTH = 3;
+  }
+  enum SurfaceEnum {
+    DRY = 0;
+    WET = 1;
+    SNOW = 2;
+    ICE = 3;
+  }
+  SourceEnum Source = 1;
+  repeated SurfaceEnum Surface = 2;
+  float Speed = 3;
+}
+
