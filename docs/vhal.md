@@ -83,7 +83,7 @@ vspec export vhal \
  --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
  --property-group 4 \
  --vhal-map vss_to_android_property_map.json \
- --continuous-list-change-mode vss_continuous.json \
+ --continuous-change-mode vss_continuous.json \
  --aosp-workspace-path $ANDROID_BUILD_TOP
 ```
 
@@ -96,3 +96,11 @@ with existing ones in the platform, therefore the use of `--min-property-id` is 
 for the first time.
 
 To only update properties, i.e., ignore all newly added VSS nodes to the spec add `--no-extend-new` argument.
+
+## Test data
+
+This module uses an excerpt of vspec files in `test/vspec/test_static_uids_vhal/vehicle_signal_specification/` as test
+data. For this purpose it is not required that those vspec test files are up-to-date, and therefore those files do not
+need to be updated when the upstream vspec files change. They test the generator with a fixed set of VSS nodes and their
+corresponding expected generated properties. If you want to add more test cases, you can add more vspec files or update
+existing ones in that directory.
