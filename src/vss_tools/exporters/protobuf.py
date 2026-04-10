@@ -25,6 +25,7 @@ from vss_tools.model import (
     VSSDataDatatype,
     VSSDataStruct,
 )
+from vss_tools.datatypes import Datatypes
 from vss_tools.tree import VSSNode
 
 PATH_DELIMITER = "."
@@ -183,21 +184,13 @@ def _write_nested_enum(fd: TextIOWrapper, field_name: str, allowed: list, indent
 def print_messages(
     nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, add_optional: bool, include_comments: bool
 ):
-    # Pass 1: write nested enum definitions for every string field with allowed values.
-    for node in nodes:
-        if isinstance(node.data, VSSDataDatatype):
-            base = node.data.datatype.strip("[]")
-            if base == "string" and node.data.allowed:
-                _write_nested_enum(fd, node.name, node.data.allowed)
-
-    # Pass 2: write field declarations.
     usedKeys: dict[int, str] = {}
     for i, node in enumerate(nodes, 1):
         if isinstance(node.data, VSSDataDatatype):
             dt_val = node.data.datatype
             base = dt_val.strip("[]")
-            if base == "string" and node.data.allowed:
-                # Replace plain string with the nested enum type.
+            if base == Datatypes.STRING[0] and node.data.allowed:
+                _write_nested_enum(fd, node.name, node.data.allowed)
                 data_type = _enum_type_name(node.name)
             else:
                 data_type = mapped.get(base, base)

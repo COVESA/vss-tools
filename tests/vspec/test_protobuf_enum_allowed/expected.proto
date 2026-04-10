@@ -8,13 +8,13 @@ message A {
     FM = 2;
     BLUETOOTH = 3;
   }
+  SourceEnum Source = 1;
   enum SurfaceEnum {
     DRY = 0;
     WET = 1;
     SNOW = 2;
     ICE = 3;
   }
-  SourceEnum Source = 1;
   repeated SurfaceEnum Surface = 2;
   float Speed = 3;
 }
