@@ -37,6 +37,6 @@ def test_protobuf_enum_for_allowed_string(tmp_path):
     cmd = f"vspec export protobuf -u {TEST_UNITS} -q {TEST_QUANT} --vspec {vspec} --output {output}"
     subprocess.run(cmd.split(), check=True)
     expected = HERE / "expected.proto"
-    assert filecmp.cmp(output, expected), (
-        f"Output differs from expected.\nGot:\n{output.read_text()}\nExpected:\n{expected.read_text()}"
-    )
+    assert filecmp.cmp(
+        output, expected
+    ), f"Output differs from expected.\nGot:\n{output.read_text()}\nExpected:\n{expected.read_text()}"
