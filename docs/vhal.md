@@ -77,22 +77,22 @@ CONTINUOUS
 This example is meant to be used with the OEM VHAL (see [aosp_vendor_car](https://github.com/COVESA/aosp_vendor_car)
 and [aosp_platform-manifest](https://github.com/COVESA/aosp_platform-manifest) repository for more details). It also
 assumes `ANDROID_BUILD_TOP` environment variable pointing to the root of AOSP workspace where the output files will be
-generated.
+generated. The path to the android workspace can also be provided via `--aosp-workspace-path` argument overriding the
+`ANDROID_BUILD_TOP` environment variable.
 
 Use `--property-group 4` to generate OEM VHAL properties. For ACTUATOR and SENSOR nodes that should use CONTINUOUS
 change mode, pass a JSON path list via `--continuous-change-mode` (see example above).
 
-The generator creates or updates the map file from `--vhal-map` and generates Java/AIDL sources in `ANDROID_BUILD_TOP`.
-On first run, the map file is created; later runs append new mappings without removing existing ones, so you can rerun
-safely as VSS evolves.
+The generator creates or updates the map file (optional `--vhal-map`) and generates Java/AIDL sources in
+`ANDROID_BUILD_TOP`. On first run, the map file is created; later runs append new mappings without removing existing
+ones, so you can rerun safely as VSS evolves.
 
+Minimal example:
 ```bash
 vspec export vhal \
  --vspec /path/to/vehicle_signal_specification/spec/VehicleSignalSpecification.vspec \
  --property-group 4 \
- --vhal-map vss_to_android_property_map.json \
- --continuous-change-mode vss_continuous.json \
- --aosp-workspace-path $ANDROID_BUILD_TOP
+ --continuous-change-mode vss_continuous.json
 ```
 
 While you can use this generator to generate `SYSTEM` (`--property-group 1`) or `VENDOR` (`--property-group 2`)
@@ -112,4 +112,3 @@ data. For this purpose it is not required that those vspec test files are up-to-
 need to be updated when the upstream vspec files change. They test the generator with a fixed set of VSS nodes and their
 corresponding expected generated properties. If you want to add more test cases, you can add more vspec files or update
 existing ones in that directory.
-

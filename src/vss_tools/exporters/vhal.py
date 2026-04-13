@@ -21,17 +21,19 @@ from vss_tools.utils.vhal.vhal_mapper import VhalMapper
 @click.option(
     "--vhal-map",
     type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=False),
-    required=True,
+    required=False,
     help="""
-        Read a json file with mapping of VSS property names to Android vehicle property ids.
-        The file containing json list of all VSS properties (leaves) mappings by vss_tools generated VHAL IDs.
+        A JSON file with mapping of VSS property nodes to Android vehicle property IDs.
+        If this file does not exist, it will be created upon first generator run.
+        If this parameter is not specified the generator will use
+        {aosp-workspace-path}/device/generic/car/emulator/vhalmap/value_map.json
     """,
 )
 @click.option(
     "--continuous-change-mode",
     type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=True),
     required=False,
-    help="Read a json file list of VSS paths which should be considered as continuous change mode.",
+    help="A JSON file containing a list of VSS paths which should use continuous change mode.",
 )
 @click.option(
     "--property-group",
@@ -40,7 +42,7 @@ from vss_tools.utils.vhal.vhal_mapper import VhalMapper
     default=4,
     show_default=True,
     help="""
-        Group of generated VHAL properties: 1 = SYSTEM, 2 = VENDOR, 3 = BACKPORTED, 4 = VSS.
+        Group of generated VHAL properties: 1 = SYSTEM, 2 = VENDOR, 3 = BACKPORTED, 4 = OEM.
         See https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehiclePropertyGroup.aidl
     """,
 )
@@ -89,11 +91,16 @@ from vss_tools.utils.vhal.vhal_mapper import VhalMapper
     "--aosp-workspace-path",
     type=click.Path(dir_okay=True, readable=True, path_type=Path, exists=True),
     required=True,
-    help="Path to AOSP workspace.",
+    envvar="ANDROID_BUILD_TOP",
+    show_envvar=True,
+    help="""
+        Path to AOSP workspace. If this parameter is not specified the ANDROID_BUILD_TOP environment variable will be
+        used. At lest one of those two must be specified.
+    """,
 )
 def cli(
     vspec: Path,
-    vhal_map: Path,
+    vhal_map: Path | None,
     continuous_change_mode: Path | None,
     extend_new: bool,
     property_group: int,
@@ -130,9 +137,16 @@ def cli(
 
     if continuous_change_mode is not None:
         mapper.load_continuous_list(continuous_change_mode)
-    mapper.load(vhal_map, tree)
-    mapper.safe(vhal_map)
-    log.info(f"Updated: {vhal_map}")
+    vhal_map_file = (
+        vhal_map
+        if vhal_map is not None
+        else (aosp_workspace_path / "device/generic/car/emulator/vhalmap/value_map.json")
+    )
+    vhal_map_file.parent.mkdir(parents=True, exist_ok=True)
+
+    mapper.load(vhal_map_file, tree)
+    mapper.safe(vhal_map_file)
+    log.info(f"Updated: {vhal_map_file}")
 
     java_output_dir = aosp_workspace_path / "vendor/car/packages/services/Car/car-lib/src/android/car/oem"
     java_output_dir.mkdir(parents=True, exist_ok=True)
