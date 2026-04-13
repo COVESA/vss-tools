@@ -239,4 +239,5 @@ public final class OemPermissions {
 
 	@FlaggedApi(FLAG_OEM_VEHICLE_PROPERTY)
 	public static final String PERMISSION_OEM_WIDTH_INCLUDING_MIRRORS_READ = "android.car.permission.oem.WIDTH_INCLUDING_MIRRORS_READ";
+
 }

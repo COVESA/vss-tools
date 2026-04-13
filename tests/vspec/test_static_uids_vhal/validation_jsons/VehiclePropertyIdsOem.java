@@ -3,6 +3,8 @@ package android.car.oem;
 import static android.car.feature.Flags.FLAG_OEM_VEHICLE_PROPERTY;
 import android.annotation.FlaggedApi;
 import android.annotation.RequiresPermission;
+import android.car.hardware.CarPropertyConfig;
+import android.car.VehicleAreaType;
 
 public final class VehiclePropertyIdsOem {
 
@@ -10,9 +12,9 @@ public final class VehiclePropertyIdsOem {
 	 * Average speed for the current trip.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -30,9 +32,9 @@ public final class VehiclePropertyIdsOem {
 	 * The available volume for cargo or luggage. For automobiles, this is usually the trunk volume.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -50,9 +52,9 @@ public final class VehiclePropertyIdsOem {
 	 * Vehicle curb weight, including all liquids and full tank of fuel, but no cargo or passengers.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -70,9 +72,9 @@ public final class VehiclePropertyIdsOem {
 	 * Current altitude relative to WGS 84 reference ellipsoid, as measured at the position of GNSS receiver antenna.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -90,9 +92,9 @@ public final class VehiclePropertyIdsOem {
 	 * Fix status of GNSS receiver.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -112,9 +114,9 @@ public final class VehiclePropertyIdsOem {
 	 * axle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -134,9 +136,9 @@ public final class VehiclePropertyIdsOem {
 	 * Left/Right is as seen from driver perspective, i.e. by a person looking forward.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -155,9 +157,9 @@ public final class VehiclePropertyIdsOem {
 	 * axle. Positive values = above center of rear axle. Negative values = below center of rear axle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -175,9 +177,9 @@ public final class VehiclePropertyIdsOem {
 	 * Current heading relative to geographic north. 0 = North, 90 = East, 180 = South, 270 = West.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -195,9 +197,9 @@ public final class VehiclePropertyIdsOem {
 	 * Accuracy of the latitude and longitude coordinates.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -215,9 +217,9 @@ public final class VehiclePropertyIdsOem {
 	 * Current latitude of vehicle in WGS 84 geodetic coordinates, as measured at the position of GNSS receiver antenna.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -235,9 +237,9 @@ public final class VehiclePropertyIdsOem {
 	 * Current longitude of vehicle in WGS 84 geodetic coordinates, as measured at the position of GNSS receiver antenna.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -255,9 +257,9 @@ public final class VehiclePropertyIdsOem {
 	 * Timestamp from GNSS system for current location, formatted according to ISO 8601 with UTC time zone.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -275,9 +277,9 @@ public final class VehiclePropertyIdsOem {
 	 * Accuracy of altitude.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -295,9 +297,9 @@ public final class VehiclePropertyIdsOem {
 	 * Current overall Vehicle weight. Including passengers, cargo and other load inside the car.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -315,9 +317,9 @@ public final class VehiclePropertyIdsOem {
 	 * The CO2 emissions.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -335,9 +337,9 @@ public final class VehiclePropertyIdsOem {
 	 * Curb weight of vehicle, including all liquids and full tank of fuel and full load of cargo and passengers.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -355,9 +357,9 @@ public final class VehiclePropertyIdsOem {
 	 * Overall vehicle height.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -377,9 +379,9 @@ public final class VehiclePropertyIdsOem {
 	 * Vehicle not broken down.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Boolean} property type
 	 * </ul>
 	 *
@@ -397,9 +399,9 @@ public final class VehiclePropertyIdsOem {
 	 * Indicates whether the vehicle is stationary or moving.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Boolean} property type
 	 * </ul>
 	 *
@@ -417,9 +419,9 @@ public final class VehiclePropertyIdsOem {
 	 * Overall vehicle length.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -437,9 +439,9 @@ public final class VehiclePropertyIdsOem {
 	 * State of the supply voltage of the control units (usually 12V).
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -457,9 +459,9 @@ public final class VehiclePropertyIdsOem {
 	 * Maximum vertical weight on the tow ball of a trailer.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -477,9 +479,9 @@ public final class VehiclePropertyIdsOem {
 	 * Maximum weight of trailer.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -497,9 +499,9 @@ public final class VehiclePropertyIdsOem {
 	 * The accumulated energy from regenerative braking over lifetime.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -517,9 +519,9 @@ public final class VehiclePropertyIdsOem {
 	 * Engine coolant level.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -537,9 +539,9 @@ public final class VehiclePropertyIdsOem {
 	 * Engine coolant temperature.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -557,9 +559,9 @@ public final class VehiclePropertyIdsOem {
 	 * Engine oil capacity in liters.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -577,9 +579,9 @@ public final class VehiclePropertyIdsOem {
 	 * Engine oil level.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -597,9 +599,9 @@ public final class VehiclePropertyIdsOem {
 	 * EOT, Engine oil temperature.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -617,9 +619,9 @@ public final class VehiclePropertyIdsOem {
 	 * Engine Running. True if engine is rotating (Speed > 0).
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Boolean} property type
 	 * </ul>
 	 *
@@ -637,9 +639,9 @@ public final class VehiclePropertyIdsOem {
 	 * Engine speed measured as rotations per minute.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -657,9 +659,9 @@ public final class VehiclePropertyIdsOem {
 	 * Current available fuel in the fuel tank expressed in liters.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -677,9 +679,9 @@ public final class VehiclePropertyIdsOem {
 	 * Average consumption in liters per 100 km.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -697,9 +699,9 @@ public final class VehiclePropertyIdsOem {
 	 * Fuel consumption since last refueling.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -717,9 +719,9 @@ public final class VehiclePropertyIdsOem {
 	 * Fuel amount in liters consumed since start of current trip.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -737,9 +739,9 @@ public final class VehiclePropertyIdsOem {
 	 * Defines the hybrid type of the vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -757,9 +759,9 @@ public final class VehiclePropertyIdsOem {
 	 * Current consumption in liters per 100 km.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -777,9 +779,9 @@ public final class VehiclePropertyIdsOem {
 	 * Indicates whether eco start stop is currently enabled.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Boolean} property type
 	 * </ul>
 	 *
@@ -797,9 +799,9 @@ public final class VehiclePropertyIdsOem {
 	 * Indicates that the fuel level is low (e.g. <50km range).
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Boolean} property type
 	 * </ul>
 	 *
@@ -817,9 +819,9 @@ public final class VehiclePropertyIdsOem {
 	 * Status of the fuel port flap(s). True if at least one is open.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ_WRITE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ_WRITE}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Boolean} property type
 	 * </ul>
 	 *
@@ -838,9 +840,9 @@ public final class VehiclePropertyIdsOem {
 	 * Remaining range in meters using only liquid fuel.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -858,9 +860,9 @@ public final class VehiclePropertyIdsOem {
 	 * Position of refuel port(s). First part indicates side of vehicle, second part relative position on that side.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -878,9 +880,9 @@ public final class VehiclePropertyIdsOem {
 	 * Level in fuel tank as percent of capacity. 0 = empty. 100 = full.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -899,9 +901,9 @@ public final class VehiclePropertyIdsOem {
 	 * with additional suffix for octane (RON) where relevant.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -919,9 +921,9 @@ public final class VehiclePropertyIdsOem {
 	 * High level information of fuel types supported
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -939,9 +941,9 @@ public final class VehiclePropertyIdsOem {
 	 * Capacity of the fuel tank in liters.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -959,9 +961,9 @@ public final class VehiclePropertyIdsOem {
 	 * Time remaining in seconds before the fuel tank is empty.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -979,9 +981,9 @@ public final class VehiclePropertyIdsOem {
 	 * Remaining range in meters using all energy sources available in the vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -999,9 +1001,9 @@ public final class VehiclePropertyIdsOem {
 	 * Time remaining in seconds before all energy sources available in the vehicle are empty.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -1019,9 +1021,9 @@ public final class VehiclePropertyIdsOem {
 	 * Defines the powertrain type of the vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1039,9 +1041,9 @@ public final class VehiclePropertyIdsOem {
 	 * The permitted total weight of cargo and installations (e.g. a roof rack) on top of the vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -1059,9 +1061,9 @@ public final class VehiclePropertyIdsOem {
 	 * Vehicle speed.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -1079,9 +1081,9 @@ public final class VehiclePropertyIdsOem {
 	 * Start time of current or latest trip, formatted according to ISO 8601 with UTC time zone.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1099,9 +1101,9 @@ public final class VehiclePropertyIdsOem {
 	 * Signal indicating if trailer is connected or not.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Boolean} property type
 	 * </ul>
 	 *
@@ -1119,9 +1121,9 @@ public final class VehiclePropertyIdsOem {
 	 * Odometer reading, total distance traveled during the lifetime of the vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -1139,9 +1141,9 @@ public final class VehiclePropertyIdsOem {
 	 * Distance traveled since start of current trip.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -1159,9 +1161,9 @@ public final class VehiclePropertyIdsOem {
 	 * Duration of latest trip.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -1179,9 +1181,9 @@ public final class VehiclePropertyIdsOem {
 	 * Trip meter reading.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ_WRITE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ_WRITE}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_ONCHANGE}
 	 *  <li>{@code Float} property type
 	 * </ul>
 	 *
@@ -1200,9 +1202,9 @@ public final class VehiclePropertyIdsOem {
 	 * Minimum turning diameter, Wall-to-Wall, as defined by SAE J1100-2009 D102.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -1220,9 +1222,9 @@ public final class VehiclePropertyIdsOem {
 	 * Indicates the design and body style of the vehicle (e.g. station wagon, hatchback, etc.).
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1240,9 +1242,9 @@ public final class VehiclePropertyIdsOem {
 	 * Vehicle brand or manufacturer.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1260,9 +1262,9 @@ public final class VehiclePropertyIdsOem {
 	 * The date in ISO 8601 format of the first registration of the vehicle with the respective public authorities.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1280,9 +1282,9 @@ public final class VehiclePropertyIdsOem {
 	 * The license plate of the vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1300,9 +1302,9 @@ public final class VehiclePropertyIdsOem {
 	 * Indicates that the vehicle meets the respective emission standard.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1320,9 +1322,9 @@ public final class VehiclePropertyIdsOem {
 	 * Vehicle model.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1340,9 +1342,9 @@ public final class VehiclePropertyIdsOem {
 	 * The date in ISO 8601 format of production of the item, e.g. vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1360,9 +1362,9 @@ public final class VehiclePropertyIdsOem {
 	 * The main color of the exterior within the basic color palette (eg. red, blue, black, white, ...).
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1381,9 +1383,9 @@ public final class VehiclePropertyIdsOem {
 	 * model).
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1402,9 +1404,9 @@ public final class VehiclePropertyIdsOem {
 	 * of limitations set by law.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -1422,9 +1424,9 @@ public final class VehiclePropertyIdsOem {
 	 * 17-character Vehicle Identification Number (VIN) as defined by ISO 3779.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1442,9 +1444,9 @@ public final class VehiclePropertyIdsOem {
 	 * 3-character World Manufacturer Identification (WMI) as defined by ISO 3780.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code String} property type
 	 * </ul>
 	 *
@@ -1462,9 +1464,9 @@ public final class VehiclePropertyIdsOem {
 	 * Model year of the vehicle.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -1482,9 +1484,9 @@ public final class VehiclePropertyIdsOem {
 	 * Overall vehicle width excluding mirrors, as defined by SAE J1100-2009 W103.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -1502,9 +1504,9 @@ public final class VehiclePropertyIdsOem {
 	 * Overall vehicle width with mirrors folded, as defined by SAE J1100-2009 W145.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *
@@ -1522,9 +1524,9 @@ public final class VehiclePropertyIdsOem {
 	 * Overall vehicle width including mirrors, as defined by SAE J1100-2009 W144.
 	 * <p>Property Config:
 	 * <ul>
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_READ}
 	 *  <li>{@link VehicleAreaType#VEHICLE_AREA_TYPE_GLOBAL}
-	 *  <li>{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
+	 *  <li>{@link CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_STATIC}
 	 *  <li>{@code Int32} property type
 	 * </ul>
 	 *

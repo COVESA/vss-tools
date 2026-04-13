@@ -331,17 +331,15 @@ def test_java_property_ids_code(java_property_ids_code: str, vhal_mapper_group_4
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp)
         java_output = path / "VehiclePropertyIdsOem.java"
-        permissions_output = path / "OemPermissions.java"
-        actual_code, _ = vhal_mapper_group_4.generate_java_files(java_output, permissions_output)
+        actual_code = vhal_mapper_group_4.generate_java_files(java_output)
         assert java_property_ids_code == actual_code
 
 
 def test_java_permissions_code(java_permissions_code: str, vhal_mapper_group_4: VhalMapper):
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp)
-        java_output = path / "VehiclePropertyIdsOem.java"
         permissions_output = path / "OemPermissions.java"
-        _, actual_code = vhal_mapper_group_4.generate_java_files(java_output, permissions_output)
+        actual_code = vhal_mapper_group_4.generate_permission_files(permissions_output)
         assert java_permissions_code == actual_code
 
 

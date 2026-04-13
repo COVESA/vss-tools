@@ -46,6 +46,9 @@ class VhalMapper:
 
     MAX_VHAL_ID = 65535  # 0xffff, must be in range of 16 bits, defined by Android specs
 
+    ACONFIG_FLAG_NAME = "oem_vehicle_property"
+    """Aconfig flag name for custom vendor packages/service/Car module."""
+
     def __init__(
         self,
         include_new: bool,
@@ -249,44 +252,34 @@ class VhalMapper:
             json_data = TypeAdapter(List[VehicleMappingItem]).dump_json(result, by_alias=True, indent=indent).decode()
             file.write(json_data)
 
-    def generate_java_files(self, output_file_path: Path, permissions_file_path: Path) -> Tuple[str, str]:
+    def generate_java_files(self, platform_file_path: Path) -> str:
         """
         Generates two Java files. First, file with the list of VHAL property IDs and the corresponding constants.
         Second, file with the list of corresponding permissions both read and write.
 
-        :param output_file_path: Output file path.
-        :param permissions_file_path: Permissions file path.
-        :aconfig_flag_name: Aconfig flag name for custom vendor packages/service/Car module.
+        :param platform_file_path: Output file path for the platform java file.
         :returns: tuple containing the java code with properties and java code with permissions.
         """
-        aconfig_flag_name = "oem_vehicle_property"
         mapping = self.get()
-        java_variables = []
-        java_head = (
-            f"package android.car.oem;\n\n"
-            f"import static android.car.feature.Flags.FLAG_{aconfig_flag_name.upper()};\n"
-            f"import android.annotation.FlaggedApi;\n"
-            f"import android.annotation.RequiresPermission;\n\n"
-        )
+        content_lines = [
+            "package android.car.oem;",
+            "",
+            f"import static android.car.feature.Flags.FLAG_{self.ACONFIG_FLAG_NAME.upper()};",
+            "import android.annotation.FlaggedApi;",
+            "import android.annotation.RequiresPermission;",
+            "import android.car.hardware.CarPropertyConfig;",
+            "import android.car.VehicleAreaType;",
+            "",
+            "public final class VehiclePropertyIdsOem {",
+            "",
+        ]
 
         for item in mapping:
             if item.vhal_id >= self.__min_vhal_id:
-                annotations_list = []
-
-                if item.access in (VehiclePropertyAccess.READ.value, VehiclePropertyAccess.READ_WRITE.value):
-                    annotations_list.append(
-                        f"@RequiresPermission.Read(@RequiresPermission(OemPermissions.PERMISSION_OEM_{item.name}_READ))"
-                    )
-                if item.access in (VehiclePropertyAccess.WRITE.value, VehiclePropertyAccess.READ_WRITE.value):
-                    annotations_list.append(
-                        f"@RequiresPermission.Write(@RequiresPermission(OemPermissions.PERMISSION_OEM_{item.name}_WRITE))"
-                    )
-                annotations = "\n".join(annotations_list)
-
                 # JavaDoc
-                config_string = item.config_string
-                lines = textwrap.wrap(config_string, width=120) if config_string else ""
-                description = "\n".join(f"\t * {line}" for line in lines)
+                lines = textwrap.wrap(item.config_string, width=120) if item.config_string else ""
+                content_lines.append("\t/**")
+                content_lines.extend(f"\t * {line}" for line in lines)
 
                 access = VehiclePropertyAccess.get_java_doc(item.access)
                 area_type = VhalAreaType.get_java_doc(item.area_id)
@@ -305,48 +298,70 @@ class VhalMapper:
                 else:
                     write_permission_str = "Property is not writable"
 
-                comment_body = (
-                    f"{description}\n"
-                    f"\t * <p>Property Config:\n"
-                    f"\t * <ul>\n"
-                    f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#{access}}}\n"
-                    f"\t *  <li>{{@link VehicleAreaType#{area_type}}}\n"
-                    f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#{change_mode}}}\n"
-                    f"\t *  <li>{{@code {property_type}}} property type\n"
-                    f"\t * </ul>\n"
-                    f"\t *\n"
-                    f"\t * <p>Required Permissions:\n"
-                    f"\t * <ul>\n"
-                    f"\t *  <li>Dangerous permission "
-                    f"{{@link OemPermissions#PERMISSION_OEM_{item.name}_READ}} to read property.\n"
-                    f"\t *  <li>{write_permission_str}\n"
-                    f"\t * </ul>\n"
+                content_lines.extend(
+                    [
+                        "\t * <p>Property Config:",
+                        "\t * <ul>",
+                        f"\t *  <li>{{@link CarPropertyConfig#{access}}}",
+                        f"\t *  <li>{{@link VehicleAreaType#{area_type}}}",
+                        f"\t *  <li>{{@link CarPropertyConfig#{change_mode}}}",
+                        f"\t *  <li>{{@code {property_type}}} property type",
+                        "\t * </ul>",
+                        "\t *",
+                        "\t * <p>Required Permissions:",
+                        "\t * <ul>",
+                        f"\t *  <li>Dangerous permission "
+                        f"{{@link OemPermissions#PERMISSION_OEM_{item.name}_READ}} to read property.",
+                        f"\t *  <li>{write_permission_str}",
+                        "\t * </ul>",
+                        "\t */",
+                    ]
                 )
-                javadoc = f"\t/**\n{comment_body}\t */\n"
 
-                annotation_line = "\n\t".join(("\t" + annotations).split("\n")) if annotations else ""
-                java_variable = (
-                    f"{javadoc}"
-                    f"\t@FlaggedApi(FLAG_{aconfig_flag_name.upper()})\n"
-                    f"{annotation_line}\n\tpublic static final int {item.name} = {item.property_id};\n"
+                content_lines.append(f"\t@FlaggedApi(FLAG_{self.ACONFIG_FLAG_NAME.upper()})")
+
+                if item.access in (VehiclePropertyAccess.READ.value, VehiclePropertyAccess.READ_WRITE.value):
+                    content_lines.append(
+                        f"\t@RequiresPermission.Read(@RequiresPermission(OemPermissions.PERMISSION_OEM_{item.name}_READ))"
+                    )
+                if item.access in (VehiclePropertyAccess.WRITE.value, VehiclePropertyAccess.READ_WRITE.value):
+                    content_lines.append(
+                        f"\t@RequiresPermission.Write(@RequiresPermission(OemPermissions.PERMISSION_OEM_{item.name}_WRITE))"
+                    )
+                content_lines.extend(
+                    [
+                        f"\tpublic static final int {item.name} = {item.property_id};",
+                        "",
+                    ]
                 )
-                java_variables.append(java_variable)
 
-        java_class = "public final class VehiclePropertyIdsOem {\n\n" + "\n".join(java_variables) + "\n}"
-        java_file = java_head + java_class
+        content_lines.append("}")
 
-        with open(output_file_path, "w") as file:
-            file.write(java_file)
+        platform_java_file = "\n".join(content_lines)
+        with open(platform_file_path, "w") as file:
+            file.write(platform_java_file)
 
-        # Permissions
-        permissions = []
+        return platform_java_file
 
-        permissions_head = (
-            f"package android.car.oem;\n\n"
-            f"import static android.car.feature.Flags.FLAG_{aconfig_flag_name.upper()};\n"
-            f"import android.annotation.SuppressLint;\n"
-            f"import android.annotation.FlaggedApi;\n\n"
-        )
+    def generate_permission_files(self, platform_file_path: Path) -> str:
+        """
+        Generates two Java files. First, file with the list of VHAL property IDs and the corresponding constants.
+        Second, file with the list of corresponding permissions both read and write.
+
+        :param platform_file_path: Output file path for the platform java file.
+        :returns: tuple containing the java code with properties and java code with permissions.
+        """
+        mapping = self.get()
+        content_lines = [
+            "package android.car.oem;",
+            "",
+            f"import static android.car.feature.Flags.FLAG_{self.ACONFIG_FLAG_NAME.upper()};",
+            "import android.annotation.SuppressLint;",
+            "import android.annotation.FlaggedApi;",
+            "",
+            "public final class OemPermissions {",
+            "",
+        ]
 
         for item in mapping:
             if item.vhal_id >= self.__min_vhal_id:
@@ -356,35 +371,42 @@ class VhalMapper:
                 if any(err in item.name for err in false_positive_errors):
                     suppress_errors = (
                         '\t@SuppressLint("IntentName")  '
-                        "// Suppress AOSP false positives for names containing ACTION or EXTRA.\n"
+                        "// Suppress AOSP false positives for names containing ACTION or EXTRA."
                     )
                 else:
                     suppress_errors = ""
 
                 if item.access in (VehiclePropertyAccess.READ.value, VehiclePropertyAccess.READ_WRITE.value):
-                    permissions.append(
-                        f"{suppress_errors}"
-                        f"\t@FlaggedApi(FLAG_{aconfig_flag_name.upper()})\n"
-                        f"\tpublic static final String PERMISSION_OEM_{item.name}_READ = "
-                        f'"android.car.permission.oem.{item.name}_READ";'
+                    if suppress_errors:
+                        content_lines.append(suppress_errors)
+                    content_lines.extend(
+                        [
+                            f"\t@FlaggedApi(FLAG_{self.ACONFIG_FLAG_NAME.upper()})",
+                            f"\tpublic static final String PERMISSION_OEM_{item.name}_READ = "
+                            f'"android.car.permission.oem.{item.name}_READ";',
+                            "",
+                        ]
                     )
 
                 if item.access in (VehiclePropertyAccess.WRITE.value, VehiclePropertyAccess.READ_WRITE.value):
-                    permissions.append(
-                        f"{suppress_errors}"
-                        f"\t@FlaggedApi(FLAG_{aconfig_flag_name.upper()})\n"
-                        f"\tpublic static final String PERMISSION_OEM_{item.name}_WRITE = "
-                        f'"android.car.permission.oem.{item.name}_WRITE";'
+                    if suppress_errors:
+                        content_lines.append(suppress_errors)
+                    content_lines.extend(
+                        [
+                            f"\t@FlaggedApi(FLAG_{self.ACONFIG_FLAG_NAME.upper()})",
+                            f"\tpublic static final String PERMISSION_OEM_{item.name}_WRITE = "
+                            f'"android.car.permission.oem.{item.name}_WRITE";',
+                            "",
+                        ]
                     )
 
-        java_permissions = "\n\n".join(permissions)
-        java_permissions_class = f"public final class OemPermissions {{\n\n{java_permissions}\n}}"
-        java_permissions_file = permissions_head + java_permissions_class
+        content_lines.append("}")
 
-        with open(permissions_file_path, "w") as file:
-            file.write(java_permissions_file)
+        platform_permission_file = "\n".join(content_lines)
+        with open(platform_file_path, "w") as file:
+            file.write(platform_permission_file)
 
-        return java_file, java_permissions_file
+        return platform_permission_file
 
     def generate_aidl_file(self, output_filename: Path, property_version: int = 1) -> str:
         """
@@ -532,12 +554,14 @@ class VhalMapper:
         strings_xml_bytes = ET.tostring(root_strings, encoding=ENCODE_FORMAT, xml_declaration=True)
         strings_xml_str = strings_xml_bytes.decode(ENCODE_FORMAT)
 
-        output_manifest_file_path = (
-            aosp_workspace_path / "vendor/car/packages/services/Oem/oem-service/AndroidManifest.xml"
-        )
-        output_strings_file_path = (
-            aosp_workspace_path / "vendor/car/packages/services/Oem/oem-service/res/values/strings.xml"
-        )
+        output_dir = aosp_workspace_path / "vendor/car/packages/services/Oem/oem-service/"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_manifest_file_path = output_dir / "AndroidManifest.xml"
+
+        output_res_values_dir = output_dir / "res/values"
+        output_res_values_dir.mkdir(parents=True, exist_ok=True)
+        output_strings_file_path = output_res_values_dir / "strings.xml"
+
         with open(output_manifest_file_path, "w", encoding=ENCODE_FORMAT) as f:
             f.write(manifest_xml_str + "\n")
         logging.info(f"Written: {output_manifest_file_path}")
