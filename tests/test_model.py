@@ -48,6 +48,23 @@ from vss_tools.model import VSSDataDatatype
         ({"datatype": "string", "pattern": "x.*", "default": "xy"}, True),
         ({"datatype": "string", "pattern": "x.*", "allowed": ["ay"]}, False),
         ({"datatype": "string", "pattern": "x.*", "allowed": ["xy", "xz"]}, True),
+        # enum
+        ({"datatype": "string", "allowed": [1, 2], "enum": {"A": 1}}, False),
+        ({"datatype": "int8", "enum": {"A": 1}}, True),
+        ({"datatype": "int8", "enum": {1: 1}}, False),
+        ({"datatype": "int8", "enum": {"A": 255}}, False),
+        ({"datatype": "int16", "enum": {"A": 255}}, True),
+        ({"datatype": "int8", "enum": {"A": 1}, "min": 1}, False),
+        ({"datatype": "int8", "enum": {"A": 1}, "max": 1}, False),
+        ({"datatype": "int8", "enum": {"A": 1}, "default": 2}, False),
+        ({"datatype": "int8", "enum": {"A": 1}, "default": 1}, True),
+        ({"datatype": "int8[]", "enum": {"A": 1, "B": 2}, "default": 1}, False),
+        ({"datatype": "int8[]", "enum": {"A": 1, "B": 2}, "default": [1]}, True),
+        ({"datatype": "int8", "enum": {"A": 1, "B": 1}}, False),
+        ({"datatype": "int8", "enum": {"123": 1}}, False),
+        ({"datatype": "int8", "enum": {"_A": 1}}, False),
+        ({"datatype": "int8", "enum": {"A_": 1}}, True),
+        ({"datatype": "int8", "enum": {"A123": 1}}, True),
     ],
 )
 def test_vss_data_datatype(data: dict[str, Any], ok: bool) -> None:
