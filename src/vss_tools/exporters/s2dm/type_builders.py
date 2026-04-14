@@ -314,6 +314,43 @@ def _sanitize_enum_value_for_graphql(original_value: str) -> tuple[str, bool]:
     return sanitized, was_modified
 
 
+def _sort_structs_by_dependencies(struct_fqns: list[str], leaves_df: pd.DataFrame) -> list[str]:
+    """
+    Sort struct FQNs so dependencies come before dependents (topological order).
+
+    Inspects each struct's property datatypes to detect struct-to-struct references,
+    then uses Kahn's algorithm to produce a safe processing order.
+    """
+    struct_fqn_set = set(struct_fqns)
+
+    deps: dict[str, set[str]] = {fqn: set() for fqn in struct_fqns}
+    for fqn in struct_fqns:
+        for _, prop_row in leaves_df[leaves_df["parent"] == fqn].iterrows():
+            datatype = str(prop_row.get("datatype", ""))
+            base = datatype[:-2] if datatype.endswith("[]") else datatype
+            if base in struct_fqn_set and base != fqn:
+                deps[fqn].add(base)
+
+    # Kahn's algorithm
+    result: list[str] = []
+    ready = [f for f, d in deps.items() if not d]
+    remaining = {f: d.copy() for f, d in deps.items() if d}
+    while ready:
+        fqn = ready.pop(0)
+        result.append(fqn)
+        for other in list(remaining):
+            remaining[other].discard(fqn)
+            if not remaining[other]:
+                ready.append(other)
+                del remaining[other]
+
+    if remaining:
+        log.warning(f"Circular struct dependencies detected, processing in original order: {list(remaining)}")
+        result.extend(remaining)
+
+    return result
+
+
 def create_struct_types(
     data_type_tree: VSSNode | None,
     vspec_comments: dict[str, Any],
@@ -339,7 +376,8 @@ def create_struct_types(
     branches_df, leaves_df = get_metadata_df(data_type_tree, extended_attributes=extended_attributes)
     struct_nodes = branches_df[branches_df["type"] == "struct"]
 
-    for fqn, struct_row in struct_nodes.iterrows():
+    for fqn in _sort_structs_by_dependencies(list(struct_nodes.index), leaves_df):
+        struct_row = struct_nodes.loc[fqn]
         # Use short name if mapping exists, otherwise fall back to FQN conversion
         if short_name_mapping and fqn in short_name_mapping:
             type_name = short_name_mapping[fqn]
@@ -354,8 +392,7 @@ def create_struct_types(
             fields[field_name] = GraphQLField(GraphQLNonNull(base_type), description=prop_row.get("description", ""))
 
             field_path = build_field_path(type_name, field_name)
-            field_metadata = {"element": "STRUCT_PROPERTY", "fqn": prop_fqn}
-            vspec_comments["field_vss_types"][field_path] = field_metadata
+            vspec_comments["field_vss_types"][field_path] = {"element": "STRUCT_PROPERTY", "fqn": prop_fqn}
 
             if pd.notna(prop_row.get("min")) or pd.notna(prop_row.get("max")):
                 vspec_comments["field_ranges"][field_path] = {
@@ -492,17 +529,6 @@ def create_object_type(
 
         # Leaf fields
         for child_fqn, leaf_row in leaves_df[leaves_df["parent"] == fqn].iterrows():
-            if branch_row.get("instances"):
-                instantiate = leaf_row.get("instantiate")
-                if instantiate is False:
-                    parent_fqn = branch_row.get("parent")
-                    if parent_fqn is None or parent_fqn == "" or pd.isna(parent_fqn):
-                        log.warning(
-                            f"Property '{child_fqn}' has instantiate=false but '{fqn}' has no parent. "
-                            f"Property will be omitted from schema."
-                        )
-                    continue
-
             field_name = convert_name_for_graphql_schema(leaf_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
             field_path = build_field_path(type_name, field_name)
 
@@ -546,11 +572,6 @@ def create_object_type(
             )
             types_registry[child_fqn] = child_type
 
-            hoisted_fields = get_hoisted_fields(
-                child_fqn, child_row, leaves_df, types_registry, unit_enums, vspec_comments, extended_attributes
-            )
-            fields.update(hoisted_fields)
-
             if child_row.get("instances"):
                 # Use natural plural form for list fields (using inflect directly)
                 plural_field_name = _inflect_engine.plural(field_name)
@@ -574,68 +595,6 @@ def create_object_type(
     vspec_comments["vss_types"][type_name] = {"element": "BRANCH", "fqn": fqn}
 
     return GraphQLObjectType(name=type_name, fields=get_fields, description=branch_row.get("description", ""))
-
-
-def get_hoisted_fields(
-    child_branch_fqn: str,
-    child_branch_row: pd.Series,
-    leaves_df: pd.DataFrame,
-    types_registry: dict[str, Any],
-    unit_enums: dict[str, GraphQLEnumType],
-    vspec_comments: dict[str, dict[str, Any]],
-    extended_attributes: tuple[str, ...] = (),
-) -> dict[str, GraphQLField]:
-    """Get fields to hoist from instantiated child branch to parent."""
-    hoisted: dict[str, GraphQLField] = {}
-
-    if not child_branch_row.get("instances"):
-        return hoisted
-
-    child_leaves = leaves_df[leaves_df["parent"] == child_branch_fqn]
-
-    for leaf_fqn, leaf_row in child_leaves.iterrows():
-        instantiate = leaf_row.get("instantiate")
-        if instantiate is False:
-            leaf_name = leaf_row["name"]
-            parent_fqn = child_branch_row["parent"]
-
-            if parent_fqn is None or parent_fqn == "" or pd.isna(parent_fqn):
-                log.warning(
-                    f"Property '{leaf_fqn}' has instantiate=false but '{child_branch_fqn}' has no parent. "
-                    f"Property will be omitted."
-                )
-                continue
-
-            hoisted_field_name = convert_name_for_graphql_schema(
-                f"{leaf_name}", GraphQLElementType.FIELD, S2DM_CONVERSIONS
-            )
-
-            parent_type_name = convert_name_for_graphql_schema(parent_fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
-            field_path = build_field_path(parent_type_name, hoisted_field_name)
-
-            if leaf_type := _get_vss_type_if_valid(leaf_row):
-                vspec_comments["field_vss_types"][field_path] = {
-                    "element": leaf_type,
-                    "fqn": leaf_fqn,
-                    "instantiate": False,
-                }
-
-            if pd.notna(leaf_row.get("min")) or pd.notna(leaf_row.get("max")):
-                vspec_comments["field_ranges"][field_path] = {
-                    "min": leaf_row.get("min") if pd.notna(leaf_row.get("min")) else None,
-                    "max": leaf_row.get("max") if pd.notna(leaf_row.get("max")) else None,
-                }
-
-            if pd.notna(leaf_row.get("deprecation")) and leaf_row.get("deprecation").strip():
-                vspec_comments["field_deprecated"][field_path] = leaf_row["deprecation"]
-
-            field_type = get_graphql_type_for_leaf(leaf_row, types_registry)
-            unit_args = _get_unit_args(leaf_row, unit_enums)
-            hoisted[hoisted_field_name] = GraphQLField(
-                field_type, args=unit_args, description=leaf_row.get("description", "")
-            )
-
-    return hoisted
 
 
 def _get_vss_type_if_valid(row: pd.Series) -> str | None:
