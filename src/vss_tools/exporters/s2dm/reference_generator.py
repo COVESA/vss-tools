@@ -77,7 +77,16 @@ def generate_vspec_reference(
         # Generate VSS lookup spec
         vspec_file_out = reference_dir / "vspec_lookup_spec.yaml"
         try:
+            from anytree import PreOrderIter
+
             tree_data = tree.as_flat_dict(with_extra_attributes=False, extended_attributes=extended_attributes)
+            # Inject `instantiate: false` for nodes that opt out of instance expansion,
+            # since `instantiate` is excluded from as_flat_dict by EXPORT_EXCLUDE_ATTRIBUTES.
+            for node in PreOrderIter(tree):
+                if hasattr(node, "data") and hasattr(node.data, "instantiate") and node.data.instantiate is False:
+                    fqn = node.get_fqn()
+                    if fqn in tree_data:
+                        tree_data[fqn]["instantiate"] = False
             if data_type_tree:
                 tree_data["ComplexDataTypes"] = data_type_tree.as_flat_dict(
                     with_extra_attributes=False, extended_attributes=extended_attributes

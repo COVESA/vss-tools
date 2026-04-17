@@ -4,15 +4,9 @@ directive @vspec(
   element: VspecElement,
   """The Fully Qualified Name (FQN) of the related element in Vspec (aka., path). Example: Vehicle.Cabin.Door.Window.position"""
   fqn: String
-  """Additional metadata associated with the mapping."""
-  metadata: [KeyValue]
+  """Original name before sanitization for GraphQL compliance (e.g. for enum values with spaces or special characters)."""
+  originalName: String
 ) on OBJECT | FIELD_DEFINITION | ENUM | ENUM_VALUE
-
-"""Key-value pair for storing metadata."""
-input KeyValue {
-  key: String!
-  value: String!
-}
 
 """Kinds of Vspec elements that can be annotated."""
 enum VspecElement {
