@@ -504,12 +504,11 @@ class TestS2DMExporter:
         instance_content = instance_file.read_text()
 
         # Check for sanitized enum values with @vspec directives
-        assert 'DRIVER_SIDE @vspec(metadata: [{key: "originalName", value: "DriverSide"}])' in instance_content
-        assert 'PASSENGER_SIDE @vspec(metadata: [{key: "originalName", value: "PassengerSide"}])' in instance_content
+        assert 'DRIVER_SIDE @vspec(originalName: "DriverSide")' in instance_content
+        assert 'PASSENGER_SIDE @vspec(originalName: "PassengerSide")' in instance_content
 
-    def test_non_instantiated_property_hoisting(self, tmp_path: Path):
-        """Test that properties with instantiate=false are hoisted to parent type."""
-        # Load the test vspec with non-instantiated properties
+    def test_non_instantiated_property_stays_in_parent_type(self, tmp_path: Path):
+        """Test that properties with instantiate=false remain in their defining type."""
         tree, _ = get_trees(
             vspec=Path("tests/vspec/test_non_instantiated_props/test.vspec"),
             include_dirs=(),
@@ -527,29 +526,25 @@ class TestS2DMExporter:
         schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
-        # Verify that Vehicle_Cabin_Door type doesn't have someSignal
+        # Verify Vehicle_Cabin_Door type contains someSignal (not hoisted)
         assert "type Vehicle_Cabin_Door @vspec" in schema_str
         door_type_start = schema_str.find("type Vehicle_Cabin_Door @vspec")
-        door_type_end = schema_str.find("\n}", door_type_start) + 2  # Include closing brace
+        door_type_end = schema_str.find("\n}", door_type_start) + 2
         door_type_content = schema_str[door_type_start:door_type_end]
 
-        # someSignal should NOT be on Door type
-        assert "someSignal" not in door_type_content
-        # But isOpen and isLocked should be
+        # someSignal stays in Door type
+        assert "someSignal" in door_type_content
         assert "isOpen" in door_type_content
         assert "isLocked" in door_type_content
 
-        # Verify that Vehicle_Cabin type has doorSomeSignal (hoisted)
+        # Vehicle_Cabin type should NOT have someSignal (no hoisting)
         assert "type Vehicle_Cabin @vspec" in schema_str
         cabin_type_start = schema_str.find("type Vehicle_Cabin @vspec")
-        cabin_type_end = schema_str.find("\n}", cabin_type_start) + 2  # Include closing brace
+        cabin_type_end = schema_str.find("\n}", cabin_type_start) + 2
         cabin_type_content = schema_str[cabin_type_start:cabin_type_end]
 
-        # someSignal should be on Cabin type (hoisted without branch prefix)
-        assert "someSignal" in cabin_type_content
-        # Verify it has the instantiate=false metadata
-        assert 'metadata: [{key: "instantiate", value: "false"}]' in cabin_type_content
-        # And doors array field should also be there (natural plural)
+        assert "someSignal" not in cabin_type_content
+        # doors array field should still be there
         assert "doors" in cabin_type_content
 
     def test_enum_value_sanitization_with_spaces(self):
@@ -622,23 +617,23 @@ class TestS2DMExporter:
         # Check that enum type has @vspec directive with element
         assert "enum Vehicle_Cabin_LightMode_Enum @vspec" in schema_str
 
-        # Check that modified enum values have @vspec directives with originalName metadata
+        # Check that modified enum values have @vspec directives with originalName argument
         # "some value" -> SOME_VALUE
         assert (
-            'SOME_VALUE @vspec(metadata: [{key: "originalName", value: "some value"}])' in schema_str
-            or 'SOME_VALUE @vspec(metadata: [{key: "originalName", value: "SOME VALUE"}])' in schema_str
+            'SOME_VALUE @vspec(originalName: "some value")' in schema_str
+            or 'SOME_VALUE @vspec(originalName: "SOME VALUE")' in schema_str
         )
 
         # "another-value" -> ANOTHER_VALUE
-        assert 'ANOTHER_VALUE @vspec(metadata: [{key: "originalName", value: "another-value"}])' in schema_str
+        assert 'ANOTHER_VALUE @vspec(originalName: "another-value")' in schema_str
 
-        # YET_ANOTHER should not have originalName metadata (wasn't modified)
-        assert 'YET_ANOTHER @vspec(metadata: [{key: "originalName"' not in schema_str
+        # YET_ANOTHER should not have originalName (wasn't modified)
+        assert "YET_ANOTHER @vspec(originalName:" not in schema_str
 
         # Check SeatPosition enum
         assert "enum Vehicle_Cabin_SeatPosition_Enum @vspec" in schema_str
-        assert 'FRONT_LEFT @vspec(metadata: [{key: "originalName", value: "front left"}])' in schema_str
-        assert 'FRONT_RIGHT @vspec(metadata: [{key: "originalName", value: "front right"}])' in schema_str
+        assert 'FRONT_LEFT @vspec(originalName: "front left")' in schema_str
+        assert 'FRONT_RIGHT @vspec(originalName: "front right")' in schema_str
 
     def test_enum_camelcase_sanitization(self):
         """Test that camelCase enum values are properly converted using caseconverter."""
@@ -698,23 +693,23 @@ class TestS2DMExporter:
         assert "enum Vehicle_Component_Type_Enum @vspec" in schema_str
 
         # AbCd should be converted to AB_CD with originalName annotation
-        assert 'AB_CD @vspec(metadata: [{key: "originalName", value: "AbCd"}])' in schema_str
+        assert 'AB_CD @vspec(originalName: "AbCd")' in schema_str
 
         # AAA, BBB, CCC, DDD should not have originalName (no change needed)
-        assert 'AAA @vspec(metadata: [{key: "originalName"' not in schema_str
-        assert 'BBB @vspec(metadata: [{key: "originalName"' not in schema_str
+        assert "AAA @vspec(originalName:" not in schema_str
+        assert "BBB @vspec(originalName:" not in schema_str
 
         # Check Connection.Protocol enum
         assert "enum Vehicle_Connection_Protocol_Enum @vspec" in schema_str
-        assert 'HTTPS_PROTOCOL @vspec(metadata: [{key: "originalName", value: "HTTPSProtocol"}])' in schema_str
-        assert 'TCP_PROTOCOL @vspec(metadata: [{key: "originalName", value: "TCPProtocol"}])' in schema_str
-        assert 'UDP_PROTOCOL @vspec(metadata: [{key: "originalName", value: "UDPProtocol"}])' in schema_str
+        assert 'HTTPS_PROTOCOL @vspec(originalName: "HTTPSProtocol")' in schema_str
+        assert 'TCP_PROTOCOL @vspec(originalName: "TCPProtocol")' in schema_str
+        assert 'UDP_PROTOCOL @vspec(originalName: "UDPProtocol")' in schema_str
 
         # Check Status.Code enum
         assert "enum Vehicle_Status_Code_Enum @vspec" in schema_str
-        assert 'IO_ERROR @vspec(metadata: [{key: "originalName", value: "IOError"}])' in schema_str
-        assert 'XML_PARSER @vspec(metadata: [{key: "originalName", value: "XMLParser"}])' in schema_str
-        assert 'SOME_API_KEY @vspec(metadata: [{key: "originalName", value: "someAPIKey"}])' in schema_str
+        assert 'IO_ERROR @vspec(originalName: "IOError")' in schema_str
+        assert 'XML_PARSER @vspec(originalName: "XMLParser")' in schema_str
+        assert 'SOME_API_KEY @vspec(originalName: "someAPIKey")' in schema_str
 
     def test_instance_dimension_enum_sanitization(self):
         """Test that instance dimension enum values are properly sanitized and annotated."""
@@ -736,20 +731,20 @@ class TestS2DMExporter:
 
         # Check that Row instance enum is created and values are sanitized
         assert "enum Vehicle_Cabin_InstanceTag_Dimension1" in schema_str
-        assert 'ROW1 @vspec(metadata: [{key: "originalName", value: "Row1"}])' in schema_str
-        assert 'ROW2 @vspec(metadata: [{key: "originalName", value: "Row2"}])' in schema_str
+        assert 'ROW1 @vspec(originalName: "Row1")' in schema_str
+        assert 'ROW2 @vspec(originalName: "Row2")' in schema_str
 
         # Check that DriverSide/PassengerSide instance enum is created and values are sanitized
         assert "enum Vehicle_Cabin_Seat_InstanceTag_Dimension1" in schema_str
-        assert 'DRIVER_SIDE @vspec(metadata: [{key: "originalName", value: "DriverSide"}])' in schema_str
-        assert 'PASSENGER_SIDE @vspec(metadata: [{key: "originalName", value: "PassengerSide"}])' in schema_str
+        assert 'DRIVER_SIDE @vspec(originalName: "DriverSide")' in schema_str
+        assert 'PASSENGER_SIDE @vspec(originalName: "PassengerSide")' in schema_str
 
         # Check that FrontLeft/FrontRight/RearLeft/RearRight instance enum is created and values are sanitized
         assert "enum Vehicle_Cabin_Seat_Position_InstanceTag_Dimension1" in schema_str
-        assert 'FRONT_LEFT @vspec(metadata: [{key: "originalName", value: "FrontLeft"}])' in schema_str
-        assert 'FRONT_RIGHT @vspec(metadata: [{key: "originalName", value: "FrontRight"}])' in schema_str
-        assert 'REAR_LEFT @vspec(metadata: [{key: "originalName", value: "RearLeft"}])' in schema_str
-        assert 'REAR_RIGHT @vspec(metadata: [{key: "originalName", value: "RearRight"}])' in schema_str
+        assert 'FRONT_LEFT @vspec(originalName: "FrontLeft")' in schema_str
+        assert 'FRONT_RIGHT @vspec(originalName: "FrontRight")' in schema_str
+        assert 'REAR_LEFT @vspec(originalName: "RearLeft")' in schema_str
+        assert 'REAR_RIGHT @vspec(originalName: "RearRight")' in schema_str
 
     def test_extended_attributes_not_in_schema_metadata(self):
         """Test that extended attributes are not annotated in @vspec schema metadata.

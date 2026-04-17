@@ -145,8 +145,7 @@ class GraphQLDirectiveProcessor:
                         if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_values:
                             if "@vspec" not in line:
                                 indent = line[: len(line) - len(line.lstrip())]
-                                # Annotate modified enum value with original value in metadata
-                                directive = f'@vspec(metadata: [{{key: "originalName", value: "{original_value}"}}])'
+                                directive = f'@vspec(originalName: "{original_value}")'
                                 lines[i] = f"{indent}{enum_value_name} {directive}"
 
                             processed_values.add(enum_value_key)
@@ -191,7 +190,7 @@ class GraphQLDirectiveProcessor:
                         if stripped_line.startswith(enum_value_name) and enum_value_key not in processed_values:
                             if "@vspec" not in line:
                                 indent = line[: len(line) - len(line.lstrip())]
-                                directive = f'@vspec(metadata: [{{key: "originalName", value: "{original_value}"}}])'
+                                directive = f'@vspec(originalName: "{original_value}")'
                                 lines[i] = f"{indent}{enum_value_name} {directive}"
 
                             processed_values.add(enum_value_key)
@@ -200,12 +199,11 @@ class GraphQLDirectiveProcessor:
         return lines
 
     def _process_field_directives(self, lines: list[str], vspec_comments: dict) -> list[str]:
-        """Process consolidated field @vspec directives (element + fqn + optional instantiate metadata)."""
+        """Process field @vspec directives (element + fqn)."""
         for field_path, vss_info in vspec_comments.get("field_vss_types", {}).items():
             type_name, field_name = field_path.split(".", 1)  # Use maxsplit=1 to handle field names with dots
             element = vss_info["element"]
             fqn = vss_info["fqn"]
-            instantiate = vss_info.get("instantiate")  # Only False for hoisted non-instantiated fields
 
             in_type = False
             for i, line in enumerate(lines):
@@ -220,15 +218,7 @@ class GraphQLDirectiveProcessor:
                     continue
 
                 if in_type and line.strip().startswith(f"{field_name}") and "@vspec" not in line:
-                    if instantiate is False:
-                        directive = (
-                            f'@vspec(element: {element}, fqn: "{fqn}", '
-                            + 'metadata: [{key: "instantiate", value: "false"}])'
-                        )
-                    else:
-                        directive = f'@vspec(element: {element}, fqn: "{fqn}")'
-
-                    lines[i] = line.rstrip() + f" {directive}"
+                    lines[i] = line.rstrip() + f' @vspec(element: {element}, fqn: "{fqn}")'
                     break
 
         return lines
