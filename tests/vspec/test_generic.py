@@ -9,6 +9,8 @@
 import filecmp
 import pathlib
 import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -53,7 +55,7 @@ def run_exporter(directory, exporter, tmp_path):
         cmd += f" --target-folder {output}"
     elif exporter in ["ros2interface"]:
         # Generate a topics file for test, shall not be checked in
-        topics_file = directory / "ros_test_topics.txt"
+        topics_file = tmp_path / "ros_test_topics.txt"
         topics_file.write_text("# includes only branch A\n" "A.*", encoding="utf-8")
 
         cmd += f" --output {output}"
@@ -61,6 +63,7 @@ def run_exporter(directory, exporter, tmp_path):
         cmd += "  --mode aggregate --srv both --expand --srv-use-msg --exclude-topics Z.*"
         cmd += "  --topics-case-sensitive --topics name:Uint16 --topics Uint32"
         cmd += "  --topics *:Float --topics regex:^A\\.Int16\\..*$ --topics Uint32"
+        cmd += f"  --output-vspec {tmp_path / 'transformed.vspec'} --package-name vss_interfaces"
     else:
         cmd += f" --output {output}"
 
@@ -95,3 +98,154 @@ def test_exporters(directory, tmp_path):
 
     for exporter in exporters:
         run_exporter(directory, exporter, tmp_path)
+
+
+# ---------- ros2interface coverage-boosting tests ----------------
+
+_SIMPLE_VSPEC = (
+    "A:\n  type: branch\n  description: Branch A.\n"
+    "A.Speed:\n  datatype: uint8\n  type: sensor\n  description: Speed signal.\n"
+    "A.Codes:\n  datatype: uint8[]\n  type: sensor\n  arraysize: 5\n  description: Codes.\n"
+    "A.Month:\n  datatype: string\n  type: sensor\n"
+    "  allowed: ['Jan', 'Feb', 'Mar']\n  description: Month.\n"
+)
+
+
+def _write_vspec(tmp_path: Path, text: str = _SIMPLE_VSPEC) -> Path:
+    p = tmp_path / "test.vspec"
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def test_ros2interface_leaf_mode_no_srv_use_msg(tmp_path):
+    vspec = _write_vspec(tmp_path)
+    out = tmp_path / "out"
+    subprocess.run(
+        [
+            "vspec",
+            "export",
+            "ros2interface",
+            "-u",
+            str(TEST_UNITS),
+            "-q",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec),
+            "--output",
+            str(out),
+            "--mode",
+            "leaf",
+            "--srv",
+            "both",
+            "--no-srv-use-msg",
+        ],
+        check=True,
+    )
+
+
+def test_ros2interface_no_match_warning(tmp_path):
+    vspec = _write_vspec(tmp_path)
+    result = subprocess.run(
+        [
+            "vspec",
+            "export",
+            "ros2interface",
+            "-u",
+            str(TEST_UNITS),
+            "-q",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec),
+            "--output",
+            str(tmp_path / "out"),
+            "--topics",
+            "NONEXISTENT_XYZ_SIGNAL",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert "No VSS signals matched" in (result.stdout + result.stderr)
+
+
+def test_ros2interface_output_vspec_with_arraysize(tmp_path):
+    vspec = _write_vspec(tmp_path)
+    out_vspec = tmp_path / "transformed.vspec"
+    subprocess.run(
+        [
+            "vspec",
+            "export",
+            "ros2interface",
+            "-u",
+            str(TEST_UNITS),
+            "-q",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec),
+            "--output",
+            str(tmp_path / "out"),
+            "--mode",
+            "leaf",
+            "--output-vspec",
+            str(out_vspec),
+        ],
+        check=True,
+    )
+    assert out_vspec.exists()
+    assert "arraysize" in out_vspec.read_text()
+
+
+def test_ros2interface_helper_functions():
+    pytest.importorskip("anytree")  # skip gracefully when vss_tools deps are unavailable
+    src_dir = HERE.parents[1] / "src"
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+    from vss_tools.exporters.ros2interface import (  # noqa: PLC0415
+        TopicMatcher,
+        _compile_rule,
+        _read_patterns_file,
+        build_timestamp_fields,
+        map_vss_to_ros_field,
+        render_get_srv,
+        render_msg_file,
+        render_set_srv,
+    )
+
+    assert map_vss_to_ros_field("uint8", 4) == "uint8[4]"
+    assert map_vss_to_ros_field("uint8[]", None) == "uint8[]"
+
+    rule_fqn = _compile_rule("fqn:A.B", False)
+    assert rule_fqn("B", "A.B") and rule_fqn("C", "A.B.C") and not rule_fqn("X", "X.Y")
+
+    assert _compile_rule("Speed", False)("Speed", "A.Speed")
+    assert not _compile_rule("Speed", False)("speed", "A.speed")
+    assert _compile_rule("Sp*", False)("Speed", "A.Speed")
+
+    assert _compile_rule("fqn:a.b", True)("B", "A.B")
+
+    assert TopicMatcher([], []).matches("A.B.C")
+
+    m = TopicMatcher(["A.*"], ["A.B"])
+    assert not m.matches("A.B") and m.matches("A.C")
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+        f.write("   ")
+        empty_p = Path(f.name)
+    assert _read_patterns_file(empty_p) == []
+    empty_p.unlink()
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        f.write("- A.Speed\n- A.Brake\n")
+        yaml_p = Path(f.name)
+    assert "A.Speed" in _read_patterns_file(yaml_p)
+    yaml_p.unlink()
+
+    assert "Allowed" in render_msg_file("X", [{"type": "uint8", "name": "v", "comment": ""}], [], ["Allowed: a"])
+
+    assert build_timestamp_fields()[0]["name"] == "timestamp_seconds"
+
+    fields = [{"type": "uint8", "name": "val", "comment": "desc"}]
+    srv = render_get_srv("pkg", "Msg", fields, use_msg=False)
+    assert "uint8 val" in srv and "int64 start_time_seconds" in srv
+
+    srv2 = render_set_srv("pkg", "Msg", fields, use_msg=False)
+    assert "uint8 val" in srv2
