@@ -36,6 +36,10 @@ class ExtraAttributesException(Exception):
     pass
 
 
+class DefaultFirstAllowedException(Exception):
+    pass
+
+
 class MultipleTypeTreesException(Exception):
     pass
 
@@ -99,6 +103,20 @@ def check_extra_attribute_violations(
     if strict or StrictOption.UNKNOWN_ATTRIBUTE in aborts:
         if extra_attributes:
             raise ExtraAttributesException(f"Forbidden extra attributes detected: {extra_attributes}")
+
+
+def check_default_first_allowed_violations(
+    root: VSSNode, strict: bool, aborts: tuple[str, ...], exceptions: set[str]
+) -> None:
+    if strict or StrictOption.DEFAULT_MATCHES_FIRST_ALLOWED in aborts:
+        violations = root.get_default_first_allowed_violations()
+        if violations and any([v[0] not in exceptions for v in violations]):
+            for violation in violations:
+                log.warning(
+                    f"default != allowed[0]: '{violation[0]}' ({violation[1]}). "
+                    "Canonical pattern: allowed: ['UNKNOWN', ...] + default: 'UNKNOWN'."
+                )
+            raise DefaultFirstAllowedException(f"default != allowed[0] violations detected: {violations}")
 
 
 def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode | None:
@@ -251,7 +269,8 @@ def get_trees(
     try:
         check_name_violations(root, strict, aborts, strict_exceptions.names)
         check_extra_attribute_violations(root, strict, aborts, extended_attributes, strict_exceptions.attributes)
-    except (NameViolationException, ExtraAttributesException) as e:
+        check_default_first_allowed_violations(root, strict, aborts, strict_exceptions.defaults)
+    except (NameViolationException, ExtraAttributesException, DefaultFirstAllowedException) as e:
         log.critical(e)
         exit(1)
 

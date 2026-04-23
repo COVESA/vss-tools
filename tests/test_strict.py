@@ -40,6 +40,7 @@ class TestLoadStrictExceptions:
         assert isinstance(exceptions, StrictExceptions)
         assert len(exceptions.names) == 0
         assert len(exceptions.attributes) == 0
+        assert len(exceptions.defaults) == 0
 
     def test_load_empty_file(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as f:
@@ -49,6 +50,7 @@ class TestLoadStrictExceptions:
             assert isinstance(exceptions, StrictExceptions)
             assert len(exceptions.names) == 0
             assert len(exceptions.attributes) == 0
+            assert len(exceptions.defaults) == 0
 
     def test_load_with_name_style_exception(self):
         data = {"Vehicle.Speed": ["name-style"]}
@@ -58,6 +60,7 @@ class TestLoadStrictExceptions:
             exceptions = load_strict_exceptions(temp_path)
             assert "Vehicle.Speed" in exceptions.names
             assert "Vehicle.Speed" not in exceptions.attributes
+            assert "Vehicle.Speed" not in exceptions.defaults
 
     def test_load_with_unknown_attribute_exception(self):
         data = {"Vehicle.Speed": ["unknown-attribute"]}
@@ -67,15 +70,27 @@ class TestLoadStrictExceptions:
             exceptions = load_strict_exceptions(temp_path)
             assert "Vehicle.Speed" not in exceptions.names
             assert "Vehicle.Speed" in exceptions.attributes
+            assert "Vehicle.Speed" not in exceptions.defaults
+
+    def test_load_with_default_matches_first_allowed_exception(self):
+        data = {"Vehicle.Speed": ["default-matches-first-allowed"]}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as f:
+            yaml.dump(data, f)
+            temp_path = Path(f.name)
+            exceptions = load_strict_exceptions(temp_path)
+            assert "Vehicle.Speed" not in exceptions.names
+            assert "Vehicle.Speed" not in exceptions.attributes
+            assert "Vehicle.Speed" in exceptions.defaults
 
     def test_load_with_multiple_exceptions(self):
-        data = {"Vehicle.Speed": ["name-style", "unknown-attribute"]}
+        data = {"Vehicle.Speed": ["name-style", "unknown-attribute", "default-matches-first-allowed"]}
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as f:
             yaml.dump(data, f)
             temp_path = Path(f.name)
             exceptions = load_strict_exceptions(temp_path)
             assert "Vehicle.Speed" in exceptions.names
             assert "Vehicle.Speed" in exceptions.attributes
+            assert "Vehicle.Speed" in exceptions.defaults
 
     def test_load_with_null_options(self):
         data = {"Vehicle.Speed": None}
@@ -85,11 +100,13 @@ class TestLoadStrictExceptions:
             exceptions = load_strict_exceptions(temp_path)
             assert "Vehicle.Speed" in exceptions.names
             assert "Vehicle.Speed" in exceptions.attributes
+            assert "Vehicle.Speed" in exceptions.defaults
 
     def test_load_multiple_entries(self):
         data = {
             "Vehicle.Speed": ["name-style"],
             "Vehicle.Engine.RPM": ["unknown-attribute"],
+            "Vehicle.Cabin.Mode": ["default-matches-first-allowed"],
             "Vehicle.Body.Doors": None,
         }
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as f:
@@ -98,10 +115,16 @@ class TestLoadStrictExceptions:
             exceptions = load_strict_exceptions(temp_path)
             assert "Vehicle.Speed" in exceptions.names
             assert "Vehicle.Speed" not in exceptions.attributes
+            assert "Vehicle.Speed" not in exceptions.defaults
             assert "Vehicle.Engine.RPM" not in exceptions.names
             assert "Vehicle.Engine.RPM" in exceptions.attributes
+            assert "Vehicle.Engine.RPM" not in exceptions.defaults
+            assert "Vehicle.Cabin.Mode" not in exceptions.names
+            assert "Vehicle.Cabin.Mode" not in exceptions.attributes
+            assert "Vehicle.Cabin.Mode" in exceptions.defaults
             assert "Vehicle.Body.Doors" in exceptions.names
             assert "Vehicle.Body.Doors" in exceptions.attributes
+            assert "Vehicle.Body.Doors" in exceptions.defaults
 
     def test_load_invalid_entry(self):
         data = {
@@ -141,3 +164,4 @@ class TestLoadStrictExceptions:
             exceptions = load_strict_exceptions(temp_path)
             assert "Vehicle.Speed" in exceptions.names
             assert "Vehicle.Speed" in exceptions.attributes
+            assert "Vehicle.Speed" in exceptions.defaults

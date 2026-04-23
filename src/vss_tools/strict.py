@@ -16,11 +16,13 @@ class StrictExceptions:
     def __init__(self) -> None:
         self.names: set[str] = set()
         self.attributes: set[str] = set()
+        self.defaults: set[str] = set()
 
 
 class StrictOption(str, Enum):
     NAME_STYLE = "name-style"
     UNKNOWN_ATTRIBUTE = "unknown-attribute"
+    DEFAULT_MATCHES_FIRST_ALLOWED = "default-matches-first-allowed"
 
 
 class StrictException(BaseModel):
@@ -51,8 +53,11 @@ def load_strict_exceptions(file: Path | None) -> StrictExceptions:
                     exceptions.names.add(exception.fqn)
                 elif e == StrictOption.UNKNOWN_ATTRIBUTE:
                     exceptions.attributes.add(exception.fqn)
+                elif e == StrictOption.DEFAULT_MATCHES_FIRST_ALLOWED:
+                    exceptions.defaults.add(exception.fqn)
         else:
             exceptions.names.add(exception.fqn)
             exceptions.attributes.add(exception.fqn)
+            exceptions.defaults.add(exception.fqn)
 
     return exceptions
