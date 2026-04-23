@@ -116,9 +116,7 @@ def check_default_first_allowed_violations(
                     f"default != allowed[0]: '{violation[0]}' ({violation[1]}). "
                     "Canonical pattern: allowed: ['UNKNOWN', ...] + default: 'UNKNOWN'."
                 )
-            raise DefaultFirstAllowedException(
-                f"default != allowed[0] violations detected: {violations}"
-            )
+            raise DefaultFirstAllowedException(f"default != allowed[0] violations detected: {violations}")
 
 
 def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode | None:

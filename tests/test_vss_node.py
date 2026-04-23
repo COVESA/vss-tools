@@ -92,3 +92,23 @@ def test_get_default_first_allowed_violations_no_default() -> None:
     )
     root = VSSNode("Cabin", None, {"type": "branch", "description": "cabin"}, children=[leaf])
     assert root.get_default_first_allowed_violations() == []
+
+
+def test_get_default_first_allowed_violations_array_skipped() -> None:
+    """Array datatypes (`string[]`) are skipped — proto3 nested-enum semantics
+    from #502 do not apply to array fields. Per-element allowed-membership is
+    already enforced at the pydantic layer. Matches the existing
+    `tests/vspec/test_datatypes_pattern/test_pattern_ok.vspec` fixture shape."""
+    leaf = VSSNode(
+        "Colors",
+        None,
+        {
+            "type": "attribute",
+            "description": "colors collection",
+            "datatype": "string[]",
+            "allowed": ["white", "green", "red", "black", "yellow", "blue"],
+            "default": ["white", "green", "red"],
+        },
+    )
+    root = VSSNode("A", None, {"type": "branch", "description": "branch"}, children=[leaf])
+    assert root.get_default_first_allowed_violations() == []
