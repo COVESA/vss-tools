@@ -61,3 +61,19 @@ def export(ctx: click.Context):
     """
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
+
+@cli.group(
+    cls=LazyGroup,
+    lazy_subcommands={
+        "sync": "vss_tools.registry:sync_cli",
+        "validate": "vss_tools.registry:validate_cli",
+    },
+)
+@click.pass_context
+def registry(ctx: click.Context):
+    """
+    Manage the stable identifier registry for a VSS modeling project.
+    """
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
