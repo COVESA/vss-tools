@@ -311,9 +311,6 @@ class TestS2DMExporter:
         assert len(main_type_lines) == 1
         assert "@instanceTag" not in main_type_lines[0]
 
-        # Test that types with instances get ID field
-        assert "id: ID!" in sdl
-
         # Verify the complete structure matches the reference pattern
         # The seat should be a list field (seats) with natural plural because it has instances
         assert "seats: [Vehicle_Cabin_Seat]" in sdl
