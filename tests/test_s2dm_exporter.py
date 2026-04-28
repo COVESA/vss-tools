@@ -155,19 +155,19 @@ class TestS2DMExporter:
         schema_str = print_schema(schema)
 
         # Check that unit enums are generated
-        assert "enum LengthUnitEnum" in schema_str
-        assert "enum AngleUnitEnum" in schema_str
-        assert "enum RelationUnitEnum" in schema_str
+        assert "enum LengthUnit" in schema_str
+        assert "enum AngleUnit" in schema_str
+        assert "enum DimensionlessRatioUnit" in schema_str
 
-        # Check that enum values use uppercase unit names
-        assert "MILLIMETER" in schema_str
-        assert "DEGREE" in schema_str
+        # Check that enum values use QUDT unit codes
+        assert "MILLIM" in schema_str
+        assert "DEG" in schema_str
         assert "PERCENT" in schema_str
 
         # Check that unit arguments are added to fields with proper defaults
-        assert "unit: LengthUnitEnum = MILLIMETER" in schema_str
-        assert "unit: AngleUnitEnum = DEGREE" in schema_str
-        assert "unit: RelationUnitEnum = PERCENT" in schema_str
+        assert "unit: LengthUnit = MILLIM" in schema_str
+        assert "unit: AngleUnit = DEG" in schema_str
+        assert "unit: DimensionlessRatioUnit = PERCENT" in schema_str
 
     def test_vspec_comment_directives(self):
         """Test that @vspec comment directives are generated correctly."""
@@ -771,7 +771,7 @@ class TestS2DMExporter:
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
         # Fields are still annotated with element + fqn
-        assert "speed(unit: RelationUnitEnum = PERCENT): Float" in schema_str
+        assert "speed(unit: DimensionlessRatioUnit = PERCENT): Float" in schema_str
         assert '@vspec(element: SENSOR, fqn: "Vehicle.Speed"' in schema_str
         assert '@vspec(element: SENSOR, fqn: "Vehicle.Temperature"' in schema_str
         assert "model: String" in schema_str

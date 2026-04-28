@@ -63,6 +63,7 @@ _, CUSTOM_DIRECTIVES = load_predefined_schema_elements(Path(__file__).parent / "
 VSpecDirective = CUSTOM_DIRECTIVES["vspec"]
 RangeDirective = CUSTOM_DIRECTIVES["range"]
 InstanceTagDirective = CUSTOM_DIRECTIVES["instanceTag"]
+ReferenceDirective = CUSTOM_DIRECTIVES["reference"]
 
 
 class S2DMExporterException(Exception):

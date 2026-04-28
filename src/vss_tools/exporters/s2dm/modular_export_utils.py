@@ -57,7 +57,7 @@ def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str
                 domain_files[file_name] = [type_name]
         elif is_enum_type(graphql_type):
             # Group enums by category
-            if "UnitEnum" in type_name:
+            if type_name.endswith("Unit") and "_" not in type_name:
                 # Unit enums go to other/units.graphql
                 enum_file = "other/units.graphql"
                 if enum_file not in domain_files:
@@ -170,7 +170,7 @@ def analyze_schema_for_nested_domains(schema: GraphQLSchema) -> dict[str, list[s
                 type_groups[domain_path].append(type_name)
         elif is_enum_type(graphql_type):
             # Group enums by category
-            if "UnitEnum" in type_name:
+            if type_name.endswith("Unit") and "_" not in type_name:
                 # Unit enums go to other/units.graphql
                 enum_file = "other/units.graphql"
                 if enum_file not in type_groups:

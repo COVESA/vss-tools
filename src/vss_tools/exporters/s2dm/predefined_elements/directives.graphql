@@ -32,3 +32,6 @@ enum VspecElement {
 directive @range(min: Float, max: Float) on FIELD_DEFINITION
 
 directive @instanceTag on OBJECT
+
+"""Reference directive for linking to an external ontology resource (e.g. a QUDT unit URI)."""
+directive @reference(uri: String) on ENUM_VALUE
