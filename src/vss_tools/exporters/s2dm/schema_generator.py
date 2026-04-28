@@ -49,6 +49,7 @@ from .type_builders import (
 VSpecDirective = CUSTOM_DIRECTIVES["vspec"]
 RangeDirective = CUSTOM_DIRECTIVES["range"]
 InstanceTagDirective = CUSTOM_DIRECTIVES["instanceTag"]
+ReferenceDirective = CUSTOM_DIRECTIVES["reference"]
 
 # Initialize directive processor
 directive_processor = GraphQLDirectiveProcessor()
@@ -182,7 +183,7 @@ def generate_s2dm_schema(
         schema = GraphQLSchema(
             query=query,
             types=get_vss_scalar_types() + list(types_registry.values()) + list(unit_enums.values()),
-            directives=[VSpecDirective, RangeDirective, InstanceTagDirective],
+            directives=[VSpecDirective, RangeDirective, InstanceTagDirective, ReferenceDirective],
         )
 
         return schema, unit_metadata, allowed_metadata, vspec_comments

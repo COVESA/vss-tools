@@ -39,11 +39,11 @@ type Vehicle_Cabin_Seat {
     instanceTag: Vehicle_Cabin_Seat_InstanceTag
 
     """Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating."""
-    heatingCooling(unit: RelationUnitEnum = PERCENT): Int8
+    heatingCooling(unit: DimensionlessRatioUnit = PERCENT): Int8
         @range(min: -100, max: 100)
 
     """Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported."""
-    height(unit: LengthUnitEnum = MILLIMETER): UInt16
+    height(unit: LengthUnit = MILLIM): UInt16
 
     """Seat backward switch engaged."""
     isBackwardSwitchEngaged: Boolean
@@ -92,22 +92,22 @@ type Vehicle_Cabin_Seat {
         @vspec(comment: "Affects the property (SingleSeat.Heating).")
 
     """Seat massage level. 0 = off. 100 = max massage."""
-    massage(unit: RelationUnitEnum = PERCENT): UInt8
+    massage(unit: DimensionlessRatioUnit = PERCENT): UInt8
         @deprecated(reason: "v5.0 - refactored to Seat.MassageLevel")
         @range(max: 100)
 
     """Seat massage level. 0 = off. 100 = max massage."""
-    massageLevel(unit: RelationUnitEnum = PERCENT): UInt8
+    massageLevel(unit: DimensionlessRatioUnit = PERCENT): UInt8
         @range(max: 100)
 
     """Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported."""
-    position(unit: LengthUnitEnum = MILLIMETER): UInt16
+    position(unit: LengthUnit = MILLIM): UInt16
 
     """Seat belt position on vehicle z-axis. Position is relative within available movable range of the seat belt. 0 = Lowermost position supported."""
-    seatBeltHeight(unit: LengthUnitEnum = MILLIMETER): UInt16
+    seatBeltHeight(unit: LengthUnit = MILLIM): UInt16
 
     """Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward."""
-    tilt(unit: AngleUnitEnum = DEGREE): Float
+    tilt(unit: AngleUnit = DEG): Float
         @vspec(comment: "In VSS it is assumed that tilting a seat affects both seating (seat bottom) and backrest, i.e. the angle between seating and backrest will not be affected when changing Tilt.")
     airbag: Vehicle_Cabin_Seat_Airbag
     backrest: Vehicle_Cabin_Seat_Backrest
@@ -171,29 +171,29 @@ type Vehicle_Cabin_Seat_Backrest {
     @vspec(comment: "Affects the property (SingleSeat.Backrest.Recline).")
 
   """Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported."""
-  lumbarHeight(unit: LengthUnitEnum = MILLIMETER): UInt8
+  lumbarHeight(unit: LengthUnit = MILLIM): UInt8
 
   """Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position."""
-  lumbarSupport(unit: RelationUnitEnum = PERCENT): Float
+  lumbarSupport(unit: DimensionlessRatioUnit = PERCENT): Float
     @range(max: 100)
 
   """Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees for backward recline."""
-  recline(unit: AngleUnitEnum = DEGREE): Float
+  recline(unit: AngleUnit = DEG): Float
     @vspec(comment: "Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.")
 
   """Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support."""
-  sideBolsterSupport(unit: RelationUnitEnum = PERCENT): Float
+  sideBolsterSupport(unit: DimensionlessRatioUnit = PERCENT): Float
     @range(max: 100)
 }
 
 """Headrest settings."""
 type Vehicle_Cabin_Seat_Headrest {
     """Headrest angle, relative to backrest."""
-    angle(unit: AngleUnitEnum = DEGREE): Float
+    angle(unit: AngleUnit = DEG): Float
         @vspec(comment: "Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.")
 
     """Position of headrest relative to movable range."""
-    height(unit: LengthUnitEnum = MILLIMETER): UInt8
+    height(unit: LengthUnit = MILLIM): UInt8
         @vspec(comment: "Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.")
 
     """Head rest backward switch engaged."""
@@ -223,7 +223,7 @@ type Vehicle_Cabin_Seat_Seating @vspec(comment: "Describes signals related to th
     isForwardSwitchEngaged: Boolean
 
     """Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating)."""
-    length(unit: LengthUnitEnum = MILLIMETER): UInt16
+    length(unit: LengthUnit = MILLIM): UInt16
 }
 
 """Attributes that identify a vehicle."""
@@ -238,17 +238,23 @@ enum Vehicle_Cabin_DriverPosition_Enum {
   RIGHT
 }
 
-"""Set of units for the quantity kind "angle". NOTE: Taken from VSS specification."""
-enum AngleUnitEnum @vspec(quantityKindKey: "angle") {
-  DEGREE @vspec(unitKey: "degrees", unitName: "degree")
+"""
+Units for "Angle"
+"""
+enum AngleUnit @vspec(element: QUANTITY_KIND, originalName: "angle") {
+  DEG @vspec(element: UNIT, originalName: "degrees") @reference(uri: "http://qudt.org/vocab/unit/Degree")
 }
 
-"""Set of units for the quantity kind "length". NOTE: Taken from VSS specification."""
-enum LengthUnitEnum @vspec(quantityKindKey: "length") {
-  MILLIMETER @vspec(unitKey: "mm", unitName: "millimeter")
+"""
+Units for "Length"
+"""
+enum LengthUnit @vspec(element: QUANTITY_KIND, originalName: "length") {
+  MILLIM @vspec(element: UNIT, originalName: "mm") @reference(uri: "http://qudt.org/vocab/unit/MilliM")
 }
 
-"""Set of units for the quantity kind "relation". NOTE: Taken from VSS specification."""
-enum RelationUnitEnum @vspec(quantityKindKey: "relation") {
-  PERCENT @vspec(unitKey: "percent", unitName: "percent")
+"""
+Units for "DimensionlessRatio"
+"""
+enum DimensionlessRatioUnit @vspec(element: QUANTITY_KIND, originalName: "relation") {
+  PERCENT @vspec(element: UNIT, originalName: "percent") @reference(uri: "http://qudt.org/vocab/unit/PERCENT")
 }
