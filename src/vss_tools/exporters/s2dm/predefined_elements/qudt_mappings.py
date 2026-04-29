@@ -1,3 +1,10 @@
+# NOTE: This mapping approach could be replaced/simplified if the VSPEC units file would already contain the QUDT info.
+# For example,
+#   mm:
+#       ...
+#       qudt-unit: http://qudt.org/vocab/unit/MilliM
+#       qudt-quantity-kind: https://qudt.org/vocab/quantitykind/Length
+
 # vspec unit key → QUDT QuantityKind and unit
 QUDT_MAPPING: dict[str, dict[str, str]] = {
     # length
@@ -159,6 +166,11 @@ QUDT_MAPPING: dict[str, dict[str, str]] = {
     },
     # resistance
     "Ohm": {"qudt_uri": "http://qudt.org/vocab/unit/OHM", "qudt_quantity_kind": "Resistance", "qudt_unit": "OHM"},
+    "mOhm": {
+        "qudt_uri": "http://qudt.org/vocab/unit/MilliOHM",
+        "qudt_quantity_kind": "Resistance",
+        "qudt_unit": "MILLIOHM",
+    },
     # iluminance
     "lx": {
         "qudt_uri": "http://qudt.org/vocab/unit/LUX",
@@ -173,7 +185,7 @@ QUDT_MAPPING: dict[str, dict[str, str]] = {
     "unix-time": {"qudt_quantity_kind": "DateTime", "qudt_unit": "UNIX_TIME"},  # Custom (not present in QUDT)
     "iso8601": {"qudt_quantity_kind": "DateTime", "qudt_unit": "ISO8601"},  # Custom (not present in QUDT)
     # energy-consumption-per-distance
-    "kWh/km": {
+    "kWh/100km": {
         "qudt_quantity_kind": "EnergyPerDistance",
         "qudt_unit": "KILOW_HR_PER_100KILOM",
     },  # Custom (not present in QUDT)
@@ -202,4 +214,12 @@ QUDT_MAPPING: dict[str, dict[str, str]] = {
     },  # Custom (not present in QUDT)
     "mpg": {"qudt_quantity_kind": "DistancePerVolume", "qudt_unit": "MILE_PER_GAL"},  # Custom (not present in QUDT)
     "km/l": {"qudt_quantity_kind": "DistancePerVolume", "qudt_unit": "KILOM_PER_L"},  # Custom (not present in QUDT)
+    "g/Ah": {"qudt_quantity_kind": "MassPerElectricCharge", "qudt_unit": "GM_PER_A_HR"},  # Custom (not present in QUDT)
+}
+
+# Deprecated VSS unit key → canonical key in QUDT_MAPPING.
+# Used to support models that have not yet migrated to the new unit name.
+QUDT_ALIASES: dict[str, str] = {
+    "days": "day",  # renamed in VSS 5.x
+    "celsius": "Celsius",  # renamed in VSS 5.x
 }

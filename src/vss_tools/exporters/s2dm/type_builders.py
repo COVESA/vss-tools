@@ -44,7 +44,7 @@ from .constants import S2DM_CONVERSIONS, VSS_LEAF_TYPES
 from .graphql_scalars import VSS_DATATYPE_MAP
 from .graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from .metadata_tracker import build_field_path
-from .predefined_elements.qudt_mappings import QUDT_MAPPING
+from .predefined_elements.qudt_mappings import QUDT_ALIASES, QUDT_MAPPING
 
 # Initialize inflect engine for pluralization (singleton)
 _inflect_engine = inflect.engine()
@@ -131,8 +131,14 @@ def _get_quantity_units() -> dict[str, dict]:
         if not qudt_quantity_kind or not qudt_unit:
             continue
 
-        # Cross-reference VSS dynamic_units for the VSS quantity key
+        # Cross-reference VSS dynamic_units for the VSS quantity key.
+        # If the canonical key is not found, check whether any alias points to it
+        # (supports models whose units.yaml still uses a deprecated unit name).
         vss_unit_data = dynamic_units.get(vss_key)
+        if vss_unit_data is None:
+            alias_key = next((a for a, canonical in QUDT_ALIASES.items() if canonical == vss_key), None)
+            if alias_key is not None:
+                vss_unit_data = dynamic_units.get(alias_key)
         if vss_unit_data is None:
             log.debug(f"QUDT unit '{vss_key}' not found in loaded dynamic_units; skipping.")
             continue
@@ -629,6 +635,7 @@ def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) 
     if not unit:
         return {}
 
+    unit = QUDT_ALIASES.get(unit, unit)
     qudt_info = QUDT_MAPPING.get(unit)
     if qudt_info is None:
         log.warning(f"Unit '{unit}' has no QUDT mapping; unit argument will not be generated.")
