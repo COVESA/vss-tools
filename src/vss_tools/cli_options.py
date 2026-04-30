@@ -76,7 +76,13 @@ aborts_opt = option(
     "--aborts",
     "-a",
     multiple=True,
-    type=click.Choice([StrictOption.NAME_STYLE.value, StrictOption.UNKNOWN_ATTRIBUTE.value]),
+    type=click.Choice(
+        [
+            StrictOption.NAME_STYLE.value,
+            StrictOption.UNKNOWN_ATTRIBUTE.value,
+            StrictOption.DEFAULT_MATCHES_FIRST_ALLOWED.value,
+        ]
+    ),
     help="Abort on selected option. The '--strict' option enables all of them.",
     show_choices=True,
 )
