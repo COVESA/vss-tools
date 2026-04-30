@@ -1,0 +1,20 @@
+A:
+  type: branch
+  description: Test branch for enum allowed values
+
+A.Source:
+  datatype: string
+  type: actuator
+  allowed: ['UNKNOWN', 'AM', 'FM', 'BLUETOOTH']
+  description: Media source with allowed values
+
+A.Surface:
+  datatype: string[]
+  type: sensor
+  allowed: ['DRY', 'WET', 'SNOW', 'ICE']
+  description: Road surface condition list (array with allowed values)
+
+A.Speed:
+  datatype: float
+  type: sensor
+  description: Speed without allowed values — must remain float
