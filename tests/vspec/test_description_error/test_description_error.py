@@ -40,5 +40,8 @@ def test_description_error(vspec_file: str, type_file: str, type_out_file: str, 
     assert process.returncode != 0
     log_content = log.read_text()
     print(log_content)
-    assert "'type': 'assertion_error'" in log_content
+    # Validator now raises ValueError (was assert) — pydantic tags this as
+    # 'value_error' in its error report. See PR #516 for the assert -> raise
+    # ValueError refactor.
+    assert "'type': 'value_error'" in log_content
     assert "1 model error(s):" in log_content
