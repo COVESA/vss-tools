@@ -31,6 +31,12 @@ from vss_tools.model import VSSDataDatatype
         ({"datatype": "uint8", "max": 100, "default": 90}, True),
         ({"datatype": "uint8", "min": 10, "default": 5}, False),
         ({"datatype": "uint8", "min": 10, "default": 10}, True),
+        # Regression: `default=0` (a falsy but valid numeric default) used to
+        # bypass min/max validation entirely because `check_default_min_max`
+        # tested `if not self.default:` instead of `if self.default is None:`.
+        ({"datatype": "uint8", "min": 1, "default": 0}, False),
+        ({"datatype": "int8", "max": -1, "default": 0}, False),
+        ({"datatype": "uint8", "min": 0, "default": 0}, True),
         ({"datatype": "uint8", "default": 300}, False),
         ({"datatype": "uint8", "default": 200}, True),
         ({"datatype": "boolean", "default": True}, True),

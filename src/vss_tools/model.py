@@ -260,7 +260,12 @@ class VSSDataDatatype(VSSData):
         return self
 
     def check_default_min_max(self) -> Self:
-        if not self.default:
+        # Use an explicit None check rather than a falsy check: `not self.default`
+        # treats default=0 as missing, so a numeric signal with default=0 and
+        # min>0 (or default=0 and max<0) silently passed validation. Same shape
+        # for default=False / default=[] / default="", though those mostly bite
+        # for the numeric case.
+        if self.default is None:
             return self
         values = [self.default]
         if isinstance(self.default, list):
