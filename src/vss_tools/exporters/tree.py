@@ -84,7 +84,7 @@ def cli(
 
     if output:
         log.info(f"Writing tree to: {output.absolute()}")
-        with open(output, "w") as f:
+        with open(output, "w", encoding="utf-8") as f:
             f.write(rendered_tree)
     else:
         log.info(rendered_tree)

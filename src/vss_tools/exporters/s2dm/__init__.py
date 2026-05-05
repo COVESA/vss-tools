@@ -125,7 +125,7 @@ def cli(
             full_schema_str = print_schema_with_vspec_directives(
                 schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
             )
-            with open(graphql_file, "w") as outfile:
+            with open(graphql_file, "w", encoding="utf-8") as outfile:
                 outfile.write(full_schema_str)
 
             log.info(f"GraphQL schema written to {graphql_file}")

@@ -41,7 +41,7 @@ mapped = {
 
 
 def init_package_file(path: Path, package_name: str):
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         log.info(f"Initializing {path}, package {package_name}")
         f.write('syntax = "proto3";\n\n')
         f.write(f"package {package_name};\n\n")
@@ -298,6 +298,6 @@ def cli(
             log.warning(f"No output directory given. Writing to: {types_out_dir.absolute()}")
         traverse_data_type_tree(datatype_tree, static_uid, add_optional, include_comments, types_out_dir)
 
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         log.info(f"Writing to: {output}")
         traverse_signal_tree(tree, f, static_uid, add_optional, include_comments)

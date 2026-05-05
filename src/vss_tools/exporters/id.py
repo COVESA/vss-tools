@@ -213,5 +213,5 @@ def cli(
         vss2id_val.validate_static_uids(signals_yaml_dict, validation_tree, strict)
 
     if not validate_only:
-        with open(output, "w") as f:
+        with open(output, "w", encoding="utf-8") as f:
             yaml.dump(signals_yaml_dict, f)

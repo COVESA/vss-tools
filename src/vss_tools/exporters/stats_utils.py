@@ -128,6 +128,6 @@ def process_radial_stats(signals_data: dict[str, Any], output: Path) -> None:
         "children": children,
     }
 
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         json.dump(radial_tree_data, f, indent=2)
     log.info(f"Radial tree stats JSON saved: {output}")

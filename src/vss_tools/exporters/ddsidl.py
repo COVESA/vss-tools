@@ -428,10 +428,10 @@ def cli(
 
     if datatype_tree is not None:
         exporter = StructExporter()
-        with open(output, "w") as idl_out:
+        with open(output, "w", encoding="utf-8") as idl_out:
             idl_out.write(exporter.export(datatype_tree))
 
-    with open(output, "a" if datatype_tree is not None else "w") as idl_out:
+    with open(output, "a" if datatype_tree is not None else "w", encoding="utf-8") as idl_out:
         export_idl(
             idl_out,
             tree,
