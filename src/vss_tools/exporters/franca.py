@@ -123,7 +123,7 @@ def cli(
         overlays=overlays,
         strict_exceptions_file=strict_exceptions,
     )
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         print_franca_header(f, franca_vss_version)
         print_franca_content(f, tree)
         f.write("\n]")

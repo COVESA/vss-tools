@@ -109,7 +109,7 @@ def generate_vspec_reference(
                         except FileNotFoundError:
                             raise S2DMExporterException(f"Units file not found: {f}") from None
 
-                    with open(units_output, "w") as outf:
+                    with open(units_output, "w", encoding="utf-8") as outf:
                         yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
 
                 log.info(f"  - Units file: {units_output.name}")
@@ -143,7 +143,7 @@ def generate_vspec_reference(
                         except FileNotFoundError:
                             raise S2DMExporterException(f"Quantities file not found: {f}") from None
 
-                    with open(quantities_output, "w") as outf:
+                    with open(quantities_output, "w", encoding="utf-8") as outf:
                         yaml.dump(merged, outf, default_flow_style=False, sort_keys=True)
 
                 log.info(f"  - Quantities file: {quantities_output.name}")
@@ -224,7 +224,7 @@ It could serve as a supporting reference for traceability or debugging.
         readme_path = reference_dir / "README.md"
 
         try:
-            with open(readme_path, "w") as f:
+            with open(readme_path, "w", encoding="utf-8") as f:
                 f.write(readme_content)
             log.info(f"  - README: {readme_path.name}")
         except (PermissionError, OSError) as e:

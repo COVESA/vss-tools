@@ -327,7 +327,7 @@ def cli(
             else:
                 rounds += 1
 
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         f.write(f"package {package}\n\n")
         for struct in structs.values():
             f.write(str(struct))
