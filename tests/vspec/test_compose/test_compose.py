@@ -55,7 +55,7 @@ def test_compose_no_types(tmp_path):
 
 
 def test_compose_round_trip(tmp_path):
-    """Compose output can be fed back into vspec export yaml without errors."""
+    """Compose output is fully self-contained: re-parseable using only snapshot files."""
     out, result = _compose(tmp_path, HERE / "test.vspec", HERE / "types.vspec")
     assert result.returncode == 0, result.stderr
 
@@ -66,9 +66,9 @@ def test_compose_round_trip(tmp_path):
             "export",
             "yaml",
             "-u",
-            str(TEST_UNITS),
+            str(out / "units_snapshot.yaml"),
             "-q",
-            str(TEST_QUANT),
+            str(out / "quantities_snapshot.yaml"),
             "-s",
             str(out / "model_snapshot.vspec"),
             "--types",

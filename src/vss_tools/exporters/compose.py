@@ -20,11 +20,13 @@
 from pathlib import Path
 
 import rich_click as click
+import yaml
 
 import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.exporters.yaml import export_yaml
 from vss_tools.main import get_trees
+from vss_tools.units_quantities import load_quantities, load_units
 
 # Fields to drop during compose serialization.
 # Keeps instantiate/aggregate/arraysize (unlike the normal export) so the
@@ -33,6 +35,17 @@ SNAPSHOT_EXCLUDE_FIELDS = ["delete", "fqn", "is_instance"]
 
 MODEL_SNAPSHOT_FILENAME = "model_snapshot.vspec"
 STRUCTS_SNAPSHOT_FILENAME = "structs_snapshot.vspec"
+UNITS_SNAPSHOT_FILENAME = "units_snapshot.yaml"
+QUANTITIES_SNAPSHOT_FILENAME = "quantities_snapshot.yaml"
+
+
+def _resolve_paths(files: tuple[Path, ...], default: Path) -> list[Path]:
+    """Return resolved file list, falling back to default if present and none given."""
+    if files:
+        return list(files)
+    if default.exists():
+        return [default]
+    return []
 
 
 @click.command()
@@ -120,3 +133,31 @@ def cli(
             log.info(f"Overwriting existing file: {structs_out}")
         export_yaml(structs_out, structs_data)
         log.info(f"Struct types written to {structs_out}")
+
+    # --- units snapshot ---
+    resolved_units = _resolve_paths(units, vspec.parent / "units.yaml")
+    if resolved_units:
+        # dynamic_units contains both key (e.g. "km") and unit-string (e.g. "kilometer")
+        # aliases pointing to the same object. Keep only canonical key entries.
+        unit_data = load_units(resolved_units)
+        units_snapshot = {
+            k: v.model_dump(by_alias=True, exclude_none=True, exclude={"key"}) for k, v in unit_data.items()
+        }
+        units_out = output_dir / UNITS_SNAPSHOT_FILENAME
+        if units_out.exists():
+            log.info(f"Overwriting existing file: {units_out}")
+        with open(units_out, "w", encoding="utf-8") as f:
+            yaml.dump(units_snapshot, f, default_flow_style=False, sort_keys=True, allow_unicode=True)
+        log.info(f"Units written to {units_out}")
+
+    # --- quantities snapshot ---
+    resolved_quantities = _resolve_paths(quantities, vspec.parent / "quantities.yaml")
+    if resolved_quantities:
+        quantity_data = load_quantities(resolved_quantities)
+        quantities_snapshot = {k: v.model_dump(exclude_none=True) for k, v in quantity_data.items()}
+        quantities_out = output_dir / QUANTITIES_SNAPSHOT_FILENAME
+        if quantities_out.exists():
+            log.info(f"Overwriting existing file: {quantities_out}")
+        with open(quantities_out, "w", encoding="utf-8") as f:
+            yaml.dump(quantities_snapshot, f, default_flow_style=False, sort_keys=True, allow_unicode=True)
+        log.info(f"Quantities written to {quantities_out}")
