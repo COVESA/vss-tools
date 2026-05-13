@@ -89,6 +89,7 @@ class VSSRaw(BaseModel):
         with_extra_attributes: bool = True,
         exclude_fields: list[str] = EXPORT_EXCLUDE_ATTRIBUTES,
         extended_attributes: tuple[str, ...] = (),
+        exclude_defaults: bool = False,
     ) -> dict[str, Any]:
         excludes = exclude_fields.copy()
         if not with_extra_attributes:
@@ -96,7 +97,13 @@ class VSSRaw(BaseModel):
                 if extra_attribute not in extended_attributes:
                     excludes.append(extra_attribute)
         data = {}
-        for k, v in self.model_dump(mode="json", exclude_none=False, exclude=set(excludes)).items():
+        dump = self.model_dump(
+            mode="json",
+            exclude_none=False,
+            exclude=set(excludes),
+            exclude_defaults=exclude_defaults,
+        )
+        for k, v in dump.items():
             if k not in extended_attributes:
                 if v == []:
                     continue

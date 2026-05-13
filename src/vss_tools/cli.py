@@ -16,7 +16,14 @@ from vss_tools import log
 from vss_tools.lazy_group import LazyGroup
 
 
-@click.group(context_settings={"auto_envvar_prefix": "vss_tools"}, invoke_without_command=True)
+@click.group(
+    cls=LazyGroup,
+    lazy_subcommands={
+        "compose": "vss_tools.exporters.compose:cli",
+    },
+    context_settings={"auto_envvar_prefix": "vss_tools"},
+    invoke_without_command=True,
+)
 @clo.log_level_opt
 @clo.log_file_opt
 @click.version_option()
