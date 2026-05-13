@@ -17,6 +17,7 @@ from pydantic import ValidationError
 from vss_tools import log
 from vss_tools.datatypes import Datatypes, dynamic_datatypes, dynamic_struct_schemas, is_array
 from vss_tools.model import (
+    EXPORT_EXCLUDE_ATTRIBUTES,
     ModelValidationException,
     VSSData,
     VSSDataBranch,
@@ -351,7 +352,13 @@ class VSSNode(Node):  # type: ignore[misc]
             log.info(f"default != allowed[0] violations (before applying exceptions): {len(violations)}")
         return violations
 
-    def as_flat_dict(self, with_extra_attributes: bool, extended_attributes: tuple[str, ...] = ()) -> dict[str, Any]:
+    def as_flat_dict(
+        self,
+        with_extra_attributes: bool,
+        extended_attributes: tuple[str, ...] = (),
+        exclude_fields: list[str] = EXPORT_EXCLUDE_ATTRIBUTES,
+        exclude_defaults: bool = False,
+    ) -> dict[str, Any]:
         """
         Generates a flat dict and whether to include
         user attributes or not
@@ -360,7 +367,12 @@ class VSSNode(Node):  # type: ignore[misc]
         node: VSSNode
         for node in PreOrderIter(self):
             key = node.get_fqn()
-            data[key] = node.data.as_dict(with_extra_attributes, extended_attributes=extended_attributes)
+            data[key] = node.data.as_dict(
+                with_extra_attributes,
+                exclude_fields=exclude_fields,
+                extended_attributes=extended_attributes,
+                exclude_defaults=exclude_defaults,
+            )
         return data
 
     def get_instance_root(self, depth: int = 0) -> tuple[VSSNode, int]:

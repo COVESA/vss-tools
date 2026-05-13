@@ -1,0 +1,28 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.Door:
+  type: branch
+  instances:
+    - Row[1,2]
+    - ["Left", "Right"]
+  description: Door branch with instances.
+
+A.Door.IsOpen:
+  datatype: boolean
+  type: actuator
+  description: Is the door open?
+
+A.Door.Config:
+  datatype: Types.Point
+  type: sensor
+  instantiate: false
+  description: Door config that should not be instantiated.
+
+A.Codes:
+  datatype: uint8[]
+  type: sensor
+  arraysize: 4
+  description: Error codes.
