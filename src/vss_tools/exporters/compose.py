@@ -18,6 +18,7 @@
 #
 
 from pathlib import Path
+from typing import Any
 
 import rich_click as click
 import yaml
@@ -27,6 +28,7 @@ from vss_tools import log
 from vss_tools.exporters.yaml import export_yaml
 from vss_tools.main import get_trees
 from vss_tools.units_quantities import load_quantities, load_units
+from vss_tools.vspec import load_vspec
 
 # Fields to drop during compose serialization.
 # Keeps instantiate/aggregate/arraysize (unlike the normal export) so the
@@ -37,6 +39,11 @@ MODEL_SNAPSHOT_FILENAME = "model_snapshot.vspec"
 STRUCTS_SNAPSHOT_FILENAME = "structs_snapshot.vspec"
 UNITS_SNAPSHOT_FILENAME = "units_snapshot.yaml"
 QUANTITIES_SNAPSHOT_FILENAME = "quantities_snapshot.yaml"
+
+
+def _filter_raw_node(attrs: dict[str, Any], exclude_fields: list[str]) -> dict[str, Any]:
+    """Strip internal-only fields and empty/null values from a raw authored node dict."""
+    return {k: v for k, v in attrs.items() if k not in exclude_fields and v is not None and v != []}
 
 
 def _resolve_paths(files: tuple[Path, ...], default: Path) -> list[Path]:
@@ -58,7 +65,6 @@ def _resolve_paths(files: tuple[Path, ...], default: Path) -> list[Path]:
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
-@clo.extend_all_attributes_opt
 @clo.strict_exceptions_opt
 @click.option(
     "--output-dir",
@@ -77,16 +83,16 @@ def cli(
     quantities: tuple[Path],
     units: tuple[Path],
     types: tuple[Path],
-    extend_all_attributes: bool,
     strict_exceptions: Path | None,
     output_dir: Path,
 ) -> None:
     """
     Compose a vspec model into a stand-alone, re-parseable folder snapshot.
 
-    Merges all input files and overlays, then writes a flat FQN-keyed YAML
-    snapshot with expansion disabled — so authored fields such as `instances`,
-    `instantiate`, `aggregate`, and `arraysize` are preserved verbatim.
+    Validates the full model (with expansion) then writes a faithful snapshot
+    of the raw authored content — so fields such as `instances`, `instantiate`,
+    `aggregate`, `arraysize`, and any instance-level overrides are preserved
+    exactly as written.
 
     The output folder contains:
       model_snapshot.vspec   — signal tree (always written)
@@ -100,7 +106,8 @@ def cli(
     else:
         output_dir.mkdir(parents=True)
 
-    tree, datatype_tree = get_trees(
+    # Phase 1: validate the full model with expansion — any real error aborts here.
+    get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
         aborts=aborts,
@@ -110,24 +117,26 @@ def cli(
         units=units,
         types=types,
         overlays=overlays,
-        expand=False,
+        expand=True,
+        strict_exceptions_file=strict_exceptions,
     )
 
     log.info(f"Composing vspec model into {output_dir}...")
 
-    tree_data = tree.as_flat_dict(
-        extend_all_attributes, extended_attributes, exclude_fields=SNAPSHOT_EXCLUDE_FIELDS, exclude_defaults=True
-    )
+    # Phase 2: raw serialization — faithfully preserve exactly what was authored,
+    # including instance-level overrides and unexpanded instance branches.
+    include_dirs_list = list(include_dirs)
+    raw_vspec = load_vspec(include_dirs_list, [vspec] + list(overlays))
+    tree_data = {fqn: _filter_raw_node(attrs, SNAPSHOT_EXCLUDE_FIELDS) for fqn, attrs in raw_vspec.data.items()}
     model_out = output_dir / MODEL_SNAPSHOT_FILENAME
     if model_out.exists():
         log.info(f"Overwriting existing file: {model_out}")
     export_yaml(model_out, tree_data)
     log.info(f"Signal tree written to {model_out}")
 
-    if datatype_tree:
-        structs_data = datatype_tree.as_flat_dict(
-            extend_all_attributes, extended_attributes, exclude_fields=SNAPSHOT_EXCLUDE_FIELDS, exclude_defaults=True
-        )
+    if types:
+        raw_types = load_vspec(include_dirs_list, list(types), "Types")
+        structs_data = {fqn: _filter_raw_node(attrs, SNAPSHOT_EXCLUDE_FIELDS) for fqn, attrs in raw_types.data.items()}
         structs_out = output_dir / STRUCTS_SNAPSHOT_FILENAME
         if structs_out.exists():
             log.info(f"Overwriting existing file: {structs_out}")
