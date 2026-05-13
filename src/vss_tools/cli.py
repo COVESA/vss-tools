@@ -20,6 +20,7 @@ from vss_tools.lazy_group import LazyGroup
     cls=LazyGroup,
     lazy_subcommands={
         "compose": "vss_tools.exporters.compose:cli",
+        "diff": "vss_tools.diff_cmd:cli",
     },
     context_settings={"auto_envvar_prefix": "vss_tools"},
     invoke_without_command=True,

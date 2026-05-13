@@ -1,0 +1,25 @@
+# Previous snapshot: model_snapshot.vspec
+# Branch A.Door with signals; will be renamed to A.Portal in current snapshot.
+A:
+  description: Root branch.
+  type: branch
+
+A.Door:
+  description: Door branch.
+  type: branch
+
+A.Door.IsOpen:
+  datatype: boolean
+  description: Is the door open?
+  type: actuator
+
+A.Door.LockState:
+  datatype: string
+  description: Lock state of the door.
+  type: sensor
+
+A.Speed:
+  datatype: float
+  description: Vehicle speed.
+  type: sensor
+  unit: km/h
