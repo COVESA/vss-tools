@@ -1,0 +1,31 @@
+# Current snapshot: model_snapshot.vspec
+# A.Door renamed to A.Portal (fka: A.Door)
+# A.Portal.IsOpen cascaded rename (datatype changed too)
+# A.Portal.LockState removed
+# A.Humidity added
+# A.Speed unit changed
+A:
+  description: Root branch.
+  type: branch
+
+A.Humidity:
+  datatype: float
+  description: Relative humidity.
+  type: sensor
+  unit: percent
+
+A.Portal:
+  description: Door branch.
+  fka: A.Door
+  type: branch
+
+A.Portal.IsOpen:
+  datatype: string
+  description: Is the door open?
+  type: actuator
+
+A.Speed:
+  datatype: float
+  description: Vehicle speed.
+  type: sensor
+  unit: m/s

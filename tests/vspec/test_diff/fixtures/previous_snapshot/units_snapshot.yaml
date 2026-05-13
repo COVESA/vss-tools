@@ -1,0 +1,14 @@
+# Units snapshot — previous
+km/h:
+  allowed-datatypes:
+  - float
+  definition: Kilometres per hour
+  quantity: speed
+  unit: km/h
+
+m/s:
+  allowed-datatypes:
+  - float
+  definition: Metres per second
+  quantity: speed
+  unit: m/s
