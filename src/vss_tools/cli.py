@@ -19,7 +19,7 @@ from vss_tools.lazy_group import LazyGroup
 @click.group(
     cls=LazyGroup,
     lazy_subcommands={
-        "compose": "vss_tools.exporters.compose:cli",
+        "compose": "vss_tools.compose:cli",
         "diff": "vss_tools.diff_cmd:cli",
     },
     context_settings={"auto_envvar_prefix": "vss_tools"},

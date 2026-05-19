@@ -26,7 +26,7 @@ from typing import Any
 
 import yaml
 
-from vss_tools.exporters.compose import (
+from vss_tools.compose import (
     MODEL_SNAPSHOT_FILENAME,
     QUANTITIES_SNAPSHOT_FILENAME,
     STRUCTS_SNAPSHOT_FILENAME,
