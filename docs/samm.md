@@ -204,12 +204,12 @@ Also, please keep in mind that since the CLI tool also provides functionality to
 
 ### Running this exporter in DEBUG or other mode
 
-As per available functionality, provided by the [vspec](vspec.md), the DEFAULT mode of execution of this and other exporters is INFO.
+As per available functionality, provided by the [vspec](export.md), the DEFAULT mode of execution of this and other exporters is INFO.
 
 Other possible modes are: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL".
 
-In order to switch these when calling this exporter you can use the option: [--log-level](vspec.md#--log-level).
-Also there is an option to redirect the console output i.e. logged information to a text file. To do so, you can use the [--log-file](vspec.md#--log-file) option.
+In order to switch these when calling this exporter you can use the option: [--log-level](export.md#--log-level).
+Also there is an option to redirect the console output i.e. logged information to a text file. To do so, you can use the [--log-file](export.md#--log-file) option.
 
 A complete example, where you can call this exporter in DEBUG mode and store the logged information into a simple text file would be:
 
