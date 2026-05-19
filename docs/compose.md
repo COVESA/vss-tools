@@ -20,8 +20,11 @@ The output folder contains up to four files:
 |---|---|---|
 | `model_snapshot.vspec` | The full model tree | Yes |
 | `structs_snapshot.vspec` | Custom struct type definitions | Only when `--types` is given |
-| `units_snapshot.yaml` | Resolved units | Only when units are provided |
-| `quantities_snapshot.yaml` | Resolved quantities | Only when quantities are provided |
+| `units_snapshot.yaml` | Resolved units | When `-u` is given or `units.yaml` exists next to the vspec |
+| `quantities_snapshot.yaml` | Resolved quantities | When `-q` is given or `quantities.yaml` exists next to the vspec |
+
+> Note: `vss-tools` automatically looks for `units.yaml` and `quantities.yaml` next to the vspec file when no `-u`/`-q` flags are given. If neither explicit paths nor default files can be found, the corresponding snapshot files are simply not written.
+
 
 ## How it works
 
