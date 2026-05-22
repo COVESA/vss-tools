@@ -1,0 +1,12 @@
+km:
+  definition: Length measured in kilometers
+  unit: kilometer
+  quantity: length
+  allowed-datatypes: ['numeric']
+  url: https://ucum.org/ucum#km
+celsius:
+  definition: Temperature measured in degree celsius
+  unit: degree celsius
+  quantity: temperature
+  allowed-datatypes: ['numeric']
+  url: https://ucum.org/ucum#Cel

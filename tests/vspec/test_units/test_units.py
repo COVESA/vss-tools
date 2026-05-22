@@ -231,3 +231,14 @@ def test_quantity_err_no_def(tmp_path):
         "'volume' is 'None'",
         ["quantities_no_def.yaml"],
     )
+
+
+def test_unit_url_field_accepted(tmp_path):
+    """Units with an optional 'url' field load and validate without error."""
+    spec = HERE / "signals_with_url_units.vspec"
+    units = HERE / "units_with_url.yaml"
+    quantities = HERE / ".." / "test_quantities.yaml"
+    out = tmp_path / "out.json"
+    cmd = f"vspec export json --pretty --vspec {spec} -u {units} -q {quantities} --output {out}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode == 0, process.stderr

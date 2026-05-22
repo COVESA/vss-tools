@@ -1,0 +1,15 @@
+A:
+  type: branch
+  description: Branch A.
+
+A.Temperature:
+  datatype: float
+  type: sensor
+  unit: celsius
+  description: Temperature in Celsius.
+
+A.Distance:
+  datatype: float
+  type: sensor
+  unit: km
+  description: Distance in kilometers.
