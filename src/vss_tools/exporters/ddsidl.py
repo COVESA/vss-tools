@@ -147,13 +147,6 @@ idl_keywords = [
 
 def getAllowedName(name):
     lower = name.lower()
-    # `keyword.iskeyword(name.lower)` (without call parens) passed a
-    # bound-method object to iskeyword instead of the lowered string,
-    # so iskeyword always returned False. VSS signals named with Python
-    # keywords that are NOT also C/IDL keywords (e.g. 'class', 'def',
-    # 'import', 'lambda') were therefore emitted unprefixed and produced
-    # syntactically invalid IDL. Compute lower once and pass it
-    # explicitly to iskeyword.
     if lower in c_keywords or lower in idl_keywords or keyword.iskeyword(lower):
         return "_" + name
     else:
