@@ -19,10 +19,7 @@ def test_cpp_header(tmp_path: Path):
     spec = HERE / "test.vspec"
     output = tmp_path / "out.hpp"
     log = tmp_path / "log.txt"
-    cmd = (
-        f"vspec --log-file {log} export cpp-header"
-        f" -s {spec} -u {TEST_UNITS} -q {TEST_QUANT} -o {output}"
-    )
+    cmd = f"vspec --log-file {log} export cpp-header -s {spec} -u {TEST_UNITS} -q {TEST_QUANT} -o {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode == 0, process.stderr
     assert filecmp.cmp(output, HERE / "expected.hpp")
