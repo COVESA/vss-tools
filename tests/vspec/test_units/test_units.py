@@ -121,6 +121,15 @@ def test_multiple_unit_files(tmp_path):
     )
 
 
+def test_unit_key_case_insensitive(tmp_path):
+    run_unit(
+        tmp_path,
+        "signals_mixed_case_units.vspec",
+        ["units_all.yaml"],
+        "expected_special.json",
+    )
+
+
 # Special units not defined
 
 

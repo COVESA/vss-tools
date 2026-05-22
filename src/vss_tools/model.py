@@ -420,6 +420,9 @@ class VSSDataDatatype(VSSData):
     def check_valid_unit(cls, v: str | None) -> str | None:
         if v is None:
             return v
+        v_lower = v.lower()
+        if v_lower in dynamic_units:
+            return v_lower
         if v not in dynamic_units:
             raise ValueError(f"'{v}' is not a valid unit")
         return v

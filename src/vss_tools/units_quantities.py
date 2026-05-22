@@ -33,6 +33,7 @@ def load_units_or_quantities(
             continue
         log.info(f"Loaded '{class_type.__name__}', file={file.absolute()}, elements={len(content)}")
         for k, v in content.items():
+            k = k.lower()
             if v is None:
                 raise MalformedDictException(f"'{class_type.__name__}', '{k}' is 'None'")
             overwrite = False
