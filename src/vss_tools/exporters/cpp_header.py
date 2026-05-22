@@ -147,7 +147,7 @@ def generate(root: VSSNode, namespace: str, include_branches: bool) -> str:
             out.append(line)
         out.append("")
 
-    out.append(f"constexpr VssSignal kSignals[] = {{")
+    out.append("constexpr VssSignal kSignals[] = {")
     for ident in signal_idents:
         out.append(f"    {ident},")
     out.append("};")
