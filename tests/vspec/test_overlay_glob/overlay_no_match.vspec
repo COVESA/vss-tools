@@ -1,0 +1,2 @@
+"A.*.DoesNotExist":
+  comment: This glob should match nothing and produce a warning.
