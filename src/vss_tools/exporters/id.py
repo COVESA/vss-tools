@@ -177,7 +177,7 @@ def cli(
     """
     Export as IDs.
     """
-    tree, _ = get_trees(
+    tree, datatype_tree = get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
         aborts=aborts,
@@ -195,6 +195,8 @@ def cli(
     id_counter: int = 0
     signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
     id_counter, _ = export_node(signals_yaml_dict, tree, id_counter, case_sensitive)
+    if datatype_tree:
+        id_counter, _ = export_node(signals_yaml_dict, datatype_tree, id_counter, case_sensitive)
 
     if validate_static_uid:
         log.info(f"Now validating nodes, static UIDs, types, units and description with file '{validate_static_uid}'")
