@@ -75,7 +75,8 @@ def print_franca_content(file: TextIOWrapper, root: VSSNode) -> None:
                 output += f",\n\tmax: {max}"
             allowed = getattr(data, "allowed", None)
             if allowed:
-                output += f",\n\tallowed: {allowed}"
+                formatted = ", ".join(f'"{v}"' if isinstance(v, str) else str(v) for v in allowed)
+                output += f",\n\tallowed: [{formatted}]"
             output += "\n}"
     file.write(output)
 
