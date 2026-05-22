@@ -1,0 +1,6 @@
+A.SignalA:
+  datatype: int8
+  type: sensor
+  unit: celsius
+  description: Modifying a signal known to exist in the base spec.
+  overlay: edit
