@@ -49,6 +49,7 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         "yaml": "vss_tools.exporters.yaml:cli",
         "tree": "vss_tools.exporters.tree:cli",
         "samm": "vss_tools.exporters.samm:cli",
+        "cpp-header": "vss_tools.exporters.cpp_header:cli",
         "go": "vss_tools.exporters.go:cli",
         "ros2interface": "vss_tools.exporters.ros2interface:cli",
         "s2dm": "vss_tools.exporters.s2dm:cli",
