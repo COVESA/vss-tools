@@ -1,0 +1,5 @@
+A.BrandNewSignal:
+  datatype: uint8
+  type: sensor
+  description: A signal that does not exist in the base spec.
+  new: true
