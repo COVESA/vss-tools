@@ -267,8 +267,6 @@ class VhalMapper:
             f"import static android.car.feature.Flags.FLAG_{self.ACONFIG_FLAG_NAME.upper()};",
             "import android.annotation.FlaggedApi;",
             "import android.annotation.RequiresPermission;",
-            "import android.car.hardware.CarPropertyConfig;",
-            "import android.car.VehicleAreaType;",
             "",
             "public final class VehiclePropertyIdsOem {",
             "",
@@ -301,10 +299,10 @@ class VhalMapper:
                 content_lines.extend(
                     [
                         "\t * <p>Property Config:",
-                        "\t * <ul>",
-                        f"\t *  <li>{{@link CarPropertyConfig#{access}}}",
-                        f"\t *  <li>{{@link VehicleAreaType#{area_type}}}",
-                        f"\t *  <li>{{@link CarPropertyConfig#{change_mode}}}",
+                        "\t * <ul>",  # the below @link entries must be fully qualified for VehiclePropertyIdsParser
+                        f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#{access}}}",
+                        f"\t *  <li>{{@link android.car.VehicleAreaType#{area_type}}}",
+                        f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#{change_mode}}}",
                         f"\t *  <li>{{@code {property_type}}} property type",
                         "\t * </ul>",
                         "\t *",
