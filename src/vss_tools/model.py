@@ -260,7 +260,7 @@ class VSSDataDatatype(VSSData):
         return self
 
     def check_default_min_max(self) -> Self:
-        if not self.default:
+        if self.default is None:
             return self
         values = [self.default]
         if isinstance(self.default, list):
