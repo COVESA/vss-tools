@@ -421,11 +421,9 @@ class VSSDataDatatype(VSSData):
         if v is None:
             return v
         v_lower = v.lower()
-        if v_lower in dynamic_units:
-            return v_lower
-        if v not in dynamic_units:
+        if v_lower not in dynamic_units:
             raise ValueError(f"'{v}' is not a valid unit")
-        return v
+        return v_lower
 
     @model_validator(mode="after")
     def check_datatype_matching_allowed_unit_datatypes(self) -> Self:
