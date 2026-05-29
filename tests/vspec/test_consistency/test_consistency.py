@@ -24,7 +24,7 @@ DATA = HERE / "data"
         (3, 1, 4, "'foo' is not of type 'uint8[]'"),
         (4, 1, 4, "'min/max' and 'allowed' cannot be used together"),
         (5, 1, 4, "default value '4' is not in 'allowed' list"),
-        (6, 1, 4, "'string' is not allowed for unit 'kwh'"),
+        (6, 1, 4, "'string' is not allowed for unit 'kWh'"),
         (7, 1, 4, "Forbidden extra attribute (core attribute): 'Vehicle':'datatype'"),
         (8, 1, 4, "'default' array size does not match 'arraysize'"),
     ],
