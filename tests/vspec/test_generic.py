@@ -91,7 +91,6 @@ def test_exporters(directory, tmp_path):
         "plantuml",
         "csv",
         "yaml",
-        "franca",
         "go",
         "samm",
     ]

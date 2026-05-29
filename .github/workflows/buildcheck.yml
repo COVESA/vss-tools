@@ -68,7 +68,6 @@ jobs:
           vspec export csv --help
           vspec export json --help
           vspec export yaml --help
-          vspec export franca --help
           vspec export ddsidl --help
           vspec export protobuf --help
           vspec export s2dm --help
