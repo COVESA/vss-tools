@@ -20,16 +20,17 @@ from vss_tools.diff import diff_folders
 @click.option(
     "--previous",
     "-p",
-    required=True,
+    default=None,
     type=click.Path(exists=True, file_okay=False, readable=True, path_type=Path),
-    help="Compose snapshot folder representing the previous version.",
+    help="Composed model snapshot used as the basis for the comparison."
+    "Omit for first-run mode (all elements treated as ADDED).",
 )
 @click.option(
     "--current",
     "-c",
     required=True,
     type=click.Path(exists=True, file_okay=False, readable=True, path_type=Path),
-    help="Compose snapshot folder representing the current version.",
+    help="Composed model representing the current version.",
 )
 @click.option(
     "--output",
@@ -37,17 +38,23 @@ from vss_tools.diff import diff_folders
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     help="Write JSON output to this file instead of stdout.",
 )
-def cli(previous: Path, current: Path, output: Path | None) -> None:
+def cli(previous: Path | None, current: Path, output: Path | None) -> None:
     """
-    Diff two vspec compose snapshot folders.
+    Diff two vspec compose snapshot folders and produce a modl-compatible diff report.
 
     Compares signals, structs, units, and quantities across two snapshot
     folders produced by `vspec compose` and reports ADDED, REMOVED, and
-    MODIFIED changes as a structured JSON document.
+    MODIFIED changes as a structured JSON document in the modl adapter IR format.
+
+    When --previous is omitted (first-run mode), every element in --current
+    is treated as ADDED and emitted with its complete aspects snapshot.
 
     Output goes to stdout by default; use --output to write to a file.
     """
-    log.info(f"Diffing snapshots: {previous} → {current}")
+    if previous:
+        log.info(f"Diffing snapshots: {previous} → {current}")
+    else:
+        log.info(f"First-run mode: treating all elements in {current} as ADDED")
     result = diff_folders(previous, current)
     out_text = json.dumps(result, indent=2, ensure_ascii=False)
 
