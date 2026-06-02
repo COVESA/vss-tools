@@ -3,7 +3,7 @@ name = "vss-tools"
 version = "7.0.0-dev0"
 description='COVESA Vehicle Signal Specification tooling.'
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "anytree>=2.12.1",
     "click>=8.1.7",
@@ -17,6 +17,7 @@ dependencies = [
     "graphene>=3.4.3",
     "pandas>=2.2.3",
     "case-converter>=1.2.0",
+    "modl",
 ]
 authors = [
 {name="COVESA VSS", email="covesa-dev@covesa.global"}
@@ -43,6 +44,9 @@ line-length = 120
 
 [tool.uv]
 package = true
+
+[tool.uv.sources]
+modl = { path = "..//cloned-model-ledger", editable = true }
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
