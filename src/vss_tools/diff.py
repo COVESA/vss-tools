@@ -21,17 +21,20 @@ No vss-tools tree parsing is performed — snapshots are already flat dicts.
 
 from __future__ import annotations
 
+import itertools
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from vss_tools import log
 from vss_tools.compose import (
     MODEL_SNAPSHOT_FILENAME,
     QUANTITIES_SNAPSHOT_FILENAME,
     STRUCTS_SNAPSHOT_FILENAME,
     UNITS_SNAPSHOT_FILENAME,
 )
+from vss_tools.tree import expand_string
 
 # ---------------------------------------------------------------------------
 # Change type constants
@@ -39,6 +42,14 @@ from vss_tools.compose import (
 ADDED = "ADDED"
 REMOVED = "REMOVED"
 MODIFIED = "MODIFIED"
+
+# ---------------------------------------------------------------------------
+# modl IR kind constants
+# ---------------------------------------------------------------------------
+ENTITY = "ENTITY"
+PROPERTY = "PROPERTY"
+ENUMERATION_SET = "ENUMERATION_SET"
+ENUM_VALUE = "ENUM_VALUE"
 
 
 # ---------------------------------------------------------------------------
@@ -74,41 +85,209 @@ def _field_diff(prev_attrs: dict[str, Any], curr_attrs: dict[str, Any]) -> list[
     return changes
 
 
-def _build_message(
-    change_type: str,
-    source: str,
-    path: str,
-    node_type: str,
-    attribute_changes: list[dict[str, Any]] | None = None,
-    previous_path: str | None = None,
-    cascade: bool = False,
-) -> str:
-    """Build a human-readable sentence describing the change."""
-    label = f"{node_type.capitalize()} '{path}'"
+# ---------------------------------------------------------------------------
+# modl IR translation helpers
+# ---------------------------------------------------------------------------
 
-    if change_type == ADDED:
-        return f"{label} was added to {source}."
 
-    if change_type == REMOVED:
-        return f"{label} was removed from {source}."
+def _vss_kind(node_type: str, source: str) -> str:
+    """Map a VSS node type + source to a modl IR element kind."""
+    if source == "quantities":
+        return ENUMERATION_SET
+    if source == "units":
+        return ENUM_VALUE
+    # model or structs
+    if node_type in ("branch", "struct"):
+        return ENTITY
+    return PROPERTY
 
-    # MODIFIED
-    parts = []
-    if previous_path:
-        suffix = " (cascaded from parent rename)" if cascade else ""
-        parts.append(f"{node_type.capitalize()} '{previous_path}' was renamed to '{path}'{suffix}.")
-    if attribute_changes:
-        for ac in attribute_changes:
-            attr, pv, cv = ac["attribute"], ac["previous"], ac["current"]
-            if pv is None:
-                parts.append(f"Attribute '{attr}' was added with value '{cv}'.")
-            elif cv is None:
-                parts.append(f"Attribute '{attr}' was removed (was '{pv}').")
-            else:
-                parts.append(f"Attribute '{attr}' changed from '{pv}' to '{cv}'.")
-    if not parts:
-        parts.append(f"{label} was modified in {source}.")
-    return " ".join(parts)
+
+def _extract_datatype(value: str | None) -> tuple[str | None, bool]:
+    """Split a VSS datatype string into base type and is_list flag."""
+    if value is None:
+        return None, False
+    if value.endswith("[]"):
+        return value[:-2], True
+    return value, False
+
+
+def _expand_instances(value: Any) -> list[str]:
+    """
+    Expand a VSS instances value into fully-qualified instance path labels.
+
+    Each top-level list item is one dimension; the result is the Cartesian
+    product of all dimensions joined with '.'.  Examples:
+
+      "Row[1,4]"                                    → ["Row1","Row2","Row3","Row4"]
+      ["Left", "Right"]                             → ["Left", "Right"]
+      ["Row[1,2]", ["DriverSide","PassengerSide"]]  → ["Row1.DriverSide",
+                                                         "Row1.PassengerSide",
+                                                         "Row2.DriverSide",
+                                                         "Row2.PassengerSide"]
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return expand_string(value)
+    if not isinstance(value, list):
+        return [str(value)]
+
+    # If every item is a plain string with no range syntax the whole list is
+    # a single dimension (e.g. ["Left", "Right"]).
+    if all(isinstance(item, str) and "[" not in item for item in value):
+        return [str(item) for item in value]
+
+    # Otherwise each item is its own dimension; compute Cartesian product.
+    dimensions: list[list[str]] = []
+    for item in value:
+        if isinstance(item, list):
+            dimensions.append([str(x) for x in item])
+        elif isinstance(item, str) and "[" in item:
+            dimensions.append(expand_string(item))
+        else:
+            dimensions.append([str(item)])
+
+    if not dimensions:
+        return []
+    return [".".join(combo) for combo in itertools.product(*dimensions)]
+
+
+def _map_aspects_added(attrs: dict[str, Any], source: str, node_type: str) -> dict[str, Any]:
+    """Build the full aspects snapshot for an ADDED event."""
+    aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity")}
+    kind = _vss_kind(node_type, source)
+    if kind == PROPERTY:
+        raw_dt = aspects.pop("datatype", None)
+        output_type, is_list = _extract_datatype(raw_dt)
+        if output_type is not None:
+            aspects["output_type"] = output_type
+            aspects["is_list"] = is_list
+        aspects.setdefault("is_required", False)
+    elif kind == ENTITY:
+        if "instances" in aspects:
+            aspects["instances"] = _expand_instances(aspects["instances"])
+    elif kind == ENUM_VALUE:
+        # rename the 'unit' display-name key to 'symbol'
+        if "unit" in aspects:
+            aspects["symbol"] = aspects.pop("unit")
+    return aspects
+
+
+def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any]:
+    """Build the changed-keys-only aspects dict for a MODIFIED event."""
+    delta: dict[str, Any] = {}
+    for ac in attribute_changes:
+        attr, current = ac["attribute"], ac["current"]
+        if attr == "fka":
+            continue
+        if attr == "datatype":
+            output_type, is_list = _extract_datatype(current)
+            if output_type is not None:
+                delta["output_type"] = output_type
+                delta["is_list"] = is_list
+        elif attr == "instances":
+            delta["instances"] = _expand_instances(current)
+        else:
+            delta[attr] = current
+    return delta
+
+
+def _parent_label(path: str, source: str, attrs: dict[str, Any]) -> str | None:
+    """Derive the modl parent_label for an event."""
+    if source == "quantities":
+        return None
+    if source == "units":
+        qty = attrs.get("quantity")
+        if not qty:
+            log.warning(f"Unit '{path}' has no quantity — skipping parent_label assignment")
+            return None
+        return str(qty)
+    # model or structs: parent is the FQN prefix
+    if "." in path:
+        return path.rsplit(".", 1)[0]
+    return None
+
+
+def _to_modl_events(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Translate internal diff events to the modl adapter IR format."""
+    result = []
+    for ev in raw_events:
+        source = ev["source"]
+        node_type = ev["node_type"]
+        path = ev["path"]
+        change_type = ev["type"]
+        attrs = ev.get("attributes") or {}
+
+        kind = _vss_kind(node_type, source)
+        parent = _parent_label(path, source, attrs)
+
+        event: dict[str, Any] = {
+            "label": path,
+            "kind": kind,
+            "change_type": change_type,
+        }
+        if parent is not None:
+            event["parent_label"] = parent
+
+        if change_type == ADDED:
+            event["aspects"] = _map_aspects_added(attrs, source, node_type)
+        elif change_type == REMOVED:
+            pass  # modl: REMOVED must carry no aspects
+        else:  # MODIFIED
+            if ev.get("previous_path"):
+                event["renamed_from"] = ev["previous_path"]
+            event["aspects"] = _map_aspects_delta(ev.get("attribute_changes") or [])
+
+        result.append(event)
+    return result
+
+
+def _inject_entity_content(modl_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Ensure every ENTITY/ENUMERATION_SET has a MODIFIED event with a content list
+    summarising which children changed, when those children are ADDED/REMOVED/MODIFIED
+    but the parent itself was not independently changed.
+    """
+    entity_kinds = {ENTITY, ENUMERATION_SET}
+    child_kinds = {PROPERTY, ENUM_VALUE}
+
+    # Track which entity labels were fully ADDED or REMOVED (no content injection needed)
+    entity_added_removed: set[str] = set()
+    # Map entity label → index in the working list for already-present MODIFIED entities
+    entity_modified: dict[str, int] = {}
+
+    events = list(modl_events)
+
+    for i, ev in enumerate(events):
+        if ev["kind"] in entity_kinds:
+            if ev["change_type"] in (ADDED, REMOVED):
+                entity_added_removed.add(ev["label"])
+            elif ev["change_type"] == MODIFIED:
+                entity_modified[ev["label"]] = i
+
+    for ev in modl_events:
+        if ev["kind"] not in child_kinds:
+            continue
+        parent = ev.get("parent_label")
+        if parent is None or parent in entity_added_removed:
+            continue
+
+        content_item = {"label": ev["label"], "change_type": ev["change_type"]}
+
+        if parent in entity_modified:
+            events[entity_modified[parent]].setdefault("content", []).append(content_item)
+        else:
+            new_entity_event: dict[str, Any] = {
+                "label": parent,
+                "kind": ENTITY,
+                "change_type": MODIFIED,
+                "aspects": {},
+                "content": [content_item],
+            }
+            entity_modified[parent] = len(events)
+            events.append(new_entity_event)
+
+    return events
 
 
 # ---------------------------------------------------------------------------
@@ -168,15 +347,6 @@ def _diff_dicts(
                             "node_type": new_nt,
                             "cascade": False,
                             "attribute_changes": attr_changes,
-                            "message": _build_message(
-                                MODIFIED,
-                                source,
-                                new_path,
-                                new_nt,
-                                attribute_changes=attr_changes,
-                                previous_path=old_path,
-                                cascade=False,
-                            ),
                         }
                     )
                     consumed_added.add(new_path)
@@ -212,15 +382,6 @@ def _diff_dicts(
                         "node_type": new_nt,
                         "cascade": True,
                         "attribute_changes": attr_changes,
-                        "message": _build_message(
-                            MODIFIED,
-                            source,
-                            new_path,
-                            new_nt,
-                            attribute_changes=attr_changes,
-                            previous_path=old_path,
-                            cascade=True,
-                        ),
                     }
                 )
                 consumed_added.add(new_path)
@@ -238,7 +399,6 @@ def _diff_dicts(
                 "path": path,
                 "node_type": nt,
                 "attributes": attrs,
-                "message": _build_message(ADDED, source, path, nt),
             }
         )
 
@@ -253,7 +413,7 @@ def _diff_dicts(
                 "source": source,
                 "path": path,
                 "node_type": nt,
-                "message": _build_message(REMOVED, source, path, nt),
+                "attributes": attrs,
             }
         )
 
@@ -270,7 +430,6 @@ def _diff_dicts(
                 "path": path,
                 "node_type": nt,
                 "attribute_changes": attr_changes,
-                "message": _build_message(MODIFIED, source, path, nt, attribute_changes=attr_changes),
             }
         )
 
@@ -282,16 +441,18 @@ def _diff_dicts(
 # ---------------------------------------------------------------------------
 
 
-def diff_folders(previous_dir: Path, current_dir: Path) -> dict[str, Any]:
+def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]:
     """
-    Diff two compose snapshot folders.
+    Diff two compose snapshot folders and return a modl-compatible diff report.
 
     Returns a dict with:
       previous, current  — folder paths as strings
-      summary            — counts per change type
-      changes            — flat list of change objects
+      changes            — ordered list of modl IR change events
+
+    When previous_dir is None (first-run mode), every element in current_dir
+    is treated as ADDED and emitted with its complete aspects snapshot.
     """
-    changes: list[dict[str, Any]] = []
+    raw_changes: list[dict[str, Any]] = []
 
     sources = [
         (MODEL_SNAPSHOT_FILENAME, "model", True),
@@ -301,21 +462,20 @@ def diff_folders(previous_dir: Path, current_dir: Path) -> dict[str, Any]:
     ]
 
     for filename, source_label, detect_renames in sources:
-        prev = load_flat_yaml(previous_dir / filename)
+        prev = load_flat_yaml(previous_dir / filename) if previous_dir else {}
         curr = load_flat_yaml(current_dir / filename)
         if not prev and not curr:
             continue
-        changes.extend(_diff_dicts(prev, curr, source_label, detect_renames=detect_renames))
+        raw_changes.extend(_diff_dicts(prev, curr, source_label, detect_renames=detect_renames))
 
-    summary = {
-        ADDED: sum(1 for c in changes if c["type"] == ADDED),
-        REMOVED: sum(1 for c in changes if c["type"] == REMOVED),
-        MODIFIED: sum(1 for c in changes if c["type"] == MODIFIED),
-    }
+    modl_events = _to_modl_events(raw_changes)
+    modl_events = _inject_entity_content(modl_events)
+
+    _KIND_ORDER = {ENTITY: 0, ENUMERATION_SET: 1, PROPERTY: 2, ENUM_VALUE: 3}
+    modl_events.sort(key=lambda e: _KIND_ORDER.get(e["kind"], 99))
 
     return {
-        "previous": str(previous_dir),
+        "previous": str(previous_dir) if previous_dir else None,
         "current": str(current_dir),
-        "summary": summary,
-        "changes": changes,
+        "changes": modl_events,
     }
