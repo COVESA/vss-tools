@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `vspec compose` command: bundles a vspec model and all its dependencies (includes, overlays, units, quantities) into a self-contained snapshot folder. Validates the full expanded model before writing, then serialises the raw authored content faithfully — preserving `instances`, instance-level overrides, and custom struct types. See [compose.md](docs/compose.md).
+- `vspec diff` command: compares two compose snapshots and reports every change (ADDED, REMOVED, MODIFIED) as structured JSON. Detects renames via the `fka` field and cascades them to child nodes automatically. See [diff.md](docs/diff.md).
+
 ### Changed
 
 - **Breaking**: Unit descriptions (`unit` field) must now be globally unique across all quantities. Previously accepted duplicate unit descriptions in `units.yaml` will now fail validation with a clear error message identifying the conflicting unit keys.
@@ -40,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Major restructure of repository structure and CLI
 
 The vss-tools repository content structure and CLI has changed significantly
-For more information see [vspec documentation](docs/vspec.md)
+For more information see [vspec documentation](docs/export.md)
 
 ### Change in UUID handling.
 
@@ -106,7 +111,7 @@ In VSS-Tools 4.0 structs are supported in the following exporters:
 Other exporters do not support structs.
 
 It is possible to use specify muliple type files with `--types`, and to use types in combination with overlays.
-For more information see [vspec documentation](docs/vspec.md)
+For more information see [vspec documentation](docs/export.md)
 
 ### Change in UUID handling.
 
@@ -133,7 +138,7 @@ From now on, if new units are needed for the VSS catalog they shall be added to 
 
 Support for defining signals with struct type added.
 For VSS 3.1 as experimental feature only supported by JSON exporter.
-For more information see [vspec documentation](docs/vspec.md)
+For more information see [vspec documentation](docs/export.md)
 
 ### Change in UUID handling.
 
@@ -155,7 +160,7 @@ The background is that they have been broken for a long period and no one has vo
 
 ### Support for specifying unit files
 
-Add new parameter `-u` has been introduced, see [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md#handling-of-units).
+Add new parameter `-u` has been introduced, see [documentation](https://github.com/COVESA/vss-tools/blob/master/docs/export.md#handling-of-units).
 Use of default unit file deprecated.
 At the same time a unit file has been added to [VSS](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml),
 allowing VSS tooling to control their own units rather than relying on units in VSS-tools.
@@ -169,4 +174,4 @@ file it will be used, only if not existing `config.yaml` in vss-tools will be us
 ### Overlay Support
 
 Overlays introduced to allow customization of VSS. See [documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/overlay/).
-See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/vspec.md) on how to include overlays when transforming VSS.
+See [vss-tools documentation](https://github.com/COVESA/vss-tools/blob/master/docs/export.md) on how to include overlays when transforming VSS.
