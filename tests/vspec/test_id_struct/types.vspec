@@ -1,0 +1,17 @@
+Types:
+  type: branch
+  description: Custom type definitions.
+
+Types.Reading:
+  type: struct
+  description: A sensor reading with value and quality.
+
+Types.Reading.Value:
+  type: property
+  datatype: float
+  description: The measured value.
+
+Types.Reading.Quality:
+  type: property
+  datatype: uint8
+  description: Quality indicator from 0 to 100.

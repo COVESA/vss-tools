@@ -1,0 +1,8 @@
+A:
+  type: branch
+  description: Branch A.
+
+A.Signal:
+  datatype: float
+  type: sensor
+  description: A simple signal.
