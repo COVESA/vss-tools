@@ -420,9 +420,10 @@ class VSSDataDatatype(VSSData):
     def check_valid_unit(cls, v: str | None) -> str | None:
         if v is None:
             return v
-        if v not in dynamic_units:
+        v_lower = v.lower()
+        if v_lower not in dynamic_units:
             raise ValueError(f"'{v}' is not a valid unit")
-        return v
+        return dynamic_units[v_lower].key or v_lower
 
     @model_validator(mode="after")
     def check_datatype_matching_allowed_unit_datatypes(self) -> Self:
@@ -433,7 +434,7 @@ class VSSDataDatatype(VSSData):
         if self.unit:
             if not Datatypes.get_type(self.datatype):
                 raise ValueError(f"Cannot use 'unit' with complex datatype: '{self.datatype}'")
-            allowed_datatypes = dynamic_units[self.unit].allowed_datatypes
+            allowed_datatypes = dynamic_units[self.unit.lower()].allowed_datatypes
             if allowed_datatypes is None:
                 allowed_datatypes = []
             if not any(Datatypes.is_subtype_of(self.datatype.rstrip("[]"), a) for a in allowed_datatypes):
