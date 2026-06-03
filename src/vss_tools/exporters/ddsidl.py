@@ -154,6 +154,7 @@ def getAllowedName(name):
 
 
 def get_allowed_enum_literal(name: str):
+    name = name.replace(" ", "_")
     if name[0].isdigit():
         return "d" + name
     return name

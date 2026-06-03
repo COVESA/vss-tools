@@ -1,0 +1,10 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.GearSelect:
+  datatype: string
+  type: actuator
+  allowed: ['Park Brake', 'Drive Forward']
+  description: Gear selection mode.
