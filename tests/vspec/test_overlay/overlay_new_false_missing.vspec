@@ -1,0 +1,5 @@
+A.DoesNotExist:
+  datatype: uint8
+  type: sensor
+  description: Incorrectly claiming this modifies an existing signal that is absent.
+  new: false

@@ -1,0 +1,5 @@
+A.SignalA:
+  datatype: int8
+  type: sensor
+  description: Incorrectly claiming this is a new signal even though it already exists.
+  new: true
