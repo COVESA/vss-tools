@@ -50,6 +50,7 @@ vspec export json --vspec spec/VehicleSignalSpecification.vspec --output vss.jso
 
 - [apigear](./apigear.md)
 - [binary](../binary/README.md)
+- [cpp-header](./cpp-header.md)
 - [ddsidl](./ddsidl.md)
 - [plantuml](./plantuml.md)
 - [go](./go.md)
