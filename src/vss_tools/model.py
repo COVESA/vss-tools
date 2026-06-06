@@ -132,8 +132,7 @@ class VSSData(VSSRaw):
         """Give better explanation for empty description."""
         if self.description == "":
             raise ValueError(
-                "All nodes in the final tree must have a description. "
-                "Implicit branches are not allowed in final tree!"
+                "All nodes in the final tree must have a description. Implicit branches are not allowed in final tree!"
             )
         return self
 
@@ -165,6 +164,7 @@ class VSSUnit(BaseModel):
     unit: str | None
     quantity: str
     allowed_datatypes: list[str] | None = Field(alias="allowed-datatypes", default=None)
+    url: str | None = None
     key: str | None = None  # The actual unit key (e.g., 'km'), populated during loading
 
     @field_validator("quantity")
@@ -468,8 +468,7 @@ class VSSDataDatatype(VSSData):
                 for def_val in check_values:
                     if not re.match(reg_exp, def_val):
                         raise ValueError(
-                            f"Specified '{value_type}' value: '{def_val}' "
-                            f"must match defined pattern: '{self.pattern}'"
+                            f"Specified '{value_type}' value: '{def_val}' must match defined pattern: '{self.pattern}'"
                         )
 
             if self.default:
