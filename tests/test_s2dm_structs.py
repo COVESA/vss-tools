@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from graphql import GraphQLList, GraphQLNonNull, GraphQLObjectType, is_object_type
 from vss_tools.exporters.s2dm import S2DM_CONVERSIONS, generate_s2dm_schema
+from vss_tools.exporters.s2dm.graphql_scalars import VSS_DATATYPE_MAP
+from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from vss_tools.main import get_trees
-from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP
-from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
 
 class TestS2DMStructs:
@@ -48,7 +48,7 @@ class TestS2DMStructs:
     def test_struct_types_are_created(self, struct_trees):
         """Test that struct types are converted to GraphQL object types."""
         tree, data_type_tree = struct_trees
-        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Check that struct types exist in the schema
         nested_struct_name = convert_name_for_graphql_schema(
@@ -72,7 +72,7 @@ class TestS2DMStructs:
     def test_struct_properties_are_non_null(self, struct_trees):
         """Test that all struct properties are non-null fields."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get NestedStruct type
         nested_struct_name = convert_name_for_graphql_schema(
@@ -88,7 +88,7 @@ class TestS2DMStructs:
     def test_struct_properties_have_correct_types(self, struct_trees):
         """Test that struct properties map to correct GraphQL types."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get NestedStruct type
         nested_struct_name = convert_name_for_graphql_schema(
@@ -115,7 +115,7 @@ class TestS2DMStructs:
     def test_nested_struct_references(self, struct_trees):
         """Test that structs can reference other structs."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get ParentStruct type
         parent_struct_name = convert_name_for_graphql_schema(
@@ -147,7 +147,7 @@ class TestS2DMStructs:
     def test_struct_array_properties(self, struct_trees):
         """Test that struct array properties are correctly handled."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get ParentStruct type
         parent_struct_name = convert_name_for_graphql_schema(
@@ -181,7 +181,7 @@ class TestS2DMStructs:
     def test_signal_with_struct_datatype(self, struct_trees):
         """Test that signals can use struct datatypes."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get the TestRoot type
         root_type_name = convert_name_for_graphql_schema("TestRoot", GraphQLElementType.TYPE, S2DM_CONVERSIONS)
@@ -212,7 +212,7 @@ class TestS2DMStructs:
     def test_struct_metadata_and_comments(self, struct_trees):
         """Test that struct metadata and comments are preserved."""
         tree, data_type_tree = struct_trees
-        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get struct type name
         nested_struct_name = convert_name_for_graphql_schema(
@@ -231,7 +231,7 @@ class TestS2DMStructs:
     def test_struct_property_range_constraints(self, struct_trees):
         """Test that range constraints on struct properties are preserved."""
         tree, data_type_tree = struct_trees
-        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, vspec_comments = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get struct type name
         nested_struct_name = convert_name_for_graphql_schema(
@@ -252,7 +252,7 @@ class TestS2DMStructs:
     def test_primitive_property_in_struct(self, struct_trees):
         """Test that primitive (non-struct) properties work correctly."""
         tree, data_type_tree = struct_trees
-        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         # Get ParentStruct type
         parent_struct_name = convert_name_for_graphql_schema(
@@ -268,6 +268,108 @@ class TestS2DMStructs:
         z_property_type = fields["zProperty"].type
         assert isinstance(z_property_type, GraphQLNonNull)
         assert z_property_type.of_type == VSS_DATATYPE_MAP["double"]
+
+    def test_signal_with_struct_datatype_short_names(self, struct_trees):
+        """Test that signals correctly reference structs when using short names (default mode)."""
+        tree, data_type_tree = struct_trees
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=True)
+
+        # Get the TestRoot type
+        root_type = schema.type_map["TestRoot"]  # Short name mode
+
+        # Get struct type names (should be short names)
+        parent_struct_name = "ParentStruct"
+        nested_struct_name = "NestedStruct"
+
+        # Verify struct types exist with short names
+        assert parent_struct_name in schema.type_map
+        assert nested_struct_name in schema.type_map
+
+        # Check fields
+        assert isinstance(root_type, GraphQLObjectType)
+        fields = root_type.fields
+
+        # ParentStructSensor should reference ParentStruct (short name)
+        assert "parentStructSensor" in fields
+        parent_sensor_type = fields["parentStructSensor"].type
+        assert (
+            parent_sensor_type == schema.type_map[parent_struct_name]
+        ), f"Expected ParentStruct but got {parent_sensor_type}"
+
+        # NestedStructSensor should reference NestedStruct (short name)
+        assert "nestedStructSensor" in fields
+        nested_sensor_type = fields["nestedStructSensor"].type
+        assert (
+            nested_sensor_type == schema.type_map[nested_struct_name]
+        ), f"Expected NestedStruct but got {nested_sensor_type}"
+
+    def test_struct_in_property_short_names(self, struct_trees):
+        """Test that struct properties correctly reference other structs with short names."""
+        tree, data_type_tree = struct_trees
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=True)
+
+        # Get ParentStruct type (short name)
+        parent_struct_type = schema.type_map["ParentStruct"]
+        nested_struct_type = schema.type_map["NestedStruct"]
+
+        # Check that x_property and y_property reference NestedStruct
+        assert isinstance(parent_struct_type, GraphQLObjectType)
+        fields = parent_struct_type.fields
+
+        # x_property should reference NestedStruct
+        assert "xProperty" in fields
+        x_property_type = fields["xProperty"].type
+        assert isinstance(x_property_type, GraphQLNonNull)
+        assert x_property_type.of_type == nested_struct_type, f"Expected NestedStruct but got {x_property_type.of_type}"
+
+    def test_struct_property_with_allowed_values_resolves_to_enum(self, struct_trees):
+        """Test that struct properties with `allowed` values resolve to an enum type, not a scalar."""
+        tree, data_type_tree = struct_trees
+        schema, _, allowed_metadata, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
+
+        nested_struct_name = convert_name_for_graphql_schema(
+            "VehicleDataTypes.TestBranch1.NestedStruct", GraphQLElementType.TYPE, S2DM_CONVERSIONS
+        )
+        enum_name = (
+            convert_name_for_graphql_schema(
+                "VehicleDataTypes.TestBranch1.NestedStruct.mode", GraphQLElementType.TYPE, S2DM_CONVERSIONS
+            )
+            + "_Enum"
+        )
+
+        # Enum type must be present in schema
+        assert enum_name in schema.type_map, f"Expected enum '{enum_name}' in schema"
+
+        # The `mode` field on NestedStruct must resolve to that enum (wrapped NonNull)
+        nested_struct_type = schema.type_map[nested_struct_name]
+        assert isinstance(nested_struct_type, GraphQLObjectType)
+        assert "mode" in nested_struct_type.fields, "Expected 'mode' field in NestedStruct"
+        mode_field_type = nested_struct_type.fields["mode"].type
+        assert isinstance(mode_field_type, GraphQLNonNull)
+        assert mode_field_type.of_type == schema.type_map[enum_name]
+
+        # Allowed enum metadata must be populated for this property
+        assert enum_name in allowed_metadata
+        assert set(allowed_metadata[enum_name]["allowed_values"].values()) == {"ACTIVE", "INACTIVE", "ERROR"}
+
+    def test_struct_property_allowed_enum_short_names(self, struct_trees):
+        """Test allowed-value enum resolution for struct properties when using short names."""
+        tree, data_type_tree = struct_trees
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=True)
+
+        nested_struct_type = schema.type_map.get("NestedStruct")
+        assert nested_struct_type is not None
+        assert isinstance(nested_struct_type, GraphQLObjectType)
+        assert "mode" in nested_struct_type.fields
+
+        mode_field_type = nested_struct_type.fields["mode"].type
+        assert isinstance(mode_field_type, GraphQLNonNull)
+        # The wrapped type must be an enum (not a scalar like String)
+        from graphql import GraphQLEnumType
+
+        assert isinstance(
+            mode_field_type.of_type, GraphQLEnumType
+        ), f"Expected GraphQLEnumType for 'mode' field, got {type(mode_field_type.of_type)}"
 
 
 class TestS2DMStructsModular:
@@ -292,7 +394,9 @@ class TestS2DMStructsModular:
         )
 
         # Generate schema
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(
+            tree, data_type_tree, use_short_names=False
+        )
 
         # Write modular output
         output_dir = tmp_path / "modular_output"
@@ -340,7 +444,9 @@ class TestS2DMStructsModular:
         )
 
         # Generate schema
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, data_type_tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(
+            tree, data_type_tree, use_short_names=False
+        )
 
         # Write modular output
         output_dir = tmp_path / "modular_output"
@@ -383,6 +489,7 @@ class TestS2DMStructsCLI:
                 "tests/vspec/test_structs/VehicleDataTypes.vspec",
                 "--output",
                 str(output_dir),
+                "--fqn-type-names",
             ],
             capture_output=True,
             text=True,
@@ -426,6 +533,7 @@ class TestS2DMStructsCLI:
                 "--output",
                 str(output_dir),
                 "--modular",
+                "--fqn-type-names",
             ],
             capture_output=True,
             text=True,

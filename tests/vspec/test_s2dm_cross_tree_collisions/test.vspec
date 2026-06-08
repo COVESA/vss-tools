@@ -1,0 +1,46 @@
+# Test cross-tree collision detection between main tree and struct types
+# Both main tree branches and struct definitions have "Window" and "Status" names
+
+Vehicle:
+  type: branch
+  description: Top-level vehicle branch
+
+Vehicle.Body:
+  type: branch
+  description: Body branch
+
+Vehicle.Body.Window:
+  type: branch
+  description: Body window - collides with Cabin.Window and struct Window
+
+Vehicle.Body.Window.Position:
+  datatype: float
+  type: sensor
+  unit: percent
+  description: Window position
+
+Vehicle.Cabin:
+  type: branch
+  description: Cabin branch
+
+Vehicle.Cabin.Window:
+  type: branch
+  description: Cabin window - collides with Body.Window and struct Window
+
+Vehicle.Cabin.Window.IsOpen:
+  datatype: boolean
+  type: actuator
+  description: Window open state
+
+Vehicle.Powertrain:
+  type: branch
+  description: Powertrain branch
+
+Vehicle.Powertrain.Status:
+  type: branch
+  description: Powertrain status - collides with struct Status
+
+Vehicle.Powertrain.Status.IsRunning:
+  datatype: boolean
+  type: sensor
+  description: Engine running state
