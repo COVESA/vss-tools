@@ -96,8 +96,11 @@ def generate_s2dm_schema(
         # Combine branches from both main tree and data type tree for joint collision detection
         # since they share the same GraphQL type namespace
         combined_branches_df = branches_df
+        struct_leaves_df: pd.DataFrame | None = None
         if data_type_tree:
-            struct_branches_df, _ = get_metadata_df(data_type_tree, extended_attributes=extended_attributes)
+            struct_branches_df, struct_leaves_df = get_metadata_df(
+                data_type_tree, extended_attributes=extended_attributes
+            )
             combined_branches_df = pd.concat([branches_df, struct_branches_df], axis=0, verify_integrity=True)
 
         # Detect and resolve short name collisions if requested
@@ -120,12 +123,19 @@ def generate_s2dm_schema(
         instance_types = create_instance_types(branches_df, vspec_comments, short_name_mapping)
         allowed_enums, allowed_metadata = create_allowed_enums(leaves_df)
 
+        # Also create allowed enums for struct properties (properties with `allowed` values)
+        if struct_leaves_df is not None:
+            struct_allowed_enums, struct_allowed_metadata = create_allowed_enums(struct_leaves_df)
+            allowed_enums.update(struct_allowed_enums)
+            allowed_metadata.update(struct_allowed_metadata)
+
         # Create struct types from data type tree
         struct_types = create_struct_types(
             data_type_tree,
             vspec_comments,
             extended_attributes=extended_attributes,
             short_name_mapping=short_name_mapping,
+            allowed_enums=allowed_enums,
         )
 
         # Combine all types
