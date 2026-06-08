@@ -380,6 +380,7 @@ def create_struct_types(
     vspec_comments: dict[str, Any],
     extended_attributes: tuple[str, ...] = (),
     short_name_mapping: dict[str, str] | None = None,
+    allowed_enums: dict[str, GraphQLEnumType] | None = None,
 ) -> dict[str, GraphQLObjectType]:
     """
     Convert VSS struct definitions to GraphQL object types.
@@ -389,6 +390,7 @@ def create_struct_types(
         vspec_comments: Dictionary to store struct metadata
         extended_attributes: Extended attribute names from CLI
         short_name_mapping: Optional mapping from FQN to short type names
+        allowed_enums: Pre-built allowed-value enum types for struct properties
 
     Returns:
         Dictionary mapping struct type names to GraphQL object types
@@ -412,7 +414,10 @@ def create_struct_types(
         fields = {}
         for prop_fqn, prop_row in properties.iterrows():
             field_name = convert_name_for_graphql_schema(prop_row["name"], GraphQLElementType.FIELD, S2DM_CONVERSIONS)
-            base_type = _get_graphql_type_for_property(prop_row, struct_types, short_name_mapping)
+            # Use get_graphql_type_for_leaf so that properties with `allowed` values resolve
+            # to their enum type rather than the raw scalar.
+            combined_registry: dict[str, Any] = {**(allowed_enums or {}), **struct_types}
+            base_type = get_graphql_type_for_leaf(prop_row, combined_registry, short_name_mapping)
             fields[field_name] = GraphQLField(GraphQLNonNull(base_type), description=prop_row.get("description", ""))
 
             field_path = build_field_path(type_name, field_name)

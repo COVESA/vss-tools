@@ -322,6 +322,55 @@ class TestS2DMStructs:
         assert isinstance(x_property_type, GraphQLNonNull)
         assert x_property_type.of_type == nested_struct_type, f"Expected NestedStruct but got {x_property_type.of_type}"
 
+    def test_struct_property_with_allowed_values_resolves_to_enum(self, struct_trees):
+        """Test that struct properties with `allowed` values resolve to an enum type, not a scalar."""
+        tree, data_type_tree = struct_trees
+        schema, _, allowed_metadata, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
+
+        nested_struct_name = convert_name_for_graphql_schema(
+            "VehicleDataTypes.TestBranch1.NestedStruct", GraphQLElementType.TYPE, S2DM_CONVERSIONS
+        )
+        enum_name = (
+            convert_name_for_graphql_schema(
+                "VehicleDataTypes.TestBranch1.NestedStruct.mode", GraphQLElementType.TYPE, S2DM_CONVERSIONS
+            )
+            + "_Enum"
+        )
+
+        # Enum type must be present in schema
+        assert enum_name in schema.type_map, f"Expected enum '{enum_name}' in schema"
+
+        # The `mode` field on NestedStruct must resolve to that enum (wrapped NonNull)
+        nested_struct_type = schema.type_map[nested_struct_name]
+        assert isinstance(nested_struct_type, GraphQLObjectType)
+        assert "mode" in nested_struct_type.fields, "Expected 'mode' field in NestedStruct"
+        mode_field_type = nested_struct_type.fields["mode"].type
+        assert isinstance(mode_field_type, GraphQLNonNull)
+        assert mode_field_type.of_type == schema.type_map[enum_name]
+
+        # Allowed enum metadata must be populated for this property
+        assert enum_name in allowed_metadata
+        assert set(allowed_metadata[enum_name]["allowed_values"].values()) == {"ACTIVE", "INACTIVE", "ERROR"}
+
+    def test_struct_property_allowed_enum_short_names(self, struct_trees):
+        """Test allowed-value enum resolution for struct properties when using short names."""
+        tree, data_type_tree = struct_trees
+        schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=True)
+
+        nested_struct_type = schema.type_map.get("NestedStruct")
+        assert nested_struct_type is not None
+        assert isinstance(nested_struct_type, GraphQLObjectType)
+        assert "mode" in nested_struct_type.fields
+
+        mode_field_type = nested_struct_type.fields["mode"].type
+        assert isinstance(mode_field_type, GraphQLNonNull)
+        # The wrapped type must be an enum (not a scalar like String)
+        from graphql import GraphQLEnumType
+
+        assert isinstance(
+            mode_field_type.of_type, GraphQLEnumType
+        ), f"Expected GraphQLEnumType for 'mode' field, got {type(mode_field_type.of_type)}"
+
 
 class TestS2DMStructsModular:
     """Test class for modular output with struct support."""
