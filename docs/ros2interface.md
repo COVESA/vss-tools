@@ -1,6 +1,6 @@
 # ROS 2 Interface Exporter (`ros2interface`)
 
-Exports a VSS model to a ROS 2 interface package: generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for Get/Set operations.
+Exports a VSS model to a ROS 2 interface package: generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for latest-single-value Get/Set operations and time-range (timeseries) Get/Set operations.
 This exporter plugs into the `vspec export` CLI like other vss-tools exporters. For generic exporter usage and common arguments, see the `vspec` documentation.
 
 ## Generated Output Structure
@@ -10,11 +10,11 @@ This exporter plugs into the `vspec export` CLI like other vss-tools exporters. 
     ├── msg  # generated .msg definitions
     |   ├── \<MSG>.msg
     |   └── \<MSG>Timeseries.msg              # only when --timeseries is set
-    └── srv  # generated .srv (if setting is enabled)
-        ├── Get\<MSG>.srv
-        ├── Set\<MSG>.srv
-        ├── Get\<MSG>Timeseries.srv           # only when --timeseries is set
-        └── Set\<MSG>Timeseries.srv           # only when --timeseries is set
+    └── srv  # generated .srv (if a service option is enabled)
+        ├── Get\<MSG>.srv                     # only when --srv get|both
+        ├── Set\<MSG>.srv                     # only when --srv set|both
+        ├── Get\<MSG>Timeseries.srv           # only when --timeseries get|both
+        └── Set\<MSG>Timeseries.srv           # only when --timeseries set|both
 ```
 
 **Example Output**
@@ -33,8 +33,8 @@ OutputFolder
 ```
 
 - .msg files include VSS metadata as comments (description, unit, min/max, allowed values).
-- Optional .srv files (Get\<Msg>.srv, Set\<Msg>.srv) that either nest the generated message or flatten its fields.
-- When `--timeseries` is enabled, per-signal `<MSG>Timeseries.msg` and matching `Get<MSG>Timeseries.srv` / `Set<MSG>Timeseries.srv` are emitted alongside, for service-based batch retrieval and injection of stamped samples.
+- Optional latest-single-value .srv files (Get\<Msg>.srv, Set\<Msg>.srv)
+- When `--timeseries get|set|both` is enabled, per-signal `<MSG>Timeseries.msg` and the matching `Get<MSG>Timeseries.srv` / `Set<MSG>Timeseries.srv` are emitted, for service-based batch retrieval and injection of stamped samples over a time range.
 
 
 ## Datatypes mapping between VSS and ROS 2 Interface
@@ -60,21 +60,28 @@ OutputFolder
 ### Core
 
 - `--output <dir>`: Output directory (required).
-- `--package-name <name>`: Name of generated ROS 2 interface package (default: `vss_interfaces`).
+- `--package-name <name>`: Name of generated ROS 2 interface package (default: `vss_interfaces`).
 - `--mode {aggregate, leaf}`:
   - `aggregate`: one `.msg` per direct parent branch containing all of its leaf signals.
   - `leaf`: one `.msg` per leaf signal.
-- `--srv {get, set, both}`: Also generate `.srv` files.
+- `--srv {get, set, both}`: Generate latest-single-value `.srv` files.
   - `get`:
-    - creates Get<MSG>.srv files to retrieve data within a specified start and end time.
+    - creates Get<MSG>.srv files to retrieve the latest single value (empty request, single-value response).
   - `set`:
-    - creates Set<MSG>.srv files to send the data and get true as response if the data gets saved.
+    - creates Set<MSG>.srv files to send a single value and get `success` as response if the data gets saved.
   - `both`:
-    - creates both the Get<MSG>.srv and Set<MSG>.srv files
+    - creates both the Get<MSG>.srv and Set<MSG>.srv files.
 - `--srv-use-msg / --no-srv-use-msg`: In services, use the generated message as a nested field (default: `--srv-use-msg`); otherwise flatten fields.
+- `--timeseries {get, set, both}`: Generate time-range (timeseries) `.srv` files plus the shared `<Signal>Timeseries.msg` wrapper.
+  - `get`:
+    - creates `<Signal>Timeseries.msg` + `Get<Signal>Timeseries.srv` to retrieve a batch of stamped samples over a time window.
+  - `set`:
+    - creates `<Signal>Timeseries.msg` + `Set<Signal>Timeseries.srv` to inject a batch of stamped samples.
+  - `both`:
+    - creates the wrapper `.msg` and both timeseries services.
+  - Composes with `--timestamp-struct-fqn` and is independent of `--srv`. See [Timeseries](#timeseries----timeseries) in the Output section.
 - `--timestamp-struct-fqn <fqn>`: Full FQN of the timestamp struct in the types tree loaded via `--types`. If not provided, falls back to built-in defaults.
-- `--output-vspec <file>`: Optional path to write a transformed VSS model alongside the ROS 2 package. See [VSS with Timestamp](#transformed-vss-vspec----output-vspec) in the Output section.
-- `--timeseries`: Also generate per-signal `<Signal>Timeseries.msg`, `Get<Signal>Timeseries.srv`, and `Set<Signal>Timeseries.srv` for service-based batch retrieval and injection of stamped samples. Composes with `--timestamp-struct-fqn`. See [Timeseries](#timeseries----timeseries) in the Output section.
+- `--output-vspec <file>`: Path to write a transformed VSS model alongside the ROS 2 package. See [Transformed VSS](#transformed-vss-vspec----output-vspec) in the Output section.
 
 ### Topic/Signal Selection
 
@@ -101,7 +108,7 @@ Following patterns are supported:
 ### Timestamp fields
 
 Timestamp fields come from the struct identified by `--timestamp-struct-fqn` in the types tree loaded via `--types`.
-If found, the struct's direct `property` children become the leading timestamp fields in every `.msg` and `.srv` file.
+If found, the struct's direct `property` children become the leading timestamp fields in every `.msg` (and the window/range fields in timeseries `.srv` files).
 When --timestamp-struct-fqn is not provided, the exporter falls back to built-in defaults; and if the struct is not found, an error is raised.
 
 |`--types`|`--timestamp-struct-fqn`|Result|
@@ -139,32 +146,52 @@ int64 timestamp_nanoseconds
 float32 value
 ```
 
-### Services (`.srv`)
+### Latest-single-value Services (`--srv`)
 
-Generated when `--srv get|set|both` is used.
+Generated when `--srv get|set|both` is used. These services operate on the **latest single value** of a signal.
 
 - `Get<Msg>.srv`
-  - Request: `int64 start_time_seconds`, `int64 start_time_nanoseconds`, `int64 end_time_seconds`, `int64 end_time_nanoseconds`
-  - Response: `<Msg>[] data` (with `--srv-use-msg`) or flattened fields
+  - Request: empty — the service always returns the latest single value, so no time window is needed.
+  - Response: `<Msg> data` (with `--srv-use-msg`) or flattened fields.
 
 - `Set<Msg>.srv`
-  - Request: `<Msg> data` (with `--srv-use-msg`) or flattened fields
-  - Response: `bool success`, `string message`
+  - Request: `<Msg> data` (with `--srv-use-msg`) or flattened fields.
+  - Response: `bool success`, `string message`.
+
+**Example — `GetVehicleSpeed.srv`**
+```
+# AUTO-GENERATED by VSS-TOOLS
+# Service: GetVehicleSpeed
+# Returns the latest single value for this group.
+---
+VehicleSpeed data   # Latest data
+```
+
+**Example — `SetVehicleSpeed.srv`**
+```
+# AUTO-GENERATED by VSS-TOOLS
+# Service: SetVehicleSpeed
+# Sets the latest single value for this group.
+VehicleSpeed data
+---
+bool success
+string message
+```
 
 ### Timeseries (`--timeseries`)
 
-When `--timeseries` is set, the exporter emits three additional files per signal alongside the existing per-signal point-in-time `<Signal>.msg`:
+When `--timeseries get|set|both` is set, the exporter emits the shared `<Signal>Timeseries.msg` wrapper plus the selected service files, alongside the per-signal point-in-time `<Signal>.msg`. Unlike the latest-single-value Get above, the timeseries Get carries a **time-window** request:
 
-- `<Signal>Timeseries.msg` — variable-length array of stamped samples with window metadata.
+- `<Signal>Timeseries.msg` — variable-length array of stamped samples with window metadata. Emitted for any `--timeseries` value (shared by Get and Set).
   - Fields: `window_start_<suffix>` / `window_end_<suffix>` (one pair per timestamp property), followed by `<Signal>[] samples`.
-- `Get<Signal>Timeseries.srv` — batch retrieval over a time window.
+- `Get<Signal>Timeseries.srv` (`get` or `both`) — batch retrieval over a time window.
   - Request: `start_time_<suffix>` / `end_time_<suffix>` fields, `uint32 max_samples` (0 = unlimited), `bool prefer_newest` (server retention policy when the window contains more samples than `max_samples`).
   - Response: `<Signal>Timeseries timeseries`, `bool success`, `string message`.
-- `Set<Signal>Timeseries.srv` — batch injection.
+- `Set<Signal>Timeseries.srv` (`set` or `both`) — batch injection.
   - Request: `<Signal>Timeseries timeseries`, `bool prefer_newest` (server drop policy when the injected batch exceeds buffer capacity).
   - Response: `bool success`, `string message`, `uint32 samples_accepted` (for partial-acceptance reporting).
 
-The timestamp suffixes (`window_start_<suffix>`, `start_time_<suffix>`, ...) inherit from the resolved timestamp schema, so `--timestamp-struct-fqn` composes transparently — a custom timestamp struct flows into the timeseries types without further configuration. The `--timeseries` flag is independent of `--srv`: timeseries services are always emitted when the flag is set, while `--srv get|set|both` continues to control only the point-in-time services.
+The timestamp suffixes (`window_start_<suffix>`, `start_time_<suffix>`, ...) inherit from the resolved timestamp schema, so `--timestamp-struct-fqn` composes transparently — a custom timestamp struct flows into the timeseries types without further configuration. `--timeseries` is independent of `--srv`: the two take the same `get|set|both` selector and can be combined, with `--srv` controlling the latest-single-value services and `--timeseries` controlling the time-range services.
 
 **Example — `VehicleSpeedTimeseries.msg`**
 ```
@@ -197,7 +224,7 @@ int64 start_time_nanoseconds
 int64 end_time_seconds
 int64 end_time_nanoseconds
 uint32 max_samples  # 0 = unlimited
-bool prefer_newest  # true = retain newest when window exceeds max_samples; false = retain oldest. Ignored when max_samples == 0.
+bool prefer_newest  # true = fetch newest when window exceeds max_samples; false = fetch oldest. Ignored when max_samples == 0.
 ---
 VehicleSpeedTimeseries timeseries
 bool success
@@ -231,7 +258,7 @@ Vehicle:
 Vehicle.Speed:
   type: struct
 
-Vehicle.Speed.Timestamp:
+Vehicle.Speed.Time:
   type: property
   datatype: <timestamp-struct-fqn>   # the FQN given via --timestamp-struct-fqn
 
@@ -246,7 +273,7 @@ The timestamp struct itself is **not** re-emitted — it is expected to already 
 
 ## Examples
 
-- Export only Vehicle.Speed as leaf message + get/set services:
+- Export only Vehicle.Speed as leaf message + latest-single-value get/set services:
 
 ```bash
 vspec export ros2interface \
@@ -285,8 +312,8 @@ vspec export ros2interface \
   --timestamp-struct-fqn MyTypes.Timestamp
 ```
 - Exports and writes a transformed VSS model.
-  - Each signal becomes `<Signal>.time` with datatype set to the FQN given via `--timestamp-struct-fqn`
-  - and `<Signal>.value` carrying the original datatype.
+  - Each signal becomes `<Signal>.Time` with datatype set to the FQN given via `--timestamp-struct-fqn`
+  - and `<Signal>.Value` carrying the original datatype.
   - The timestamp struct itself is NOT re-emitted.
 
 ```bash
@@ -298,7 +325,7 @@ vspec export ros2interface \
   --mode leaf \
   --output-vspec ./out/transformed.vspec
 ```
-- Export Vehicle.Speed with timeseries support (batch retrieval/injection services in addition to the point-in-time message):
+- Export Vehicle.Speed with timeseries support (batch retrieval + injection services and the wrapper message, in addition to the point-in-time message):
 
 ```bash
 vspec export ros2interface \
@@ -308,10 +335,24 @@ vspec export ros2interface \
   --package-name vss_speed_interfaces \
   --mode leaf \
   --topics Vehicle.Speed \
-  --timeseries
+  --timeseries both
 ```
 
-This produces `VehicleSpeed.msg`, `VehicleSpeedTimeseries.msg`, `GetVehicleSpeedTimeseries.srv`, and `SetVehicleSpeedTimeseries.srv`. The point-in-time `Get`/`Set` services are still gated by `--srv` independently.
+This produces `VehicleSpeed.msg`, `VehicleSpeedTimeseries.msg`, `GetVehicleSpeedTimeseries.srv`, and `SetVehicleSpeedTimeseries.srv`. The latest-single-value `Get`/`Set` services are still gated by `--srv` independently.
+
+- Combine latest-single-value and timeseries services in one run:
+
+```bash
+vspec export ros2interface \
+  --vspec spec/VehicleSignalSpecification.vspec \
+  -I spec \
+  --output ./out \
+  --package-name vss_speed_interfaces \
+  --mode leaf \
+  --topics Vehicle.Speed \
+  --srv get \
+  --timeseries both
+```
 
 **Full example using the `vehicle_signal_specification` repo side-by-side with `vss-tools`:**
 
@@ -336,6 +377,7 @@ vspec export ros2interface \
   --package-name vss_speed_interfaces \
   --mode leaf \
   --srv both --srv-use-msg \
+  --timeseries both \
   --topics Vehicle.Speed \
   --output-vspec ./out/transformed.vspec \
   --timestamp-struct-fqn VehicleDataTypes.Timestamp
@@ -351,13 +393,13 @@ vspec export ros2interface \
   --output ./out \
   --package-name vss_interfaces \
   --mode aggregate|leaf \
-  --srv get|set|both \
+  [--srv get|set|both] \
   [--srv-use-msg | --no-srv-use-msg] \
+  [--timeseries get|set|both] \
   [--timestamp-struct-fqn <fqn>] \
   [--topics PATTERN ...] \
   [--exclude-topics PATTERN ...] \
   [--topics-file patterns.txt] \
   [--topics-case-insensitive] \
-  [--output-vspec transformed.vspec] \
-  [--timeseries]
+  [--output-vspec transformed.vspec]
 ```

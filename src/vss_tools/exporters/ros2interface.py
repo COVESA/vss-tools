@@ -34,10 +34,9 @@ Patterns can be specified as:
 Key CLI options (existing remain)
 ---------------------------------
 --mode aggregate|leaf
---srv get|set|both
+--srv get|set|both              Get/Set on the latest single value
 --srv-use-msg / --no-srv-use-msg
---timeseries           Also generate per-signal timeseries .msg + Get/Set services
-                       for batch retrieval / injection of stamped samples.
+--timeseries get|set|both       Get/Set over a time range (batch of stamped samples)
 
 Examples
 --------
@@ -60,6 +59,16 @@ vspec export ros2interface \
   --mode aggregate \
   --srv get \
   --topics '*.Speed'
+
+# Export Vehicle.Speed with time-range (timeseries) services:
+vspec export ros2interface \
+  --vspec spec/VehicleSignalSpecification.vspec \
+  -I spec \
+  --output ./out \
+  --package-name vss_speed_interfaces \
+  --mode leaf \
+  --timeseries both \
+  --topics Vehicle.Speed
 """
 
 from __future__ import annotations
@@ -523,14 +532,13 @@ def render_get_srv(
     msg_name: str,
     fields: list[dict[str, str]],
     use_msg: bool,
-    timestamp_schema: Timestamp = DEFAULT_TIMESTAMP,
 ) -> str:
-    header = [f"Service: Get{msg_name}", "Returns latest values for this group."]
-    request = [
-        f"{prop.ros_type} start_time_{prop.ros_name.removeprefix('timestamp_')}" for prop in timestamp_schema.properties
-    ] + [f"{prop.ros_type} end_time_{prop.ros_name.removeprefix('timestamp_')}" for prop in timestamp_schema.properties]
+    header = [f"Service: Get{msg_name}", "Returns the latest single value for this group."]
+    # No request fields: this service always returns the latest single value,
+    # so a start_time/end_time window would serve no purpose.
+    request: list[str] = []
     if use_msg:
-        response = [f"{msg_name}[] data"]
+        response = [f"{msg_name} data   # Latest data"]
     else:
         response = [f"{f['type']} {f['name']} # {f.get('comment', '')}".rstrip() for f in fields]
     return render_srv_file(request, response, header)
@@ -582,7 +590,7 @@ def write_transformed_struct_vspec(
 
 
 def render_set_srv(pkg_name: str, msg_name: str, fields: list[dict[str, str]], use_msg: bool) -> str:
-    header = [f"Service: Set{msg_name}", "Sets values for this group."]
+    header = [f"Service: Set{msg_name}", "Sets the latest single value for this group."]
     if use_msg:
         request = [f"{msg_name} data"]
     else:
@@ -604,7 +612,7 @@ def render_set_srv(pkg_name: str, msg_name: str, fields: list[dict[str, str]], u
 # --timestamp-struct-fqn flag composes cleanly with --timeseries.
 
 
-def _timestamp_suffixes(timestamp_schema: Timestamp) -> list[Tuple[str, str]]:
+def _timestamp_suffixes(timestamp_schema: Timestamp = DEFAULT_TIMESTAMP) -> list[Tuple[str, str]]:
     """Returns [(ros_type, suffix)] derived from the timestamp schema properties.
 
     A property's ros_name like 'timestamp_seconds' yields suffix 'seconds'.
@@ -783,7 +791,7 @@ def render_set_timeseries_srv(base_msg_name: str) -> str:
 @click.option(
     "--srv",
     type=click.Choice(["get", "set", "both"], case_sensitive=False),
-    help="Also generate .srv files: Get<Msg>.srv, Set<Msg>.srv, or both.",
+    help="Generate latest-single-value services: Get<Msg>.srv, Set<Msg>.srv, or both.",
 )
 @click.option(
     "--srv-use-msg/--no-srv-use-msg",
@@ -836,15 +844,12 @@ def render_set_timeseries_srv(base_msg_name: str) -> str:
 )
 @click.option(
     "--timeseries",
-    default=False,
-    is_flag=True,
-    show_default=True,
+    type=click.Choice(["get", "set", "both"], case_sensitive=False),
     help=(
-        "For each generated <Signal>.msg, also emit a <Signal>Timeseries.msg containing a "
-        "variable-length array of stamped samples with window metadata, plus "
-        "Get<Signal>Timeseries.srv and Set<Signal>Timeseries.srv for service-based batch "
-        "retrieval and injection. Designed for history queries, data logging, and statistics "
-        "processing. Composes with --timestamp-struct-fqn."
+        "Generate time-range (timeseries) services returning a batch of stamped samples: "
+        "get -> <Signal>Timeseries.msg + Get<Signal>Timeseries.srv; "
+        "set -> <Signal>Timeseries.msg + Set<Signal>Timeseries.srv; both -> all three. "
+        "Composes with --timestamp-struct-fqn. Can be combined with --srv."
     ),
 )
 def cli(
@@ -866,7 +871,7 @@ def cli(
     topics_file: Optional[Path],
     topics_case_insensitive: bool,
     output_vspec: Optional[Path],
-    timeseries: bool,
+    timeseries: str,
 ):
     log.info("Loading VSS…")
     root, types_root = get_trees(
@@ -941,7 +946,7 @@ def cli(
     msg_dir = pkg_dir / "msg"
     srv_dir = pkg_dir / "srv"
     msg_dir.mkdir(parents=True, exist_ok=True)
-    if srv:
+    if srv or timeseries:
         srv_dir.mkdir(parents=True, exist_ok=True)
     msg_rel_paths: list[str] = []
     srv_rel_paths: list[str] = []
@@ -951,7 +956,7 @@ def cli(
         (msg_dir / fname).write_text(content, encoding="utf-8")
         msg_rel_paths.append(f"msg/{fname}")
 
-    # Write ordinary .srv files (get/set)
+    # Write latest-single-value .srv files (get/set)
     if srv:
         for fname, content, fields in msgs:
             base, get_srv_name, set_srv_name = srv_names_for_msg(fname)
@@ -962,7 +967,6 @@ def cli(
                     msg_type_name,
                     fields,
                     srv_use_msg,
-                    timestamp_schema=timestamp_schema,
                 )
                 (srv_dir / get_srv_name).write_text(get_content, encoding="utf-8")
                 srv_rel_paths.append(f"srv/{get_srv_name}")
@@ -971,14 +975,14 @@ def cli(
                 (srv_dir / set_srv_name).write_text(set_content, encoding="utf-8")
                 srv_rel_paths.append(f"srv/{set_srv_name}")
 
-    # Write timeseries .msg and Get/Set .srv files (when --timeseries is enabled).
-    # These are emitted alongside the per-signal sample .msg files generated above:
-    #   <Signal>.msg               -> already written (one stamped sample)
-    #   <Signal>Timeseries.msg     -> new (variable-length array + window)
-    #   Get<Signal>Timeseries.srv  -> new (batch retrieval)
-    #   Set<Signal>Timeseries.srv  -> new (batch injection)
+    # Write timeseries .msg and Get/Set .srv files (when --timeseries is set).
+    #   get  -> <Signal>Timeseries.msg + Get<Signal>Timeseries.srv
+    #   set  -> <Signal>Timeseries.msg + Set<Signal>Timeseries.srv
+    #   both -> all three
+    # The <Signal>Timeseries.msg wrapper is shared by Get and Set, so it is emitted
+    # whenever --timeseries has any value.
     if timeseries:
-        srv_dir.mkdir(parents=True, exist_ok=True)
+        ts_mode = timeseries.lower()
         for fname, _content, _fields in msgs:
             base = fname[:-4] if fname.lower().endswith(".msg") else fname
             ts_msg_name = timeseries_msg_name(base)
@@ -995,16 +999,17 @@ def cli(
             (msg_dir / ts_msg_name).write_text(ts_msg_content, encoding="utf-8")
             msg_rel_paths.append(f"msg/{ts_msg_name}")
 
-            get_ts_content = render_get_timeseries_srv(
-                base_msg_name=base,
-                timestamp_schema=timestamp_schema,
-            )
-            (srv_dir / get_ts_srv).write_text(get_ts_content, encoding="utf-8")
-            srv_rel_paths.append(f"srv/{get_ts_srv}")
-
-            set_ts_content = render_set_timeseries_srv(base_msg_name=base)
-            (srv_dir / set_ts_srv).write_text(set_ts_content, encoding="utf-8")
-            srv_rel_paths.append(f"srv/{set_ts_srv}")
+            if ts_mode in ("get", "both"):
+                get_ts_content = render_get_timeseries_srv(
+                    base_msg_name=base,
+                    timestamp_schema=timestamp_schema,
+                )
+                (srv_dir / get_ts_srv).write_text(get_ts_content, encoding="utf-8")
+                srv_rel_paths.append(f"srv/{get_ts_srv}")
+            if ts_mode in ("set", "both"):
+                set_ts_content = render_set_timeseries_srv(base_msg_name=base)
+                (srv_dir / set_ts_srv).write_text(set_ts_content, encoding="utf-8")
+                srv_rel_paths.append(f"srv/{set_ts_srv}")
 
     log.info("Done. Generated %d message(s) and %d service(s) in %s", len(msg_rel_paths), len(srv_rel_paths), pkg_dir)
 
