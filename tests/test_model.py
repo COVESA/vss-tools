@@ -9,7 +9,8 @@ from typing import Any
 
 import pydantic
 import pytest
-from vss_tools.model import VSSDataDatatype
+from vss_tools.datatypes import dynamic_quantities
+from vss_tools.model import VSSDataDatatype, VSSUnit
 
 
 @pytest.mark.parametrize(
@@ -75,6 +76,32 @@ def test_vss_data_datatype(data: dict[str, Any], ok: bool) -> None:
     data_ok = True
     try:
         VSSDataDatatype(**data)
+    except pydantic.ValidationError as e:
+        data_ok = False
+        print(e)
+
+    assert ok == data_ok
+
+
+@pytest.mark.parametrize(
+    "data, ok",
+    [
+        ({}, False),
+        ({"quantity": "q"}, True),
+        ({"qudt": {}}, False),
+        ({"qudt": {"unit": "u", "quantity-kind": "k"}}, True),
+    ],
+)
+def test_vss_unit(data: dict[str, Any], ok: bool) -> None:
+    dynamic_quantities.clear()
+    dynamic_quantities.append("q")
+
+    data.update({"definition": "def", "unit": "u"})
+
+    data_ok = True
+    print(data)
+    try:
+        VSSUnit(**data)
     except pydantic.ValidationError as e:
         data_ok = False
         print(e)
