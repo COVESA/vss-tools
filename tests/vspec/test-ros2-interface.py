@@ -1439,10 +1439,14 @@ A.Speed:
         tmp_path,
         mode="leaf",
         extra_args=[
-            "--include-dirs", str(INCLUDE_DIR),
-            "--types", str(types_vspec),
-            "--timestamp-struct-fqn", "CustomTypes.MyTime",
-            "--timeseries", "both",
+            "--include-dirs",
+            str(INCLUDE_DIR),
+            "--types",
+            str(types_vspec),
+            "--timestamp-struct-fqn",
+            "CustomTypes.MyTime",
+            "--timeseries",
+            "both",
         ],
     )
     ts_msg = read_text(pkg_dir / "msg" / "ASpeedTimeseries.msg")
