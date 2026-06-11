@@ -1,0 +1,581 @@
+# Copyright (c) 2016 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.VehicleIdentification:
+  type: branch
+  description: Attributes that identify a vehicle.
+
+Vehicle.VehicleIdentification.VIN:
+  datatype: string
+  type: attribute
+  description: 17-character Vehicle Identification Number (VIN) as defined by ISO 3779.
+  pattern: ^([0-9A-HJ-NPR-Z]{3})([0-9A-HJ-NPR-Z]{6})([0-9A-HJ-NPR-Z]{4}[0-9]{4})$
+
+Vehicle.VehicleIdentification.WMI:
+  datatype: string
+  type: attribute
+  description: 3-character World Manufacturer Identification (WMI) as defined by ISO 3780.
+
+Vehicle.VehicleIdentification.Brand:
+  datatype: string
+  type: attribute
+  description: Vehicle brand or manufacturer.
+
+Vehicle.VehicleIdentification.Model:
+  datatype: string
+  type: attribute
+  description: Vehicle model.
+
+Vehicle.VehicleIdentification.Year:
+  datatype: uint16
+  type: attribute
+  description: Model year of the vehicle.
+
+Vehicle.VehicleIdentification.BodyType:
+  datatype: string
+  type: attribute
+  description: Indicates the design and body style of the vehicle (e.g. station wagon, hatchback, etc.).
+
+Vehicle.VehicleIdentification.DateVehicleFirstRegistered:
+  datatype: string
+  type: attribute
+  unit: iso8601
+  description: The date in ISO 8601 format of the first registration of the vehicle with the respective public authorities.
+
+Vehicle.VehicleIdentification.LicensePlate:
+  datatype: string
+  type: attribute
+  description: The license plate of the vehicle.
+  comment: Depending on the context, this attribute might not be up to date or might be misconfigured, and therefore should be considered untrustworthy in the absence of another method of verification.
+
+Vehicle.VehicleIdentification.MeetsEmissionStandard:
+  datatype: string
+  type: attribute
+  description: Indicates that the vehicle meets the respective emission standard.
+
+Vehicle.VehicleIdentification.ProductionDate:
+  datatype: string
+  type: attribute
+  unit: iso8601
+  description: The date in ISO 8601 format of production of the item, e.g. vehicle.
+
+Vehicle.VehicleIdentification.VehicleModelDate:
+  datatype: string
+  type: attribute
+  unit: iso8601
+  description: The release date in ISO 8601 format of a vehicle model (often used to differentiate versions of the same make and model).
+
+Vehicle.VehicleIdentification.VehicleSeatingCapacity:
+  datatype: uint16
+  type: attribute
+  description: The number of passengers that can be seated in the vehicle, both in terms of the physical space available, and in terms of limitations set by law.
+
+Vehicle.VehicleIdentification.VehicleExteriorColor:
+  datatype: string
+  type: attribute
+  description: The main color of the exterior within the basic color palette (eg. red, blue, black, white, ...).
+
+Vehicle.LowVoltageSystemState:
+  datatype: string
+  type: sensor
+  allowed: [
+    'UNDEFINED', # State of low voltage system not known
+    'LOCK',      # Low voltage system off, steering lock or equivalent engaged
+    'OFF',       # Low voltage system off, steering lock or equivalent not engaged
+    'ACC',       # Vehicle Accessories on/living
+    'ON',        # Engine start enabled (e.g. ignition on, diesel pre-heating, electrical drive released)
+    'START'      # Engine starter relay closed (not applicable for electrical vehicles)
+    ]
+  description: State of the supply voltage of the control units (usually 12V).
+
+Vehicle.Speed:
+  datatype: float
+  type: sensor
+  unit: km/h
+  description: Vehicle speed.
+
+Vehicle.TraveledDistance:
+  datatype: float
+  type: sensor
+  unit: km
+  description: Odometer reading, total distance traveled during the lifetime of the vehicle.
+
+Vehicle.TraveledDistanceSinceStart:
+  datatype: float
+  type: sensor
+  unit: km
+  description: Distance traveled since start of current trip.
+  comment: A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode).
+           A trip is considered to end when engine is no longer enabled.
+           The signal may however keep the value of the last trip until a new trip is started.
+
+Vehicle.StartTime:
+  datatype: string
+  type: attribute
+  default: '0000-01-01T00:00Z'
+  unit: iso8601
+  description: Start time of current or latest trip, formatted according to ISO 8601 with UTC time zone.
+  comment: This signal is supposed to be set whenever a new trip starts.
+           A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode).
+           A trip is considered to end when engine is no longer enabled.
+           The default value indicates that the vehicle never has been started, or that latest start time is unknown.
+
+Vehicle.TripDuration:
+  datatype: float
+  type: sensor
+  unit: s
+  description: Duration of latest trip.
+  comment: This signal is not assumed to be continuously updated, but instead set to 0 when a trip starts
+           and set to the actual duration of the trip when a trip ends.
+           A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode).
+           A trip is considered to end when engine is no longer enabled.
+
+Vehicle.TripMeterReading:
+  datatype: float
+  type: actuator
+  unit: km
+  description: Trip meter reading.
+  comment: The trip meter is an odometer that can be manually reset by the driver
+
+Vehicle.IsBrokenDown:
+  datatype: boolean
+  type: sensor
+  description: Vehicle breakdown or any similar event causing vehicle to stop on the road,
+               that might pose a risk to other road users.
+               True = Vehicle broken down on the road, due to e.g. engine problems, flat tire, out of gas, brake problems.
+               False = Vehicle not broken down.
+  comment: Actual criteria and method used to decide if a vehicle is broken down is implementation specific.
+
+Vehicle.IsMoving:
+  datatype: boolean
+  type: sensor
+  description: Indicates whether the vehicle is stationary or moving.
+
+Vehicle.AverageSpeed:
+  datatype: float
+  type: sensor
+  unit: km/h
+  description: Average speed for the current trip.
+  comment: A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode).
+           A trip is considered to end when engine is no longer enabled.
+           The signal may however keep the value of the last trip until a new trip is started.
+           Calculation of average speed may exclude periods when the vehicle for example is not moving or transmission is in neutral.
+
+Vehicle.RoofLoad:
+  datatype: int16
+  type: attribute
+  unit: kg
+  description: The permitted total weight of cargo and installations (e.g. a roof rack) on top of the vehicle.
+
+Vehicle.CargoVolume:
+  datatype: float
+  type: attribute
+  unit: l
+  description: The available volume for cargo or luggage. For automobiles, this is usually the trunk volume.
+  min: 0
+
+Vehicle.EmissionsCO2:
+  datatype: int16
+  type: attribute
+  description: The CO2 emissions.
+  unit: g/km
+
+Vehicle.CurrentOverallWeight:
+  datatype: uint16
+  type: sensor
+  unit: kg
+  description: Current overall Vehicle weight. Including passengers, cargo and other load inside the car.
+
+Vehicle.CurbWeight:
+  datatype: uint16
+  type: attribute
+  default: 0
+  unit: kg
+  description: Vehicle curb weight, including all liquids and full tank of fuel, but no cargo or passengers.
+
+Vehicle.GrossWeight:
+  datatype: uint16
+  type: attribute
+  default: 0
+  unit: kg
+  description: Curb weight of vehicle, including all liquids and full tank of fuel and full load of cargo and passengers.
+
+Vehicle.MaxTowWeight:
+  datatype: uint16
+  type: attribute
+  default: 0
+  unit: kg
+  description: Maximum weight of trailer.
+
+Vehicle.MaxTowBallWeight:
+  datatype: uint16
+  type: attribute
+  default: 0
+  unit: kg
+  description: Maximum vertical weight on the tow ball of a trailer.
+
+Vehicle.Length:
+  datatype: uint16
+  type: attribute
+  default: 0
+  unit: mm
+  description: Overall vehicle length.
+
+Vehicle.Height:
+  datatype: uint16
+  type: attribute
+  default: 0
+  unit: mm
+  description: Overall vehicle height.
+
+Vehicle.WidthExcludingMirrors:
+  datatype: uint16
+  type: attribute
+  default: 0
+  unit: mm
+  description: Overall vehicle width excluding mirrors, as defined by SAE J1100-2009 W103.
+
+Vehicle.WidthIncludingMirrors:
+  datatype: uint16
+  type: attribute
+  unit: mm
+  description: Overall vehicle width including mirrors, as defined by SAE J1100-2009 W144.
+
+Vehicle.WidthFoldedMirrors:
+  datatype: uint16
+  type: attribute
+  unit: mm
+  description: Overall vehicle width with mirrors folded, as defined by SAE J1100-2009 W145.
+
+Vehicle.TurningDiameter:
+  datatype: uint16
+  type: attribute
+  unit: mm
+  description: Minimum turning diameter, Wall-to-Wall, as defined by SAE J1100-2009 D102.
+
+Vehicle.Trailer:
+  type: branch
+  description: Trailer signals.
+
+Vehicle.Trailer.IsConnected:
+  datatype: boolean
+  type: sensor
+  description: Signal indicating if trailer is connected or not.
+
+Vehicle.CurrentLocation:
+  type: branch
+  description: The current latitude and longitude of the vehicle.
+
+Vehicle.CurrentLocation.Timestamp:
+  datatype: string
+  type: sensor
+  unit: iso8601
+  description: Timestamp from GNSS system for current location, formatted according to ISO 8601 with UTC time zone.
+
+Vehicle.CurrentLocation.Latitude:
+  datatype: double
+  type: sensor
+  min: -90
+  max: 90
+  unit: degrees
+  description: Current latitude of vehicle in WGS 84 geodetic coordinates, as measured at the position of GNSS receiver antenna.
+
+Vehicle.CurrentLocation.Longitude:
+  datatype: double
+  type: sensor
+  min: -180
+  max: 180
+  unit: degrees
+  description: Current longitude of vehicle in WGS 84 geodetic coordinates, as measured at the position of GNSS receiver antenna.
+
+Vehicle.CurrentLocation.Heading:
+  datatype: double
+  type: sensor
+  min: 0
+  max: 360
+  unit: degrees
+  description: Current heading relative to geographic north.
+               0 = North, 90 = East, 180 = South, 270 = West.
+
+Vehicle.CurrentLocation.HorizontalAccuracy:
+  datatype: double
+  type: sensor
+  unit: m
+  description: Accuracy of the latitude and longitude coordinates.
+
+Vehicle.CurrentLocation.Altitude:
+  datatype: double
+  type: sensor
+  unit: m
+  description: Current altitude relative to WGS 84 reference ellipsoid, as measured at the position of GNSS receiver antenna.
+
+Vehicle.CurrentLocation.VerticalAccuracy:
+  datatype: double
+  type: sensor
+  unit: m
+  description: Accuracy of altitude.
+
+Vehicle.CurrentLocation.GNSSReceiver:
+  type: branch
+  description: Information on the GNSS receiver used for determining current location.
+
+Vehicle.CurrentLocation.GNSSReceiver.FixType:
+  datatype: string
+  type: sensor
+  allowed: ['NONE',
+            'TWO_D',
+            'TWO_D_SATELLITE_BASED_AUGMENTATION',
+            'TWO_D_GROUND_BASED_AUGMENTATION',
+            'TWO_D_SATELLITE_AND_GROUND_BASED_AUGMENTATION',
+            'THREE_D',
+            'THREE_D_SATELLITE_BASED_AUGMENTATION',
+            'THREE_D_GROUND_BASED_AUGMENTATION',
+            'THREE_D_SATELLITE_AND_GROUND_BASED_AUGMENTATION']
+  description: Fix status of GNSS receiver.
+
+Vehicle.CurrentLocation.GNSSReceiver.MountingPosition:
+  type: branch
+  description: Mounting position of GNSS receiver antenna relative to vehicle coordinate system.
+               Axis definitions according to ISO 8855. Origin at center of (first) rear axle.
+
+Vehicle.CurrentLocation.GNSSReceiver.MountingPosition.X:
+  datatype: int16
+  type: attribute
+  unit: mm
+  description: Mounting position of GNSS receiver antenna relative to vehicle coordinate system.
+               Axis definitions according to ISO 8855. Origin at center of (first) rear axle.
+               Positive values = forward of rear axle. Negative values = backward of rear axle.
+
+Vehicle.CurrentLocation.GNSSReceiver.MountingPosition.Y:
+  datatype: int16
+  type: attribute
+  unit: mm
+  description: Mounting position of GNSS receiver antenna relative to vehicle coordinate system.
+               Axis definitions according to ISO 8855. Origin at center of (first) rear axle.
+               Positive values = left of origin. Negative values = right of origin.
+               Left/Right is as seen from driver perspective, i.e. by a person looking forward.
+
+Vehicle.CurrentLocation.GNSSReceiver.MountingPosition.Z:
+  datatype: int16
+  type: attribute
+  unit: mm
+  description: Mounting position of GNSS receiver on Z-axis.
+               Axis definitions according to ISO 8855. Origin at center of (first) rear axle.
+               Positive values = above center of rear axle. Negative values = below center of rear axle.
+
+Vehicle.Powertrain:
+  type: branch
+  description: Powertrain data for battery management, etc.
+
+Vehicle.Powertrain.AccumulatedBrakingEnergy:
+  datatype: float
+  type: sensor
+  unit: kWh
+  description: The accumulated energy from regenerative braking over lifetime.
+
+Vehicle.Powertrain.Range:
+  datatype: uint32
+  type: sensor
+  unit: m
+  description: Remaining range in meters using all energy sources available in the vehicle.
+
+Vehicle.Powertrain.TimeRemaining:
+  datatype: uint32
+  type: sensor
+  unit: s
+  description: Time remaining in seconds before all energy sources available in the vehicle are empty.
+
+Vehicle.Powertrain.Type:
+  datatype: string
+  type: attribute
+  allowed: ['COMBUSTION', 'HYBRID', 'ELECTRIC']
+  description: Defines the powertrain type of the vehicle.
+  comment: For vehicles with a combustion engine (including hybrids) more detailed information on fuels supported can
+           be found in FuelSystem.SupportedFuelTypes and FuelSystem.SupportedFuels.
+
+Vehicle.Powertrain.CombustionEngine:
+  type: branch
+  description: Engine-specific data, stopping at the bell housing.
+
+Vehicle.Powertrain.CombustionEngine.IsRunning:
+  datatype: boolean
+  type: sensor
+  description: Engine Running. True if engine is rotating (Speed > 0).
+
+Vehicle.Powertrain.CombustionEngine.Speed:
+  datatype: uint16
+  type: sensor
+  unit: rpm
+  description: Engine speed measured as rotations per minute.
+
+Vehicle.Powertrain.CombustionEngine.EngineOil:
+  type: branch
+  description: Signals related to the engine oil
+
+Vehicle.Powertrain.CombustionEngine.EngineOil.Capacity:
+  datatype: float
+  type: attribute
+  description: Engine oil capacity in liters.
+  unit: l
+
+Vehicle.Powertrain.CombustionEngine.EngineOil.Level:
+  datatype: string
+  type: sensor
+  allowed: [
+    'CRITICALLY_LOW',  # Critically low, immediate action required
+    'LOW',             # Level below recommended range, but not critical
+    'NORMAL',          # Within normal range, no need for driver action
+    'HIGH',            # Level above recommended range, but not critical
+    'CRITICALLY_HIGH'  # Critically high, immediate action required
+    ]
+  description: Engine oil level.
+
+Vehicle.Powertrain.CombustionEngine.EngineOil.Temperature:
+  datatype: float
+  type: sensor
+  unit: celsius
+  description: EOT, Engine oil temperature.
+
+Vehicle.Powertrain.CombustionEngine.EngineCoolant:
+  type: branch
+  description: Signals related to the engine coolant
+
+Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature:
+  datatype: float
+  type: sensor
+  unit: celsius
+  description: Engine coolant temperature.
+
+Vehicle.Powertrain.CombustionEngine.EngineCoolant.Level:
+  datatype: string
+  type: sensor
+  allowed: [
+    'CRITICALLY_LOW',  # Critically low, immediate action required
+    'LOW',             # Level below recommended range, but not critical
+    'NORMAL',          # Within normal range, no need for driver action
+    ]
+  description: Engine coolant level.
+
+Vehicle.Powertrain.FuelSystem:
+  type: branch
+  description: Fuel system data.
+
+Vehicle.Powertrain.FuelSystem.SupportedFuelTypes:
+  datatype: string[]
+  type: attribute
+  allowed: ['GASOLINE', 'DIESEL', 'E85', 'LPG', 'CNG', 'LNG', 'H2', 'OTHER']
+  description: High level information of fuel types supported
+  comment: If a vehicle also has an electric drivetrain (e.g. hybrid) that will be obvious from the PowerTrain.Type signal.
+
+Vehicle.Powertrain.FuelSystem.SupportedFuel:
+  datatype: string[]
+  type: attribute
+  allowed: ['E5_95', 'E5_98', 'E10_95', 'E10_98', 'E85', 'B7', 'B10', 'B20', 'B30', 'B100',
+            'XTL', 'LPG', 'CNG', 'LNG', 'H2', 'OTHER']
+  description: Detailed information on fuels supported by the vehicle.
+               Identifiers originating from DIN EN 16942:2021-08, appendix B,
+               with additional suffix for octane (RON) where relevant.
+  comment: RON 95 is sometimes referred to as Super, RON 98 as Super Plus.
+
+Vehicle.Powertrain.FuelSystem.HybridType:
+  datatype: string
+  type: attribute
+  allowed: ['UNKNOWN', 'NOT_APPLICABLE', 'STOP_START', 'BELT_ISG', 'CIMG', 'PHEV']
+  default: 'UNKNOWN'
+  description: Defines the hybrid type of the vehicle.
+
+Vehicle.Powertrain.FuelSystem.TankCapacity:
+  datatype: float
+  type: attribute
+  unit: l
+  description: Capacity of the fuel tank in liters.
+
+Vehicle.Powertrain.FuelSystem.AbsoluteLevel:
+  datatype: float
+  type: sensor
+  unit: l
+  description: Current available fuel in the fuel tank expressed in liters.
+
+Vehicle.Powertrain.FuelSystem.RelativeLevel:
+  datatype: uint8
+  type: sensor
+  unit: percent
+  min: 0
+  max: 100
+  description: Level in fuel tank as percent of capacity. 0 = empty. 100 = full.
+
+Vehicle.Powertrain.FuelSystem.Range:
+  datatype: uint32
+  type: sensor
+  unit: m
+  description: Remaining range in meters using only liquid fuel.
+
+Vehicle.Powertrain.FuelSystem.TimeRemaining:
+  datatype: uint32
+  type: sensor
+  unit: s
+  description: Time remaining in seconds before the fuel tank is empty.
+
+Vehicle.Powertrain.FuelSystem.InstantConsumption:
+  datatype: float
+  type: sensor
+  unit: l/100km
+  min: 0
+  description: Current consumption in liters per 100 km.
+
+Vehicle.Powertrain.FuelSystem.AverageConsumption:
+  datatype: float
+  type: sensor
+  unit: l/100km
+  min: 0
+  description: Average consumption in liters per 100 km.
+
+Vehicle.Powertrain.FuelSystem.ConsumptionSinceStart:
+  datatype: float
+  type: sensor
+  unit: l
+  description: Fuel amount in liters consumed since start of current trip.
+  comment: A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode).
+           A trip is considered to end when engine is no longer enabled.
+           The signal may however keep the value of the last trip until a new trip is started.
+
+Vehicle.Powertrain.FuelSystem.ConsumptionSinceLastRefuel:
+  datatype: float
+  type: sensor
+  unit: l
+  description: Fuel consumption since last refueling.
+  comment: Amount of fuel consumed since last refueling.
+
+Vehicle.Powertrain.FuelSystem.IsEngineStopStartEnabled:
+  datatype: boolean
+  type: sensor
+  description: Indicates whether eco start stop is currently enabled.
+
+Vehicle.Powertrain.FuelSystem.IsFuelLevelLow:
+  datatype: boolean
+  type: sensor
+  description: Indicates that the fuel level is low (e.g. <50km range).
+
+Vehicle.Powertrain.FuelSystem.RefuelPortPosition:
+  datatype: string[]
+  type: attribute
+  allowed: ['FRONT_LEFT', 'FRONT_MIDDLE', 'FRONT_RIGHT',
+            'REAR_LEFT', 'REAR_MIDDLE', 'REAR_RIGHT',
+            'LEFT_FRONT', 'LEFT_MIDDLE', 'LEFT_REAR',
+            'RIGHT_FRONT', 'RIGHT_MIDDLE', 'RIGHT_REAR']
+  description: Position of refuel port(s).
+               First part indicates side of vehicle, second part relative position on that side.
+
+Vehicle.Powertrain.FuelSystem.IsFuelPortFlapOpen:
+  datatype: boolean
+  type: actuator
+  description: Status of the fuel port flap(s). True if at least one is open.

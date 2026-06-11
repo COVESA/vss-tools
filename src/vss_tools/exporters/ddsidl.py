@@ -146,24 +146,15 @@ idl_keywords = [
 
 
 def getAllowedName(name):
-    if name.lower() in c_keywords or name.lower() in idl_keywords or keyword.iskeyword(name.lower):
+    lower = name.lower()
+    if lower in c_keywords or lower in idl_keywords or keyword.iskeyword(lower):
         return "_" + name
     else:
         return name
 
 
 def get_allowed_enum_literal(name: str):
-    """
-    Check if this is is an allowed literal name, if not add prefix.
-
-    Background:
-
-    In VSS '123' is a perfectly fine string literal, usable as allowed value for a string.
-    The current exporter (this file) translated it previously to 123 which is not a valid DSS IDL literal.
-    Adding an underscore as prefix makes the generated IDL ok, but then gives problems if generating for example
-    Python code by Eclipse Cyclone DDS idlc Python Backend.
-    By that reason we now add a regular character instead.
-    """
+    name = name.replace(" ", "_")
     if name[0].isdigit():
         return "d" + name
     return name
@@ -428,10 +419,10 @@ def cli(
 
     if datatype_tree is not None:
         exporter = StructExporter()
-        with open(output, "w") as idl_out:
+        with open(output, "w", encoding="utf-8") as idl_out:
             idl_out.write(exporter.export(datatype_tree))
 
-    with open(output, "a" if datatype_tree is not None else "w") as idl_out:
+    with open(output, "a" if datatype_tree is not None else "w", encoding="utf-8") as idl_out:
         export_idl(
             idl_out,
             tree,

@@ -22,7 +22,12 @@ from vss_tools.main import get_trees
 
 
 def export_yaml(file_name, content_dict):
-    with open(file_name, "w") as f:
+    # Open the file in text mode with explicit utf-8 encoding so allow_unicode=True
+    # can write non-ASCII characters (e.g. ° in unit names) without crashing on
+    # platforms whose default encoding is not UTF-8 (e.g. Windows cp1252).
+    # Note: the `encoding=...` kwarg passed to yaml.dump below is ignored when the
+    # stream is a text-mode file, but is kept for clarity.
+    with open(file_name, "w", encoding="utf-8") as f:
         yaml.dump(
             content_dict,
             f,

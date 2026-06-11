@@ -41,4 +41,5 @@ class LazyGroup(RichGroup):
         # check the result to make debugging easier
         if not isinstance(cmd_object, click.BaseCommand):
             raise ValueError(f"Lazy loading of {import_path} failed by returning " "a non-command object")
+        cmd_object.name = cmd_name
         return cmd_object

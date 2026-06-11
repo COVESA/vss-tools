@@ -1,0 +1,317 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+
+	<string name="app_title" translatable="false">OEM service</string>
+
+	<string name="car_permission_label_oem_average_speed_read">Read car\u2019s state of average speed</string>
+
+	<string name="car_permission_desc_oem_average_speed_read">Read car\u2019s state of average speed</string>
+
+	<string name="car_permission_label_oem_cargo_volume_read">Read car\u2019s state of cargo volume</string>
+
+	<string name="car_permission_desc_oem_cargo_volume_read">Read car\u2019s state of cargo volume</string>
+
+	<string name="car_permission_label_oem_curb_weight_read">Read car\u2019s state of curb weight</string>
+
+	<string name="car_permission_desc_oem_curb_weight_read">Read car\u2019s state of curb weight</string>
+
+	<string name="car_permission_label_oem_current_location_altitude_read">Read car\u2019s state of current location altitude</string>
+
+	<string name="car_permission_desc_oem_current_location_altitude_read">Read car\u2019s state of current location altitude</string>
+
+	<string name="car_permission_label_oem_current_location_gnssreceiver_fix_type_read">Read car\u2019s state of current location gnssreceiver fix type</string>
+
+	<string name="car_permission_desc_oem_current_location_gnssreceiver_fix_type_read">Read car\u2019s state of current location gnssreceiver fix type</string>
+
+	<string name="car_permission_label_oem_current_location_gnssreceiver_mounting_position_x_read">Read car\u2019s state of current location gnssreceiver mounting position x</string>
+
+	<string name="car_permission_desc_oem_current_location_gnssreceiver_mounting_position_x_read">Read car\u2019s state of current location gnssreceiver mounting position x</string>
+
+	<string name="car_permission_label_oem_current_location_gnssreceiver_mounting_position_y_read">Read car\u2019s state of current location gnssreceiver mounting position y</string>
+
+	<string name="car_permission_desc_oem_current_location_gnssreceiver_mounting_position_y_read">Read car\u2019s state of current location gnssreceiver mounting position y</string>
+
+	<string name="car_permission_label_oem_current_location_gnssreceiver_mounting_position_z_read">Read car\u2019s state of current location gnssreceiver mounting position z</string>
+
+	<string name="car_permission_desc_oem_current_location_gnssreceiver_mounting_position_z_read">Read car\u2019s state of current location gnssreceiver mounting position z</string>
+
+	<string name="car_permission_label_oem_current_location_heading_read">Read car\u2019s state of current location heading</string>
+
+	<string name="car_permission_desc_oem_current_location_heading_read">Read car\u2019s state of current location heading</string>
+
+	<string name="car_permission_label_oem_current_location_horizontal_accuracy_read">Read car\u2019s state of current location horizontal accuracy</string>
+
+	<string name="car_permission_desc_oem_current_location_horizontal_accuracy_read">Read car\u2019s state of current location horizontal accuracy</string>
+
+	<string name="car_permission_label_oem_current_location_latitude_read">Read car\u2019s state of current location latitude</string>
+
+	<string name="car_permission_desc_oem_current_location_latitude_read">Read car\u2019s state of current location latitude</string>
+
+	<string name="car_permission_label_oem_current_location_longitude_read">Read car\u2019s state of current location longitude</string>
+
+	<string name="car_permission_desc_oem_current_location_longitude_read">Read car\u2019s state of current location longitude</string>
+
+	<string name="car_permission_label_oem_current_location_timestamp_read">Read car\u2019s state of current location timestamp</string>
+
+	<string name="car_permission_desc_oem_current_location_timestamp_read">Read car\u2019s state of current location timestamp</string>
+
+	<string name="car_permission_label_oem_current_location_vertical_accuracy_read">Read car\u2019s state of current location vertical accuracy</string>
+
+	<string name="car_permission_desc_oem_current_location_vertical_accuracy_read">Read car\u2019s state of current location vertical accuracy</string>
+
+	<string name="car_permission_label_oem_current_overall_weight_read">Read car\u2019s state of current overall weight</string>
+
+	<string name="car_permission_desc_oem_current_overall_weight_read">Read car\u2019s state of current overall weight</string>
+
+	<string name="car_permission_label_oem_emissions_co2_read">Read car\u2019s state of emissions co2</string>
+
+	<string name="car_permission_desc_oem_emissions_co2_read">Read car\u2019s state of emissions co2</string>
+
+	<string name="car_permission_label_oem_gross_weight_read">Read car\u2019s state of gross weight</string>
+
+	<string name="car_permission_desc_oem_gross_weight_read">Read car\u2019s state of gross weight</string>
+
+	<string name="car_permission_label_oem_height_read">Read car\u2019s state of height</string>
+
+	<string name="car_permission_desc_oem_height_read">Read car\u2019s state of height</string>
+
+	<string name="car_permission_label_oem_is_broken_down_read">Read car\u2019s state of is broken down</string>
+
+	<string name="car_permission_desc_oem_is_broken_down_read">Read car\u2019s state of is broken down</string>
+
+	<string name="car_permission_label_oem_is_moving_read">Read car\u2019s state of is moving</string>
+
+	<string name="car_permission_desc_oem_is_moving_read">Read car\u2019s state of is moving</string>
+
+	<string name="car_permission_label_oem_length_read">Read car\u2019s state of length</string>
+
+	<string name="car_permission_desc_oem_length_read">Read car\u2019s state of length</string>
+
+	<string name="car_permission_label_oem_low_voltage_system_state_read">Read car\u2019s state of low voltage system state</string>
+
+	<string name="car_permission_desc_oem_low_voltage_system_state_read">Read car\u2019s state of low voltage system state</string>
+
+	<string name="car_permission_label_oem_max_tow_ball_weight_read">Read car\u2019s state of max tow ball weight</string>
+
+	<string name="car_permission_desc_oem_max_tow_ball_weight_read">Read car\u2019s state of max tow ball weight</string>
+
+	<string name="car_permission_label_oem_max_tow_weight_read">Read car\u2019s state of max tow weight</string>
+
+	<string name="car_permission_desc_oem_max_tow_weight_read">Read car\u2019s state of max tow weight</string>
+
+	<string name="car_permission_label_oem_powertrain_accumulated_braking_energy_read">Read car\u2019s state of powertrain accumulated braking energy</string>
+
+	<string name="car_permission_desc_oem_powertrain_accumulated_braking_energy_read">Read car\u2019s state of powertrain accumulated braking energy</string>
+
+	<string name="car_permission_label_oem_powertrain_combustion_engine_engine_coolant_level_read">Read car\u2019s state of powertrain combustion engine engine coolant level</string>
+
+	<string name="car_permission_desc_oem_powertrain_combustion_engine_engine_coolant_level_read">Read car\u2019s state of powertrain combustion engine engine coolant level</string>
+
+	<string name="car_permission_label_oem_powertrain_combustion_engine_engine_coolant_temperature_read">Read car\u2019s state of powertrain combustion engine engine coolant temperature</string>
+
+	<string name="car_permission_desc_oem_powertrain_combustion_engine_engine_coolant_temperature_read">Read car\u2019s state of powertrain combustion engine engine coolant temperature</string>
+
+	<string name="car_permission_label_oem_powertrain_combustion_engine_engine_oil_capacity_read">Read car\u2019s state of powertrain combustion engine engine oil capacity</string>
+
+	<string name="car_permission_desc_oem_powertrain_combustion_engine_engine_oil_capacity_read">Read car\u2019s state of powertrain combustion engine engine oil capacity</string>
+
+	<string name="car_permission_label_oem_powertrain_combustion_engine_engine_oil_level_read">Read car\u2019s state of powertrain combustion engine engine oil level</string>
+
+	<string name="car_permission_desc_oem_powertrain_combustion_engine_engine_oil_level_read">Read car\u2019s state of powertrain combustion engine engine oil level</string>
+
+	<string name="car_permission_label_oem_powertrain_combustion_engine_engine_oil_temperature_read">Read car\u2019s state of powertrain combustion engine engine oil temperature</string>
+
+	<string name="car_permission_desc_oem_powertrain_combustion_engine_engine_oil_temperature_read">Read car\u2019s state of powertrain combustion engine engine oil temperature</string>
+
+	<string name="car_permission_label_oem_powertrain_combustion_engine_is_running_read">Read car\u2019s state of powertrain combustion engine (is_running)</string>
+
+	<string name="car_permission_desc_oem_powertrain_combustion_engine_is_running_read">Read car\u2019s state of powertrain combustion engine (is_running)</string>
+
+	<string name="car_permission_label_oem_powertrain_combustion_engine_speed_read">Read car\u2019s state of powertrain combustion engine speed</string>
+
+	<string name="car_permission_desc_oem_powertrain_combustion_engine_speed_read">Read car\u2019s state of powertrain combustion engine speed</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_absolute_level_read">Read car\u2019s state of powertrain fuel system absolute level</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_absolute_level_read">Read car\u2019s state of powertrain fuel system absolute level</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_average_consumption_read">Read car\u2019s state of powertrain fuel system average consumption</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_average_consumption_read">Read car\u2019s state of powertrain fuel system average consumption</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_consumption_since_last_refuel_read">Read car\u2019s state of powertrain fuel system consumption since last refuel</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_consumption_since_last_refuel_read">Read car\u2019s state of powertrain fuel system consumption since last refuel</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_consumption_since_start_read">Read car\u2019s state of powertrain fuel system consumption since start</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_consumption_since_start_read">Read car\u2019s state of powertrain fuel system consumption since start</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_hybrid_type_read">Read car\u2019s state of powertrain fuel system hybrid type</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_hybrid_type_read">Read car\u2019s state of powertrain fuel system hybrid type</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_instant_consumption_read">Read car\u2019s state of powertrain fuel system instant consumption</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_instant_consumption_read">Read car\u2019s state of powertrain fuel system instant consumption</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_is_engine_stop_start_enabled_read">Read car\u2019s state of powertrain fuel system (is_engine_stop_start_enabled)</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_is_engine_stop_start_enabled_read">Read car\u2019s state of powertrain fuel system (is_engine_stop_start_enabled)</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_is_fuel_level_low_read">Read car\u2019s state of powertrain fuel system (is_fuel_level_low)</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_is_fuel_level_low_read">Read car\u2019s state of powertrain fuel system (is_fuel_level_low)</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_is_fuel_port_flap_open_read">Read car\u2019s state of powertrain fuel system (is_fuel_port_flap_open)</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_is_fuel_port_flap_open_read">Read car\u2019s state of powertrain fuel system (is_fuel_port_flap_open)</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_is_fuel_port_flap_open_write">Control car\u2019s state of powertrain fuel system (is_fuel_port_flap_open)</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_is_fuel_port_flap_open_write">Control car\u2019s state of powertrain fuel system (is_fuel_port_flap_open)</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_range_read">Read car\u2019s state of powertrain fuel system range</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_range_read">Read car\u2019s state of powertrain fuel system range</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_refuel_port_position_read">Read car\u2019s state of powertrain fuel system refuel port position</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_refuel_port_position_read">Read car\u2019s state of powertrain fuel system refuel port position</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_relative_level_read">Read car\u2019s state of powertrain fuel system relative level</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_relative_level_read">Read car\u2019s state of powertrain fuel system relative level</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_supported_fuel_read">Read car\u2019s state of powertrain fuel system supported fuel</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_supported_fuel_read">Read car\u2019s state of powertrain fuel system supported fuel</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_supported_fuel_types_read">Read car\u2019s state of powertrain fuel system supported fuel types</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_supported_fuel_types_read">Read car\u2019s state of powertrain fuel system supported fuel types</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_tank_capacity_read">Read car\u2019s state of powertrain fuel system tank capacity</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_tank_capacity_read">Read car\u2019s state of powertrain fuel system tank capacity</string>
+
+	<string name="car_permission_label_oem_powertrain_fuel_system_time_remaining_read">Read car\u2019s state of powertrain fuel system time remaining</string>
+
+	<string name="car_permission_desc_oem_powertrain_fuel_system_time_remaining_read">Read car\u2019s state of powertrain fuel system time remaining</string>
+
+	<string name="car_permission_label_oem_powertrain_range_read">Read car\u2019s state of powertrain range</string>
+
+	<string name="car_permission_desc_oem_powertrain_range_read">Read car\u2019s state of powertrain range</string>
+
+	<string name="car_permission_label_oem_powertrain_time_remaining_read">Read car\u2019s state of powertrain time remaining</string>
+
+	<string name="car_permission_desc_oem_powertrain_time_remaining_read">Read car\u2019s state of powertrain time remaining</string>
+
+	<string name="car_permission_label_oem_powertrain_type_read">Read car\u2019s state of powertrain type</string>
+
+	<string name="car_permission_desc_oem_powertrain_type_read">Read car\u2019s state of powertrain type</string>
+
+	<string name="car_permission_label_oem_roof_load_read">Read car\u2019s state of roof load</string>
+
+	<string name="car_permission_desc_oem_roof_load_read">Read car\u2019s state of roof load</string>
+
+	<string name="car_permission_label_oem_speed_read">Read car\u2019s state of speed</string>
+
+	<string name="car_permission_desc_oem_speed_read">Read car\u2019s state of speed</string>
+
+	<string name="car_permission_label_oem_start_time_read">Read car\u2019s state of start time</string>
+
+	<string name="car_permission_desc_oem_start_time_read">Read car\u2019s state of start time</string>
+
+	<string name="car_permission_label_oem_trailer_is_connected_read">Read car\u2019s state of trailer (is_connected)</string>
+
+	<string name="car_permission_desc_oem_trailer_is_connected_read">Read car\u2019s state of trailer (is_connected)</string>
+
+	<string name="car_permission_label_oem_traveled_distance_read">Read car\u2019s state of traveled distance</string>
+
+	<string name="car_permission_desc_oem_traveled_distance_read">Read car\u2019s state of traveled distance</string>
+
+	<string name="car_permission_label_oem_traveled_distance_since_start_read">Read car\u2019s state of traveled distance since start</string>
+
+	<string name="car_permission_desc_oem_traveled_distance_since_start_read">Read car\u2019s state of traveled distance since start</string>
+
+	<string name="car_permission_label_oem_trip_duration_read">Read car\u2019s state of trip duration</string>
+
+	<string name="car_permission_desc_oem_trip_duration_read">Read car\u2019s state of trip duration</string>
+
+	<string name="car_permission_label_oem_trip_meter_reading_read">Read car\u2019s state of trip meter reading</string>
+
+	<string name="car_permission_desc_oem_trip_meter_reading_read">Read car\u2019s state of trip meter reading</string>
+
+	<string name="car_permission_label_oem_trip_meter_reading_write">Control car\u2019s state of trip meter reading</string>
+
+	<string name="car_permission_desc_oem_trip_meter_reading_write">Control car\u2019s state of trip meter reading</string>
+
+	<string name="car_permission_label_oem_turning_diameter_read">Read car\u2019s state of turning diameter</string>
+
+	<string name="car_permission_desc_oem_turning_diameter_read">Read car\u2019s state of turning diameter</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_body_type_read">Read car\u2019s state of vehicle identification body type</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_body_type_read">Read car\u2019s state of vehicle identification body type</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_brand_read">Read car\u2019s state of vehicle identification brand</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_brand_read">Read car\u2019s state of vehicle identification brand</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_date_vehicle_first_registered_read">Read car\u2019s state of vehicle identification date vehicle first registered</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_date_vehicle_first_registered_read">Read car\u2019s state of vehicle identification date vehicle first registered</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_license_plate_read">Read car\u2019s state of vehicle identification license plate</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_license_plate_read">Read car\u2019s state of vehicle identification license plate</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_meets_emission_standard_read">Read car\u2019s state of vehicle identification meets emission standard</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_meets_emission_standard_read">Read car\u2019s state of vehicle identification meets emission standard</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_model_read">Read car\u2019s state of vehicle identification model</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_model_read">Read car\u2019s state of vehicle identification model</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_production_date_read">Read car\u2019s state of vehicle identification production date</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_production_date_read">Read car\u2019s state of vehicle identification production date</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_vehicle_exterior_color_read">Read car\u2019s state of vehicle identification vehicle exterior color</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_vehicle_exterior_color_read">Read car\u2019s state of vehicle identification vehicle exterior color</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_vehicle_model_date_read">Read car\u2019s state of vehicle identification vehicle model date</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_vehicle_model_date_read">Read car\u2019s state of vehicle identification vehicle model date</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_vehicle_seating_capacity_read">Read car\u2019s state of vehicle identification vehicle seating capacity</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_vehicle_seating_capacity_read">Read car\u2019s state of vehicle identification vehicle seating capacity</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_vin_read">Read car\u2019s state of vehicle identification vin</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_vin_read">Read car\u2019s state of vehicle identification vin</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_wmi_read">Read car\u2019s state of vehicle identification wmi</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_wmi_read">Read car\u2019s state of vehicle identification wmi</string>
+
+	<string name="car_permission_label_oem_vehicle_identification_year_read">Read car\u2019s state of vehicle identification year</string>
+
+	<string name="car_permission_desc_oem_vehicle_identification_year_read">Read car\u2019s state of vehicle identification year</string>
+
+	<string name="car_permission_label_oem_width_excluding_mirrors_read">Read car\u2019s state of width excluding mirrors</string>
+
+	<string name="car_permission_desc_oem_width_excluding_mirrors_read">Read car\u2019s state of width excluding mirrors</string>
+
+	<string name="car_permission_label_oem_width_folded_mirrors_read">Read car\u2019s state of width folded mirrors</string>
+
+	<string name="car_permission_desc_oem_width_folded_mirrors_read">Read car\u2019s state of width folded mirrors</string>
+
+	<string name="car_permission_label_oem_width_including_mirrors_read">Read car\u2019s state of width including mirrors</string>
+
+	<string name="car_permission_desc_oem_width_including_mirrors_read">Read car\u2019s state of width including mirrors</string>
+</resources>

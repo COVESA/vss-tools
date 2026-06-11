@@ -54,6 +54,7 @@ def get_data(node: VSSNode, with_extra_attributes: bool = True, extended_attribu
 @click.option(
     "--stats-radial",
     type=click.Path(path_type=Path),
+    default=None,
     help="Generate radial tree statistics into following JSON file",
 )
 @click.pass_context
@@ -109,12 +110,12 @@ def cli(
             log.info("Adding custom data types to signal dictionary")
             signals_data["ComplexDataTypes"] = types_data
         else:
-            with open(types_output, "w") as f:
+            with open(types_output, "w", encoding="utf-8") as f:
                 json.dump(types_data, f, indent=indent, sort_keys=True)
 
     # Only write main JSON output if output path is provided
     if output:
-        with open(output, "w") as f:
+        with open(output, "w", encoding="utf-8") as f:
             json.dump(signals_data, f, indent=indent, sort_keys=True)
 
     # Generate radial statistics if requested

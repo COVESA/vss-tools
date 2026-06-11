@@ -1,0 +1,13 @@
+module A
+{
+module GearSelect_M
+{
+enum GearSelectValues{Park_Brake,Drive_Forward};
+};
+struct GearSelect
+{
+GearSelect_M::GearSelectValues value;
+//const string type ="actuator";
+//const string description="Gear selection mode.";
+};
+};

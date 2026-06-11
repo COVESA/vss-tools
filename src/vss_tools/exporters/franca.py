@@ -75,7 +75,8 @@ def print_franca_content(file: TextIOWrapper, root: VSSNode) -> None:
                 output += f",\n\tmax: {max}"
             allowed = getattr(data, "allowed", None)
             if allowed:
-                output += f",\n\tallowed: {allowed}"
+                formatted = ", ".join(f'"{v}"' if isinstance(v, str) else str(v) for v in allowed)
+                output += f",\n\tallowed: [{formatted}]"
             output += "\n}"
     file.write(output)
 
@@ -123,7 +124,7 @@ def cli(
         overlays=overlays,
         strict_exceptions_file=strict_exceptions,
     )
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         print_franca_header(f, franca_vss_version)
         print_franca_content(f, tree)
         f.write("\n]")

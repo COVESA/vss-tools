@@ -1,0 +1,22 @@
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Door:
+  type: branch
+  instances:
+    - Row[1,2]
+    - ["Left", "Right"]
+  description: All doors.
+
+# This will hoist successfully to Vehicle
+Vehicle.Door.SomeSignal:
+  type: attribute
+  datatype: uint8
+  instantiate: false
+  description: A door signal that should be hoisted to Vehicle.
+
+Vehicle.Door.IsOpen:
+  type: actuator
+  datatype: boolean
+  description: Is door open or closed?

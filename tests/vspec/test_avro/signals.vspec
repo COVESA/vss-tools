@@ -1,0 +1,9 @@
+Vehicle:
+  type: branch
+  description: High-level vehicle branch.
+
+Vehicle.Speed:
+  type: sensor
+  datatype: float
+  unit: km
+  description: Current vehicle speed.

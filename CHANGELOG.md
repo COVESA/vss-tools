@@ -8,7 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!IMPORTANT]
 > This document only contain changes introduced in VSS-Tools 3.0 or later
 
-## Unreleased (major)
+## [Unreleased]
+
+### Changed
+
+- **Breaking**: Unit descriptions (`unit` field) must now be globally unique across all quantities. Previously accepted duplicate unit descriptions in `units.yaml` will now fail validation with a clear error message identifying the conflicting unit keys.
+- Enhanced `s2dm` exporter that provides increased traceability of the performed mapping, reporting name conversions, correspondences, etc.
+
+## 6.0
 
 ### Changed
 
@@ -20,10 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `plantuml` exporter
+- `ROS 2 Interface` exporter
+- `s2dm` exporter
 
 ### Removed
 
- - vspec2ttl removed.
+ - vspec2ttl removed
+- `graphql` exporter
 
 ## 5.0
 

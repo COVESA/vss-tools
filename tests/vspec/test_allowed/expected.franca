@@ -23,13 +23,13 @@ const SignalSpec[] signal_spec = [
 	type: "sensor",
 	description: "A string",
 	datatype: "string",
-	allowed: ['January', 'February']
+	allowed: ["January", "February"]
 },
 {	name: "A.StringArray",
 	type: "sensor",
 	description: "A string array",
 	datatype: "string[]",
-	allowed: ['January', 'February', 'March']
+	allowed: ["January", "February", "March"]
 },
 {	name: "A.Int",
 	type: "sensor",

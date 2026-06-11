@@ -66,11 +66,12 @@ Other exporters may have stricter requirements.
 | VSS-tools version | Supported VSS catalog versions | Comments |
 | ----------------- | ------------------------------ | -------- |
 | `v3.0`            | `v3.0` - `v3.1.1`              |
-| `v3.1`            | `v3.0` -`v4.0`                 |
+| `v3.1`            | `v3.0` - `v4.0`                |
 | `v4.0`            | `v4.0`                         |
 | `v4.1`            | `v4.0` -                       |
 | `4.2`             | `v4.0` -                       |
 | `5.0`             | `v5.0` -                       |
+| `6.0`             | `v5.0` -                       |
 | `<latest source>` | `v5.0` -                       |
 
 ### Changes affecting compatibility

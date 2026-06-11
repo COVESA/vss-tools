@@ -146,6 +146,20 @@ class Datatypes:
         is_string,
         [],
     )
+    INT = (
+        "int",
+        is_numeric,
+        [
+            "int64",
+            "int32",
+            "int16",
+            "int8",
+            "uint64",
+            "uint32",
+            "uint16",
+            "uint8",
+        ],
+    )
     NUMERIC = (
         "numeric",
         is_numeric,
@@ -205,6 +219,7 @@ class Datatypes:
         STRING_ARRAY,
         NUMERIC,
         NUMERIC_ARRAY,
+        INT,
     ]
 
     @classmethod

@@ -74,7 +74,7 @@ def add_rows(
 
 
 def write_csv(rows: list[list[Any]], output: Path):
-    with open(output, "w", newline="") as f:
+    with open(output, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(rows)
 

@@ -1,0 +1,171 @@
+# Copyright (c) 2025 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+from pathlib import Path
+
+import rich_click as click
+
+import vss_tools.cli_options as clo
+from vss_tools import log
+from vss_tools.main import get_trees
+from vss_tools.utils.vhal.vhal_mapper import VhalMapper
+
+
+@click.command()
+@clo.vspec_opt
+@click.option(
+    "--vhal-map",
+    type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=False),
+    required=False,
+    help="""
+        A JSON file with mapping of VSS property nodes to Android vehicle property IDs.
+        If this file does not exist, it will be created upon first generator run.
+        If this parameter is not specified the generator will use
+        {aosp-workspace-path}/device/generic/car/emulator/vhalmap/value_map.json
+    """,
+)
+@click.option(
+    "--continuous-change-mode",
+    type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=True),
+    required=False,
+    help="A JSON file containing a list of VSS paths which should use continuous change mode.",
+)
+@click.option(
+    "--property-group",
+    type=int,
+    required=False,
+    default=4,
+    show_default=True,
+    help="""
+        Group of generated VHAL properties: 1 = SYSTEM, 2 = VENDOR, 3 = BACKPORTED, 4 = OEM.
+        See https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehiclePropertyGroup.aidl
+    """,
+)
+@click.option(
+    "--min-property-id",
+    type=int,
+    required=False,
+    default=1,
+    show_default=True,
+    help="Stating ID for newly generated properties. This considers only the last 2 bytes of the VHAL property ID.",
+)
+@click.option(
+    "--extend-new/--no-extend-new",
+    help="""
+        Whether to extend the map with new VSS nodes from the spec not present in the map file or only update
+        existing VHAL properties and ignores all new VSS nodes.
+    """,
+    default=True,
+    show_default=True,
+)
+@click.option(
+    "--override-vhal-units/--no-override-vhal-units",
+    help="Overrides previously generated VHAL units.",
+    default=False,
+    show_default=True,
+)
+@click.option(
+    "--override-vhal-datatype/--no-override-vhal-datatype",
+    help="Overrides previously generated VHAL datatypes.",
+    default=False,
+    show_default=True,
+)
+@click.option(
+    "--property-version",
+    type=int,
+    required=False,
+    default=4,
+    show_default=True,
+    help="""
+        The vehicle property's AIDL interface version used in
+        https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleProperty.aidl
+        Currently, all properties use the same version.
+    """,
+)
+@click.option(
+    "--aosp-workspace-path",
+    type=click.Path(dir_okay=True, readable=True, path_type=Path, exists=True),
+    required=True,
+    envvar="ANDROID_BUILD_TOP",
+    show_envvar=True,
+    help="""
+        Path to AOSP workspace. If this parameter is not specified the ANDROID_BUILD_TOP environment variable will be
+        used. At lest one of those two must be specified.
+    """,
+)
+def cli(
+    vspec: Path,
+    vhal_map: Path | None,
+    continuous_change_mode: Path | None,
+    extend_new: bool,
+    property_group: int,
+    property_version: int,
+    aosp_workspace_path: Path,
+    min_property_id: int,
+    override_vhal_units: bool,
+    override_vhal_datatype: bool,
+):
+    """
+    Export as VSS as VHAL mapping file, Java and AIDL sources.
+    """
+    tree, datatype_tree = get_trees(
+        vspec=vspec,
+        include_dirs=(),
+        aborts=(),
+        strict=False,
+        extended_attributes=(),
+        quantities=(),
+        units=(),
+        types=(),
+        overlays=(),
+        expand=True,
+    )
+
+    log.info("Generating JSON output for VHAL Mapper...")
+    mapper = VhalMapper(
+        group=property_group,
+        include_new=extend_new,
+        starting_id=min_property_id,
+        override_units=override_vhal_units,
+        override_datatype=override_vhal_datatype,
+    )
+
+    if continuous_change_mode is not None:
+        mapper.load_continuous_list(continuous_change_mode)
+    vhal_map_file = (
+        vhal_map
+        if vhal_map is not None
+        else (aosp_workspace_path / "device/generic/car/emulator/vhalmap/value_map.json")
+    )
+    vhal_map_file.parent.mkdir(parents=True, exist_ok=True)
+
+    mapper.load(vhal_map_file, tree)
+    mapper.safe(vhal_map_file)
+    log.info(f"Updated: {vhal_map_file}")
+
+    java_output_dir = aosp_workspace_path / "vendor/car/packages/services/Car/car-lib/src/android/car/oem"
+    java_output_dir.mkdir(parents=True, exist_ok=True)
+
+    java_output = java_output_dir / "VehiclePropertyIdsOem.java"
+    mapper.generate_java_files(java_output)
+    log.info(f"Written: {java_output}")
+
+    permissions_output = java_output_dir / "OemPermissions.java"
+    mapper.generate_permission_files(permissions_output)
+    log.info(f"Written: {permissions_output}")
+
+    aidl_output_dir = (
+        aosp_workspace_path
+        / "vendor/car/hardware/interfaces/automotive/vehicle/aidl_property/vendor/android/hardware/automotive/vehicle"
+    )
+    aidl_output_dir.mkdir(parents=True, exist_ok=True)
+    aidl_output = aidl_output_dir / "VehiclePropertyOem.aidl"
+    mapper.generate_aidl_file(aidl_output, property_version)
+    log.info(f"Written: {aidl_output}")
+
+    mapper.generate_xml_files(aosp_workspace_path)

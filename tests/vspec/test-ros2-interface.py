@@ -17,6 +17,7 @@ TEST_UNITS = HERE / "test_units_ros2.yaml"
 TEST_QUANT = HERE / "test_quantities_ros2.yaml"
 EXPORTER = "ros2interface"  # the subcommand of ros2 exporter
 DEFAULT_PKG = "vss_interfaces"  # package name used in tests
+INCLUDE_DIR = HERE.parents[2] / "vehicle_signal_specification" / "spec" / "include"
 
 
 def run_ros2_exporter(
@@ -84,25 +85,26 @@ A.Speed:
   datatype: float
   description: Vehicle speed.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "ASpeed.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "float32 speed" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "float32 value" in text
     assert "Vehicle speed." in text
+    assert "uint64 timestamp" not in text
 
     # ---- order check with multiline regex ----
 
     pattern = re.compile(
         r"""
-            ^\s*(?:\#.*\r?\n|\r?\n)*          # any comments/empty lines before timestamp
-            \s*uint64\s+timestamp\s*\r?\n     # timestamp line
-            \s*\r?\n                          # exactly one blank line
-            \s*\#\s*Vehicle\s+speed\.\s*\r?\n # comment line immediately above datatype
-            \s*float32\s+speed\s*$            # datatype line
+            ^\s*(?:\#.*\r?\n|\r?\n)*              # any comments/empty lines before timestamp
+            \s*int64\s+timestamp_seconds\s*\r?\n  # timestamp_seconds line
+            (?:\s*\r?\n|\s*\#.*\r?\n)*            # optional blank lines / comments between
+            \s*int64\s+timestamp_nanoseconds\s*$  # timestamp_nanoseconds line
             """,
         flags=re.IGNORECASE | re.MULTILINE | re.VERBOSE,
     )
@@ -130,15 +132,16 @@ A.FanSpeed:
         vspec,
         tmp_path,
         mode="leaf",
-        extra_args=["--srv", "set", "--no-srv-use-msg"],
+        extra_args=["--srv", "set", "--no-srv-use-msg", "--include-dirs", str(INCLUDE_DIR)],
     )
     srv = pkg_dir / "srv" / "SetAFanSpeed.srv"  # naming: Set<MsgBase>.srv
     assert srv.is_file(), f"Missing {srv}"
     text = read_text(srv)
 
     # flattened request fields derived from message fields
-    assert "uint64 timestamp" in text
-    assert "uint16 fan_speed" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "uint16 value" in text
     assert "bool success" in text
     assert "string message" in text
 
@@ -163,7 +166,7 @@ A.FanSpeed:
         vspec,
         tmp_path,
         mode="leaf",
-        extra_args=["--srv", "get", "--srv-use-msg"],
+        extra_args=["--srv", "get", "--srv-use-msg", "--include-dirs", str(INCLUDE_DIR)],
     )
     msg = pkg_dir / "msg" / "AFanSpeed.msg"  # naming: <MsgBase>.msg
     srv = pkg_dir / "srv" / "GetAFanSpeed.srv"  # naming: Get<MsgBase>.srv
@@ -171,8 +174,10 @@ A.FanSpeed:
     assert srv.is_file(), f"Missing {srv}"
     text = read_text(srv)
 
-    assert "uint64 start_time_ms" in text
-    assert "uint64 end_time_ms" in text
+    assert "int64 start_time_seconds" in text
+    assert "int64 start_time_nanoseconds" in text
+    assert "int64 end_time_seconds" in text
+    assert "int64 end_time_nanoseconds" in text
     # custom message field
     assert "AFanSpeed[] data" in text
 
@@ -234,8 +239,8 @@ A.DriveMode:
     assert "Allowed values:" in text
     assert "park" in text and "drive" in text and "reverse" in text
 
-    # field type & derived name
-    assert "string drive_mode" in text
+    # field type & value field name
+    assert "string value" in text
 
 
 # ------------- output with arrays in the datatypes -------------
@@ -251,12 +256,13 @@ A.ByteArray:
   datatype: uint8[]
   description: A byte sequence.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AByteArray.msg"
     assert msg.is_file()
     text = read_text(msg)
-    assert "uint8[] byte_array" in text
-    assert "uint64 timestamp" in text
+    assert "uint8[] value" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
 
 
 # ------------- output with bound in the comments like min and max range (e.g range=[0,10]) -------------
@@ -421,7 +427,7 @@ A.Speed:
         vspec,
         tmp_path,
         mode="leaf",
-        extra_args=["--srv", "both", "--srv-use-msg"],
+        extra_args=["--srv", "both", "--srv-use-msg", "--include-dirs", str(INCLUDE_DIR)],
     )
     get_srv = pkg_dir / "srv" / "GetASpeed.srv"
     set_srv = pkg_dir / "srv" / "SetASpeed.srv"
@@ -434,11 +440,13 @@ A.Speed:
     # Get response uses message array
     pattern_get = re.compile(
         r"""
-        ^\s*(?:\#.*\r?\n|\r?\n)*          # (top) any # comments / empty lines
-        \s*uint64\s+start_time_ms\s*\r?\n # 1) request: start_time_ms
-        \s*uint64\s+end_time_ms\s*\r?\n   # 2) request: end_time_ms
-        \s*---\s*\r?\n                    # 3) separator
-        \s*ASpeed\[\]\s+data\s*$          # 4) response: ASpeed[] data
+        ^\s*(?:\#.*\r?\n|\r?\n)*                  # (top) any # comments / empty lines
+        \s*int64\s+start_time_seconds\s*\r?\n     # 1) request: start_time_seconds
+        \s*int64\s+start_time_nanoseconds\s*\r?\n # 2) request: start_time_nanoseconds
+        \s*int64\s+end_time_seconds\s*\r?\n       # 3) request: end_time_seconds
+        \s*int64\s+end_time_nanoseconds\s*\r?\n   # 4) request: end_time_nanoseconds
+        \s*---\s*\r?\n                             # 5) separator
+        \s*ASpeed\[\]\s+data\s*$                  # 6) response: ASpeed[] data
         """,
         flags=re.MULTILINE | re.VERBOSE | re.IGNORECASE,
     )
@@ -556,13 +564,14 @@ B.Level:
   allowed: [0, 1, 2]
   description: Level setting.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="aggregate")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="aggregate", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "B.msg"
     assert msg.is_file(), "Aggregate message for branch B should be created"
     text = read_text(msg)
 
     assert "Parent branch: B" in text
-    assert "uint64 timestamp" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
     assert "string mode" in text
     assert "uint8 level" in text
     assert "Allowed values (combined):" in text
@@ -722,14 +731,15 @@ A.Door.Open:
   datatype: boolean
   description: Door status.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "ADoorOpen.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "bool open" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "bool value" in text
     assert "Door status." in text
 
 
@@ -749,14 +759,15 @@ A.Engine.Temperature:
   datatype: uint8
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "uint8 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "uint8 value" in text
     assert "Engine Temperature." in text
 
 
@@ -776,14 +787,15 @@ A.Engine.Temperature:
   datatype: uint16
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "uint16 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "uint16 value" in text
     assert "Engine Temperature." in text
 
 
@@ -803,14 +815,15 @@ A.Engine.Temperature:
   datatype: uint32
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "uint32 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "uint32 value" in text
     assert "Engine Temperature." in text
 
 
@@ -830,14 +843,15 @@ A.Engine.Temperature:
   datatype: uint64
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "uint64 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "uint64 value" in text
     assert "Engine Temperature." in text
 
 
@@ -857,14 +871,15 @@ A.Engine.Temperature:
   datatype: int8
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "int8 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "int8 value" in text
     assert "Engine Temperature." in text
 
 
@@ -884,14 +899,15 @@ A.Engine.Temperature:
   datatype: int16
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "int16 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "int16 value" in text
     assert "Engine Temperature." in text
 
 
@@ -911,14 +927,15 @@ A.Engine.Temperature:
   datatype: int32
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "int32 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "int32 value" in text
     assert "Engine Temperature." in text
 
 
@@ -938,14 +955,15 @@ A.Engine.Temperature:
   datatype: int64
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "int64 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "int64 value" in text
     assert "Engine Temperature." in text
 
 
@@ -965,14 +983,15 @@ A.Engine.Temperature:
   datatype: float
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "float32 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "float32 value" in text
     assert "Engine Temperature." in text
 
 
@@ -992,14 +1011,15 @@ A.Engine.Temperature:
   datatype: double
   description: Engine Temperature.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineTemperature.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "float64 temperature" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "float64 value" in text
     assert "Engine Temperature." in text
 
 
@@ -1019,12 +1039,196 @@ A.Engine.VIN:
   datatype: string
   description: Engine VIN Number.
 """
-    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf")
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="leaf", extra_args=["--include-dirs", str(INCLUDE_DIR)])
     msg = pkg_dir / "msg" / "AEngineVIN.msg"
     assert msg.is_file(), f"Missing {msg}"
     text = read_text(msg)
 
     # header & fields written by the exporter
-    assert "uint64 timestamp" in text
-    assert "string vin" in text
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "string value" in text
     assert "Engine VIN Number." in text
+
+
+def test_ros2_struct_timestamp_leaf_msg_and_srv(tmp_path):
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=["--srv", "both", "--srv-use-msg", "--include-dirs", str(INCLUDE_DIR)],
+    )
+
+    msg = pkg_dir / "msg" / "ASpeed.msg"
+    get_srv = pkg_dir / "srv" / "GetASpeed.srv"
+    set_srv = pkg_dir / "srv" / "SetASpeed.srv"
+
+    assert msg.is_file(), f"Missing {msg}"
+    assert get_srv.is_file(), f"Missing {get_srv}"
+    assert set_srv.is_file(), f"Missing {set_srv}"
+
+    msg_text = read_text(msg)
+    get_text = read_text(get_srv)
+    set_text = read_text(set_srv)
+
+    assert "int64 timestamp_seconds" in msg_text
+    assert "int64 timestamp_nanoseconds" in msg_text
+    assert "float32 value" in msg_text
+    assert "uint64 timestamp" not in msg_text
+
+    assert "int64 start_time_seconds" in get_text
+    assert "int64 start_time_nanoseconds" in get_text
+    assert "int64 end_time_seconds" in get_text
+    assert "int64 end_time_nanoseconds" in get_text
+    assert "ASpeed[] data" in get_text
+
+    assert "ASpeed data" in set_text
+    assert "bool success" in set_text
+    assert "string message" in set_text
+
+
+def test_ros2_struct_timestamp_aggregate_mode(tmp_path):
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+A.RPM:
+  type: sensor
+  datatype: uint16
+  description: Engine RPM.
+"""
+    pkg_dir = run_ros2_exporter(vspec, tmp_path, mode="aggregate", extra_args=["--include-dirs", str(INCLUDE_DIR)])
+
+    msg = pkg_dir / "msg" / "A.msg"
+    assert msg.is_file(), f"Missing {msg}"
+    text = read_text(msg)
+
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "float32 speed" in text
+    assert "uint16 rpm" in text
+    assert "uint64 timestamp" not in text
+
+
+def test_ros2_struct_timestamp_uses_types_tree(tmp_path):
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    # A types file must have a root namespace (bare structs at root fail RootTypesException).
+    types_vspec = tmp_path / "CustomTypes.vspec"
+    types_vspec.write_text(
+        """\
+CustomTypes:
+  type: branch
+  description: Custom type definitions.
+
+CustomTypes.Timestamp:
+  type: struct
+  description: A point in time.
+
+CustomTypes.Timestamp.seconds:
+  type: property
+  datatype: int64
+  description: Unix epoch seconds.
+
+CustomTypes.Timestamp.nanoseconds:
+  type: property
+  datatype: int64
+  min: 0
+  max: 999999999
+  description: Nanosecond offset within the second.
+""",
+        encoding="utf-8",
+    )
+
+    transformed = tmp_path / "out" / "transformed.vspec"
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=[
+            "--types",
+            str(types_vspec),
+            "--timestamp-struct-fqn",
+            "CustomTypes.Timestamp",
+            "--srv",
+            "get",
+            "--srv-use-msg",
+            "--output-vspec",
+            str(transformed),
+        ],
+    )
+
+    msg = pkg_dir / "msg" / "ASpeed.msg"
+    srv = pkg_dir / "srv" / "GetASpeed.srv"
+    assert msg.is_file(), f"Missing {msg}"
+    assert srv.is_file(), f"Missing {srv}"
+    assert transformed.is_file(), f"Missing {transformed}"
+
+    msg_text = read_text(msg)
+    srv_text = read_text(srv)
+    transformed_text = read_text(transformed)
+
+    assert "int64 timestamp_seconds" in msg_text
+    assert "int64 timestamp_nanoseconds" in msg_text
+    assert "int32 timestamp_sec" not in msg_text
+    assert "uint32 timestamp_nanosec" not in msg_text
+
+    assert "int64 start_time_seconds" in srv_text
+    assert "int64 start_time_nanoseconds" in srv_text
+    assert "int64 end_time_seconds" in srv_text
+    assert "int64 end_time_nanoseconds" in srv_text
+
+    assert "type: property" in transformed_text
+    assert "datatype: CustomTypes.Timestamp" in transformed_text
+    assert "A.Speed.Time:" in transformed_text
+    assert "A.Speed.Time.seconds:" not in transformed_text
+    assert "A.Speed.Time.nanoseconds:" not in transformed_text
+    assert "Timestamp.seconds:" not in transformed_text
+    assert "Timestamp.nanoseconds:" not in transformed_text
+
+
+def test_ros2_struct_timestamp_fallback_defaults(tmp_path):
+    """When no --types file is provided, built-in timestamp defaults (int64 fields) are used."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+    )
+    msg = pkg_dir / "msg" / "ASpeed.msg"
+    assert msg.is_file(), f"Missing {msg}"
+    text = read_text(msg)
+
+    assert "int64 timestamp_seconds" in text
+    assert "int64 timestamp_nanoseconds" in text
+    assert "int32 timestamp_sec" not in text
+    assert "uint32 timestamp_nanosec" not in text
+    assert "uint64 timestamp" not in text

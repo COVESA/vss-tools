@@ -1,0 +1,21 @@
+#
+# Simple test vspec for struct types
+#
+TestRoot:
+  type: branch
+  description: Root branch for testing.
+
+TestRoot.ParentStructSensor:
+  datatype: VehicleDataTypes.TestBranch1.ParentStruct
+  type: sensor
+  description: A sensor with parent struct type.
+
+TestRoot.NestedStructSensor:
+  datatype: VehicleDataTypes.TestBranch1.NestedStruct
+  type: sensor
+  description: A sensor with nested struct type.
+
+TestRoot.PrimitiveSignal:
+  datatype: uint8
+  type: sensor
+  description: A simple uint8 sensor.

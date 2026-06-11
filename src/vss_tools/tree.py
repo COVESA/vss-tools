@@ -308,6 +308,49 @@ class VSSNode(Node):  # type: ignore[misc]
             log.info(f"Attributes (before applying exceptions): {len(violations)}")
         return violations
 
+    def get_default_first_allowed_violations(self) -> list[list[str]]:
+        """
+        Gets a list of scalar-type nodes where both `default` and `allowed`
+        are set but `default != allowed[0]`.
+
+        This matters for proto3 nested-enum generation (see #502): the first
+        `allowed` entry becomes enum value 0 and is the implicit wire-unset
+        default, so `default` must match `allowed[0]` for the VSS intent to
+        survive proto3 serialization. The canonical VSS pattern is
+        `allowed: ['UNKNOWN', ...]` + `default: 'UNKNOWN'` — see e.g.
+        `Powertrain/CombustionEngine.vspec` `Configuration`.
+
+        Array datatypes (`string[]` etc.) are skipped — per-element
+        membership in `allowed` is already enforced by the pydantic
+        `VSSDataDatatype` validators; requiring the whole default list to
+        equal the first allowed scalar has no proto3 analog.
+
+        Returns a list of `[fqn, message]` pairs, empty if none.
+        """
+        violations = []
+        for node in PreOrderIter(self):
+            if not isinstance(node.data, VSSDataDatatype):
+                continue
+            if node.data.allowed is None or node.data.default is None:
+                continue
+            if len(node.data.allowed) == 0:
+                continue
+            # Skip array datatypes — proto3 nested-enum semantics from #502
+            # apply to scalar fields only. Array default-membership is
+            # already validated at the pydantic layer.
+            if node.data.datatype.endswith("[]"):
+                continue
+            if node.data.default != node.data.allowed[0]:
+                violations.append(
+                    [
+                        node.get_fqn(),
+                        f"default={node.data.default!r} != allowed[0]={node.data.allowed[0]!r}",
+                    ]
+                )
+        if violations:
+            log.info(f"default != allowed[0] violations (before applying exceptions): {len(violations)}")
+        return violations
+
     def as_flat_dict(self, with_extra_attributes: bool, extended_attributes: tuple[str, ...] = ()) -> dict[str, Any]:
         """
         Generates a flat dict and whether to include

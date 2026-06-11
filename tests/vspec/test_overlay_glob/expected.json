@@ -1,0 +1,37 @@
+{
+  "A": {
+    "children": {
+      "Other": {
+        "datatype": "uint8",
+        "description": "Unrelated signal.",
+        "type": "sensor"
+      },
+      "Row1": {
+        "children": {
+          "Signal": {
+            "comment": "Applied to all row signals via glob.",
+            "datatype": "float",
+            "description": "First row signal.",
+            "type": "sensor"
+          }
+        },
+        "description": "Row 1.",
+        "type": "branch"
+      },
+      "Row2": {
+        "children": {
+          "Signal": {
+            "comment": "Applied to all row signals via glob.",
+            "datatype": "float",
+            "description": "Second row signal.",
+            "type": "sensor"
+          }
+        },
+        "description": "Row 2.",
+        "type": "branch"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

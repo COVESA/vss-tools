@@ -45,14 +45,15 @@ def write_graph_to_file(path_to_file: Path, file_name: str, graph: Graph):
     output_folder: Path = Path(path_to_file)
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    # Create and write data to ttl file
+    # Create and write data to ttl file. Use a context manager so the file
+    # is closed even if .write() raises, and pin the encoding to UTF-8 so
+    # RDF graphs containing non-ASCII characters serialise consistently
+    # across platforms (matches the encoding fix applied to the other
+    # exporters in the previous commit).
     output_file: Path = output_folder / f"{file_name}.ttl"
-    file_writer = output_file.open("w")
-    file_writer.write(filedata)
-
-    # Add new line and close the file
-    file_writer.write("\n")
-    file_writer.close()
+    with output_file.open("w", encoding="utf-8") as file_writer:
+        file_writer.write(filedata)
+        file_writer.write("\n")
 
     # Return file location
     return output_file

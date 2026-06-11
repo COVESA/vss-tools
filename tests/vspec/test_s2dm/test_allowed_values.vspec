@@ -1,0 +1,38 @@
+#
+# S2DM test file for allowed values functionality
+#
+Vehicle:
+  type: branch
+  description: High-level vehicle data.
+
+Vehicle.Transmission:
+  type: branch
+  description: Transmission-specific data.
+
+Vehicle.Transmission.GearMode:
+  datatype: string
+  type: sensor
+  allowed: ['PARK', 'REVERSE', 'NEUTRAL', 'DRIVE']
+  description: Current gear mode.
+
+Vehicle.Transmission.DriveType:
+  datatype: string
+  type: attribute
+  allowed: ['FWD', 'RWD', 'AWD']
+  description: Drive type configuration.
+
+Vehicle.Performance:
+  type: branch
+  description: Performance-related signals.
+
+Vehicle.Performance.Level:
+  datatype: uint8
+  type: actuator
+  allowed: [1, 2, 3, 4, 5]
+  description: Performance level setting.
+
+Vehicle.Performance.Rating:
+  datatype: float
+  type: sensor
+  allowed: [1.0, 2.5, 4.0, 5.0]
+  description: Performance rating.

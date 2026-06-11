@@ -18,8 +18,10 @@ from anytree import findall
 
 import vss_tools.cli_options as clo
 from vss_tools import log
+from vss_tools.datatypes import Datatypes
 from vss_tools.main import get_trees
 from vss_tools.model import (
+    VSSData,
     VSSDataBranch,
     VSSDataDatatype,
     VSSDataStruct,
@@ -39,13 +41,13 @@ mapped = {
 
 
 def init_package_file(path: Path, package_name: str):
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         log.info(f"Initializing {path}, package {package_name}")
         f.write('syntax = "proto3";\n\n')
         f.write(f"package {package_name};\n\n")
 
 
-def traverse_data_type_tree(tree: VSSNode, static_uid: bool, add_optional: bool, out_dir: Path):
+def traverse_data_type_tree(tree: VSSNode, static_uid: bool, add_optional: bool, include_comments: bool, out_dir: Path):
     """
     All structs in a branch are written to a single .proto file.
     The file's base name is same as the branch's name
@@ -86,13 +88,21 @@ def traverse_data_type_tree(tree: VSSNode, static_uid: bool, add_optional: bool,
 
             write_imports(fd, imports)
 
+            if include_comments:
+                write_comment(fd, node, indent="")
             fd.write(f"message {struct_path.name} {{" + "\n")
-            print_messages(node.children, fd, static_uid, add_optional)
+            print_messages(node.children, fd, static_uid, add_optional, include_comments)
             fd.write("}\n\n")
             log.info(f"Wrote {struct_path.name} to {out_file}")
 
 
-def traverse_signal_tree(tree: VSSNode, fd: TextIOWrapper, static_uid: bool, add_optional: bool):
+def traverse_signal_tree(
+    tree: VSSNode,
+    fd: TextIOWrapper,
+    static_uid: bool,
+    add_optional: bool,
+    include_comments: bool,
+):
     fd.write('syntax = "proto3";\n\n')
 
     imports = []
@@ -106,8 +116,10 @@ def traverse_signal_tree(tree: VSSNode, fd: TextIOWrapper, static_uid: bool, add
 
     # write proto messages to file
     for node in findall(tree, filter_=lambda node: isinstance(node.data, VSSDataBranch)):
+        if include_comments:
+            write_comment(fd, node, indent="")
         fd.write(f"message {node.get_fqn('')} {{" + "\n")
-        print_messages(node.children, fd, static_uid, add_optional)
+        print_messages(node.children, fd, static_uid, add_optional, include_comments)
         fd.write("}\n\n")
 
 
@@ -119,12 +131,69 @@ def write_imports(fd: TextIOWrapper, imports: list[str]):
     fd.write("\n")
 
 
-def print_messages(nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, add_optional: bool):
+def write_comment(fd: TextIOWrapper, node: VSSNode, indent: str = "  "):
+    """Write a protobuf comment block with description and metadata."""
+    if not isinstance(node.data, VSSData):
+        return
+    lines: list[str] = []
+    if node.data.description:
+        lines.append(node.data.description)
+    if isinstance(node.data, VSSDataDatatype):
+        if node.data.allowed is not None:
+            lines.append(f"Allowed: {node.data.allowed}")
+        if node.data.min is not None:
+            lines.append(f"Min: {node.data.min}")
+        if node.data.max is not None:
+            lines.append(f"Max: {node.data.max}")
+        if node.data.default is not None:
+            lines.append(f"Default: {node.data.default}")
+        if node.data.unit is not None:
+            lines.append(f"Unit: {node.data.unit}")
+    if node.data.deprecation is not None:
+        lines.append(f"Deprecation: {node.data.deprecation}")
+    if node.data.comment is not None:
+        lines.append(f"Comment: {node.data.comment}")
+    if not lines:
+        return
+    fd.write(f"{indent}// {lines[0]}\n")
+    if len(lines) > 1:
+        if node.data.description:
+            fd.write(f"{indent}//\n")
+        for line in lines[1:]:
+            fd.write(f"{indent}// {line}\n")
+
+
+def _enum_type_name(field_name: str) -> str:
+    """Return the nested enum type name for a string field with allowed values."""
+    return f"{field_name}Enum"
+
+
+def _write_nested_enum(fd: TextIOWrapper, field_name: str, allowed: list, indent: str = "  ") -> None:
+    """Write a nested proto3 enum for a string field constrained to allowed values.
+
+    Proto3 requires the first enum value to equal 0.  We assign values in the
+    order they appear in the VSS `allowed` list, starting from 0.
+    """
+    enum_name = _enum_type_name(field_name)
+    fd.write(f"{indent}enum {enum_name} {{\n")
+    for idx, val in enumerate(allowed):
+        fd.write(f"{indent}  {val} = {idx};\n")
+    fd.write(f"{indent}}}\n")
+
+
+def print_messages(
+    nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, add_optional: bool, include_comments: bool
+):
     usedKeys: dict[int, str] = {}
     for i, node in enumerate(nodes, 1):
         if isinstance(node.data, VSSDataDatatype):
             dt_val = node.data.datatype
-            data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
+            base = dt_val.strip("[]")
+            if base == Datatypes.STRING[0] and node.data.allowed:
+                _write_nested_enum(fd, node.name, node.data.allowed)
+                data_type = _enum_type_name(node.name)
+            else:
+                data_type = mapped.get(base, base)
             if dt_val.endswith("[]"):
                 data_type = "repeated " + data_type
             elif add_optional:
@@ -161,6 +230,8 @@ def print_messages(nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, a
                 usedKeys[fieldNumber] = node.get_fqn()
         else:
             fieldNumber = i
+        if include_comments:
+            write_comment(fd, node)
         fd.write(f"  {data_type} {node.name} = {fieldNumber};" + "\n")
 
 
@@ -187,6 +258,7 @@ def print_messages(nodes: tuple[VSSNode], fd: TextIOWrapper, static_uid: bool, a
     help="Expect staticUID attribute in the vspec input and use it as field number",
 )
 @click.option("--add-optional", is_flag=True, help="Set each field to 'optional'")
+@click.option("--include-comments", is_flag=True, help="Include descriptions and metadata as comments")
 def cli(
     vspec: Path,
     output: Path,
@@ -201,6 +273,7 @@ def cli(
     types_out_dir: Path | None,
     static_uid: bool,
     add_optional: bool,
+    include_comments: bool,
     strict_exceptions: Path | None,
 ):
     """
@@ -223,8 +296,8 @@ def cli(
         if not types_out_dir:
             types_out_dir = Path.cwd()
             log.warning(f"No output directory given. Writing to: {types_out_dir.absolute()}")
-        traverse_data_type_tree(datatype_tree, static_uid, add_optional, types_out_dir)
+        traverse_data_type_tree(datatype_tree, static_uid, add_optional, include_comments, types_out_dir)
 
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         log.info(f"Writing to: {output}")
-        traverse_signal_tree(tree, f, static_uid, add_optional)
+        traverse_signal_tree(tree, f, static_uid, add_optional, include_comments)

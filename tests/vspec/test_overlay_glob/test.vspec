@@ -1,0 +1,26 @@
+A:
+  type: branch
+  description: Branch A.
+
+A.Row1:
+  type: branch
+  description: Row 1.
+
+A.Row1.Signal:
+  datatype: float
+  type: sensor
+  description: First row signal.
+
+A.Row2:
+  type: branch
+  description: Row 2.
+
+A.Row2.Signal:
+  datatype: float
+  type: sensor
+  description: Second row signal.
+
+A.Other:
+  datatype: uint8
+  type: sensor
+  description: Unrelated signal.

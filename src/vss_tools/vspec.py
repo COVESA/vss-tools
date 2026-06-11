@@ -7,6 +7,8 @@
 # SPDX-License-Identifier: MPL-2.0
 from __future__ import annotations
 
+import copy
+import fnmatch
 from pathlib import Path
 from typing import Any
 
@@ -102,8 +104,22 @@ class VSpec:
     def __str__(self) -> str:
         return f"{self.__class__.__name__}, src={self.source}, prefix={self.prefix}, includes={len(self.includes)}"
 
+    def _expand_globs(self, overlay_data: dict[str, Any]) -> dict[str, Any]:
+        """Return overlay_data with wildcard keys expanded against self.data."""
+        result: dict[str, Any] = {}
+        for key, value in overlay_data.items():
+            if "*" not in key:
+                result[key] = value
+                continue
+            matches = [k for k in self.data if fnmatch.fnmatch(k, key)]
+            if not matches:
+                log.warning(f"Overlay glob '{key}' matched no keys in the base spec")
+            for match in matches:
+                result[match] = copy.deepcopy(value)
+        return result
+
     def update(self, other: VSpec) -> None:
-        deep_update(self.data, other.data)
+        deep_update(self.data, self._expand_globs(other.data))
 
 
 def get_vspecs(includes: list[Path], spec: Path, prefix: str | None = None) -> list[VSpec]:

@@ -1,0 +1,60 @@
+Types:
+  type: branch
+  description: Custom struct type definitions used in tests.
+
+Types.Sensor:
+  type: struct
+  description: A hardware sensor reading with a value and quality indicator.
+
+Types.Sensor.Value:
+  type: property
+  datatype: double
+  description: The measured value reported by the sensor.
+
+Types.Sensor.Quality:
+  type: property
+  datatype: uint8
+  description: Signal quality score from 0 to 100.
+
+Types.AlertRecord:
+  type: struct
+  description: A diagnostic alert with a severity level and a recorded timestamp.
+
+Types.AlertRecord.Severity:
+  type: property
+  datatype: string
+  allowed: ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+  description: Indicates how serious the alert is.
+
+Types.AlertRecord.OccurredAt:
+  type: property
+  datatype: uint64
+  description: Unix timestamp (ms) when the alert was recorded.
+
+Types.Schedule:
+  type: struct
+  description: A recurring schedule composed of time windows.
+
+Types.Schedule.Window:
+  type: struct
+  description: A single time window within a schedule.
+
+Types.Schedule.Window.StartMinute:
+  type: property
+  datatype: uint16
+  description: Start of the window expressed as minutes since midnight.
+
+Types.Schedule.Window.DurationMinutes:
+  type: property
+  datatype: uint16
+  description: Length of the window in minutes.
+
+Types.Schedule.IsEnabled:
+  type: property
+  datatype: boolean
+  description: Indicates whether the schedule is currently active.
+
+Types.Schedule.RepeatCount:
+  type: property
+  datatype: uint8
+  description: How many times the schedule repeats per week (0 means once).

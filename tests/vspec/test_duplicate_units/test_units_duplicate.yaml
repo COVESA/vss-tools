@@ -1,0 +1,14 @@
+# Test file with duplicate unit descriptions
+# This should trigger an error when processed by s2dm exporter
+
+g/s:
+  definition: Mass per time measured in grams per second
+  unit: grams per second
+  quantity: mass-per-time
+  allowed-datatypes: ['numeric']
+
+kg/s:
+  definition: Mass per time measured in kilograms per second
+  unit: grams per second  # DUPLICATE - should cause error
+  quantity: mass-per-time
+  allowed-datatypes: ['numeric']

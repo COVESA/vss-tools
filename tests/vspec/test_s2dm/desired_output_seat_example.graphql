@@ -1,0 +1,254 @@
+type Query {
+  vehicle: Vehicle
+}
+
+scalar Int8
+
+scalar UInt8
+
+scalar Int16
+
+scalar UInt16
+
+scalar UInt32
+
+scalar Int64
+
+scalar UInt64
+
+"""All in-cabin components, including doors."""
+type Vehicle {
+    id: ID!
+    cabin: Vehicle_Cabin
+    vehicleIdentification: Vehicle_VehicleIdentification
+}
+
+"""All in-cabin components, including doors."""
+type Vehicle_Cabin {
+    """The position of the driver seat in row 1."""
+    driverPosition: Vehicle_Cabin_DriverPosition_Enum
+        @vspec(comment: "Some signals use DriverSide and PassengerSide as instances. If this signal specifies that DriverPosition is LEFT or MIDDLE, then DriverSide refers to left side and PassengerSide to right side. If this signal specifies that DriverPosition is RIGHT, then DriverSide refers to right side and PassengerSide to left side.")
+    seat_s: [Vehicle_Cabin_Seat]
+}
+
+
+
+"""The model of a vehicle's Seat."""
+type Vehicle_Cabin_Seat {
+    id: ID!
+    instanceTag: Vehicle_Cabin_Seat_InstanceTag
+
+    """Heating or Cooling requsted for the Item. -100 = Maximum cooling, 0 = Heating/cooling deactivated, 100 = Maximum heating."""
+    heatingCooling(unit: RelationUnitEnum = PERCENT): Int8
+        @range(min: -100, max: 100)
+
+    """Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported."""
+    height(unit: LengthUnitEnum = MILLIMETER): UInt16
+
+    """Seat backward switch engaged."""
+    isBackwardSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Position).")
+
+    """Is the belt engaged."""
+    isBelted: Boolean
+
+    """Cooler switch for Seat heater."""
+    isCoolerSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Heating).")
+
+    """Decrease massage level switch engaged."""
+    isDecreaseMassageLevelSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.MassageLevel).")
+
+    """Seat down switch engaged."""
+    isDownSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Height).")
+
+    """Seat forward switch engaged."""
+    isForwardSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Position).")
+
+    """Increase massage level switch engaged."""
+    isIncreaseMassageLevelSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.MassageLevel).")
+
+    """Does the seat have a passenger in it."""
+    isOccupied: Boolean
+
+    """Tilt backward switch engaged."""
+    isTiltBackwardSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Tilt).")
+
+    """Tilt forward switch engaged."""
+    isTiltForwardSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Tilt).")
+
+        """Seat up switch engaged."""
+    isUpSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Height).")
+
+    """Warmer switch for Seat heater."""
+    isWarmerSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Heating).")
+
+    """Seat massage level. 0 = off. 100 = max massage."""
+    massage(unit: RelationUnitEnum = PERCENT): UInt8
+        @deprecated(reason: "v5.0 - refactored to Seat.MassageLevel")
+        @range(max: 100)
+
+    """Seat massage level. 0 = off. 100 = max massage."""
+    massageLevel(unit: RelationUnitEnum = PERCENT): UInt8
+        @range(max: 100)
+
+    """Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported."""
+    position(unit: LengthUnitEnum = MILLIMETER): UInt16
+
+    """Seat belt position on vehicle z-axis. Position is relative within available movable range of the seat belt. 0 = Lowermost position supported."""
+    seatBeltHeight(unit: LengthUnitEnum = MILLIMETER): UInt16
+
+    """Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward."""
+    tilt(unit: AngleUnitEnum = DEGREE): Float
+        @vspec(comment: "In VSS it is assumed that tilting a seat affects both seating (seat bottom) and backrest, i.e. the angle between seating and backrest will not be affected when changing Tilt.")
+    airbag: Vehicle_Cabin_Seat_Airbag
+    backrest: Vehicle_Cabin_Seat_Backrest
+    headrest: Vehicle_Cabin_Seat_Headrest
+    seating: Vehicle_Cabin_Seat_Seating
+}
+
+type Vehicle_Cabin_Seat_InstanceTag @instanceTag {
+    dimension1: Vehicle_Cabin_Seat_InstanceTag_Dimension1
+    dimension2: Vehicle_Cabin_Seat_InstanceTag_Dimension2
+}
+
+enum Vehicle_Cabin_Seat_InstanceTag_Dimension1 {
+  Row1
+  Row2
+}
+
+enum Vehicle_Cabin_Seat_InstanceTag_Dimension2 {
+  DriverSide
+  PassengerSide
+}
+
+"""Airbag signals."""
+type Vehicle_Cabin_Seat_Airbag {
+  """Airbag deployment status. True = Airbag deployed. False = Airbag not deployed."""
+  isDeployed: Boolean
+}
+
+"""Describes signals related to the backrest of the seat."""
+type Vehicle_Cabin_Seat_Backrest {
+  """Is switch for less lumbar support engaged."""
+  isLessLumbarSupportSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.LumbarSupport).")
+
+  """Is switch for less side bolster support engaged."""
+  isLessSideBolsterSupportSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.SideBolsterSupport).")
+
+  """Lumbar down switch engaged."""
+  isLumbarDownSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.LumbarSupport).")
+
+  """Lumbar up switch engaged."""
+  isLumbarUpSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.LumbarSupport).")
+
+  """Is switch for more lumbar support engaged."""
+  isMoreLumbarSupportSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.LumbarSupport).")
+
+  """Is switch for more side bolster support engaged."""
+  isMoreSideBolsterSupportSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.SideBolsterSupport).")
+
+  """Backrest recline backward switch engaged."""
+  isReclineBackwardSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.Recline).")
+
+  """Backrest recline forward switch engaged."""
+  isReclineForwardSwitchEngaged: Boolean
+    @vspec(comment: "Affects the property (SingleSeat.Backrest.Recline).")
+
+  """Height of lumbar support. Position is relative within available movable range of the lumbar support. 0 = Lowermost position supported."""
+  lumbarHeight(unit: LengthUnitEnum = MILLIMETER): UInt8
+
+  """Lumbar support (in/out position). 0 = Innermost position. 100 = Outermost position."""
+  lumbarSupport(unit: RelationUnitEnum = PERCENT): Float
+    @range(max: 100)
+
+  """Backrest recline compared to seat z-axis (seat vertical axis). 0 degrees = Upright/Vertical backrest. Negative degrees for forward recline. Positive degrees for backward recline."""
+  recline(unit: AngleUnitEnum = DEGREE): Float
+    @vspec(comment: "Seat z-axis depends on seat tilt. This means that movement of backrest due to seat tilting will not affect Backrest.Recline as long as the angle between Seating and Backrest are constant. Absolute recline relative to vehicle z-axis can be calculated as Tilt + Backrest.Recline.")
+
+  """Side bolster support. 0 = Minimum support (widest side bolster setting). 100 = Maximum support."""
+  sideBolsterSupport(unit: RelationUnitEnum = PERCENT): Float
+    @range(max: 100)
+}
+
+"""Headrest settings."""
+type Vehicle_Cabin_Seat_Headrest {
+    """Headrest angle, relative to backrest."""
+    angle(unit: AngleUnitEnum = DEGREE): Float
+        @vspec(comment: "Headrest angle, relative to backrest, 0 degrees if parallel to backrest, Positive degrees = tilted forward.")
+
+    """Position of headrest relative to movable range."""
+    height(unit: LengthUnitEnum = MILLIMETER): UInt8
+        @vspec(comment: "Position of headrest relative to movable range of the head rest. 0 = Bottommost position supported.")
+
+    """Head rest backward switch engaged."""
+    isBackwardSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Headrest.Angle).")
+
+    """Head rest down switch engaged."""
+    isDownSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Headrest.Height).")
+
+    """Head rest forward switch engaged."""
+    isForwardSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Headrest.Angle).")
+
+    """Head rest up switch engaged."""
+    isUpSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Headrest.Height).")
+}
+
+"""Describes signals related to the seat bottom of the seat."""
+type Vehicle_Cabin_Seat_Seating @vspec(comment: "Describes signals related to the seat bottom of the seat. Seating is here considered as the part of the seat that supports the thighs. Additional cushions (if any) for support of lower legs is not covered by this branch.") {
+    """Is switch to decrease seating length engaged."""
+    isBackwardSwitchEngaged: Boolean
+        @vspec(comment: "Affects the property (SingleSeat.Seating.Length).")
+
+    """Is switch to increase seating length engaged."""
+    isForwardSwitchEngaged: Boolean
+
+    """Length adjustment of seating. 0 = Adjustable part of seating in rearmost position (Shortest length of seating)."""
+    length(unit: LengthUnitEnum = MILLIMETER): UInt16
+}
+
+"""Attributes that identify a vehicle."""
+type Vehicle_VehicleIdentification {
+  """17-character Vehicle Identification Number (VIN) as defined by ISO 3779."""
+  vin: String
+}
+
+enum Vehicle_Cabin_DriverPosition_Enum {
+  LEFT
+  MIDDLE
+  RIGHT
+}
+
+"""Set of units for the quantity kind "angle". NOTE: Taken from VSS specification."""
+enum AngleUnitEnum @vspec(quantityKindKey: "angle") {
+  DEGREE @vspec(unitKey: "degrees", unitName: "degree")
+}
+
+"""Set of units for the quantity kind "length". NOTE: Taken from VSS specification."""
+enum LengthUnitEnum @vspec(quantityKindKey: "length") {
+  MILLIMETER @vspec(unitKey: "mm", unitName: "millimeter")
+}
+
+"""Set of units for the quantity kind "relation". NOTE: Taken from VSS specification."""
+enum RelationUnitEnum @vspec(quantityKindKey: "relation") {
+  PERCENT @vspec(unitKey: "percent", unitName: "percent")
+}

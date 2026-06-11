@@ -1,6 +1,6 @@
 [project]
 name = "vss-tools"
-version = "6.0.0-dev0"
+version = "7.0.0-dev0"
 description='COVESA Vehicle Signal Specification tooling.'
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,6 +16,8 @@ dependencies = [
     "rich>=13.9.4",
     "graphene>=3.4.3",
     "pandas>=2.2.3",
+    "case-converter>=1.2.0",
+    "inflect>=7.5.0",
 ]
 authors = [
 {name="COVESA VSS", email="covesa-dev@covesa.global"}
@@ -48,7 +50,7 @@ select = ["E", "F", "I"]
 
 [dependency-groups]
 dev = [
-    "bump-my-version>=1.2.0",
+    "bump-my-version>=1.2.5",
     "mypy>=1.13.0",
     "nox>=2024.10.9",
     "pre-commit>=4.0.1",
@@ -59,3 +61,6 @@ dev = [
     "types-pyyaml>=6.0.12.20240917",
     "types-setuptools>=75.3.0.20241107",
 ]
+
+[tool.coverage.run]
+patch = ["subprocess"]

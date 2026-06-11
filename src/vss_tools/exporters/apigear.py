@@ -400,7 +400,7 @@ def generate_solution(
 
 
 def export_yaml(file_name, content_dict):
-    with open(file_name, "w") as f:
+    with open(file_name, "w", encoding="utf-8") as f:
         yaml.dump(
             content_dict,
             f,

@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8'?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.oem.service" coreApp="true">
+
+	<uses-sdk android:minSdkVersion="33" />
+
+	<permission android:name="android.car.permission.oem.AVERAGE_SPEED_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_average_speed_read" android:description="@string/car_permission_desc_oem_average_speed_read" />
+
+	<permission android:name="android.car.permission.oem.CARGO_VOLUME_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_cargo_volume_read" android:description="@string/car_permission_desc_oem_cargo_volume_read" />
+
+	<permission android:name="android.car.permission.oem.CURB_WEIGHT_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_curb_weight_read" android:description="@string/car_permission_desc_oem_curb_weight_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_ALTITUDE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_altitude_read" android:description="@string/car_permission_desc_oem_current_location_altitude_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_GNSSRECEIVER_FIX_TYPE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_gnssreceiver_fix_type_read" android:description="@string/car_permission_desc_oem_current_location_gnssreceiver_fix_type_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_X_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_gnssreceiver_mounting_position_x_read" android:description="@string/car_permission_desc_oem_current_location_gnssreceiver_mounting_position_x_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_Y_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_gnssreceiver_mounting_position_y_read" android:description="@string/car_permission_desc_oem_current_location_gnssreceiver_mounting_position_y_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_GNSSRECEIVER_MOUNTING_POSITION_Z_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_gnssreceiver_mounting_position_z_read" android:description="@string/car_permission_desc_oem_current_location_gnssreceiver_mounting_position_z_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_HEADING_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_heading_read" android:description="@string/car_permission_desc_oem_current_location_heading_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_HORIZONTAL_ACCURACY_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_horizontal_accuracy_read" android:description="@string/car_permission_desc_oem_current_location_horizontal_accuracy_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_LATITUDE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_latitude_read" android:description="@string/car_permission_desc_oem_current_location_latitude_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_LONGITUDE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_longitude_read" android:description="@string/car_permission_desc_oem_current_location_longitude_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_TIMESTAMP_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_timestamp_read" android:description="@string/car_permission_desc_oem_current_location_timestamp_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_LOCATION_VERTICAL_ACCURACY_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_location_vertical_accuracy_read" android:description="@string/car_permission_desc_oem_current_location_vertical_accuracy_read" />
+
+	<permission android:name="android.car.permission.oem.CURRENT_OVERALL_WEIGHT_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_current_overall_weight_read" android:description="@string/car_permission_desc_oem_current_overall_weight_read" />
+
+	<permission android:name="android.car.permission.oem.EMISSIONS_CO2_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_emissions_co2_read" android:description="@string/car_permission_desc_oem_emissions_co2_read" />
+
+	<permission android:name="android.car.permission.oem.GROSS_WEIGHT_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_gross_weight_read" android:description="@string/car_permission_desc_oem_gross_weight_read" />
+
+	<permission android:name="android.car.permission.oem.HEIGHT_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_height_read" android:description="@string/car_permission_desc_oem_height_read" />
+
+	<permission android:name="android.car.permission.oem.IS_BROKEN_DOWN_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_is_broken_down_read" android:description="@string/car_permission_desc_oem_is_broken_down_read" />
+
+	<permission android:name="android.car.permission.oem.IS_MOVING_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_is_moving_read" android:description="@string/car_permission_desc_oem_is_moving_read" />
+
+	<permission android:name="android.car.permission.oem.LENGTH_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_length_read" android:description="@string/car_permission_desc_oem_length_read" />
+
+	<permission android:name="android.car.permission.oem.LOW_VOLTAGE_SYSTEM_STATE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_low_voltage_system_state_read" android:description="@string/car_permission_desc_oem_low_voltage_system_state_read" />
+
+	<permission android:name="android.car.permission.oem.MAX_TOW_BALL_WEIGHT_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_max_tow_ball_weight_read" android:description="@string/car_permission_desc_oem_max_tow_ball_weight_read" />
+
+	<permission android:name="android.car.permission.oem.MAX_TOW_WEIGHT_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_max_tow_weight_read" android:description="@string/car_permission_desc_oem_max_tow_weight_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_ACCUMULATED_BRAKING_ENERGY_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_accumulated_braking_energy_read" android:description="@string/car_permission_desc_oem_powertrain_accumulated_braking_energy_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_COMBUSTION_ENGINE_ENGINE_COOLANT_LEVEL_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_combustion_engine_engine_coolant_level_read" android:description="@string/car_permission_desc_oem_powertrain_combustion_engine_engine_coolant_level_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_COMBUSTION_ENGINE_ENGINE_COOLANT_TEMPERATURE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_combustion_engine_engine_coolant_temperature_read" android:description="@string/car_permission_desc_oem_powertrain_combustion_engine_engine_coolant_temperature_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_COMBUSTION_ENGINE_ENGINE_OIL_CAPACITY_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_combustion_engine_engine_oil_capacity_read" android:description="@string/car_permission_desc_oem_powertrain_combustion_engine_engine_oil_capacity_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_COMBUSTION_ENGINE_ENGINE_OIL_LEVEL_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_combustion_engine_engine_oil_level_read" android:description="@string/car_permission_desc_oem_powertrain_combustion_engine_engine_oil_level_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_COMBUSTION_ENGINE_ENGINE_OIL_TEMPERATURE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_combustion_engine_engine_oil_temperature_read" android:description="@string/car_permission_desc_oem_powertrain_combustion_engine_engine_oil_temperature_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_COMBUSTION_ENGINE_IS_RUNNING_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_combustion_engine_is_running_read" android:description="@string/car_permission_desc_oem_powertrain_combustion_engine_is_running_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_COMBUSTION_ENGINE_SPEED_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_combustion_engine_speed_read" android:description="@string/car_permission_desc_oem_powertrain_combustion_engine_speed_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_ABSOLUTE_LEVEL_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_absolute_level_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_absolute_level_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_AVERAGE_CONSUMPTION_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_average_consumption_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_average_consumption_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_CONSUMPTION_SINCE_LAST_REFUEL_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_consumption_since_last_refuel_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_consumption_since_last_refuel_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_CONSUMPTION_SINCE_START_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_consumption_since_start_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_consumption_since_start_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_HYBRID_TYPE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_hybrid_type_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_hybrid_type_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_INSTANT_CONSUMPTION_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_instant_consumption_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_instant_consumption_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_IS_ENGINE_STOP_START_ENABLED_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_is_engine_stop_start_enabled_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_is_engine_stop_start_enabled_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_IS_FUEL_LEVEL_LOW_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_is_fuel_level_low_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_is_fuel_level_low_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_IS_FUEL_PORT_FLAP_OPEN_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_is_fuel_port_flap_open_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_is_fuel_port_flap_open_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_IS_FUEL_PORT_FLAP_OPEN_WRITE" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_is_fuel_port_flap_open_write" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_is_fuel_port_flap_open_write" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_RANGE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_range_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_range_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_REFUEL_PORT_POSITION_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_refuel_port_position_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_refuel_port_position_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_RELATIVE_LEVEL_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_relative_level_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_relative_level_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_SUPPORTED_FUEL_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_supported_fuel_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_supported_fuel_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_SUPPORTED_FUEL_TYPES_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_supported_fuel_types_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_supported_fuel_types_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_TANK_CAPACITY_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_tank_capacity_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_tank_capacity_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_FUEL_SYSTEM_TIME_REMAINING_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_fuel_system_time_remaining_read" android:description="@string/car_permission_desc_oem_powertrain_fuel_system_time_remaining_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_RANGE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_range_read" android:description="@string/car_permission_desc_oem_powertrain_range_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_TIME_REMAINING_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_time_remaining_read" android:description="@string/car_permission_desc_oem_powertrain_time_remaining_read" />
+
+	<permission android:name="android.car.permission.oem.POWERTRAIN_TYPE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_powertrain_type_read" android:description="@string/car_permission_desc_oem_powertrain_type_read" />
+
+	<permission android:name="android.car.permission.oem.ROOF_LOAD_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_roof_load_read" android:description="@string/car_permission_desc_oem_roof_load_read" />
+
+	<permission android:name="android.car.permission.oem.SPEED_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_speed_read" android:description="@string/car_permission_desc_oem_speed_read" />
+
+	<permission android:name="android.car.permission.oem.START_TIME_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_start_time_read" android:description="@string/car_permission_desc_oem_start_time_read" />
+
+	<permission android:name="android.car.permission.oem.TRAILER_IS_CONNECTED_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_trailer_is_connected_read" android:description="@string/car_permission_desc_oem_trailer_is_connected_read" />
+
+	<permission android:name="android.car.permission.oem.TRAVELED_DISTANCE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_traveled_distance_read" android:description="@string/car_permission_desc_oem_traveled_distance_read" />
+
+	<permission android:name="android.car.permission.oem.TRAVELED_DISTANCE_SINCE_START_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_traveled_distance_since_start_read" android:description="@string/car_permission_desc_oem_traveled_distance_since_start_read" />
+
+	<permission android:name="android.car.permission.oem.TRIP_DURATION_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_trip_duration_read" android:description="@string/car_permission_desc_oem_trip_duration_read" />
+
+	<permission android:name="android.car.permission.oem.TRIP_METER_READING_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_trip_meter_reading_read" android:description="@string/car_permission_desc_oem_trip_meter_reading_read" />
+
+	<permission android:name="android.car.permission.oem.TRIP_METER_READING_WRITE" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_trip_meter_reading_write" android:description="@string/car_permission_desc_oem_trip_meter_reading_write" />
+
+	<permission android:name="android.car.permission.oem.TURNING_DIAMETER_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_turning_diameter_read" android:description="@string/car_permission_desc_oem_turning_diameter_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_BODY_TYPE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_body_type_read" android:description="@string/car_permission_desc_oem_vehicle_identification_body_type_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_BRAND_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_brand_read" android:description="@string/car_permission_desc_oem_vehicle_identification_brand_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_DATE_VEHICLE_FIRST_REGISTERED_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_date_vehicle_first_registered_read" android:description="@string/car_permission_desc_oem_vehicle_identification_date_vehicle_first_registered_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_LICENSE_PLATE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_license_plate_read" android:description="@string/car_permission_desc_oem_vehicle_identification_license_plate_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_MEETS_EMISSION_STANDARD_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_meets_emission_standard_read" android:description="@string/car_permission_desc_oem_vehicle_identification_meets_emission_standard_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_MODEL_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_model_read" android:description="@string/car_permission_desc_oem_vehicle_identification_model_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_PRODUCTION_DATE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_production_date_read" android:description="@string/car_permission_desc_oem_vehicle_identification_production_date_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_VEHICLE_EXTERIOR_COLOR_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_vehicle_exterior_color_read" android:description="@string/car_permission_desc_oem_vehicle_identification_vehicle_exterior_color_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_VEHICLE_MODEL_DATE_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_vehicle_model_date_read" android:description="@string/car_permission_desc_oem_vehicle_identification_vehicle_model_date_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_VEHICLE_SEATING_CAPACITY_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_vehicle_seating_capacity_read" android:description="@string/car_permission_desc_oem_vehicle_identification_vehicle_seating_capacity_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_VIN_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_vin_read" android:description="@string/car_permission_desc_oem_vehicle_identification_vin_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_WMI_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_wmi_read" android:description="@string/car_permission_desc_oem_vehicle_identification_wmi_read" />
+
+	<permission android:name="android.car.permission.oem.VEHICLE_IDENTIFICATION_YEAR_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_vehicle_identification_year_read" android:description="@string/car_permission_desc_oem_vehicle_identification_year_read" />
+
+	<permission android:name="android.car.permission.oem.WIDTH_EXCLUDING_MIRRORS_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_width_excluding_mirrors_read" android:description="@string/car_permission_desc_oem_width_excluding_mirrors_read" />
+
+	<permission android:name="android.car.permission.oem.WIDTH_FOLDED_MIRRORS_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_width_folded_mirrors_read" android:description="@string/car_permission_desc_oem_width_folded_mirrors_read" />
+
+	<permission android:name="android.car.permission.oem.WIDTH_INCLUDING_MIRRORS_READ" android:protectionLevel="dangerous" android:label="@string/car_permission_label_oem_width_including_mirrors_read" android:description="@string/car_permission_desc_oem_width_including_mirrors_read" />
+
+	<application android:label="@string/app_title" android:directBootAware="true" android:allowBackup="false" />
+</manifest>

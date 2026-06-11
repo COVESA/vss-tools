@@ -122,6 +122,7 @@ func main() {
             }
             case 'm':  //subtree metadata
             {
+                var numberOfAllowedElements int
                 var subTreePath string
                 fmt.Printf("\nPath to subtree node: ")
                 fmt.Scanf("%s", &subTreePath)
@@ -141,6 +142,11 @@ func main() {
                     fmt.Printf("Node type=%s\n", getTypeName(parser.VSSgetType(searchData[i].NodeHandle)))
                     fmt.Printf("Node path=%s\n", searchData[i].NodePath)
                     fmt.Printf("Node validation=%d\n", parser.VSSgetValidation(searchData[i].NodeHandle))
+                    numberOfAllowedElements = parser.VSSgetNumOfAllowedElements(searchData[i].NodeHandle)
+                    fmt.Printf("Node num of allowed values=%d\n", numberOfAllowedElements);
+                    for j := 0 ; j < numberOfAllowedElements ; j++ {
+                        fmt.Printf("Node allowed value=%s at index=%d\n", parser.VSSgetAllowedElement(searchData[i].NodeHandle, j), j);
+                    }
                 }
             }
             case 'h':  //help
