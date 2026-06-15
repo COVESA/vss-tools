@@ -573,7 +573,7 @@ def test_ros2interface_srv_and_timeseries_combined(tmp_path):
 def test_ros2interface_timeseries_cli_aggregate_mode(tmp_path):
     """--timeseries should also work in aggregate mode (one .msg per parent branch).
 
-    The existing test-ros2-interface.py tests only cover leaf mode; this fills the gap.
+    The existing test_ros2_interface.py tests only cover leaf mode; this fills the gap.
     """
     vspec = _write_vspec(tmp_path)
     out = tmp_path / "out"

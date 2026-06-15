@@ -982,9 +982,9 @@ def cli(
     # The <Signal>Timeseries.msg wrapper is shared by Get and Set, so it is emitted
     # whenever --timeseries has any value.
     if timeseries:
-        ts_mode = timeseries.lower()
+        ts_args = timeseries.lower()
         for fname, _content, _fields in msgs:
-            base = fname[:-4] if fname.lower().endswith(".msg") else fname
+            base = fname.removesuffix(".msg")
             ts_msg_name = timeseries_msg_name(base)
             ts_base, get_ts_srv, set_ts_srv = timeseries_srv_names(base)
 
@@ -999,14 +999,14 @@ def cli(
             (msg_dir / ts_msg_name).write_text(ts_msg_content, encoding="utf-8")
             msg_rel_paths.append(f"msg/{ts_msg_name}")
 
-            if ts_mode in ("get", "both"):
+            if ts_args in ("get", "both"):
                 get_ts_content = render_get_timeseries_srv(
                     base_msg_name=base,
                     timestamp_schema=timestamp_schema,
                 )
                 (srv_dir / get_ts_srv).write_text(get_ts_content, encoding="utf-8")
                 srv_rel_paths.append(f"srv/{get_ts_srv}")
-            if ts_mode in ("set", "both"):
+            if ts_args in ("set", "both"):
                 set_ts_content = render_set_timeseries_srv(base_msg_name=base)
                 (srv_dir / set_ts_srv).write_text(set_ts_content, encoding="utf-8")
                 srv_rel_paths.append(f"srv/{set_ts_srv}")
