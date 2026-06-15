@@ -652,3 +652,177 @@ def test_ros2interface_timeseries_cli_with_topic_filter(tmp_path):
     # Other signals must NOT be generated.
     assert not (msg_dir / "ACodes.msg").exists()
     assert not (msg_dir / "AMonthTimeseries.msg").exists()
+
+
+def test_ros2interface_delete_helper_function():
+    """Unit-test render_delete_timeseries_srv: mode selector, window fields, retention
+    field, and the response fields (samples_deleted / samples_retained)."""
+    pytest.importorskip("anytree")
+    src_dir = HERE.parents[1] / "src"
+    if str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+    from vss_tools.exporters.ros2interface import (
+        DEFAULT_TIMESTAMP,
+        Timestamp,  
+        TimestampProperty,
+        render_delete_timeseries_srv,
+        timeseries_delete_srv_name,
+    )
+
+    # naming helper
+    assert timeseries_delete_srv_name("VehicleSpeed") == "DeleteVehicleSpeedTimeseries.srv"
+
+    srv = render_delete_timeseries_srv("VehicleSpeed", timestamp_schema=DEFAULT_TIMESTAMP)
+    # mode selector
+    assert "uint8 mode" in srv
+    assert "FULL" in srv and "TIME_WINDOW" in srv and "RETENTION_FLOOR" in srv
+    # TIME_WINDOW fields (default schema suffixes)
+    assert "int64 start_time_seconds" in srv
+    assert "int64 start_time_nanoseconds" in srv
+    assert "int64 end_time_seconds" in srv
+    assert "int64 end_time_nanoseconds" in srv
+    # RETENTION_FLOOR field
+    assert "uint32 keep_latest" in srv
+    # separator + response
+    assert "---" in srv
+    assert "bool success" in srv
+    assert "string message" in srv
+    assert "uint32 samples_deleted" in srv
+    assert "uint32 samples_retained" in srv
+
+    # custom timestamp schema flows into the window fields
+    custom = Timestamp(
+        fqn="CustomTypes.MyTime",
+        properties=[
+            TimestampProperty(name="epoch_s", ros_name="timestamp_epoch_s", ros_type="int64", comment="Epoch seconds"),
+            TimestampProperty(name="nanos", ros_name="timestamp_nanos", ros_type="int64", comment="Nanoseconds"),
+        ],
+    )
+    srv_custom = render_delete_timeseries_srv("VehicleSpeed", timestamp_schema=custom)
+    assert "int64 start_time_epoch_s" in srv_custom
+    assert "int64 end_time_nanos" in srv_custom
+    assert "start_time_seconds" not in srv_custom
+
+
+def test_ros2interface_timeseries_delete_cli(tmp_path):
+    """--timeseries-delete emits the wrapper .msg + Delete service; off by default."""
+    vspec = _write_vspec(tmp_path)
+    out = tmp_path / "out"
+    subprocess.run(
+        [
+            "vspec",
+            "export",
+            "ros2interface",
+            "-u",
+            str(TEST_UNITS),
+            "-q",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec),
+            "--output",
+            str(out),
+            "--mode",
+            "leaf",
+            "--timeseries-delete",
+        ],
+        check=True,
+    )
+    srv_dir = out / "vss_interfaces" / "srv"
+    msg_dir = out / "vss_interfaces" / "msg"
+    # wrapper present, delete service present, no get/set timeseries services
+    assert (msg_dir / "ASpeedTimeseries.msg").exists()
+    assert (srv_dir / "DeleteASpeedTimeseries.srv").exists()
+    assert not (srv_dir / "GetASpeedTimeseries.srv").exists()
+    assert not (srv_dir / "SetASpeedTimeseries.srv").exists()
+
+
+def test_ros2interface_timeseries_delete_default_off(tmp_path):
+    """Without --timeseries-delete, no Delete*Timeseries.srv is generated."""
+    vspec = _write_vspec(tmp_path)
+    out = tmp_path / "out"
+    subprocess.run(
+        [
+            "vspec",
+            "export",
+            "ros2interface",
+            "-u",
+            str(TEST_UNITS),
+            "-q",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec),
+            "--output",
+            str(out),
+            "--mode",
+            "leaf",
+            "--timeseries",
+            "get",
+        ],
+        check=True,
+    )
+    srv_dir = out / "vss_interfaces" / "srv"
+    assert not (srv_dir / "DeleteASpeedTimeseries.srv").exists()
+
+
+def test_ros2interface_timeseries_delete_combined(tmp_path):
+    """--timeseries both --timeseries-delete emits Get, Set, AND Delete, sharing one wrapper."""
+    vspec = _write_vspec(tmp_path)
+    out = tmp_path / "out"
+    subprocess.run(
+        [
+            "vspec",
+            "export",
+            "ros2interface",
+            "-u",
+            str(TEST_UNITS),
+            "-q",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec),
+            "--output",
+            str(out),
+            "--mode",
+            "leaf",
+            "--timeseries",
+            "both",
+            "--timeseries-delete",
+        ],
+        check=True,
+    )
+    srv_dir = out / "vss_interfaces" / "srv"
+    msg_dir = out / "vss_interfaces" / "msg"
+    assert (msg_dir / "ASpeedTimeseries.msg").exists()
+    assert (srv_dir / "GetASpeedTimeseries.srv").exists()
+    assert (srv_dir / "SetASpeedTimeseries.srv").exists()
+    assert (srv_dir / "DeleteASpeedTimeseries.srv").exists()
+
+
+def test_ros2interface_timeseries_delete_topic_filter(tmp_path):
+    """--timeseries-delete respects --topics filtering."""
+    vspec = _write_vspec(tmp_path)
+    out = tmp_path / "out"
+    subprocess.run(
+        [
+            "vspec",
+            "export",
+            "ros2interface",
+            "-u",
+            str(TEST_UNITS),
+            "-q",
+            str(TEST_QUANT),
+            "--vspec",
+            str(vspec),
+            "--output",
+            str(out),
+            "--mode",
+            "leaf",
+            "--topics",
+            "A.Speed",
+            "--timeseries-delete",
+        ],
+        check=True,
+    )
+    srv_dir = out / "vss_interfaces" / "srv"
+    assert (srv_dir / "DeleteASpeedTimeseries.srv").exists()
+    assert not (srv_dir / "DeleteACodesTimeseries.srv").exists()
+    assert not (srv_dir / "DeleteAMonthTimeseries.srv").exists()

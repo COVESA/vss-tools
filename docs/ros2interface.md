@@ -1,6 +1,6 @@
 # ROS 2 Interface Exporter (`ros2interface`)
 
-Exports a VSS model to a ROS 2 interface package: generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for latest-single-value Get/Set operations and time-range (timeseries) Get/Set operations.
+Exports a VSS model to a ROS 2 interface package: generates `.msg` files (per leaf or aggregated by parent branch) and optional `.srv` files for latest-single-value Get/Set operations, time-range (timeseries) Get/Set operations, and timeseries deletion.
 This exporter plugs into the `vspec export` CLI like other vss-tools exporters. For generic exporter usage and common arguments, see the `vspec` documentation.
 
 ## Generated Output Structure
@@ -9,12 +9,13 @@ This exporter plugs into the `vspec export` CLI like other vss-tools exporters. 
 └── <package-name>
     ├── msg  # generated .msg definitions
     |   ├── \<MSG>.msg
-    |   └── \<MSG>Timeseries.msg              # only when --timeseries is set
+    |   └── \<MSG>Timeseries.msg              # only when --timeseries or --timeseries-delete is set
     └── srv  # generated .srv (if a service option is enabled)
         ├── Get\<MSG>.srv                     # only when --srv get|both
         ├── Set\<MSG>.srv                     # only when --srv set|both
         ├── Get\<MSG>Timeseries.srv           # only when --timeseries get|both
-        └── Set\<MSG>Timeseries.srv           # only when --timeseries set|both
+        ├── Set\<MSG>Timeseries.srv           # only when --timeseries set|both
+        └── Delete\<MSG>Timeseries.srv        # only when --timeseries-delete is set
 ```
 
 **Example Output**
@@ -29,12 +30,14 @@ OutputFolder
         ├── GetVehicleSpeed.srv
         ├── SetVehicleSpeed.srv
         ├── GetVehicleSpeedTimeseries.srv
-        └── SetVehicleSpeedTimeseries.srv
+        ├── SetVehicleSpeedTimeseries.srv
+        └── DeleteVehicleSpeedTimeseries.srv
 ```
 
 - .msg files include VSS metadata as comments (description, unit, min/max, allowed values).
 - Optional latest-single-value .srv files (Get\<Msg>.srv, Set\<Msg>.srv)
 - When `--timeseries get|set|both` is enabled, per-signal `<MSG>Timeseries.msg` and the matching `Get<MSG>Timeseries.srv` / `Set<MSG>Timeseries.srv` are emitted, for service-based batch retrieval and injection of stamped samples over a time range.
+- When `--timeseries-delete` is enabled, a `Delete<MSG>Timeseries.srv` (plus the shared `<MSG>Timeseries.msg` wrapper) is emitted, for full or partial deletion of stored samples.
 
 
 ## Datatypes mapping between VSS and ROS 2 Interface
@@ -80,6 +83,7 @@ OutputFolder
   - `both`:
     - creates the wrapper `.msg` and both timeseries services.
   - Composes with `--timestamp-struct-fqn` and is independent of `--srv`. See [Timeseries](#timeseries----timeseries) in the Output section.
+- `--timeseries-delete`: Generate a `Delete<MSG>Timeseries.srv` (plus the shared `<MSG>Timeseries.msg` wrapper) for deleting stored samples. The service is mode-based: `FULL` (delete all), `TIME_WINDOW` (delete a `[start, end]` range), or `RETENTION_FLOOR` (keep at least N most-recent). Destructive, so off by default. Composes with `--timestamp-struct-fqn` and `--timeseries`. See [Timeseries Deletion](#timeseries-deletion----timeseries-delete) in the Output section.
 - `--timestamp-struct-fqn <fqn>`: Full FQN of the timestamp struct in the types tree loaded via `--types`. If not provided, falls back to built-in defaults.
 - `--output-vspec <file>`: Path to write a transformed VSS model alongside the ROS 2 package. See [Transformed VSS](#transformed-vss-vspec----output-vspec) in the Output section.
 
@@ -249,6 +253,51 @@ uint32 samples_accepted  # how many samples were actually stored
 
 Timeseries messages are intended primarily as service payloads (batch retrieval for downstream statistics, replay, or cloud-upload pipelines), rather than as primary Pub/Sub topics — the per-signal `<MSG>.msg` continues to serve the Pub/Sub leg. The `prefer_newest` field on both Get and Set requests makes the sample-retention/drop policy an explicit client choice rather than a server default, so behavior is consistent across implementations.
 
+### Timeseries Deletion (`--timeseries-delete`)
+
+When `--timeseries-delete` is set, the exporter emits a single `Delete<MSG>Timeseries.srv` per signal (plus the shared `<MSG>Timeseries.msg` wrapper, in case other services are also requested). Deletion is **destructive** and therefore off by default; it is a dedicated opt-in flag so destructive operations stay easy to audit.
+
+A single mode-based service covers both full and partial deletion. The `mode` field is authoritative — fields that do not apply to the chosen mode are ignored.
+
+- `Delete<MSG>Timeseries.srv`
+  - Request:
+    - `uint8 mode` — `0 = FULL`, `1 = TIME_WINDOW`, `2 = RETENTION_FLOOR`.
+    - `start_time_<suffix>` / `end_time_<suffix>` — used when `mode == 1` (TIME_WINDOW): delete samples whose timestamp falls in `[start, end]`.
+    - `uint32 keep_latest` — used when `mode == 2` (RETENTION_FLOOR): delete oldest samples while retaining at least this many of the most recent.
+  - Response:
+    - `bool success`, `string message`.
+    - `uint32 samples_deleted` — how many samples were actually removed.
+    - `uint32 samples_retained` — how many remain after the operation.
+
+| `mode` | Name | Behavior | Window fields | `keep_latest` |
+|---|---|---|---|---|
+| `0` | `FULL` | Delete all stored samples for the signal. | ignored | ignored |
+| `1` | `TIME_WINDOW` | Delete samples whose timestamp is within `[start, end]` (inclusive). | used | ignored |
+| `2` | `RETENTION_FLOOR` | Delete oldest samples but retain at least `keep_latest` of the most recent. | ignored | used |
+
+The `RETENTION_FLOOR` mode covers the "reduce capacity but keep a legal minimum" use case: a client requests deletion while guaranteeing that at least `keep_latest` of the most recent samples remain. The `samples_retained` response field lets the client confirm the floor was honored (i.e. `samples_retained >= keep_latest`). The `start_time_<suffix>` / `end_time_<suffix>` window fields inherit from the resolved timestamp schema, so `--timestamp-struct-fqn` composes transparently here too.
+
+Deleting zero matching samples is **not** a failure: `success` is `true` with `samples_deleted = 0` (idempotent — deleting an already-empty range is a no-op).
+
+**Example — `DeleteVehicleSpeedTimeseries.srv`**
+```
+# AUTO-GENERATED by VSS-TOOLS
+# Service: DeleteVehicleSpeedTimeseries
+# Deletes stored samples for this signal (full, time-window, or retention-floor).
+
+uint8 mode  # 0 = FULL, 1 = TIME_WINDOW, 2 = RETENTION_FLOOR
+int64 start_time_seconds  # used when mode == 1 (TIME_WINDOW)
+int64 start_time_nanoseconds  # used when mode == 1 (TIME_WINDOW)
+int64 end_time_seconds  # used when mode == 1 (TIME_WINDOW)
+int64 end_time_nanoseconds  # used when mode == 1 (TIME_WINDOW)
+uint32 keep_latest  # used when mode == 2 (RETENTION_FLOOR): min most-recent samples to retain
+---
+bool success
+string message
+uint32 samples_deleted  # how many samples were actually removed
+uint32 samples_retained  # how many remain after the operation
+```
+
 ### Transformed VSS (`.vspec`) — `--output-vspec`
 
 When `--output-vspec <file>` is provided, a transformed VSS model is written alongside the ROS 2 package. Each selected signal is restructured as:
@@ -341,7 +390,7 @@ vspec export ros2interface \
   --timeseries both
 ```
 
-- Export Vehicle.Speed with timeseries support (batch retrieval + injection services and the wrapper message, in addition to the point-in-time message):
+- Export Vehicle.Speed with both latest-single-value and timeseries services:
   - This produces `VehicleSpeed.msg`, `VehicleSpeedTimeseries.msg`, `GetVehicleSpeedTimeseries.srv`, and `SetVehicleSpeedTimeseries.srv`
   - The latest-single-value `GET`/`SET` services are still gated by `--srv` CLI flag independently.
 
@@ -355,6 +404,21 @@ vspec export ros2interface \
   --topics Vehicle.Speed \
   --srv get \
   --timeseries both
+```
+
+- Export Vehicle.Speed with a timeseries delete service (full / partial deletion):
+  - This produces `VehicleSpeed.msg`, `VehicleSpeedTimeseries.msg`, and `DeleteVehicleSpeedTimeseries.srv`.
+  - Can be combined with `--timeseries get|set|both` to also generate the retrieval/injection services.
+
+```bash
+vspec export ros2interface \
+  --vspec spec/VehicleSignalSpecification.vspec \
+  -I spec \
+  --output ./out \
+  --package-name vss_speed_interfaces \
+  --mode leaf \
+  --topics Vehicle.Speed \
+  --timeseries-delete
 ```
 
 **Full example using the `vehicle_signal_specification` repo side-by-side with `vss-tools`:**
@@ -381,6 +445,7 @@ vspec export ros2interface \
   --mode leaf \
   --srv both --srv-use-msg \
   --timeseries both \
+  --timeseries-delete \
   --topics Vehicle.Speed \
   --output-vspec ./out/transformed.vspec \
   --timestamp-struct-fqn VehicleDataTypes.Timestamp
@@ -399,6 +464,7 @@ vspec export ros2interface \
   [--srv get|set|both] \
   [--srv-use-msg | --no-srv-use-msg] \
   [--timeseries get|set|both] \
+  [--timeseries-delete] \
   [--timestamp-struct-fqn <fqn>] \
   [--topics PATTERN ...] \
   [--exclude-topics PATTERN ...] \
