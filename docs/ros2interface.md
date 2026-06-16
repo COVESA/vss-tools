@@ -8,14 +8,14 @@ This exporter plugs into the `vspec export` CLI like other vss-tools exporters. 
 \<output>
 └── <package-name>
     ├── msg  # generated .msg definitions
-    |   ├── \<MSG>.msg
-    |   └── \<MSG>Timeseries.msg              # only when --timeseries or --timeseries-delete is set
+    |   ├── \<Msg>.msg
+    |   └── \<Msg>Timeseries.msg              # only when --timeseries or --timeseries-delete is set
     └── srv  # generated .srv (if a service option is enabled)
-        ├── Get\<MSG>.srv                     # only when --srv get|both
-        ├── Set\<MSG>.srv                     # only when --srv set|both
-        ├── Get\<MSG>Timeseries.srv           # only when --timeseries get|both
-        ├── Set\<MSG>Timeseries.srv           # only when --timeseries set|both
-        └── Delete\<MSG>Timeseries.srv        # only when --timeseries-delete is set
+        ├── Get\<Msg>.srv                     # only when --srv get|both
+        ├── Set\<Msg>.srv                     # only when --srv set|both
+        ├── Get\<Msg>Timeseries.srv           # only when --timeseries get|both
+        ├── Set\<Msg>Timeseries.srv           # only when --timeseries set|both
+        └── Delete\<Msg>Timeseries.srv        # only when --timeseries-delete is set
 ```
 
 **Example Output**
@@ -36,8 +36,8 @@ OutputFolder
 
 - .msg files include VSS metadata as comments (description, unit, min/max, allowed values).
 - Optional latest-single-value .srv files (Get\<Msg>.srv, Set\<Msg>.srv)
-- When `--timeseries get|set|both` is enabled, per-signal `<MSG>Timeseries.msg` and the matching `Get<MSG>Timeseries.srv` / `Set<MSG>Timeseries.srv` are emitted, for service-based batch retrieval and injection of stamped samples over a time range.
-- When `--timeseries-delete` is enabled, a `Delete<MSG>Timeseries.srv` (plus the shared `<MSG>Timeseries.msg` wrapper) is emitted, for full or partial deletion of stored samples.
+- When `--timeseries get|set|both` is enabled, per-signal `<Msg>Timeseries.msg` and the matching `Get<Msg>Timeseries.srv` / `Set<Msg>Timeseries.srv` are emitted, for service-based batch retrieval and injection of stamped samples over a time range.
+- When `--timeseries-delete` is enabled, a `Delete<Msg>Timeseries.srv` (plus the shared `<Msg>Timeseries.msg` wrapper) is emitted, for full or partial deletion of stored samples.
 
 
 ## Datatypes mapping between VSS and ROS 2 Interface
@@ -69,21 +69,21 @@ OutputFolder
   - `leaf`: one `.msg` per leaf signal.
 - `--srv {get, set, both}`: Generate latest-single-value `.srv` files.
   - `get`:
-    - creates Get<MSG>.srv files to retrieve the latest single value (empty request, single-value response).
+    - creates `Get<Msg>.srv` files to retrieve the latest single value (empty request, single-value response).
   - `set`:
-    - creates Set<MSG>.srv files to send a single value and get `success` as response if the data gets saved.
+    - creates `Set<Msg>.srv` files to send a single value and get `success` as response if the data gets saved.
   - `both`:
-    - creates both the Get<MSG>.srv and Set<MSG>.srv files.
+    - creates both the `Get<Msg>.srv` and `Set<Msg>.srv` files.
 - `--srv-use-msg / --no-srv-use-msg`: In services, use the generated message as a nested field (default: `--srv-use-msg`); otherwise flatten fields.
-- `--timeseries {get, set, both}`: Generate time-range (timeseries) `.srv` files plus the shared `<MSG>Timeseries.msg` wrapper.
+- `--timeseries {get, set, both}`: Generate time-range (timeseries) `.srv` files plus the shared `<Msg>Timeseries.msg` wrapper.
   - `get`:
-    - creates `<MSG>Timeseries.msg` + `Get<MSG>Timeseries.srv` to retrieve a batch of stamped samples over a time window.
+    - creates `<Msg>Timeseries.msg` + `Get<Msg>Timeseries.srv` to retrieve a batch of stamped samples over a time window.
   - `set`:
-    - creates `<MSG>Timeseries.msg` + `Set<MSG>Timeseries.srv` to inject a batch of stamped samples.
+    - creates `<Msg>Timeseries.msg` + `Set<Msg>Timeseries.srv` to inject a batch of stamped samples.
   - `both`:
     - creates the wrapper `.msg` and both timeseries services.
   - Composes with `--timestamp-struct-fqn` and is independent of `--srv`. See [Timeseries](#timeseries----timeseries) in the Output section.
-- `--timeseries-delete`: Generate a `Delete<MSG>Timeseries.srv` (plus the shared `<MSG>Timeseries.msg` wrapper) for deleting stored samples. The service is mode-based: `FULL` (delete all), `TIME_WINDOW` (delete a `[start, end]` range), or `RETENTION_FLOOR` (keep at least N most-recent). Destructive, so off by default. Composes with `--timestamp-struct-fqn` and `--timeseries`. See [Timeseries Deletion](#timeseries-deletion----timeseries-delete) in the Output section.
+- `--timeseries-delete`: Generate a `Delete<Msg>Timeseries.srv` (plus the shared `<Msg>Timeseries.msg` wrapper) for deleting stored samples. The service is mode-based: `FULL` (delete all), `TIME_WINDOW` (delete a `[start, end]` range), or `RETENTION_FLOOR` (keep at least N most-recent). Destructive, so off by default. Composes with `--timestamp-struct-fqn` and `--timeseries`. See [Timeseries Deletion](#timeseries-deletion----timeseries-delete) in the Output section.
 - `--timestamp-struct-fqn <fqn>`: Full FQN of the timestamp struct in the types tree loaded via `--types`. If not provided, falls back to built-in defaults.
 - `--output-vspec <file>`: Path to write a transformed VSS model alongside the ROS 2 package. See [Transformed VSS](#transformed-vss-vspec----output-vspec) in the Output section.
 
@@ -176,6 +176,7 @@ VehicleSpeed data   # Latest data
 ```
 # AUTO-GENERATED by VSS-TOOLS
 # Service: SetVehicleSpeed
+
 # Sets the latest single value for this group.
 VehicleSpeed data
 ---
@@ -185,15 +186,15 @@ string message
 
 ### Timeseries (`--timeseries`)
 
-When `--timeseries get|set|both` is set, the exporter emits the shared `<MSG>Timeseries.msg` wrapper plus the selected service files, alongside the per-signal point-in-time `<MSG>.msg`. Unlike the latest-single-value Get above, the timeseries Get carries a **time-window** request:
+When `--timeseries get|set|both` is set, the exporter emits the shared `<Msg>Timeseries.msg` wrapper plus the selected service files, alongside the per-signal point-in-time `<Msg>.msg`. Unlike the latest-single-value Get above, the timeseries Get carries a **time-window** request:
 
-- `<MSG>Timeseries.msg` — variable-length array of stamped samples with window metadata. Emitted for any `--timeseries` value (shared by Get and Set).
-  - Fields: `window_start_<suffix>` / `window_end_<suffix>` (one pair per timestamp property), followed by `<MSG>[] samples`.
-- `Get<MSG>Timeseries.srv` (`get` or `both`) — batch retrieval over a time window.
+- `<Msg>Timeseries.msg` — variable-length array of stamped samples with window metadata. Emitted for any `--timeseries` value (shared by Get and Set).
+  - Fields: `window_start_<suffix>` / `window_end_<suffix>` (one pair per timestamp property), followed by `<Msg>[] samples`.
+- `Get<Msg>Timeseries.srv` (`get` or `both`) — batch retrieval over a time window.
   - Request: `start_time_<suffix>` / `end_time_<suffix>` fields, `uint32 max_samples` (0 = unlimited), `bool prefer_newest` (server retention policy when the window contains more samples than `max_samples`).
-  - Response: `<MSG>Timeseries timeseries`, `bool success`, `string message`.
-- `Set<MSG>Timeseries.srv` (`set` or `both`) — batch injection.
-  - Request: `<MSG>Timeseries timeseries`, `bool prefer_newest` (server drop policy when the injected batch exceeds buffer capacity).
+  - Response: `<Msg>Timeseries timeseries`, `bool success`, `string message`.
+- `Set<Msg>Timeseries.srv` (`set` or `both`) — batch injection.
+  - Request: `<Msg>Timeseries timeseries`, `bool prefer_newest` (server drop policy when the injected batch exceeds buffer capacity).
   - Response: `bool success`, `string message`, `uint32 samples_accepted` (for partial-acceptance reporting).
 
 The timestamp suffixes (`window_start_<suffix>`, `start_time_<suffix>`, ...) inherit from the resolved timestamp schema, so `--timestamp-struct-fqn` composes transparently — a custom timestamp struct flows into the timeseries types without further configuration. `--timeseries` is independent of `--srv`: the two take the same `get|set|both` selector and can be combined, with `--srv` controlling the latest-single-value services and `--timeseries` controlling the time-range services.
@@ -223,8 +224,8 @@ VehicleSpeed[] samples
 ```
 # AUTO-GENERATED by VSS-TOOLS
 # Service: GetVehicleSpeedTimeseries
-# Retrieves a batch of stamped samples for this signal over a time window.
 
+# Retrieves a batch of stamped samples for this signal over a time window.
 int64 start_time_seconds
 int64 start_time_nanoseconds
 int64 end_time_seconds
@@ -241,8 +242,8 @@ string message
 ```
 # AUTO-GENERATED by VSS-TOOLS
 # Service: SetVehicleSpeedTimeseries
-# Injects a batch of stamped samples into this signal's server-side buffer.
 
+# Injects a batch of stamped samples into this signal's server-side buffer.
 VehicleSpeedTimeseries timeseries
 bool prefer_newest  # true = drop oldest when injected batch exceeds buffer; false = drop newest (reject incoming once full).
 ---
@@ -251,15 +252,15 @@ string message
 uint32 samples_accepted  # how many samples were actually stored
 ```
 
-Timeseries messages are intended primarily as service payloads (batch retrieval for downstream statistics, replay, or cloud-upload pipelines), rather than as primary Pub/Sub topics — the per-signal `<MSG>.msg` continues to serve the Pub/Sub leg. The `prefer_newest` field on both Get and Set requests makes the sample-retention/drop policy an explicit client choice rather than a server default, so behavior is consistent across implementations.
+Timeseries messages are intended primarily as service payloads (batch retrieval for downstream statistics, replay, or cloud-upload pipelines), rather than as primary Pub/Sub topics — the per-signal `<Msg>.msg` continues to serve the Pub/Sub leg. The `prefer_newest` field on both Get and Set requests makes the sample-retention/drop policy an explicit client choice rather than a server default, so behavior is consistent across implementations.
 
 ### Timeseries Deletion (`--timeseries-delete`)
 
-When `--timeseries-delete` is set, the exporter emits a single `Delete<MSG>Timeseries.srv` per signal (plus the shared `<MSG>Timeseries.msg` wrapper, in case other services are also requested). Deletion is **destructive** and therefore off by default; it is a dedicated opt-in flag so destructive operations stay easy to audit.
+When `--timeseries-delete` is set, the exporter emits a single `Delete<Msg>Timeseries.srv` per signal (plus the shared `<Msg>Timeseries.msg` wrapper, in case other services are also requested). Deletion is **destructive** and therefore off by default; it is a dedicated opt-in flag so destructive operations stay easy to audit.
 
 A single mode-based service covers both full and partial deletion. The `mode` field is authoritative — fields that do not apply to the chosen mode are ignored.
 
-- `Delete<MSG>Timeseries.srv`
+- `Delete<Msg>Timeseries.srv`
   - Request:
     - `uint8 mode` — `0 = FULL`, `1 = TIME_WINDOW`, `2 = RETENTION_FLOOR`.
     - `start_time_<suffix>` / `end_time_<suffix>` — used when `mode == 1` (TIME_WINDOW): delete samples whose timestamp falls in `[start, end]`.
@@ -283,8 +284,8 @@ Deleting zero matching samples is **not** a failure: `success` is `true` with `s
 ```
 # AUTO-GENERATED by VSS-TOOLS
 # Service: DeleteVehicleSpeedTimeseries
-# Deletes stored samples for this signal (full, time-window, or retention-floor).
 
+# Deletes stored samples for this signal (full, time-window, or retention-floor).
 uint8 mode  # 0 = FULL, 1 = TIME_WINDOW, 2 = RETENTION_FLOOR
 int64 start_time_seconds  # used when mode == 1 (TIME_WINDOW)
 int64 start_time_nanoseconds  # used when mode == 1 (TIME_WINDOW)
@@ -364,8 +365,8 @@ vspec export ros2interface \
   --timestamp-struct-fqn MyTypes.Timestamp
 ```
 - Exports and writes a transformed VSS model.
-  - Each signal becomes `<MSG>.Time` with datatype set to the FQN given via `--timestamp-struct-fqn`
-  - and `<MSG>.Value` carrying the original datatype.
+  - Each signal becomes `<Signal>.Time` with datatype set to the FQN given via `--timestamp-struct-fqn`
+  - and `<Signal>.Value` carrying the original datatype.
   - The timestamp struct itself is NOT re-emitted.
 
 ```bash
