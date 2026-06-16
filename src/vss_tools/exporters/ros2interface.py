@@ -408,6 +408,7 @@ def render_srv_file(
     buf.append(GEN_HEADER)
     if header:
         buf.append(_format_comment(header).rstrip())
+    buf.append("")
     buf.extend(request_lines if request_lines else [])
     buf.append("---")
     buf.extend(response_lines if response_lines else [])
