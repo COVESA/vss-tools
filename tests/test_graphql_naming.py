@@ -6,7 +6,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from vss_tools.utils.graphql_utils import (
+from vss_tools.exporters.s2dm.graphql_utils import (
     GraphQLElementType,
     convert_fqn_to_graphql_type_name,
     convert_name_for_graphql_schema,

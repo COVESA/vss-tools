@@ -20,6 +20,15 @@ NestedStruct.z:
   datatype: double
   default: 1
 
+NestedStruct.mode:
+  type: property
+  description: "Mode of the nested struct"
+  datatype: string
+  allowed:
+    - ACTIVE
+    - INACTIVE
+    - ERROR
+
 ParentStruct:
   type: struct
   description: "A struct that is going to contain properties that are structs themselves"

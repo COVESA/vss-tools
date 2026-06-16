@@ -8,6 +8,7 @@
 
 from pathlib import Path
 
+import pytest
 from graphql import build_schema, print_schema
 from vss_tools.exporters.s2dm import (
     S2DM_CONVERSIONS,
@@ -15,8 +16,9 @@ from vss_tools.exporters.s2dm import (
     get_metadata_df,
     print_schema_with_vspec_directives,
 )
+from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
+from vss_tools.exporters.s2dm.type_builders import _sanitize_enum_value_for_graphql
 from vss_tools.main import get_trees
-from vss_tools.utils.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 
 
 class TestS2DMExporter:
@@ -82,7 +84,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
 
         # Check that schema is valid
         assert schema is not None
@@ -121,7 +123,7 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema(schema)
 
         # Check that output contains expected elements
@@ -149,23 +151,23 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema(schema)
 
         # Check that unit enums are generated
-        assert "enum LengthUnitEnum" in schema_str
-        assert "enum AngleUnitEnum" in schema_str
-        assert "enum RelationUnitEnum" in schema_str
+        assert "enum LengthUnit" in schema_str
+        assert "enum AngleUnit" in schema_str
+        assert "enum DimensionlessRatioUnit" in schema_str
 
-        # Check that enum values use uppercase unit names
-        assert "MILLIMETER" in schema_str
-        assert "DEGREE" in schema_str
+        # Check that enum values use QUDT unit codes
+        assert "MILLIM" in schema_str
+        assert "DEG" in schema_str
         assert "PERCENT" in schema_str
 
         # Check that unit arguments are added to fields with proper defaults
-        assert "unit: LengthUnitEnum = MILLIMETER" in schema_str
-        assert "unit: AngleUnitEnum = DEGREE" in schema_str
-        assert "unit: RelationUnitEnum = PERCENT" in schema_str
+        assert "unit: LengthUnit = MILLIM" in schema_str
+        assert "unit: AngleUnit = DEG" in schema_str
+        assert "unit: DimensionlessRatioUnit = PERCENT" in schema_str
 
     def test_vspec_comment_directives(self):
         """Test that @vspec comment directives are generated correctly."""
@@ -182,7 +184,9 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
         schema_str = print_schema_with_vspec_directives(
             schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments
         )
@@ -220,7 +224,9 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
         sdl = print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
 
         # Test @deprecated directive for massage field
@@ -266,7 +272,9 @@ class TestS2DMExporter:
             expand=False,
         )
 
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
         sdl = print_schema_with_vspec_directives(schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
 
         # Test that instance tag type is created
@@ -303,12 +311,9 @@ class TestS2DMExporter:
         assert len(main_type_lines) == 1
         assert "@instanceTag" not in main_type_lines[0]
 
-        # Test that types with instances get ID field
-        assert "id: ID!" in sdl
-
         # Verify the complete structure matches the reference pattern
-        # The seat should be a list field (seat_s) because it has instances
-        assert "seat_s: [Vehicle_Cabin_Seat]" in sdl
+        # The seat should be a list field (seats) with natural plural because it has instances
+        assert "seats: [Vehicle_Cabin_Seat]" in sdl
 
     def test_allowed_value_enums_generation(self):
         """Test that allowed value enums are generated correctly."""
@@ -328,7 +333,7 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, _, _, _ = generate_s2dm_schema(tree)
+        schema, _, _, _ = generate_s2dm_schema(tree, use_short_names=False)
         schema_sdl = print_schema(schema)
 
         # Check that allowed value enums were generated
@@ -347,8 +352,8 @@ class TestS2DMExporter:
 
         # Check for float field with allowed values [1.0, 2.5, 4.0, 5.0]
         assert "Vehicle_Performance_Rating_Enum" in schema_sdl
-        assert "_1" in schema_sdl  # 1.0 becomes _1
-        assert "_2_DOT_5" in schema_sdl  # 2.5 should use _DOT_
+        assert "_1_0" in schema_sdl  # 1.0 becomes _1_0
+        assert "_2_5" in schema_sdl  # 2.5 becomes _2_5
         assert "_4" in schema_sdl
         assert "_5" in schema_sdl
 
@@ -378,7 +383,9 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
 
         # Test modular export with flat domains (default)
         output_dir = tmp_path / "modular_flat"
@@ -425,7 +432,9 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
 
         # Test modular export with nested domains
         output_dir = tmp_path / "modular_nested"
@@ -456,9 +465,47 @@ class TestS2DMExporter:
         seat_content = (output_dir / "domain" / "Vehicle" / "Cabin" / "Seat" / "_Seat.graphql").read_text()
         assert "Vehicle_Cabin_Seat" in seat_content
 
-    def test_non_instantiated_property_hoisting(self, tmp_path: Path):
-        """Test that properties with instantiate=false are hoisted to parent type."""
-        # Load the test vspec with non-instantiated properties
+    def test_modular_export_instance_enum_directives(self, tmp_path):
+        """Test that instance dimension enums get @vspec directives in modular export."""
+        from vss_tools.exporters.s2dm import write_modular_schema
+
+        # Load test vspec with instances that need sanitization
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_instance_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema
+        schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments = generate_s2dm_schema(
+            tree, use_short_names=False
+        )
+
+        # Test modular export with flat domains
+        output_dir = tmp_path / "modular_instance_test"
+        write_modular_schema(
+            schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments, output_dir, flat_domains=True
+        )
+
+        # Check that instance files were created
+        instance_file = output_dir / "instances" / "Vehicle_Cabin_Seat_InstanceTag.graphql"
+        assert instance_file.exists()
+
+        # Verify that instance dimension enums have @vspec directives with originalName
+        instance_content = instance_file.read_text()
+
+        # Check for sanitized enum values with @vspec directives
+        assert 'DRIVER_SIDE @vspec(originalName: "DriverSide")' in instance_content
+        assert 'PASSENGER_SIDE @vspec(originalName: "PassengerSide")' in instance_content
+
+    def test_non_instantiated_property_stays_in_parent_type(self, tmp_path: Path):
+        """Test that properties with instantiate=false remain in their defining type."""
         tree, _ = get_trees(
             vspec=Path("tests/vspec/test_non_instantiated_props/test.vspec"),
             include_dirs=(),
@@ -473,30 +520,425 @@ class TestS2DMExporter:
         )
 
         # Generate schema
-        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
         schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
 
-        # Verify that Vehicle_Cabin_Door type doesn't have someSignal
+        # Verify Vehicle_Cabin_Door type contains someSignal (not hoisted)
         assert "type Vehicle_Cabin_Door @vspec" in schema_str
         door_type_start = schema_str.find("type Vehicle_Cabin_Door @vspec")
-        door_type_end = schema_str.find("\n}", door_type_start) + 2  # Include closing brace
+        door_type_end = schema_str.find("\n}", door_type_start) + 2
         door_type_content = schema_str[door_type_start:door_type_end]
 
-        # someSignal should NOT be on Door type
-        assert "someSignal" not in door_type_content
-        # But isOpen and isLocked should be
+        # someSignal stays in Door type
+        assert "someSignal" in door_type_content
         assert "isOpen" in door_type_content
         assert "isLocked" in door_type_content
 
-        # Verify that Vehicle_Cabin type has doorSomeSignal (hoisted)
+        # Vehicle_Cabin type should NOT have someSignal (no hoisting)
         assert "type Vehicle_Cabin @vspec" in schema_str
         cabin_type_start = schema_str.find("type Vehicle_Cabin @vspec")
-        cabin_type_end = schema_str.find("\n}", cabin_type_start) + 2  # Include closing brace
+        cabin_type_end = schema_str.find("\n}", cabin_type_start) + 2
         cabin_type_content = schema_str[cabin_type_start:cabin_type_end]
 
-        # someSignal should be on Cabin type (hoisted without branch prefix)
-        assert "someSignal" in cabin_type_content
-        # Verify it has the instantiate=false metadata
-        assert 'metadata: [{key: "instantiate", value: "false"}]' in cabin_type_content
-        # And door_s array field should also be there
-        assert "door_s" in cabin_type_content
+        assert "someSignal" not in cabin_type_content
+        # doors array field should still be there
+        assert "doors" in cabin_type_content
+
+    def test_enum_value_sanitization_with_spaces(self):
+        """Test that enum values with spaces are sanitized correctly."""
+        # Test the sanitization function
+        assert _sanitize_enum_value_for_graphql("some value") == ("SOME_VALUE", True)
+        assert _sanitize_enum_value_for_graphql("SOME VALUE") == ("SOME_VALUE", True)
+        assert _sanitize_enum_value_for_graphql("another-value") == ("ANOTHER_VALUE", True)
+        assert _sanitize_enum_value_for_graphql("YET_ANOTHER") == ("YET_ANOTHER", False)
+        assert _sanitize_enum_value_for_graphql("front left") == ("FRONT_LEFT", True)
+        assert _sanitize_enum_value_for_graphql("1value") == ("_1VALUE", True)
+
+    def test_enum_sanitization_in_schema_generation(self):
+        """Test that enum values with spaces generate proper schema with metadata."""
+        # Load the test vspec with spaces in enum values
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_enum_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, _, allowed_metadata, _ = generate_s2dm_schema(tree, use_short_names=False)
+
+        # Check that schema is valid
+        assert schema is not None
+
+        # Check that enum type for LightMode exists
+        light_mode_enum_name = "Vehicle_Cabin_LightMode_Enum"
+        assert light_mode_enum_name in schema.type_map
+
+        # Check metadata includes modified values
+        assert light_mode_enum_name in allowed_metadata
+        metadata = allowed_metadata[light_mode_enum_name]
+        assert "modified_values" in metadata
+
+        # Verify specific modifications
+        modified = metadata["modified_values"]
+        assert "SOME_VALUE" in modified
+        assert modified["SOME_VALUE"] in ["some value", "SOME VALUE"]  # One of them
+        assert "ANOTHER_VALUE" in modified
+        assert modified["ANOTHER_VALUE"] == "another-value"
+
+        # YET_ANOTHER should not be in modified (no modification needed)
+        assert "YET_ANOTHER" not in modified
+
+    def test_enum_sanitization_schema_output_with_directives(self):
+        """Test that the schema output includes proper @vspec directives for modified enum values."""
+        # Load the test vspec with spaces in enum values
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_enum_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Check that enum type has @vspec directive with element
+        assert "enum Vehicle_Cabin_LightMode_Enum @vspec" in schema_str
+
+        # Check that modified enum values have @vspec directives with originalName argument
+        # "some value" -> SOME_VALUE
+        assert (
+            'SOME_VALUE @vspec(originalName: "some value")' in schema_str
+            or 'SOME_VALUE @vspec(originalName: "SOME VALUE")' in schema_str
+        )
+
+        # "another-value" -> ANOTHER_VALUE
+        assert 'ANOTHER_VALUE @vspec(originalName: "another-value")' in schema_str
+
+        # YET_ANOTHER should not have originalName (wasn't modified)
+        assert "YET_ANOTHER @vspec(originalName:" not in schema_str
+
+        # Check SeatPosition enum
+        assert "enum Vehicle_Cabin_SeatPosition_Enum @vspec" in schema_str
+        assert 'FRONT_LEFT @vspec(originalName: "front left")' in schema_str
+        assert 'FRONT_RIGHT @vspec(originalName: "front right")' in schema_str
+
+    def test_enum_camelcase_sanitization(self):
+        """Test that camelCase enum values are properly converted using caseconverter."""
+        from vss_tools.exporters.s2dm.type_builders import _sanitize_enum_value_for_graphql
+
+        # Test camelCase word boundary detection
+        test_cases = [
+            ("PbCa", "PB_CA", True),  # Mixed case acronyms
+            ("HTTPSConnection", "HTTPS_CONNECTION", True),  # Acronym + word
+            ("someAPIKey", "SOME_API_KEY", True),  # word + acronym + word
+            ("XMLParser", "XML_PARSER", True),  # Acronym + word
+            ("myValue", "MY_VALUE", True),  # Simple camelCase
+            ("IOError", "IO_ERROR", True),  # Two-letter acronym
+            ("AGM", "AGM", False),  # Already uppercase, no change
+            ("EFB", "EFB", False),  # Already uppercase, no change
+            ("already_snake", "ALREADY_SNAKE", True),  # snake_case to SCREAMING_SNAKE_CASE
+            ("ALREADY_SCREAMING", "ALREADY_SCREAMING", False),  # No change needed
+            ("mixed-Case", "MIXED_CASE", True),  # Mixed with hyphen
+            ("some value", "SOME_VALUE", True),  # Spaces
+            ("value.with.dots", "VALUE_WITH_DOTS", True),  # Dots
+            ("123value", "_123VALUE", True),  # Starts with number
+        ]
+
+        error_cases = [
+            "",  # Empty string
+            "   ",  # Whitespace only
+        ]
+
+        for input_val, expected_output, expected_modified in test_cases:
+            result, was_modified = _sanitize_enum_value_for_graphql(input_val)
+            assert result == expected_output, f"Failed for '{input_val}': expected '{expected_output}', got '{result}'"
+            assert was_modified == expected_modified, f"Failed modification flag for '{input_val}'"
+
+        for input_val in error_cases:
+            with pytest.raises(ValueError):
+                _sanitize_enum_value_for_graphql(input_val)
+
+    def test_camelcase_enums_schema_generation(self):
+        """Test that camelCase enum values in vspec generate proper schema with directives."""
+        # Load the test vspec with camelCase enum values
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_camelcase_enums.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Check Component.Type enum with AbCd
+        assert "enum Vehicle_Component_Type_Enum @vspec" in schema_str
+
+        # AbCd should be converted to AB_CD with originalName annotation
+        assert 'AB_CD @vspec(originalName: "AbCd")' in schema_str
+
+        # AAA, BBB, CCC, DDD should not have originalName (no change needed)
+        assert "AAA @vspec(originalName:" not in schema_str
+        assert "BBB @vspec(originalName:" not in schema_str
+
+        # Check Connection.Protocol enum
+        assert "enum Vehicle_Connection_Protocol_Enum @vspec" in schema_str
+        assert 'HTTPS_PROTOCOL @vspec(originalName: "HTTPSProtocol")' in schema_str
+        assert 'TCP_PROTOCOL @vspec(originalName: "TCPProtocol")' in schema_str
+        assert 'UDP_PROTOCOL @vspec(originalName: "UDPProtocol")' in schema_str
+
+        # Check Status.Code enum
+        assert "enum Vehicle_Status_Code_Enum @vspec" in schema_str
+        assert 'IO_ERROR @vspec(originalName: "IOError")' in schema_str
+        assert 'XML_PARSER @vspec(originalName: "XMLParser")' in schema_str
+        assert 'SOME_API_KEY @vspec(originalName: "someAPIKey")' in schema_str
+
+    def test_instance_dimension_enum_sanitization(self):
+        """Test that instance dimension enum values are properly sanitized and annotated."""
+        # Load the test vspec with instances that need sanitization
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_instance_sanitization.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Check that Row instance enum is created and values are sanitized
+        assert "enum Vehicle_Cabin_InstanceTag_Dimension1" in schema_str
+        assert 'ROW1 @vspec(originalName: "Row1")' in schema_str
+        assert 'ROW2 @vspec(originalName: "Row2")' in schema_str
+
+        # Check that DriverSide/PassengerSide instance enum is created and values are sanitized
+        assert "enum Vehicle_Cabin_Seat_InstanceTag_Dimension1" in schema_str
+        assert 'DRIVER_SIDE @vspec(originalName: "DriverSide")' in schema_str
+        assert 'PASSENGER_SIDE @vspec(originalName: "PassengerSide")' in schema_str
+
+        # Check that FrontLeft/FrontRight/RearLeft/RearRight instance enum is created and values are sanitized
+        assert "enum Vehicle_Cabin_Seat_Position_InstanceTag_Dimension1" in schema_str
+        assert 'FRONT_LEFT @vspec(originalName: "FrontLeft")' in schema_str
+        assert 'FRONT_RIGHT @vspec(originalName: "FrontRight")' in schema_str
+        assert 'REAR_LEFT @vspec(originalName: "RearLeft")' in schema_str
+        assert 'REAR_RIGHT @vspec(originalName: "RearRight")' in schema_str
+
+    def test_extended_attributes_not_in_schema_metadata(self):
+        """Test that extended attributes are not annotated in @vspec schema metadata.
+
+        Extended attributes are available via the sidecar vspec lookup, so they are
+        intentionally omitted from the schema to keep it minimal.
+        """
+        # Load the test vspec with extended attributes
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_extended_attributes.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=("source", "quality", "calibration", "customMetadata", "anotherAttribute"),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(
+            tree, extended_attributes=("source", "quality", "calibration", "customMetadata", "anotherAttribute")
+        )
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Fields are still annotated with element + fqn
+        assert "speed(unit: DimensionlessRatioUnit = PERCENT): Float" in schema_str
+        assert '@vspec(element: SENSOR, fqn: "Vehicle.Speed"' in schema_str
+        assert '@vspec(element: SENSOR, fqn: "Vehicle.Temperature"' in schema_str
+        assert "model: String" in schema_str
+        assert '@vspec(element: ATTRIBUTE, fqn: "Vehicle.Info.Model"' in schema_str
+
+        # Extended attributes are NOT annotated in @vspec metadata (available via sidecar instead)
+        assert '{key: "source"' not in schema_str
+        assert '{key: "quality"' not in schema_str
+        assert '{key: "calibration"' not in schema_str
+        assert '{key: "customMetadata"' not in schema_str
+        assert '{key: "anotherAttribute"' not in schema_str
+
+    def test_empty_branches_are_skipped(self, caplog):
+        """Test that empty branches (branches with no children) are skipped during export."""
+        # Load vspec with empty branches
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=True)
+
+        # Check that empty branches are NOT in the schema type_map
+        assert "EmptyBranch" not in schema.type_map
+        assert "AnotherEmpty" not in schema.type_map
+        assert "EmptyNested" not in schema.type_map
+
+        # Check that non-empty branches ARE in the schema
+        assert "Vehicle" in schema.type_map
+        assert "HasContent" in schema.type_map
+
+        # Generate the actual GraphQL SDL output
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Verify empty types don't appear in the SDL output
+        assert "type EmptyBranch" not in schema_str
+        assert "type AnotherEmpty" not in schema_str
+        assert "type EmptyNested" not in schema_str
+
+        # Verify non-empty types DO appear in the SDL output
+        assert "type Vehicle" in schema_str
+        assert "type HasContent" in schema_str
+
+        # Verify HasContent has the expected speed field
+        assert "speed" in schema_str.lower()
+
+        # Check that warnings were logged for empty branches
+        assert "Vehicle.EmptyBranch" in caplog.text
+        assert "was skipped because the reference vspec does not define any sub-elements inside" in caplog.text
+        assert "Vehicle.AnotherEmpty" in caplog.text
+        assert "Vehicle.HasContent.EmptyNested" in caplog.text
+
+    def test_empty_branches_skipped_with_fqn_names(self, caplog, tmp_path):
+        """Test that empty branches are skipped when using FQN names (use_short_names=False)."""
+        # Load vspec with empty branches
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema with FQN names
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=False)
+
+        # Check that empty branches are NOT in the schema type_map (FQN format)
+        assert "Vehicle_EmptyBranch" not in schema.type_map
+        assert "Vehicle_AnotherEmpty" not in schema.type_map
+        assert "Vehicle_HasContent_EmptyNested" not in schema.type_map
+
+        # Check that non-empty branches ARE in the schema
+        assert "Vehicle" in schema.type_map
+        assert "Vehicle_HasContent" in schema.type_map
+
+        # Generate the actual GraphQL SDL output
+        schema_str = print_schema_with_vspec_directives(schema, unit_metadata, allowed_metadata, vspec_comments)
+
+        # Write to file for debugging
+        output_file = tmp_path / "test_empty_branches_fqn.graphql"
+        output_file.write_text(schema_str)
+
+        # Verify empty types don't appear in the SDL output (FQN format)
+        assert "type Vehicle_EmptyBranch" not in schema_str
+        assert "type Vehicle_AnotherEmpty" not in schema_str
+        assert "type Vehicle_HasContent_EmptyNested" not in schema_str
+
+        # Verify non-empty types DO appear in the SDL output
+        assert "type Vehicle " in schema_str or "type Vehicle {" in schema_str or "type Vehicle\n" in schema_str
+        assert "type Vehicle_HasContent" in schema_str
+
+        # Check that warnings were logged for empty branches
+        assert "Vehicle.EmptyBranch" in caplog.text
+        assert "Vehicle.AnotherEmpty" in caplog.text
+        assert "Vehicle.HasContent.EmptyNested" in caplog.text
+
+    def test_empty_branches_reported_in_not_mapped_yaml(self, tmp_path):
+        """Test that empty branches are reported in vspec_reference/not_mapped.yaml."""
+        from vss_tools.exporters.s2dm import generate_vspec_reference
+
+        # Load vspec with empty branches
+        tree, _ = get_trees(
+            vspec=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            units=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            overlays=(),
+            expand=False,
+        )
+
+        # Generate schema (captures skipped branches in vspec_comments)
+        schema, unit_metadata, allowed_metadata, vspec_comments = generate_s2dm_schema(tree, use_short_names=True)
+
+        # Verify that skipped branches were tracked
+        assert "skipped_empty_branches" in vspec_comments
+        skipped = vspec_comments["skipped_empty_branches"]
+        assert len(skipped) == 3
+
+        # Verify the FQNs of skipped branches
+        skipped_fqns = [entry["fqn"] for entry in skipped]
+        assert "Vehicle.EmptyBranch" in skipped_fqns
+        assert "Vehicle.AnotherEmpty" in skipped_fqns
+        assert "Vehicle.HasContent.EmptyNested" in skipped_fqns
+
+        # Generate vspec_reference with the metadata
+        generate_vspec_reference(
+            tree=tree,
+            data_type_tree=None,
+            output_dir=tmp_path,
+            extended_attributes=(),
+            vspec_file=Path("tests/vspec/test_s2dm/test_empty_branches.vspec"),
+            units_files=(Path("tests/vspec/test_s2dm/test_units.yaml"),),
+            quantities_files=(Path("tests/vspec/test_s2dm/test_quantities.yaml"),),
+            mapping_metadata=vspec_comments,
+        )
+
+        # Verify not_mapped.yaml was created
+        not_mapped_file = tmp_path / "vspec_reference" / "not_mapped.yaml"
+        assert not_mapped_file.exists()
+
+        # Verify contents of not_mapped.yaml
+        content = not_mapped_file.read_text()
+        assert "skipped_empty_branches:" in content
+        assert "Vehicle.EmptyBranch" in content
+        assert "Vehicle.AnotherEmpty" in content
+        assert "Vehicle.HasContent.EmptyNested" in content
+        assert "Empty branch (no children)" in content
+
+        # Verify header comments are present
+        assert "Branches Skipped During S2DM Export" in content
+        assert "no children (no properties or sub-branches)" in content
+
+        # Verify README mentions the file
+        readme_file = tmp_path / "vspec_reference" / "README.md"
+        assert readme_file.exists()
+        readme_content = readme_file.read_text()
+        assert "not_mapped.yaml" in readme_content
+        assert "empty branches" in readme_content.lower()

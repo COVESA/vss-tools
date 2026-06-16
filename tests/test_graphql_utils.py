@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 from graphql import build_schema
-from vss_tools.utils.graphql_utils import (
+from vss_tools.exporters.s2dm.graphql_utils import (
     GraphQLUtilsException,
     extract_custom_directives_from_schema,
     load_graphql_schema_from_path,
