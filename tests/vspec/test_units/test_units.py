@@ -121,6 +121,26 @@ def test_multiple_unit_files(tmp_path):
     )
 
 
+def test_unit_key_case_insensitive(tmp_path):
+    run_unit(
+        tmp_path,
+        "signals_mixed_case_units.vspec",
+        ["units_all.yaml"],
+        "expected_special.json",
+    )
+
+
+def test_unit_key_canonical_case_preserved(tmp_path):
+    """Unit keys with mixed case in units.yaml must be output with that casing, not lowercased."""
+    run_unit(
+        tmp_path,
+        "signals_canonical_case_units.vspec",
+        ["units_kwh.yaml"],
+        "expected_canonical_case.json",
+        ["quantities.yaml"],
+    )
+
+
 # Special units not defined
 
 

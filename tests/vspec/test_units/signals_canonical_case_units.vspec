@@ -1,0 +1,10 @@
+#
+A:
+  type: branch
+  description: Branch A.
+
+A.SignalEnergy:
+  datatype: float
+  type: sensor
+  unit: kwh
+  description: Energy in kilowatt hours.
