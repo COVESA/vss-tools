@@ -17,7 +17,7 @@ TEST_UNITS = HERE / "test_units_ros2.yaml"
 TEST_QUANT = HERE / "test_quantities_ros2.yaml"
 EXPORTER = "ros2interface"  # the subcommand of ros2 exporter
 DEFAULT_PKG = "vss_interfaces"  # package name used in tests
-INCLUDE_DIR = HERE.parents[2] / "vehicle_signal_specification" / "spec" / "include"
+INCLUDE_DIR = HERE / "test_include"
 
 
 def run_ros2_exporter(
