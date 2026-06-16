@@ -1,0 +1,15 @@
+A
+├── IntNoMinMax
+├── IntOnlyMax
+├── IntOnlyMin
+├── IntMinMax
+├── IntMaxZero
+├── IntMinZero
+├── FloatNoMinMax
+├── FloatOnlyMax
+├── FloatOnlyMin
+├── FloatMinMax
+├── FloatMaxZero
+├── FloatMinZero
+├── FloatMaxZeroInt
+└── FloatMinZeroInt
