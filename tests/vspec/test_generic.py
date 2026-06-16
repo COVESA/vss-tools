@@ -663,7 +663,7 @@ def test_ros2interface_delete_helper_function():
         sys.path.insert(0, str(src_dir))
     from vss_tools.exporters.ros2interface import (
         DEFAULT_TIMESTAMP,
-        Timestamp,  
+        Timestamp,
         TimestampProperty,
         render_delete_timeseries_srv,
         timeseries_delete_srv_name,
