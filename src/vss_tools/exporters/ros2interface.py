@@ -814,9 +814,7 @@ def render_delete_timeseries_srv(
     for ros_type, suffix in _timestamp_suffixes(timestamp_schema):
         request.append(f"{ros_type} end_time_{suffix}  # used when mode == 1 (TIME_WINDOW)")
     # RETENTION_FLOOR field (used when mode == 2 (RETENTION_FLOOR))
-    request.append(
-        "uint32 keep_latest  # used when mode == 2 (RETENTION_FLOOR): min most-recent samples to retain"
-    )
+    request.append("uint32 keep_latest  # used when mode == 2 (RETENTION_FLOOR): min most-recent samples to retain")
 
     response = [
         "bool success",
