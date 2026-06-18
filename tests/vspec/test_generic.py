@@ -573,7 +573,7 @@ def test_ros2interface_srv_and_timeseries_combined(tmp_path):
 def test_ros2interface_timeseries_cli_aggregate_mode(tmp_path):
     """--timeseries should also work in aggregate mode (one .msg per parent branch).
 
-    The existing test_ros2_interface.py tests only cover leaf mode; this fills the gap.
+    The existing test-ros2-interface.py tests only cover leaf mode; this fills the gap.
     """
     vspec = _write_vspec(tmp_path)
     out = tmp_path / "out"
@@ -661,7 +661,7 @@ def test_ros2interface_delete_helper_function():
     src_dir = HERE.parents[1] / "src"
     if str(src_dir) not in sys.path:
         sys.path.insert(0, str(src_dir))
-    from vss_tools.exporters.ros2interface import (
+    from vss_tools.exporters.ros2interface import (  # noqa: PLC0415
         DEFAULT_TIMESTAMP,
         Timestamp,
         TimestampProperty,
@@ -705,7 +705,7 @@ def test_ros2interface_delete_helper_function():
 
 
 def test_ros2interface_timeseries_delete_cli(tmp_path):
-    """--timeseries-delete emits the wrapper .msg + Delete service; off by default."""
+    """--timeseries-delete emits the Delete service but NOT the wrapper .msg; off by default."""
     vspec = _write_vspec(tmp_path)
     out = tmp_path / "out"
     subprocess.run(
@@ -729,9 +729,10 @@ def test_ros2interface_timeseries_delete_cli(tmp_path):
     )
     srv_dir = out / "vss_interfaces" / "srv"
     msg_dir = out / "vss_interfaces" / "msg"
-    # wrapper present, delete service present, no get/set timeseries services
-    assert (msg_dir / "ASpeedTimeseries.msg").exists()
+    # Delete service present; the Timeseries wrapper .msg is NOT produced for delete alone
+    # (the delete service is self-contained and does not reference the wrapper type).
     assert (srv_dir / "DeleteASpeedTimeseries.srv").exists()
+    assert not (msg_dir / "ASpeedTimeseries.msg").exists()
     assert not (srv_dir / "GetASpeedTimeseries.srv").exists()
     assert not (srv_dir / "SetASpeedTimeseries.srv").exists()
 
