@@ -9,7 +9,7 @@ This exporter plugs into the `vspec export` CLI like other vss-tools exporters. 
 └── <package-name>
     ├── msg  # generated .msg definitions
     |   ├── \<Msg>.msg
-    |   └── \<Msg>Timeseries.msg              # only when --timeseries or --timeseries-delete is set
+    |   └── \<Msg>Timeseries.msg              # only when --timeseries is used
     └── srv  # generated .srv (if a service option is enabled)
         ├── Get\<Msg>.srv                     # only when --srv get|both
         ├── Set\<Msg>.srv                     # only when --srv set|both
