@@ -785,10 +785,10 @@ def render_delete_timeseries_srv(
     selector is authoritative; fields that do not apply to the chosen mode are ignored.
 
     Request:
+        # constants for mode
         uint8 FULL=0                    # full delete of all samples
         uint8 TIME_WINDOW=1             # delete only those that coincide between the selected time window
         uint8 RETENTION_FLOOR=2         # Minimum samples to retain
-
         uint8 mode                      # deletion mode (FULL, TIME_WINDOW, or RETENTION_FLOOR)
         <ts_type> start_time_<suffix>   # used when mode == 1 (TIME_WINDOW)
         <ts_type> end_time_<suffix>     # used when mode == 1 (TIME_WINDOW)
@@ -806,14 +806,18 @@ def render_delete_timeseries_srv(
     ]
 
     request: list[str] = [
-        "uint8 mode  # 0 = FULL, 1 = TIME_WINDOW, 2 = RETENTION_FLOOR",
+        "# constants for mode",
+        "uint8 FULL=0  # full delete of all samples",
+        "uint8 TIME_WINDOW=1  # delete only those that coincide between the selected time window",
+        "uint8 RETENTION_FLOOR=2  # Minimum samples to retain",
+        "uint8 mode  # deletion mode (FULL, TIME_WINDOW, or RETENTION_FLOOR)",
     ]
-    # TIME_WINDOW fields (used when mode == 1 (TIME_WINDOW))
+    # TIME_WINDOW fields (used when mode == 1 (TIME_WINDOW)
     for ros_type, suffix in _timestamp_suffixes(timestamp_schema):
         request.append(f"{ros_type} start_time_{suffix}  # used when mode == 1 (TIME_WINDOW)")
     for ros_type, suffix in _timestamp_suffixes(timestamp_schema):
         request.append(f"{ros_type} end_time_{suffix}  # used when mode == 1 (TIME_WINDOW)")
-    # RETENTION_FLOOR field (used when mode == 2 (RETENTION_FLOOR))
+    # RETENTION_FLOOR field (used when mode == 2 (RETENTION_FLOOR)
     request.append("uint32 keep_latest  # used when mode == 2 (RETENTION_FLOOR): min most-recent samples to retain")
 
     response = [
