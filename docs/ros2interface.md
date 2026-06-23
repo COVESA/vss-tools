@@ -9,7 +9,7 @@ This exporter plugs into the `vspec export` CLI like other vss-tools exporters. 
 └── <package-name>
     ├── msg  # generated .msg definitions
     |   ├── \<Msg>.msg
-    |   └── \<Msg>Timeseries.msg
+    |   └── \<Msg>Timeseries.msg              # only when --timeseries is used
     └── srv  # generated .srv (if a service option is enabled)
         ├── Get\<Msg>.srv                     # only when --srv get|both
         ├── Set\<Msg>.srv                     # only when --srv set|both
@@ -75,7 +75,7 @@ OutputFolder
   - `both`:
     - creates both the `Get<Msg>.srv` and `Set<Msg>.srv` files.
 - `--srv-use-msg / --no-srv-use-msg`: In services, use the generated message as a nested field (default: `--srv-use-msg`); otherwise flatten fields.
-- `--timeseries {get, set, both}`: Generate time-range (timeseries) `.srv`
+- `--timeseries {get, set, both}`: Generate time-range (timeseries) `.srv` files plus the shared `<Msg>Timeseries.msg` wrapper.
   - `get`:
     - creates `<Msg>Timeseries.msg` + `Get<Msg>Timeseries.srv` to retrieve a batch of stamped samples over a time window.
   - `set`:
@@ -412,7 +412,7 @@ vspec export ros2interface \
 ```
 
 - Export Vehicle.Speed with a timeseries delete service (full / partial deletion):
-  - This produces `VehicleSpeed.msg`, `VehicleSpeedTimeseries.msg`, and `DeleteVehicleSpeedTimeseries.srv`.
+  - This produces `VehicleSpeed.msg` and `DeleteVehicleSpeedTimeseries.srv`.
   - Can be combined with `--timeseries get|set|both` to also generate the retrieval/injection services.
 
 ```bash
