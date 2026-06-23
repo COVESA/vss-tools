@@ -94,6 +94,7 @@ def test_exporters(directory, tmp_path):
         "franca",
         "go",
         "samm",
+        "tree",
     ]
 
     for exporter in exporters:
