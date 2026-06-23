@@ -33,7 +33,7 @@ from vss_tools.datatypes import (
     resolve_datatype,
 )
 
-EXPORT_EXCLUDE_ATTRIBUTES = ["delete", "instantiate", "fqn", "arraysize", "aggregate", "is_instance"]
+EXPORT_EXCLUDE_ATTRIBUTES = ["delete", "instantiate", "fqn", "arraysize", "aggregate", "is_instance", "overlay"]
 
 
 class ModelException(Exception):
@@ -116,6 +116,7 @@ class VSSData(VSSRaw):
     constUID: str | None = None
     fka: list[str] = []
     instantiate: bool = True
+    overlay: str | None = None
 
     @field_validator("constUID")
     @classmethod

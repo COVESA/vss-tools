@@ -76,3 +76,49 @@ def test_overlay_branch_error(tmp_path):
     # ValueError refactor.
     assert "'type': 'value_error'" in log_content
     assert "description" in log_content
+
+
+def _run_overlay_expect_pass(overlay_name: str, tmp_path: Path) -> None:
+    overlay = HERE / overlay_name
+    output = tmp_path / "out.json"
+    spec = HERE / "test.vspec"
+    cmd = f"vspec export json --pretty -u {TEST_UNITS} -q {TEST_QUANT}"
+    cmd += f" --vspec {spec} -l {overlay} --output {output}"
+    process = subprocess.run(cmd.split(), capture_output=True, text=True)
+    assert process.returncode == 0, process.stderr
+
+
+def _run_overlay_expect_fail(overlay_name: str, tmp_path: Path, expected_msg: str) -> None:
+    overlay = HERE / overlay_name
+    output = tmp_path / "out.json"
+    log = tmp_path / "log.txt"
+    spec = HERE / "test.vspec"
+    cmd = f"vspec --log-file {log} export json --pretty -u {TEST_UNITS} -q {TEST_QUANT}"
+    cmd += f" --vspec {spec} -l {overlay} --output {output}"
+    process = subprocess.run(cmd.split())
+    assert process.returncode != 0
+    assert expected_msg in log.read_text()
+
+
+def test_overlay_add_accepted(tmp_path):
+    _run_overlay_expect_pass("overlay_add_ok.vspec", tmp_path)
+
+
+def test_overlay_edit_accepted(tmp_path):
+    _run_overlay_expect_pass("overlay_edit_ok.vspec", tmp_path)
+
+
+def test_overlay_add_conflict(tmp_path):
+    _run_overlay_expect_fail(
+        "overlay_add_conflict.vspec",
+        tmp_path,
+        "already exists in the base spec",
+    )
+
+
+def test_overlay_edit_missing(tmp_path):
+    _run_overlay_expect_fail(
+        "overlay_edit_missing.vspec",
+        tmp_path,
+        "does not exist in the base spec",
+    )
