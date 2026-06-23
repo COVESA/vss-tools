@@ -931,7 +931,7 @@ def render_delete_timeseries_srv(
     default=False,
     show_default=True,
     help=(
-        "Generate a Delete<Msg>Timeseries.srv (plus the shared <Msg>Timeseries.msg wrapper) "
+        "Generate a Delete<Msg>Timeseries.srv "
         "for deleting stored samples. The service is mode-based: FULL (delete all), "
         "TIME_WINDOW (delete a [start, end] range), or RETENTION_FLOOR (keep at least N most-recent). "
         "Destructive; off by default. Composes with --timestamp-struct-fqn and --timeseries."
@@ -1065,9 +1065,7 @@ def cli(
     #   --timeseries get   -> <Msg>Timeseries.msg + Get<Msg>Timeseries.srv
     #   --timeseries set   -> <Msg>Timeseries.msg + Set<Msg>Timeseries.srv
     #   --timeseries both  -> wrapper + Get + Set
-    #   --timeseries-delete-> wrapper + Delete<Msg>Timeseries.srv
-    # The <Msg>Timeseries.msg wrapper is shared by all timeseries services, so it is
-    # emitted once whenever any of --timeseries / --timeseries-delete is requested.
+    #   --timeseries-delete-> Delete<Msg>Timeseries.srv
     if timeseries or timeseries_delete:
         ts_args = timeseries.lower() if timeseries else ""
         for fname, _content, _fields in msgs:
