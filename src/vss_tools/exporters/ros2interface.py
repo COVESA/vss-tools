@@ -789,6 +789,7 @@ def render_delete_timeseries_srv(
         uint8 FULL=0                    # full delete of all samples
         uint8 TIME_WINDOW=1             # delete only those that coincide between the selected time window
         uint8 RETENTION_FLOOR=2         # Minimum samples to retain
+
         uint8 mode                      # deletion mode (FULL, TIME_WINDOW, or RETENTION_FLOOR)
         <ts_type> start_time_<suffix>   # used when mode == 1 (TIME_WINDOW)
         <ts_type> end_time_<suffix>     # used when mode == 1 (TIME_WINDOW)

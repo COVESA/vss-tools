@@ -263,8 +263,8 @@ A single mode-based service covers both full and partial deletion. The `mode` fi
 - `Delete<Msg>Timeseries.srv`
   - Request:
     - `uint8 mode` — `0 = FULL`, `1 = TIME_WINDOW`, `2 = RETENTION_FLOOR`.
-    - `start_time_<suffix>` / `end_time_<suffix>` — used when `mode == TIME_WINDOW` (TIME_WINDOW): delete samples whose timestamp falls in `[start, end]`.
-    - `uint32 keep_latest` — used when `mode == RETENTION_FLOOR` (RETENTION_FLOOR): delete oldest samples while retaining at least this many of the most recent.
+    - `start_time_<suffix>` / `end_time_<suffix>` — used when `mode == 1 (TIME_WINDOW)` : delete samples whose timestamp falls in `[start, end]`.
+    - `uint32 keep_latest` — used when `mode == 2 (RETENTION_FLOOR)` : delete oldest samples while retaining at least this many of the most recent.
   - Response:
     - `bool success`, `string message`.
     - `uint32 samples_deleted` — how many samples were actually removed.
@@ -290,12 +290,13 @@ Deleting zero matching samples is **not** a failure: `success` is `true` with `s
 uint8 FULL=0                  # full delete of all samples
 uint8 TIME_WINDOW=1           # delete only those that coincide between the selected time window
 uint8 RETENTION_FLOOR=2       # Minimum samples to retain
+
 uint8 mode                    # deletion mode (FULL, TIME_WINDOW, or RETENTION_FLOOR)
-int64 start_time_seconds      # used when mode == TIME_WINDOW
-int64 start_time_nanoseconds  # used when mode == TIME_WINDOW
-int64 end_time_seconds        # used when mode == TIME_WINDOW
-int64 end_time_nanoseconds    # used when mode == TIME_WINDOW
-uint32 keep_latest            # used when mode == RETENTION_FLOOR: min most-recent samples to retain
+int64 start_time_seconds      # used when mode == 1 (TIME_WINDOW)
+int64 start_time_nanoseconds  # used when mode == 1 (TIME_WINDOW)
+int64 end_time_seconds        # used when mode == 1 (TIME_WINDOW)
+int64 end_time_nanoseconds    # used when mode == 1 (TIME_WINDOW)
+uint32 keep_latest            # used when mode == 2 (RETENTION_FLOOR): min most-recent samples to retain
 ---
 bool success
 string message
