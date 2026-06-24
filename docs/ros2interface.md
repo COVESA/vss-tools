@@ -397,7 +397,7 @@ vspec export ros2interface \
 ```
 
 - Export Vehicle.Speed with both latest-single-value and timeseries services:
-  - This produces `VehicleSpeed.msg`, `GetVehicleSpeedTimeseries.srv`, and `SetVehicleSpeedTimeseries.srv`
+  - This produces `VehicleSpeed.msg`, `VehicleSpeedTimeseries.msg`, `GetVehicleSpeed.srv`, `SetVehicleSpeed.srv`, `GetVehicleSpeedTimeseries.srv`, and `SetVehicleSpeedTimeseries.srv`
   - The latest-single-value `GET`/`SET` services are still gated by `--srv` CLI flag independently.
 
 ```bash
@@ -408,7 +408,7 @@ vspec export ros2interface \
   --package-name vss_speed_interfaces \
   --mode leaf \
   --topics Vehicle.Speed \
-  --srv get \
+  --srv both \
   --timeseries both
 ```
 
