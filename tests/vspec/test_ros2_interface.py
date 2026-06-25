@@ -17,7 +17,7 @@ TEST_UNITS = HERE / "test_units_ros2.yaml"
 TEST_QUANT = HERE / "test_quantities_ros2.yaml"
 EXPORTER = "ros2interface"  # the subcommand of ros2 exporter
 DEFAULT_PKG = "vss_interfaces"  # package name used in tests
-INCLUDE_DIR = HERE.parents[2] / "vehicle_signal_specification" / "spec" / "include"
+INCLUDE_DIR = HERE / "test_include"
 
 
 def run_ros2_exporter(
@@ -174,12 +174,12 @@ A.FanSpeed:
     assert srv.is_file(), f"Missing {srv}"
     text = read_text(srv)
 
-    assert "int64 start_time_seconds" in text
-    assert "int64 start_time_nanoseconds" in text
-    assert "int64 end_time_seconds" in text
-    assert "int64 end_time_nanoseconds" in text
-    # custom message field
-    assert "AFanSpeed[] data" in text
+    # Latest-single Get has no request fields (no time window)
+    assert "start_time_seconds" not in text
+    assert "end_time_seconds" not in text
+    # custom message field: latest single value (no longer an array)
+    assert "AFanSpeed data" in text
+    assert "AFanSpeed[] data" not in text
 
 
 # ------------- custom msg Set<MsgBase>.srv output test -------------
@@ -437,20 +437,19 @@ A.Speed:
     get_text = read_text(get_srv)
     set_text = read_text(set_srv)
 
-    # Get response uses message array
+    # Get has an empty request (no time window) and a single latest response value
     pattern_get = re.compile(
         r"""
         ^\s*(?:\#.*\r?\n|\r?\n)*                  # (top) any # comments / empty lines
-        \s*int64\s+start_time_seconds\s*\r?\n     # 1) request: start_time_seconds
-        \s*int64\s+start_time_nanoseconds\s*\r?\n # 2) request: start_time_nanoseconds
-        \s*int64\s+end_time_seconds\s*\r?\n       # 3) request: end_time_seconds
-        \s*int64\s+end_time_nanoseconds\s*\r?\n   # 4) request: end_time_nanoseconds
-        \s*---\s*\r?\n                             # 5) separator
-        \s*ASpeed\[\]\s+data\s*$                  # 6) response: ASpeed[] data
+        \s*---\s*\r?\n                             # separator (no request fields)
+        \s*ASpeed\s+data\s*(?:\#.*)?$             # response: ASpeed data  # Latest data
         """,
         flags=re.MULTILINE | re.VERBOSE | re.IGNORECASE,
     )
     assert pattern_get.search(get_text), "Expected layout not found in the Get<MsgBase>.srv File, Incorrect layout!"
+    # explicitly confirm no time-window fields leaked into the request
+    assert "start_time_seconds" not in get_text
+    assert "end_time_seconds" not in get_text
 
     # Set request uses message
     pattern_set = re.compile(
@@ -1085,11 +1084,11 @@ A.Speed:
     assert "float32 value" in msg_text
     assert "uint64 timestamp" not in msg_text
 
-    assert "int64 start_time_seconds" in get_text
-    assert "int64 start_time_nanoseconds" in get_text
-    assert "int64 end_time_seconds" in get_text
-    assert "int64 end_time_nanoseconds" in get_text
-    assert "ASpeed[] data" in get_text
+    # Latest-single Get has no request time window
+    assert "start_time_seconds" not in get_text
+    assert "end_time_seconds" not in get_text
+    assert "ASpeed data" in get_text
+    assert "ASpeed[] data" not in get_text
 
     assert "ASpeed data" in set_text
     assert "bool success" in set_text
@@ -1193,10 +1192,9 @@ CustomTypes.Timestamp.nanoseconds:
     assert "int32 timestamp_sec" not in msg_text
     assert "uint32 timestamp_nanosec" not in msg_text
 
-    assert "int64 start_time_seconds" in srv_text
-    assert "int64 start_time_nanoseconds" in srv_text
-    assert "int64 end_time_seconds" in srv_text
-    assert "int64 end_time_nanoseconds" in srv_text
+    # Latest-single Get has no request time window
+    assert "start_time_seconds" not in srv_text
+    assert "end_time_seconds" not in srv_text
 
     assert "type: property" in transformed_text
     assert "datatype: CustomTypes.Timestamp" in transformed_text
@@ -1232,3 +1230,229 @@ A.Speed:
     assert "int32 timestamp_sec" not in text
     assert "uint32 timestamp_nanosec" not in text
     assert "uint64 timestamp" not in text
+
+
+# ------------- --srv latest-single-value contract -------------
+
+
+def test_ros2_srv_get_returns_single_latest_value(tmp_path):
+    """--srv get now returns a single <Msg> data (latest), not an array."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=["--include-dirs", str(INCLUDE_DIR), "--srv", "get"],
+    )
+    get_text = read_text(pkg_dir / "srv" / "GetASpeed.srv")
+    assert "ASpeed data" in get_text
+    assert "Latest data" in get_text
+    # explicitly NOT the old array form
+    assert "ASpeed[] data" not in get_text
+
+
+# ------------- --timeseries get|set|both -------------
+
+
+def test_ros2_timeseries_default_off(tmp_path):
+    """Without --timeseries, no <Signal>Timeseries.msg or *Timeseries.srv is generated."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=["--include-dirs", str(INCLUDE_DIR)],
+    )
+    assert (pkg_dir / "msg" / "ASpeed.msg").is_file()
+    assert not (pkg_dir / "msg" / "ASpeedTimeseries.msg").exists()
+    assert not (pkg_dir / "srv" / "GetASpeedTimeseries.srv").exists()
+    assert not (pkg_dir / "srv" / "SetASpeedTimeseries.srv").exists()
+
+
+def test_ros2_timeseries_both(tmp_path):
+    """--timeseries both emits the wrapper .msg and both Get/Set timeseries services."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=["--include-dirs", str(INCLUDE_DIR), "--timeseries", "both"],
+    )
+    ts_msg = pkg_dir / "msg" / "ASpeedTimeseries.msg"
+    get_ts = pkg_dir / "srv" / "GetASpeedTimeseries.srv"
+    set_ts = pkg_dir / "srv" / "SetASpeedTimeseries.srv"
+    assert ts_msg.is_file()
+    assert get_ts.is_file()
+    assert set_ts.is_file()
+
+    msg_text = read_text(ts_msg)
+    assert "int64 window_start_seconds" in msg_text
+    assert "int64 window_start_nanoseconds" in msg_text
+    assert "int64 window_end_seconds" in msg_text
+    assert "int64 window_end_nanoseconds" in msg_text
+    assert "ASpeed[] samples" in msg_text
+
+    get_text = read_text(get_ts)
+    assert "int64 start_time_seconds" in get_text
+    assert "uint32 max_samples" in get_text
+    assert "bool prefer_newest" in get_text
+    assert "ASpeedTimeseries timeseries" in get_text
+
+    set_text = read_text(set_ts)
+    assert "ASpeedTimeseries timeseries" in set_text
+    assert "bool prefer_newest" in set_text
+    assert "uint32 samples_accepted" in set_text
+
+
+def test_ros2_timeseries_get_only(tmp_path):
+    """--timeseries get emits the wrapper + Get service, but NOT the Set service."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=["--include-dirs", str(INCLUDE_DIR), "--timeseries", "get"],
+    )
+    assert (pkg_dir / "msg" / "ASpeedTimeseries.msg").is_file()
+    assert (pkg_dir / "srv" / "GetASpeedTimeseries.srv").is_file()
+    assert not (pkg_dir / "srv" / "SetASpeedTimeseries.srv").exists()
+
+
+def test_ros2_timeseries_set_only(tmp_path):
+    """--timeseries set emits the wrapper + Set service, but NOT the Get service."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=["--include-dirs", str(INCLUDE_DIR), "--timeseries", "set"],
+    )
+    assert (pkg_dir / "msg" / "ASpeedTimeseries.msg").is_file()
+    assert (pkg_dir / "srv" / "SetASpeedTimeseries.srv").is_file()
+    assert not (pkg_dir / "srv" / "GetASpeedTimeseries.srv").exists()
+
+
+def test_ros2_srv_and_timeseries_combined(tmp_path):
+    """--srv and --timeseries are independent and can be combined."""
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=["--include-dirs", str(INCLUDE_DIR), "--srv", "get", "--timeseries", "both"],
+    )
+    # latest single-value Get
+    assert (pkg_dir / "srv" / "GetASpeed.srv").is_file()
+    assert "ASpeed data" in read_text(pkg_dir / "srv" / "GetASpeed.srv")
+    # latest Set NOT generated (only --srv get)
+    assert not (pkg_dir / "srv" / "SetASpeed.srv").exists()
+    # timeseries trio present
+    assert (pkg_dir / "msg" / "ASpeedTimeseries.msg").is_file()
+    assert (pkg_dir / "srv" / "GetASpeedTimeseries.srv").is_file()
+    assert (pkg_dir / "srv" / "SetASpeedTimeseries.srv").is_file()
+
+
+def test_ros2_timeseries_composes_with_timestamp_struct_fqn(tmp_path):
+    """Custom timestamp struct flows into the timeseries window/range field suffixes."""
+    types_vspec = tmp_path / "types.vspec"
+    types_vspec.write_text(
+        """\
+CustomTypes:
+  type: branch
+  description: Custom types branch.
+
+CustomTypes.MyTime:
+  type: struct
+  description: Custom timestamp.
+
+CustomTypes.MyTime.epoch_s:
+  type: property
+  datatype: int64
+  description: Epoch seconds.
+
+CustomTypes.MyTime.nanos:
+  type: property
+  datatype: int64
+  description: Nanoseconds.
+""",
+        encoding="utf-8",
+    )
+    vspec = """\
+A:
+  type: branch
+  description: Branch A.
+A.Speed:
+  type: sensor
+  datatype: float
+  description: Vehicle speed.
+"""
+    pkg_dir = run_ros2_exporter(
+        vspec,
+        tmp_path,
+        mode="leaf",
+        extra_args=[
+            "--include-dirs",
+            str(INCLUDE_DIR),
+            "--types",
+            str(types_vspec),
+            "--timestamp-struct-fqn",
+            "CustomTypes.MyTime",
+            "--timeseries",
+            "both",
+        ],
+    )
+    ts_msg = read_text(pkg_dir / "msg" / "ASpeedTimeseries.msg")
+    get_ts = read_text(pkg_dir / "srv" / "GetASpeedTimeseries.srv")
+    assert "int64 window_start_epoch_s" in ts_msg
+    assert "int64 window_start_nanos" in ts_msg
+    assert "window_start_seconds" not in ts_msg
+    assert "int64 start_time_epoch_s" in get_ts
+    assert "int64 end_time_nanos" in get_ts
