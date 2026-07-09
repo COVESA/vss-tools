@@ -15,19 +15,16 @@ a real VSS tree is processed.
 
 from pathlib import Path
 
-import pytest
 from graphql import GraphQLObjectType, GraphQLString, print_schema
-
+from vss_tools.exporters.s2dm import generate_s2dm_schema
 from vss_tools.exporters.s2dm.type_builders import (
     _clean_enum_name,
     _parse_instances_simple,
     create_unit_enums,
     resolve_datatype_to_graphql,
 )
-from vss_tools.exporters.s2dm import generate_s2dm_schema
 from vss_tools.main import get_trees
 from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP
-
 
 HERE = Path(__file__).parent
 TEST_UNITS = HERE / "vspec" / "test_s2dm" / "test_units.yaml"
@@ -122,7 +119,7 @@ class TestResolveDatatype:
                 assert result == gql_type, f"Failed for {vss_type}"
 
     def test_array_type_wraps_in_list(self):
-        from graphql import GraphQLList, GraphQLNonNull
+        from graphql import GraphQLList
 
         result = resolve_datatype_to_graphql("uint8[]", {})
         assert isinstance(result, GraphQLList)
