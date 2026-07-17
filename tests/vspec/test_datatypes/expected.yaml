@@ -1,68 +1,68 @@
 A:
-  description: Branch A.
   type: branch
+  description: Branch A.
 
-A.Double:
-  datatype: double
-  description: A double.
+A.UInt8:
   type: sensor
-  unit: km
-
-A.Float:
-  datatype: float
-  description: A float.
-  type: sensor
-  unit: km
-
-A.Int16:
-  datatype: int16
-  description: An int16.
-  type: sensor
-  unit: km
-
-A.Int32:
-  datatype: int32
-  description: An int32
-  type: sensor
-  unit: km
-
-A.Int64:
-  datatype: int64
-  description: An int64
-  type: sensor
+  description: A uint8.
+  datatype: uint8
   unit: km
 
 A.Int8:
-  datatype: int8
-  description: An int8.
   type: sensor
+  description: An int8.
+  datatype: int8
   unit: km
 
-A.IsBoolean:
-  datatype: boolean
-  description: A boolean
-  type: sensor
-
 A.UInt16:
-  datatype: uint16
-  description: A uint16.
   type: sensor
+  description: A uint16.
+  datatype: uint16
+  unit: km
+
+A.Int16:
+  type: sensor
+  description: An int16.
+  datatype: int16
   unit: km
 
 A.UInt32:
-  datatype: uint16
-  description: A uint32.
   type: sensor
+  description: A uint32.
+  datatype: uint16
+  unit: km
+
+A.Int32:
+  type: sensor
+  description: An int32
+  datatype: int32
   unit: km
 
 A.UInt64:
-  datatype: uint64
-  description: A uint64.
   type: sensor
+  description: A uint64.
+  datatype: uint64
   unit: km
 
-A.UInt8:
-  datatype: uint8
-  description: A uint8.
+A.Int64:
   type: sensor
+  description: An int64
+  datatype: int64
+  unit: km
+
+A.IsBoolean:
+  type: sensor
+  description: A boolean
+  datatype: boolean
+
+A.Float:
+  type: sensor
+  description: A float.
+  datatype: float
+  unit: km
+
+A.Double:
+  type: sensor
+  description: A double.
+  datatype: double
   unit: km

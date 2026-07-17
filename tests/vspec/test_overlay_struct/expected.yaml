@@ -1,40 +1,40 @@
 A:
-  description: Branch A.
   type: branch
+  description: Branch A.
 
 A.SignalA:
-  datatype: Types.Struct1
-  description: This is the first signal.
   type: sensor
+  description: This is the first signal.
+  datatype: Types.Struct1
 
 A.SignalB:
-  datatype: Types.Struct2
-  description: This is the second signal.
   type: sensor
+  description: This is the second signal.
+  datatype: Types.Struct2
 
 ComplexDataTypes:
   Types:
-    description: Top-level branch for vehicle data types.
     type: branch
+    description: Top-level branch for vehicle data types.
   Types.Struct1:
-    description: A struct with datatype property defined.
     type: struct
+    description: A struct with datatype property defined.
   Types.Struct1.x:
-    datatype: double
-    description: x property
     type: property
+    description: x property
+    datatype: double
   Types.Struct1.y:
-    datatype: uint16
-    description: y property
     type: property
+    description: y property
+    datatype: uint16
   Types.Struct2:
-    description: A struct with datatype property defined.
     type: struct
+    description: A struct with datatype property defined.
   Types.Struct2.c:
-    datatype: double
+    type: property
     description: x property
-    type: property
+    datatype: double
   Types.Struct2.d:
-    datatype: uint16
-    description: y property
     type: property
+    description: y property
+    datatype: uint16
