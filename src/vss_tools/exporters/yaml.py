@@ -33,7 +33,7 @@ def export_yaml(file_name, content_dict):
             f,
             default_flow_style=False,
             Dumper=NoAliasDumper,
-            sort_keys=True,
+            sort_keys=False,
             width=1024,
             indent=2,
             encoding="utf-8",
