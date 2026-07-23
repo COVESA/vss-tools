@@ -1,5 +1,8 @@
-class A {
+class AIS {
 	b : PB.BIS0
+	y : PY.Y
+	y1 : A
+	y2 : A
 }
 ' This description will be duplicated.
 package PB {
@@ -16,5 +19,27 @@ package PB {
 		' sensor: This description will also exist multiple times.
 		' unit: km
 		c : int8
+	}
+}
+' d
+package PY {
+	class Y {
+
+		' attribute: d
+		count : uint8
+	}
+}
+class A {
+	z : PZ.ZIS
+}
+' d
+package PZ {
+	class ZIS {
+
+		' branch: d
+		z1 : None
+
+		' branch: d
+		z2 : None
 	}
 }

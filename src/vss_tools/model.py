@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import re
 from enum import Enum
-from typing import Any, TypeAlias
+from typing import Any, Literal, TypeAlias
 
 import jsonschema
 from pydantic import (
@@ -33,7 +33,15 @@ from vss_tools.datatypes import (
     resolve_datatype,
 )
 
-EXPORT_EXCLUDE_ATTRIBUTES = ["delete", "instantiate", "fqn", "arraysize", "aggregate", "is_instance"]
+EXPORT_EXCLUDE_ATTRIBUTES = [
+    "delete",
+    "instantiate",
+    "fqn",
+    "arraysize",
+    "aggregate",
+    "is_instance",
+    "instances_relation",
+]
 
 
 class ModelException(Exception):
@@ -139,6 +147,7 @@ class VSSData(VSSRaw):
 
 class VSSDataBranch(VSSData):
     instances: Any = None
+    instances_relation: Literal["child", "sibling"] = "child"
     aggregate: bool = False
     is_instance: bool = False
 

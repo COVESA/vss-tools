@@ -17,3 +17,20 @@ A.B.C:
   unit: km
   description: This description will also exist multiple times.
   comment: As well as this comment.
+
+A.Y:
+  type: branch
+  instances: Y[1,2]
+  instances_relation: sibling
+  description: d
+
+A.Y.Count:
+  type: attribute
+  datatype: uint8
+  description: d
+  instantiate: false
+
+A.Y.Z:
+  type: branch
+  instances: Z[1,2]
+  description: d

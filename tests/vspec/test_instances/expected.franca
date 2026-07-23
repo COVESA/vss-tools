@@ -70,5 +70,46 @@ const SignalSpec[] signal_spec = [
 	description: "This description will also exist multiple times.",
 	datatype: "int8",
 	unit: "km"
+},
+{	name: "A.Y",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y.Count",
+	type: "attribute",
+	description: "d",
+	datatype: "uint8"
+},
+{	name: "A.Y1",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y1.Z",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y1.Z.Z1",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y1.Z.Z2",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y2",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y2.Z",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y2.Z.Z1",
+	type: "branch",
+	description: "d"
+},
+{	name: "A.Y2.Z.Z2",
+	type: "branch",
+	description: "d"
 }
 ]

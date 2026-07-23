@@ -64,3 +64,44 @@ A.B.Row2.Right.C:
   comment: As well as this comment.
   datatype: int8
   unit: km
+
+A.Y:
+  type: branch
+  description: d
+
+A.Y.Count:
+  type: attribute
+  description: d
+  datatype: uint8
+
+A.Y1:
+  type: branch
+  description: d
+
+A.Y1.Z:
+  type: branch
+  description: d
+
+A.Y1.Z.Z1:
+  type: branch
+  description: d
+
+A.Y1.Z.Z2:
+  type: branch
+  description: d
+
+A.Y2:
+  type: branch
+  description: d
+
+A.Y2.Z:
+  type: branch
+  description: d
+
+A.Y2.Z.Z1:
+  type: branch
+  description: d
+
+A.Y2.Z.Z2:
+  type: branch
+  description: d

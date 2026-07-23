@@ -56,4 +56,46 @@ octet value;
 
 };
 
+module Y
+{
+struct Count
+{
+octet value;
+//const string type ="attribute";
+//const string description="d";
+};
+};
+
+module Y1
+{
+module Z
+{
+module Z1
+{
+};
+
+module Z2
+{
+};
+
+};
+
+};
+
+module Y2
+{
+module Z
+{
+module Z1
+{
+};
+
+module Z2
+{
+};
+
+};
+
+};
+
 };

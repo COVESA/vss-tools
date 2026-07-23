@@ -20,6 +20,6 @@ Description: Branch A."""@en ;
     samm:name "ACharacteristic" .
 
 :AEntity a samm:Entity ;
-    samm:properties ( [ samm:property :b; samm:payloadName "b" ] ) .
+    samm:properties ( [ samm:property :b; samm:payloadName "b" ] [ samm:property :y; samm:payloadName "y" ] ) .
 
 
