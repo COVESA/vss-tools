@@ -1,38 +1,38 @@
 A:
-  description: Branch A.
   type: branch
-
-A.Float:
-  allowed:
-  - 1.1
-  - 2.54
-  - 3
-  datatype: float
-  description: A float
-  type: actuator
-
-A.Int:
-  allowed:
-  - 1
-  - 2
-  - 3
-  datatype: uint16
-  description: An int
-  type: sensor
+  description: Branch A.
 
 A.String:
+  type: sensor
+  description: A string
+  datatype: string
   allowed:
   - January
   - February
-  datatype: string
-  description: A string
-  type: sensor
 
 A.StringArray:
+  type: sensor
+  description: A string array
+  datatype: string[]
   allowed:
   - January
   - February
   - March
-  datatype: string[]
-  description: A string array
+
+A.Int:
   type: sensor
+  description: An int
+  datatype: uint16
+  allowed:
+  - 1
+  - 2
+  - 3
+
+A.Float:
+  type: actuator
+  description: A float
+  datatype: float
+  allowed:
+  - 1.1
+  - 2.54
+  - 3
