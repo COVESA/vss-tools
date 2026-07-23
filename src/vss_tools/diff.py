@@ -152,6 +152,95 @@ def _expand_instances(value: Any) -> list[str]:
     return [".".join(combo) for combo in itertools.product(*dimensions)]
 
 
+def _expand_instance_fqns(base_fqn: str, instances_value: Any) -> list[str]:
+    """
+    Expand a branch's instances into all branch FQN paths produced by expansion,
+    mirroring expand_instance() in tree.py — including every intermediate dimension hop.
+
+    Each top-level entry in instances_value is one dimension, iterated exactly as
+    expand_instances() iterates ``for instance in node.data.instances``.
+    Roots advance (next dimension attaches to generated nodes) when the dimension
+    entry is a list or expands to more than one name — matching the tree.py rule:
+      ``len(names) > 1 or isinstance(instance, list) → return nodes, nodes``.
+    """
+    if not instances_value:
+        return []
+
+    # Normalise: if instances_value itself is not a list, wrap it so we can
+    # iterate uniformly (mirrors tree.py where data.instances is always iterable).
+    raw_dimensions: list[Any] = instances_value if isinstance(instances_value, list) else [instances_value]
+
+    roots: list[str] = [base_fqn]
+    all_created: list[str] = []
+
+    for dimension in raw_dimensions:
+        if isinstance(dimension, list):
+            # Inner list: each element is an explicit name (possibly range syntax)
+            names: list[str] = []
+            for item in dimension:
+                s = str(item)
+                names.extend(expand_string(s) if "[" in s else [s])
+            advance = True  # isinstance(instance, list) → return nodes, nodes
+        elif isinstance(dimension, str) and "[" in dimension:
+            names = expand_string(dimension)
+            advance = len(names) > 1  # range expansion → return nodes, nodes
+        else:
+            names = [str(dimension)]
+            advance = False  # single plain string → return roots, nodes
+
+        new_nodes: list[str] = []
+        for root in roots:
+            for name in names:
+                fqn = f"{root}.{name}"
+                all_created.append(fqn)
+                new_nodes.append(fqn)
+
+        if advance:
+            roots = new_nodes
+
+    return all_created
+
+
+def _inject_instance_expansions(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    For every ENTITY ADDED or REMOVED event that carries an ``instances`` attribute,
+    inject ADDED or REMOVED events for all branch FQNs produced by instance expansion.
+
+    This mirrors the YAML exporter's behaviour: instances expand into concrete branch
+    hops (one per dimension level), so those branches must appear in the diff just as
+    they would appear in any expanded output.  Without these synthetic events,
+    ``_inject_entity_content`` has no parent to anchor children to and creates phantom
+    ENTITY MODIFIED events instead.
+    """
+    result: list[dict[str, Any]] = []
+    for ev in raw_events:
+        result.append(ev)
+        if ev["type"] not in (ADDED, REMOVED):
+            continue
+        if _vss_kind(ev["node_type"], ev["source"]) != ENTITY:
+            continue
+        attrs = ev.get("attributes") or {}
+        instances_value = attrs.get("instances")
+        if not instances_value:
+            continue
+
+        description = attrs.get("description", "")
+        for fqn in _expand_instance_fqns(ev["path"], instances_value):
+            result.append(
+                {
+                    "type": ev["type"],
+                    "source": ev["source"],
+                    "path": fqn,
+                    "node_type": "branch",
+                    "attributes": {
+                        "type": "branch",
+                        "description": description,
+                    },
+                }
+            )
+    return result
+
+
 def _map_aspects_added(attrs: dict[str, Any], source: str, node_type: str) -> dict[str, Any]:
     """Build the full aspects snapshot for an ADDED event."""
     aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity")}
@@ -468,6 +557,7 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
             continue
         raw_changes.extend(_diff_dicts(prev, curr, source_label, detect_renames=detect_renames))
 
+    raw_changes = _inject_instance_expansions(raw_changes)
     modl_events = _to_modl_events(raw_changes)
     modl_events = _inject_entity_content(modl_events)
 
