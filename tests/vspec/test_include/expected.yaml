@@ -1,0 +1,27 @@
+A:
+  type: branch
+  description: d
+
+A.X:
+  type: branch
+  description: d
+
+A.X.D:
+  type: branch
+  description: d
+
+A.B:
+  type: branch
+  description: d
+
+A.B.B2:
+  type: branch
+  description: d
+
+A.C:
+  type: branch
+  description: d
+
+A.C2:
+  type: branch
+  description: d

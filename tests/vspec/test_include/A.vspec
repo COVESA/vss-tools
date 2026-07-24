@@ -1,0 +1,13 @@
+A:
+  type: branch
+  description: d
+  includes:
+    - B
+
+#include C A
+
+A.X:
+  type: branch
+  description: d
+
+#include D.vspec A.X
