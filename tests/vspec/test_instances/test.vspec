@@ -34,3 +34,45 @@ A.Y.Z:
   type: branch
   instances: Z[1,2]
   description: d
+
+A.X:
+  type: branch
+  description: d
+
+A.X.B:
+  type: branch
+  description: d
+  instances:
+    - B1
+    - B2
+  instances_relation: sibling
+
+A.X.B.Count:
+  type: attribute
+  datatype: uint8
+  instantiate: false
+  description: d
+
+A.X.B.Value:
+  type: sensor
+  datatype: boolean
+  description: d
+
+A.X.C:
+  type: branch
+  description: d
+  instances:
+    - C1
+    - C2
+  instances_relation: sibling
+
+A.X.C.Count:
+  type: attribute
+  datatype: uint8
+  instantiate: false
+  description: d
+
+A.X.C.Value:
+  type: sensor
+  datatype: boolean
+  description: d

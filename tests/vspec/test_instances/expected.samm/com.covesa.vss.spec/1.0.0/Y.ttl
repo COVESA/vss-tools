@@ -9,13 +9,13 @@
     samm:preferredName "Y"@en ;
     samm:properties ( :y ) .
 
-:count a samm:Property ;
-    samm:characteristic :CountCharacteristic ;
-    samm:preferredName "Count"@en .
-
 :y a samm:Property ;
     samm:characteristic :YInstanceSingleEntity ;
     samm:preferredName "Y"@en .
+
+:yCount a samm:Property ;
+    samm:characteristic :YCountCharacteristic ;
+    samm:preferredName "Y Count"@en .
 
 :yy1 a samm:Property ;
     samm:characteristic :YCharacteristic ;
@@ -38,7 +38,7 @@
     samm:characteristic :ZCharacteristic ;
     samm:preferredName "ZZ2"@en .
 
-:CountCharacteristic a samm:Characteristic ;
+:YCountCharacteristic a samm:Characteristic ;
     samm:dataType xsd:unsignedByte ;
     samm:description """
 VSS path    : A.Y.Count
@@ -46,7 +46,7 @@ VSS path    : A.Y.Count
 Description: d"""@en .
 
 :YEntity a samm:Entity ;
-    samm:properties ( [ samm:property :count; samm:payloadName "count" ] [ samm:property :z; samm:payloadName "z" ] ) .
+    samm:properties ( [ samm:property :yCount; samm:payloadName "count" ] [ samm:property :z; samm:payloadName "z" ] ) .
 
 :YInstanceEntity a samm:Entity ;
     samm:properties ( [ samm:property :yy1; samm:optional true; samm:payloadName "y1" ] [ samm:property :yy2; samm:optional true; samm:payloadName "y2" ] ) .

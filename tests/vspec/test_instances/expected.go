@@ -3,6 +3,7 @@ package vss
 type AI1 struct {
 	B BI2
 	Y Y
+	X XI1
 	Y1 A
 	Y2 A
 }
@@ -19,6 +20,23 @@ type B struct {
 }
 type Y struct {
 	Count uint8
+}
+type XI1 struct {
+	B I1B
+	C I1C
+	B1 X
+	B2 X
+	C1 X
+	C2 X
+}
+type I1B struct {
+	Count uint8
+}
+type I1C struct {
+	Count uint8
+}
+type X struct {
+	Value bool
 }
 type A struct {
 	Z Y2ZI1
