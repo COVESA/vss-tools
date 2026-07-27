@@ -57,7 +57,11 @@ class Include:
         candidates = [self.target]
 
         if self.target.suffix == "":
-            candidates = [self.target.with_suffix(".vspec"), self.target.with_suffix(".yaml")]
+            candidates = [
+                self.target.with_suffix(".vspec"),
+                self.target.with_suffix(".yaml"),
+                self.target.with_suffix(".yml"),
+            ]
 
         for dir in unique_include_dirs:
             for candidate in candidates:
