@@ -12,3 +12,9 @@ angle:
 relation:
   definition: Dimensionsless quantity for relation between two values of the same quantity.
   remark: This quantity is not described in ISO 80000.
+
+angular_velocity:
+  definition: Rate of change of angular position.
+
+power:
+  definition: Rate at which work is done or energy is transferred.

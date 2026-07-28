@@ -21,3 +21,20 @@ percent:
   unit: percent
   quantity: relation
   allowed-datatypes: ['numeric']
+
+# Angular velocity — key is lowercase to reproduce the regression from #523/#535
+# where unit_data.key preserves original YAML casing and dynamic_units stores lowercase keys.
+rpm:
+  definition: Rotational speed in revolutions per minute
+  unit: revolution per minute
+  quantity: angular_velocity
+  allowed-datatypes: ['numeric']
+
+# Power — uppercase YAML key reproduces the exact #535 regression scenario:
+# after #523, dynamic_units["w"] exists but the validator returns key="W" (original casing),
+# so _get_unit_args received unit="W" and dynamic_units["W"] raised KeyError.
+W:
+  definition: Power measured in watts
+  unit: watt
+  quantity: power
+  allowed-datatypes: ['numeric']
