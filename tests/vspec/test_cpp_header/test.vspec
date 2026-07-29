@@ -1,0 +1,23 @@
+A:
+  type: branch
+  description: Branch A.
+
+A.Speed:
+  datatype: float
+  type: sensor
+  unit: km
+  min: 0
+  max: 300
+  description: Vehicle speed.
+
+A.GearMode:
+  datatype: string
+  type: actuator
+  allowed: ['PARK', 'REVERSE', 'NEUTRAL', 'DRIVE']
+  description: Gear selection mode.
+
+A.Count:
+  datatype: uint32
+  type: attribute
+  default: 0
+  description: A count attribute.
