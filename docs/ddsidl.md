@@ -80,17 +80,19 @@ IDL files can be supplied as input to one of the DDS implementation (e.g: Cycloe
 
 ### Installation of CycloneDDS
 
-Cyclone DDS can for Linux be installed with:
+Cyclone DDS can be installed with:
 
 ```bash
-pip install cyclonedds==0.10.5
+sudo apt install cyclonedds-tools
+pip install cyclonedds
 ```
 
-*Note that there have been backward inccompatible changes in [CycloneDDS 11.0](https://pypi.org/project/cyclonedds/) and by that reason we use 0.10.5*
+*Note that these steps may not be sufficient in many cases!*
 
-**Usage of CycloneDDS to take IDL file as input and generate Python file with types**
+**Usage of CycloneDDS to take IDL file as input and generate C files with types**
 
-> idlc **-l py**  ./results/res.idl
+> idlc **-l c**  ./results/res.idl
+
 
 ### FastDDS
 

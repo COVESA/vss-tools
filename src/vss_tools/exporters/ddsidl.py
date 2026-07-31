@@ -160,7 +160,8 @@ def get_allowed_enum_literal(name: str):
     return name
 
 
-idl_file_buffer = []
+idl_file_buffer: list[str] = []
+
 
 dataTypesMap_covesa_dds = {
     "uint8": "octet",
