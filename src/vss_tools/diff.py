@@ -57,8 +57,8 @@ ENUM_VALUE = "ENUM_VALUE"
 # ---------------------------------------------------------------------------
 
 
-def load_flat_yaml(path: Path) -> dict[str, Any]:
-    """Load a flat snapshot YAML file. Returns empty dict when file is absent."""
+def load_snapshot_yaml(path: Path) -> dict[str, Any]:
+    """Load a YAML file. Returns an empty dict when the file is absent."""
     if not path.exists():
         return {}
     content = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -551,8 +551,8 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
     ]
 
     for filename, source_label, detect_renames in sources:
-        prev = load_flat_yaml(previous_dir / filename) if previous_dir else {}
-        curr = load_flat_yaml(current_dir / filename)
+        prev = load_snapshot_yaml(previous_dir / filename) if previous_dir else {}
+        curr = load_snapshot_yaml(current_dir / filename)
         if not prev and not curr:
             continue
         raw_changes.extend(_diff_dicts(prev, curr, source_label, detect_renames=detect_renames))

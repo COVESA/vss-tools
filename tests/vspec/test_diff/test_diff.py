@@ -22,7 +22,7 @@ from vss_tools.diff import (
     PROPERTY,
     REMOVED,
     diff_folders,
-    load_flat_yaml,
+    load_snapshot_yaml,
 )
 from vss_tools.diff_cmd import cli
 
@@ -44,24 +44,24 @@ def changes_by_label(result: dict[str, Any]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# load_flat_yaml
+# load_snapshot_yaml
 # ---------------------------------------------------------------------------
 
 
-class TestLoadFlatYaml:
+class TestLoadSnapshotYaml:
     def test_loads_valid_yaml(self, tmp_path: Path):
         f = tmp_path / "snap.vspec"
         f.write_text("A:\n  type: branch\n  description: x\n")
-        result = load_flat_yaml(f)
+        result = load_snapshot_yaml(f)
         assert result == {"A": {"type": "branch", "description": "x"}}
 
     def test_returns_empty_dict_for_missing_file(self, tmp_path: Path):
-        assert load_flat_yaml(tmp_path / "nonexistent.yaml") == {}
+        assert load_snapshot_yaml(tmp_path / "nonexistent.yaml") == {}
 
     def test_returns_empty_dict_for_non_mapping(self, tmp_path: Path):
         f = tmp_path / "bad.yaml"
         f.write_text("- item1\n- item2\n")
-        assert load_flat_yaml(f) == {}
+        assert load_snapshot_yaml(f) == {}
 
 
 # ---------------------------------------------------------------------------
