@@ -3,7 +3,7 @@ name = "vss-tools"
 version = "7.0.0-dev0"
 description='COVESA Vehicle Signal Specification tooling.'
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "anytree>=2.12.1",
     "click>=8.1.7",

@@ -23,7 +23,7 @@ def run_error_test(tool, exporter, argument, arg_error_expected: bool, tmp_path)
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     if arg_error_expected:
         assert process.returncode != 0
-        assert "No such option:" in process.stderr
+        assert "No such option" in process.stderr
     else:
         assert process.returncode == 0
 
