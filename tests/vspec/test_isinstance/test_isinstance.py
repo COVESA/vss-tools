@@ -19,8 +19,8 @@ def test_exporters():
     )
     door = tree.children[0]
     row1 = door.children[0]
-    assert row1.data.is_instance
-    door.children[1]
-    assert row1.data.is_instance
+    row2 = door.children[1]
+    assert not row1.data.is_instance
+    assert row2.data.is_instance
     special = row1.children[0]
     assert not special.data.is_instance
