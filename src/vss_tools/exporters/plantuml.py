@@ -93,7 +93,8 @@ def get_enums(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
                 fqns.add(fqn)
                 # create Enumeration
                 tree_content_lines.append("")
-                tree_content_lines.append("%s' %s" % (fill, data.description))
+                if data.description is not None:
+                    tree_content_lines.append("%s' %s" % (fill, data.description))
                 tree_content_lines.append("%senum %s {" % (fill, node.name))
                 for a in allowed:
                     tree_content_lines.append("%s\t%s," % (fill, a))
@@ -127,7 +128,8 @@ def get_rendered_class(tree: VSSNode, fill, attributes: tuple[str]) -> str:
         if node.is_leaf:
             # add an entry to the data type
             tree_content_lines.append("")
-            tree_content_lines.append("%s' %s: %s" % (fill, data.type.value, data.description))
+            if data.description is not None:
+                tree_content_lines.append("%s' %s: %s" % (fill, data.type.value, data.description))
             datatype = getattr(data, "datatype", None)
             unit = getattr(data, "unit", None)
             if unit:
@@ -155,7 +157,8 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
     data = node.get_vss_data()
     needPkg = node.parent and (node.is_leaf or not (isinstance(data, VSSDataBranch) and data.is_instance))
     if needPkg:
-        tree_content_lines.append("%s' %s" % (fill, data.description))
+        if data.description is not None:
+            tree_content_lines.append("%s' %s" % (fill, data.description))
         tree_content_lines.append("%spackage P%s {" % (fill, node.name))
         nFill = fill + "\t"
     else:
