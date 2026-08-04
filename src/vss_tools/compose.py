@@ -27,13 +27,15 @@ import vss_tools.cli_options as clo
 from vss_tools import log
 from vss_tools.exporters.yaml import export_yaml
 from vss_tools.main import get_trees
+from vss_tools.model import EXPORT_EXCLUDE_ATTRIBUTES
 from vss_tools.units_quantities import load_quantities, load_units
 from vss_tools.vspec import load_vspec
 
 # Fields to drop during compose serialization.
 # Keeps instantiate/aggregate/arraysize (unlike the normal export) so the
 # output remains a valid, re-parseable vspec.
-SNAPSHOT_EXCLUDE_FIELDS = ["delete", "fqn", "is_instance"]
+# Keep instantiate/aggregate/arraysize so the snapshot stays re-parseable.
+SNAPSHOT_EXCLUDE_FIELDS = [f for f in EXPORT_EXCLUDE_ATTRIBUTES if f not in {"instantiate", "aggregate", "arraysize"}]
 
 MODEL_SNAPSHOT_FILENAME = "model.vspec"
 STRUCTS_SNAPSHOT_FILENAME = "structs.vspec"
