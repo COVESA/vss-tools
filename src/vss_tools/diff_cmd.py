@@ -7,7 +7,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
-import sys
 from pathlib import Path
 
 import rich_click as click
@@ -56,10 +55,10 @@ def cli(previous: Path | None, current: Path, output: Path | None) -> None:
     else:
         log.info(f"First-run mode: treating all elements in {current} as ADDED")
     result = diff_folders(previous, current)
-    out_text = json.dumps(result, indent=2, ensure_ascii=False)
 
     if output:
-        output.write_text(out_text, encoding="utf-8")
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, ensure_ascii=False)
         log.info(f"Diff written to {output}")
     else:
-        sys.stdout.write(out_text + "\n")
+        click.echo(json.dumps(result, indent=2, ensure_ascii=False))

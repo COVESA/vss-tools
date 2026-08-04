@@ -257,12 +257,8 @@ class TestFkaTypeMismatch:
         prev_dir.mkdir()
         curr_dir.mkdir()
 
-        (prev_dir / "model_snapshot.vspec").write_text(
-            "A.OldSignal:\n  datatype: float\n  description: x\n  type: sensor\n"
-        )
-        (curr_dir / "model_snapshot.vspec").write_text(
-            "A.NewBranch:\n  description: x\n  fka: A.OldSignal\n  type: branch\n"
-        )
+        (prev_dir / "model.vspec").write_text("A.OldSignal:\n  datatype: float\n  description: x\n  type: sensor\n")
+        (curr_dir / "model.vspec").write_text("A.NewBranch:\n  description: x\n  fka: A.OldSignal\n  type: branch\n")
 
         result = diff_folders(prev_dir, curr_dir)
         by_label = changes_by_label(result)
@@ -283,12 +279,8 @@ class TestDatatypeMapping:
         prev_dir.mkdir()
         curr_dir.mkdir()
 
-        (prev_dir / "model_snapshot.vspec").write_text(
-            "A.Vals:\n  datatype: float[]\n  description: x\n  type: sensor\n"
-        )
-        (curr_dir / "model_snapshot.vspec").write_text(
-            "A.Vals:\n  datatype: float[]\n  description: x\n  type: sensor\n"
-        )
+        (prev_dir / "model.vspec").write_text("A.Vals:\n  datatype: float[]\n  description: x\n  type: sensor\n")
+        (curr_dir / "model.vspec").write_text("A.Vals:\n  datatype: float[]\n  description: x\n  type: sensor\n")
 
         result = diff_folders(prev_dir, curr_dir)
         # No changes between identical snapshots
@@ -300,8 +292,8 @@ class TestDatatypeMapping:
         prev_dir.mkdir()
         curr_dir.mkdir()
 
-        (prev_dir / "model_snapshot.vspec").write_text("")
-        (curr_dir / "model_snapshot.vspec").write_text(
+        (prev_dir / "model.vspec").write_text("")
+        (curr_dir / "model.vspec").write_text(
             "A.Tags:\n  datatype: string[]\n  description: list of tags\n  type: sensor\n"
         )
 
@@ -408,7 +400,7 @@ class TestExpandInstances:
         prev_dir.mkdir()
         curr_dir.mkdir()
 
-        (prev_dir / "model_snapshot.vspec").write_text(
+        (prev_dir / "model.vspec").write_text(
             "Vehicle.Seat:\n"
             "  type: branch\n"
             "  description: seat\n"
@@ -417,7 +409,7 @@ class TestExpandInstances:
             "    - - DriverSide\n"
             "      - PassengerSide\n"
         )
-        (curr_dir / "model_snapshot.vspec").write_text(
+        (curr_dir / "model.vspec").write_text(
             "Vehicle.Seat:\n"
             "  type: branch\n"
             "  description: seat\n"
@@ -439,8 +431,8 @@ class TestExpandInstances:
         prev_dir.mkdir()
         curr_dir.mkdir()
 
-        (prev_dir / "model_snapshot.vspec").write_text("")
-        (curr_dir / "model_snapshot.vspec").write_text(
+        (prev_dir / "model.vspec").write_text("")
+        (curr_dir / "model.vspec").write_text(
             "Vehicle.Seat:\n"
             "  type: branch\n"
             "  description: seat\n"
