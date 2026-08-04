@@ -13,15 +13,12 @@ import rich_click as click
 
 import vss_tools.cli_options as clo
 from vss_tools import log
+from vss_tools.compose import cli as compose_cli
+from vss_tools.diff_cmd import cli as diff_cli
 from vss_tools.lazy_group import LazyGroup
 
 
 @click.group(
-    cls=LazyGroup,
-    lazy_subcommands={
-        "compose": "vss_tools.compose:cli",
-        "diff": "vss_tools.diff_cmd:cli",
-    },
     context_settings={"auto_envvar_prefix": "vss_tools"},
     invoke_without_command=True,
 )
@@ -38,6 +35,10 @@ def cli(ctx: click.Context, log_level: str, log_file: Path):
         log.addHandler(file_handler)
 
     log.setLevel(log_level)
+
+
+cli.add_command(compose_cli, "compose")
+cli.add_command(diff_cli, "diff")
 
 
 @cli.group(

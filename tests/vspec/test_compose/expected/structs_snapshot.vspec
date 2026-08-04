@@ -1,17 +1,17 @@
 Types:
-  description: Custom data types.
   type: branch
+  description: Custom data types.
 
 Types.Point:
-  description: A 2D point struct.
   type: struct
+  description: A 2D point struct.
 
 Types.Point.X:
+  type: property
   datatype: float
   description: X coordinate.
-  type: property
 
 Types.Point.Y:
+  type: property
   datatype: float
   description: Y coordinate.
-  type: property

@@ -1,22 +1,22 @@
 A:
-  description: Branch A.
   type: branch
-
-A.Codes:
-  arraysize: 4
-  datatype: uint8[]
-  description: Error codes.
-  type: sensor
+  description: Branch A.
 
 A.Door:
-  description: Door branch with instances.
+  type: branch
   instances:
   - Row[1,2]
   - - Left
     - Right
-  type: branch
+  description: Door branch with instances.
 
 A.Door.IsOpen:
   datatype: boolean
-  description: Is the door open?
   type: actuator
+  description: Is the door open?
+
+A.Codes:
+  datatype: uint8[]
+  type: sensor
+  arraysize: 4
+  description: Error codes.
