@@ -41,17 +41,17 @@ def test_compose_with_structs(tmp_path):
     out, result = _compose(tmp_path, HERE / "test.vspec", HERE / "types.vspec")
     assert result.returncode == 0, result.stderr
 
-    assert filecmp.cmp(out / "model_snapshot.vspec", EXPECTED / "model_snapshot.vspec")
-    assert filecmp.cmp(out / "structs_snapshot.vspec", EXPECTED / "structs_snapshot.vspec")
+    assert filecmp.cmp(out / "model.vspec", EXPECTED / "model.vspec")
+    assert filecmp.cmp(out / "structs.vspec", EXPECTED / "structs.vspec")
 
 
 def test_compose_no_types(tmp_path):
-    """Without --types only model_snapshot.vspec is written; structs file absent."""
+    """Without --types only model.vspec is written; structs file absent."""
     out, result = _compose(tmp_path, HERE / "test_no_types.vspec")
     assert result.returncode == 0, result.stderr
 
-    assert filecmp.cmp(out / "model_snapshot.vspec", EXPECTED / "model_snapshot_no_types.vspec")
-    assert not (out / "structs_snapshot.vspec").exists()
+    assert filecmp.cmp(out / "model.vspec", EXPECTED / "model_no_types.vspec")
+    assert not (out / "structs.vspec").exists()
 
 
 def test_compose_round_trip(tmp_path):
@@ -66,13 +66,13 @@ def test_compose_round_trip(tmp_path):
             "export",
             "yaml",
             "-u",
-            str(out / "units_snapshot.yaml"),
+            str(out / "units.yaml"),
             "-q",
-            str(out / "quantities_snapshot.yaml"),
+            str(out / "quantities.yaml"),
             "-s",
-            str(out / "model_snapshot.vspec"),
+            str(out / "model.vspec"),
             "--types",
-            str(out / "structs_snapshot.vspec"),
+            str(out / "structs.vspec"),
             "--output",
             str(yaml_out),
         ],
@@ -87,7 +87,7 @@ def test_compose_existing_dir_is_reused(tmp_path):
     """Pre-existing output directory is reused and stale files are overwritten."""
     out = tmp_path / "out"
     out.mkdir()
-    stale = out / "model_snapshot.vspec"
+    stale = out / "model.vspec"
     stale.write_text("stale content", encoding="utf-8")
 
     _, result = _compose(tmp_path, HERE / "test_no_types.vspec")

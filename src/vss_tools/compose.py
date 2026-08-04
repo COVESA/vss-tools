@@ -35,10 +35,10 @@ from vss_tools.vspec import load_vspec
 # output remains a valid, re-parseable vspec.
 SNAPSHOT_EXCLUDE_FIELDS = ["delete", "fqn", "is_instance"]
 
-MODEL_SNAPSHOT_FILENAME = "model_snapshot.vspec"
-STRUCTS_SNAPSHOT_FILENAME = "structs_snapshot.vspec"
-UNITS_SNAPSHOT_FILENAME = "units_snapshot.yaml"
-QUANTITIES_SNAPSHOT_FILENAME = "quantities_snapshot.yaml"
+MODEL_SNAPSHOT_FILENAME = "model.vspec"
+STRUCTS_SNAPSHOT_FILENAME = "structs.vspec"
+UNITS_SNAPSHOT_FILENAME = "units.yaml"
+QUANTITIES_SNAPSHOT_FILENAME = "quantities.yaml"
 
 
 def _filter_raw_node(attrs: dict[str, Any], exclude_fields: list[str]) -> dict[str, Any]:
