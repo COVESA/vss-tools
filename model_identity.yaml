@@ -1,0 +1,7 @@
+# Identity metadata file of the VSS COVESA modeling project.
+# name: --> A human-readable name for the model.
+# id: --> The namespace as a Uniform Resource Identifier (URI). It must start with `http://` or `https://` and end with '/' or '#'.
+# preferred_prefix: --> An optional display alias for the model. It is used by inspection commands to shorten output.
+name: VSS COVESA                         # human-readable model name
+id: "http://covesa.global/models/vss/"   # must end with '/' or '#'; full URIs are stored in the ledger
+preferred_prefix: "vss"                  # optional display alias; used by inspection commands to shorten output
