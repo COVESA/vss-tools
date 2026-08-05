@@ -60,7 +60,8 @@ def print_franca_content(file: TextIOWrapper, root: VSSNode) -> None:
                 output += "{"
             output += f'\tname: "{node.get_fqn()}"'
             output += f',\n\ttype: "{data.type.value}"'
-            output += f',\n\tdescription: "{data.description}"'
+            if data.description is not None:
+                output += f',\n\tdescription: "{data.description}"'
             datatype = getattr(data, "datatype", None)
             if datatype:
                 output += f',\n\tdatatype: "{datatype}"'

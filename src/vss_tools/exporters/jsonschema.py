@@ -147,7 +147,8 @@ def add_node(
     extend_all_attributes: bool,
 ) -> None:
     schema["type"] = "object"
-    schema["description"] = node.get_vss_data().description
+    if node.get_vss_data().description is not None:
+        schema["description"] = node.get_vss_data().description
     if extend_all_attributes:
         add_x_attributes(schema, node)
     if isinstance(node.data, VSSDataDatatype):

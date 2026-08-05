@@ -184,7 +184,7 @@ def generate_property(node: VSSNode, datatype: str) -> ApiGearProperty | None:
         return None
 
     property = ApiGearProperty(apigear_type)
-    if data.description != "":
+    if data.description is not None:
         property.description = data.description
     return property
 
@@ -221,7 +221,7 @@ def export_node(node: VSSNode, module: ApiGearModule, interface: ApiGearInterfac
                     enum.variants.append((variant, element_dec))
 
             property = ApiGearProperty(ApiGearType(enum_name))
-            if data.description != "":
+            if data.description is not None:
                 property.description = data.description
             if interface is not None:
                 interface.properties[name] = property

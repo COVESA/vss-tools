@@ -1,6 +1,0 @@
-VehicleDataTypes:
-  type: branch
-  description: Top-level branch for vehicle data types.
-
-VehicleDataTypes.TestBranch1:
-  type: branch
