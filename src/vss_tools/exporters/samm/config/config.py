@@ -8,7 +8,7 @@
 
 # General CONFIG variables
 SAMM_TYPE = "samm"
-SAMM_VERSION = "2.1.0"
+SAMM_VERSION = "2.2.0"
 # Custom string, which we use to escape " and ' characters in VSS node description/comments
 # Used in file_helper.write_graph_to_file to properly escape characters in filedata, before to write it to a file.
 CUSTOM_ESCAPE_CHAR = "#V2E-ESC-CHAR#"

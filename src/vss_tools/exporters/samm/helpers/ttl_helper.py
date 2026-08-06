@@ -33,20 +33,6 @@ def parse_vss_tree(path_to_ttl: Path, vss_node: VSSNode, split_vss: bool):
         "Parse VSS node: '%s' to TTL file\n  -- as aspect%s\n", vss_node.name, "\n  -- split" if split_vss else ""
     )
 
-    # Skip parsing of VSSNode is branches, which have only deprecated children
-    # NOTE: this is a special case for the OBD branch, which children are marked as deprecated from VSS 5.0,
-    #       but the branch itself is not marked as deprecated.
-    deprecated_children = list(filter(lambda n: n.data.deprecation, vss_node.children))
-
-    if len(deprecated_children) == len(vss_node.children):
-        log.warning(
-            "All child nodes of VSSNode: '%s' are deprecated.\n" "Skip the parsing of VSSNode: '%s'.\n",
-            vss_node.name,
-            vss_node.name,
-        )
-
-        return "DEPRECATED"
-
     # Initialize RDF Graph for current node
     graph = ttl_builder.setup_graph()
 
@@ -54,12 +40,11 @@ def parse_vss_tree(path_to_ttl: Path, vss_node: VSSNode, split_vss: bool):
     # NOTE: ESMF-AME requires standalone aspect models to have an aspect node.
     node_uri = handle_vss_node(path_to_ttl, graph, vss_node, True, split_vss)
 
-    if node_uri != "DEPRECATED":
-        # Print graph for current vss_node to a TTL file
-        # NOTE: make sure that TTL file name will reflect this graph's Aspect model name, i.e. uc first camel case
-        vss_node_ttl_file = write_graph_to_file(path_to_ttl, str_to_uc_first_camel_case(vss_node.ttl_name), graph)
+    # Print graph for current vss_node to a TTL file
+    # NOTE: make sure that TTL file name will reflect this graph's Aspect model name, i.e. uc first camel case
+    vss_node_ttl_file = write_graph_to_file(path_to_ttl, str_to_uc_first_camel_case(vss_node.ttl_name), graph)
 
-        log.debug("TTL file for parsed VSS node: '%s' is:\n'%s'\n", vss_node.name, vss_node_ttl_file)
+    log.debug("TTL file for parsed VSS node: '%s' is:\n'%s'\n", vss_node.name, vss_node_ttl_file)
 
     return node_uri
 
@@ -71,20 +56,6 @@ def handle_vss_node(path_to_ttl: Path, graph: Graph, vss_node: VSSNode, is_aspec
         vss_node.get_fqn(),
         is_aspect,
     )
-
-    # Check if node is deprecated and return DEPRECATED so it will be skipped for further conversion to TTL
-    if (
-        hasattr(vss_node.data, "deprecation")
-        and vss_node.data.deprecation
-        and len(vss_node.data.deprecation.strip()) > 0
-    ):
-        log.warning(
-            "Skipping VSSNode: '%s' since it is deprecated.\nDeprecation: '%s'\n",
-            vss_node.name,
-            vss_node.data.deprecation,
-        )
-
-        return "DEPRECATED"
 
     # Build the general graph node for current vss_node
     node_uri = ttl_builder.add_graph_node(graph, vss_node, is_aspect)
@@ -158,12 +129,12 @@ def handle_branch_node(
             # Each child should be a leaf node of its parent - i.e. NO ASPECTS and no split for child nodes
             child_node_uri = handle_vss_node(path_to_ttl, graph, child_node, False, False)
 
-        if child_node_uri and child_node_uri != "DEPRECATED" and str(child_node_uri) != samm_output_namespace:
+        if child_node_uri and str(child_node_uri) != samm_output_namespace:
             # Each property should have payloadName = property name,
             # so to avoid the prefixed ttl_name when generating APIs and JSON payloads
             properties_uris.append((child_node_uri, ("payloadName", child_node.name)))
 
-        elif child_node_uri != "DEPRECATED":
+        else:
             log.warning(
                 "Child node: '%s' does not have a valid URI: '%s' and is not added to '%s' node.\n",
                 child_node.name,
