@@ -33,13 +33,18 @@ class TestUnitAliasResolution:
 
     @pytest.fixture()
     def current_dynamic_units(self, monkeypatch):
-        """Simulate a current model whose units.yaml uses the new canonical names."""
+        """Simulate a current model whose units.yaml uses the new canonical names.
+
+        Keys are lowercase because load_units_or_quantities() normalises all
+        YAML keys with k.lower() before inserting into dynamic_units.
+        The original casing is preserved inside VSSUnit.key.
+        """
         monkeypatch.setattr(
             type_builders_module,
             "dynamic_units",
             {
                 "day": _make_unit("day", "time"),
-                "Celsius": _make_unit("Celsius", "temperature"),
+                "celsius": _make_unit("Celsius", "temperature"),  # key lowercased
             },
         )
 

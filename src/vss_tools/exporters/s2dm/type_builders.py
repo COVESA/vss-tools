@@ -131,14 +131,14 @@ def _get_quantity_units() -> dict[str, dict]:
         if not qudt_quantity_kind or not qudt_unit:
             continue
 
-        # Cross-reference VSS dynamic_units for the VSS quantity key.
-        # If the canonical key is not found, check whether any alias points to it
-        # (supports models whose units.yaml still uses a deprecated unit name).
-        vss_unit_data = dynamic_units.get(vss_key)
+        # dynamic_units normalizes all keys to lowercase (see units_quantities.py).
+        # QUDT_MAPPING keys use canonical VSS casing (e.g. "W", "Celsius"), so
+        # always look up with .lower(). The original casing is preserved in vss_unit_data.key.
+        vss_unit_data = dynamic_units.get(vss_key.lower())
         if vss_unit_data is None:
             alias_key = next((a for a, canonical in QUDT_ALIASES.items() if canonical == vss_key), None)
             if alias_key is not None:
-                vss_unit_data = dynamic_units.get(alias_key)
+                vss_unit_data = dynamic_units.get(alias_key.lower())
         if vss_unit_data is None:
             log.debug(f"QUDT unit '{vss_key}' not found in loaded dynamic_units; skipping.")
             continue
