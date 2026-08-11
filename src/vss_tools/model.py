@@ -64,6 +64,18 @@ class NodeType(str, Enum):
     PROPERTY = "property"
 
 
+class OverlayDirective(str, Enum):
+    """
+    Intent directive for overlay nodes, checked against the base spec:
+
+    ADD  — the node must NOT already exist in the base spec (create intent)
+    EDIT — the node MUST already exist in the base spec (modify intent)
+    """
+
+    ADD = "add"
+    EDIT = "edit"
+
+
 class VSSRaw(BaseModel):
     """
     Most low level model that accepts everything
@@ -116,7 +128,7 @@ class VSSData(VSSRaw):
     constUID: str | None = None
     fka: list[str] = []
     instantiate: bool = True
-    overlay: str | None = None
+    overlay: OverlayDirective | None = None
 
     @field_validator("constUID")
     @classmethod

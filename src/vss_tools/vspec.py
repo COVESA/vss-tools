@@ -15,6 +15,7 @@ from typing import Any
 import yaml
 
 from vss_tools import log
+from vss_tools.model import OverlayDirective
 
 
 class IncludeStatementException(Exception):
@@ -34,6 +35,10 @@ class InvalidSpecDuplicatedEntryException(Exception):
 
 
 class SpecException(Exception):
+    pass
+
+
+class OverlayDirectiveException(Exception):
     pass
 
 
@@ -120,6 +125,35 @@ class VSpec:
 
     def update(self, other: VSpec) -> None:
         deep_update(self.data, self._expand_globs(other.data))
+
+
+def apply_overlay(base: VSpec, overlay: VSpec) -> None:
+    """
+    Validates 'overlay:' directives on overlay nodes against the base spec,
+    then merges the overlay into it.
+
+    overlay: add  — the key must NOT exist in the base spec (creating a new node)
+    overlay: edit — the key MUST exist in the base spec (modifying an existing node)
+    (omitted)     — no check; node may exist or not (backward-compatible default)
+    """
+    expanded = base._expand_globs(overlay.data)
+    for key, value in expanded.items():
+        if not isinstance(value, dict) or "overlay" not in value:
+            continue
+        try:
+            directive = OverlayDirective(value["overlay"])
+        except ValueError as e:
+            raise OverlayDirectiveException(
+                f"'{key}' has an invalid 'overlay' value: {e}. "
+                f"Expected one of: {[d.value for d in OverlayDirective]}"
+            ) from e
+        if directive == OverlayDirective.ADD and key in base.data:
+            raise OverlayDirectiveException(f"'{key}' declares 'overlay: add' but already exists in the base spec")
+        if directive == OverlayDirective.EDIT and key not in base.data:
+            raise OverlayDirectiveException(
+                f"'{key}' declares 'overlay: edit' but does not exist in the base spec"
+            )
+    deep_update(base.data, expanded)
 
 
 def get_vspecs(includes: list[Path], spec: Path, prefix: str | None = None) -> list[VSpec]:

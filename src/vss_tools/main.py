@@ -25,7 +25,13 @@ from vss_tools.model import (
 from vss_tools.strict import StrictExceptions, StrictOption, load_strict_exceptions
 from vss_tools.tree import ModelValidationException, VSSNode, add_struct_schemas, build_tree
 from vss_tools.units_quantities import DuplicatedUnitException, MalformedDictException, load_quantities, load_units
-from vss_tools.vspec import InvalidSpecDuplicatedEntryException, InvalidSpecException, load_vspec
+from vss_tools.vspec import (
+    InvalidSpecDuplicatedEntryException,
+    InvalidSpecException,
+    OverlayDirectiveException,
+    apply_overlay,
+    load_vspec,
+)
 
 
 class NameViolationException(Exception):
@@ -198,41 +204,6 @@ def validate_tree(root: VSSNode) -> None:
         exit(1)
 
 
-class OverlayDirectiveException(Exception):
-    pass
-
-
-def check_overlay_directives(
-    vspec: Path,
-    include_dirs: list[Path],
-    overlays: tuple[Path, ...],
-) -> None:
-    """
-    Validates 'overlay:' directives on overlay nodes against the base spec.
-
-    overlay: add  — the key must NOT exist in the base spec (creating a new node)
-    overlay: edit — the key MUST exist in the base spec (modifying an existing node)
-    (omitted)     — no check; node may exist or not (backward-compatible default)
-    """
-    base_keys = set(load_vspec(include_dirs, [vspec]).data.keys())
-    for overlay_path in overlays:
-        overlay_data = load_vspec([overlay_path.parent] + include_dirs, [overlay_path]).data
-        for key, value in overlay_data.items():
-            if not isinstance(value, dict):
-                continue
-            directive = value.get("overlay")
-            if directive == "add" and key in base_keys:
-                raise OverlayDirectiveException(
-                    f"Overlay '{overlay_path.name}': '{key}' declares 'overlay: add' "
-                    f"but already exists in the base spec"
-                )
-            if directive == "edit" and key not in base_keys:
-                raise OverlayDirectiveException(
-                    f"Overlay '{overlay_path.name}': '{key}' declares 'overlay: edit' "
-                    f"but does not exist in the base spec"
-                )
-
-
 def get_trees(
     vspec: Path,
     include_dirs: tuple[Path, ...] = (),
@@ -263,17 +234,13 @@ def get_trees(
         if include_dir not in unique_include_dirs:
             unique_include_dirs.append(include_dir)
 
-    if overlays:
-        try:
-            check_overlay_directives(vspec, unique_include_dirs, overlays)
-        except (InvalidSpecDuplicatedEntryException, InvalidSpecException, OverlayDirectiveException) as e:
-            log.critical(e)
-            exit(1)
-
     try:
         types_root = get_types_root(types, unique_include_dirs)
-        vspec_data = load_vspec(unique_include_dirs, [vspec] + list(overlays))
-    except (InvalidSpecDuplicatedEntryException, InvalidSpecException) as e:
+        vspec_data = load_vspec(unique_include_dirs, [vspec])
+        if overlays:
+            overlay_data = load_vspec(unique_include_dirs, list(overlays))
+            apply_overlay(vspec_data, overlay_data)
+    except (InvalidSpecDuplicatedEntryException, InvalidSpecException, OverlayDirectiveException) as e:
         log.critical(e)
         exit(1)
 
