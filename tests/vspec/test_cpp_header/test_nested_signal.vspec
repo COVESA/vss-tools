@@ -1,0 +1,25 @@
+Vehicle:
+  type: branch
+  description: Top branch.
+
+Vehicle.Body:
+  type: branch
+  description: Body branch.
+
+Vehicle.Body.Lights:
+  type: branch
+  description: Lights branch.
+
+Vehicle.Body.Lights.IsOn:
+  type: actuator
+  datatype: boolean
+  description: Is the light on.
+
+Vehicle.Cabin:
+  type: branch
+  description: Cabin branch.
+
+Vehicle.Cabin.Seat:
+  type: sensor
+  datatype: uint8
+  description: Seat position.

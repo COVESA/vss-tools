@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <limits>
 
-namespace vss {
+namespace {{ namespace }} {
 
 constexpr double kNoValue = std::numeric_limits<double>::quiet_NaN();
 
@@ -81,7 +81,9 @@ enum class CppType : uint8_t {
 
 enum class Unit : uint8_t {
     kNone = 0,
-    kKm,
+{% for member in units %}
+    {{ member }},
+{% endfor %}
 };
 
 struct Signal {
@@ -97,58 +99,35 @@ struct Signal {
     const char* const default_value;
 };
 
-constexpr Signal A_Speed = {
-    "A.Speed",
-    NodeType::kSensor,
-    DataType::kFloat,
-    CppType::kFloat,
-    Unit::kKm,
-    "Vehicle speed.",
-    0.0,
-    300.0,
+{% for signal in signals %}
+{% if signal.allowed %}
+constexpr const char* {{ signal.ident }}_kAllowed[] = {
+{% for v in signal.allowed %}
+    {{ v }},
+{% endfor %}
     nullptr,
-    nullptr,
+};
+{% endif %}
+constexpr Signal {{ signal.ident }} = {
+    {{ signal.fqn }},
+    NodeType::{{ signal.type_enum }},
+    DataType::{{ signal.datatype_enum }},
+    CppType::{{ signal.cpp_type_enum }},
+    Unit::{{ signal.unit_enum }},
+    {{ signal.description }},
+    {{ signal.min_value }},
+    {{ signal.max_value }},
+    {{ signal.allowed_ref }},
+    {{ signal.default_value }},
 };
 
-constexpr const char* A_GearMode_kAllowed[] = {
-    "PARK",
-    "REVERSE",
-    "NEUTRAL",
-    "DRIVE",
-    nullptr,
-};
-constexpr Signal A_GearMode = {
-    "A.GearMode",
-    NodeType::kActuator,
-    DataType::kString,
-    CppType::kConstCharPtr,
-    Unit::kNone,
-    "Gear selection mode.",
-    kNoValue,
-    kNoValue,
-    A_GearMode_kAllowed,
-    nullptr,
-};
-
-constexpr Signal A_Count = {
-    "A.Count",
-    NodeType::kAttribute,
-    DataType::kUint32,
-    CppType::kUint32T,
-    Unit::kNone,
-    "A count attribute.",
-    kNoValue,
-    kNoValue,
-    nullptr,
-    "0",
-};
-
+{% endfor %}
 constexpr Signal kSignals[] = {
-    A_Speed,
-    A_GearMode,
-    A_Count,
+{% for signal in signals %}
+    {{ signal.ident }},
+{% endfor %}
 };
 
 constexpr std::size_t kSignalCount = sizeof(kSignals) / sizeof(kSignals[0]);
 
-}  // namespace vss
+}  // namespace {{ namespace }}

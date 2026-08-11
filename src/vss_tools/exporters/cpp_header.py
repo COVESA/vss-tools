@@ -9,123 +9,137 @@
 # Export VSS tree as a C++ header-only file suitable for embedding in
 # binaries with no filesystem dependency (e.g. microcontrollers).
 
+import fnmatch
 import re
 from pathlib import Path
 
 import rich_click as click
 from anytree import PreOrderIter
+from jinja2 import Environment, FileSystemLoader
 
 import vss_tools.cli_options as clo
 from vss_tools import log
+from vss_tools.datatypes import Datatypes, is_array
 from vss_tools.main import get_trees
 from vss_tools.model import VSSDataBranch
 from vss_tools.tree import VSSNode
 
-_CPP_TYPE_MAP: dict[str, str] = {
+_TEMPLATE_DIR = Path(__file__).parent / "templates"
+_ENV = Environment(
+    loader=FileSystemLoader(_TEMPLATE_DIR),
+    trim_blocks=True,
+    lstrip_blocks=True,
+    keep_trailing_newline=True,
+)
+
+# Base (non-array) VSS datatype -> C++ type. Derived from the datatype names
+# themselves; vss_tools.datatypes.Datatypes is the single source of truth for
+# which datatypes exist, so adding one there is enough to cover it here too.
+_BASE_CPP_TYPE: dict[str, str] = {
     "uint8": "uint8_t",
-    "uint16": "uint16_t",
-    "uint32": "uint32_t",
-    "uint64": "uint64_t",
     "int8": "int8_t",
+    "uint16": "uint16_t",
     "int16": "int16_t",
+    "uint32": "uint32_t",
     "int32": "int32_t",
+    "uint64": "uint64_t",
     "int64": "int64_t",
     "float": "float",
     "double": "double",
     "boolean": "bool",
     "string": "const char*",
-    "uint8[]": "const uint8_t*",
-    "uint16[]": "const uint16_t*",
-    "uint32[]": "const uint32_t*",
-    "uint64[]": "const uint64_t*",
-    "int8[]": "const int8_t*",
-    "int16[]": "const int16_t*",
-    "int32[]": "const int32_t*",
-    "int64[]": "const int64_t*",
-    "float[]": "const float*",
-    "double[]": "const double*",
-    "boolean[]": "const bool*",
-    "string[]": "const char* const*",
     "numeric": "double",
-    "numeric[]": "const double*",
     "int": "int64_t",
 }
 
+
+def _cpp_type_for(datatype: str) -> str:
+    if is_array(datatype):
+        base = _BASE_CPP_TYPE[datatype.removesuffix("[]")]
+        # "const char*" arrays are "const char* const*", not "const const char**"
+        return "const char* const*" if base == "const char*" else f"const {base}*"
+    return _BASE_CPP_TYPE[datatype]
+
+
+_CPP_TYPE_MAP: dict[str, str] = {t[0]: _cpp_type_for(t[0]) for t in Datatypes.types}
+
 _NODE_TYPE_ENUM: dict[str, str] = {
-    "sensor": "VssNodeType::kSensor",
-    "actuator": "VssNodeType::kActuator",
-    "attribute": "VssNodeType::kAttribute",
-    "branch": "VssNodeType::kBranch",
+    "sensor": "kSensor",
+    "actuator": "kActuator",
+    "attribute": "kAttribute",
+    "branch": "kBranch",
 }
 
 _DATATYPE_ENUM: dict[str, str] = {
-    "uint8": "VssDataType::kUint8",
-    "int8": "VssDataType::kInt8",
-    "uint16": "VssDataType::kUint16",
-    "int16": "VssDataType::kInt16",
-    "uint32": "VssDataType::kUint32",
-    "int32": "VssDataType::kInt32",
-    "uint64": "VssDataType::kUint64",
-    "int64": "VssDataType::kInt64",
-    "float": "VssDataType::kFloat",
-    "double": "VssDataType::kDouble",
-    "boolean": "VssDataType::kBoolean",
-    "string": "VssDataType::kString",
-    "uint8[]": "VssDataType::kUint8Array",
-    "int8[]": "VssDataType::kInt8Array",
-    "uint16[]": "VssDataType::kUint16Array",
-    "int16[]": "VssDataType::kInt16Array",
-    "uint32[]": "VssDataType::kUint32Array",
-    "int32[]": "VssDataType::kInt32Array",
-    "uint64[]": "VssDataType::kUint64Array",
-    "int64[]": "VssDataType::kInt64Array",
-    "float[]": "VssDataType::kFloatArray",
-    "double[]": "VssDataType::kDoubleArray",
-    "boolean[]": "VssDataType::kBooleanArray",
-    "string[]": "VssDataType::kStringArray",
-    "numeric": "VssDataType::kNumeric",
-    "numeric[]": "VssDataType::kNumericArray",
-    "int": "VssDataType::kInt64",
+    "uint8": "kUint8",
+    "int8": "kInt8",
+    "uint16": "kUint16",
+    "int16": "kInt16",
+    "uint32": "kUint32",
+    "int32": "kInt32",
+    "uint64": "kUint64",
+    "int64": "kInt64",
+    "float": "kFloat",
+    "double": "kDouble",
+    "boolean": "kBoolean",
+    "string": "kString",
+    "uint8[]": "kUint8Array",
+    "int8[]": "kInt8Array",
+    "uint16[]": "kUint16Array",
+    "int16[]": "kInt16Array",
+    "uint32[]": "kUint32Array",
+    "int32[]": "kInt32Array",
+    "uint64[]": "kUint64Array",
+    "int64[]": "kInt64Array",
+    "float[]": "kFloatArray",
+    "double[]": "kDoubleArray",
+    "boolean[]": "kBooleanArray",
+    "string[]": "kStringArray",
+    "numeric": "kNumeric",
+    "numeric[]": "kNumericArray",
+    "int": "kInt64",
 }
 
 _CPP_TYPE_ENUM: dict[str, str] = {
-    "uint8_t": "VssCppType::kUint8T",
-    "int8_t": "VssCppType::kInt8T",
-    "uint16_t": "VssCppType::kUint16T",
-    "int16_t": "VssCppType::kInt16T",
-    "uint32_t": "VssCppType::kUint32T",
-    "int32_t": "VssCppType::kInt32T",
-    "uint64_t": "VssCppType::kUint64T",
-    "int64_t": "VssCppType::kInt64T",
-    "float": "VssCppType::kFloat",
-    "double": "VssCppType::kDouble",
-    "bool": "VssCppType::kBool",
-    "const char*": "VssCppType::kConstCharPtr",
-    "const uint8_t*": "VssCppType::kConstUint8TPtr",
-    "const int8_t*": "VssCppType::kConstInt8TPtr",
-    "const uint16_t*": "VssCppType::kConstUint16TPtr",
-    "const int16_t*": "VssCppType::kConstInt16TPtr",
-    "const uint32_t*": "VssCppType::kConstUint32TPtr",
-    "const int32_t*": "VssCppType::kConstInt32TPtr",
-    "const uint64_t*": "VssCppType::kConstUint64TPtr",
-    "const int64_t*": "VssCppType::kConstInt64TPtr",
-    "const float*": "VssCppType::kConstFloatPtr",
-    "const double*": "VssCppType::kConstDoublePtr",
-    "const bool*": "VssCppType::kConstBoolPtr",
-    "const char* const*": "VssCppType::kConstCharConstPtr",
+    "uint8_t": "kUint8T",
+    "int8_t": "kInt8T",
+    "uint16_t": "kUint16T",
+    "int16_t": "kInt16T",
+    "uint32_t": "kUint32T",
+    "int32_t": "kInt32T",
+    "uint64_t": "kUint64T",
+    "int64_t": "kInt64T",
+    "float": "kFloat",
+    "double": "kDouble",
+    "bool": "kBool",
+    "const char*": "kConstCharPtr",
+    "const uint8_t*": "kConstUint8TPtr",
+    "const int8_t*": "kConstInt8TPtr",
+    "const uint16_t*": "kConstUint16TPtr",
+    "const int16_t*": "kConstInt16TPtr",
+    "const uint32_t*": "kConstUint32TPtr",
+    "const int32_t*": "kConstInt32TPtr",
+    "const uint64_t*": "kConstUint64TPtr",
+    "const int64_t*": "kConstInt64TPtr",
+    "const float*": "kConstFloatPtr",
+    "const double*": "kConstDoublePtr",
+    "const bool*": "kConstBoolPtr",
+    "const char* const*": "kConstCharConstPtr",
 }
 
 
 def _unit_enum_member(unit: str) -> str:
-    """Convert a VSS unit string to a C++ enum member name prefixed with k."""
+    """
+    Convert a VSS unit string to a C++ enum member name prefixed with k.
+
+    Only handles characters that actually occur in spec/units.yaml today:
+    '/' (cm/s^2), '^' (m/s^2), '-' (mpg-uk). No VSS unit uses '°', '%',
+    '·' or '*' (those are spelled out, e.g. "percent", "degrees").
+    """
     s = unit
     s = s.replace("/", "_Per_")
     s = s.replace("^", "_Pow_")
-    s = s.replace("°", "Deg")
-    s = s.replace("%", "Pct")
     s = s.replace("-", "_Minus_")
-    s = s.replace("·", "_Mul_")
-    s = s.replace("*", "_Mul_")
     s = re.sub(r"[^A-Za-z0-9_]", "_", s)
     s = re.sub(r"_+", "_", s).strip("_")
     if s and s[0].isdigit():
@@ -156,7 +170,7 @@ def _identifier(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "_", path)
 
 
-def _emit_signal(node: VSSNode, unit_map: dict[str, str]) -> list[str]:
+def _signal_context(node: VSSNode, unit_map: dict[str, str]) -> dict[str, object]:
     data = node.get_vss_data()
     fqn = node.get_fqn()
     ident = _identifier(fqn)
@@ -168,174 +182,70 @@ def _emit_signal(node: VSSNode, unit_map: dict[str, str]) -> list[str]:
     allowed = getattr(data, "allowed", None)
     default = getattr(data, "default", None)
 
-    type_enum = _NODE_TYPE_ENUM.get(data.type.value, "VssNodeType::kSensor")
-    datatype_enum = _DATATYPE_ENUM.get(datatype, "VssDataType::kString") if datatype else "VssDataType::kString"
-    cpp_type_enum = _CPP_TYPE_ENUM.get(cpp_type_str, "VssCppType::kConstCharPtr")
-    unit_enum_val = unit_map.get(unit, "VssUnit::kNone") if unit else "VssUnit::kNone"
+    return {
+        "ident": ident,
+        "fqn": _str_literal(fqn),
+        "type_enum": _NODE_TYPE_ENUM.get(data.type.value, "kSensor"),
+        "datatype_enum": _DATATYPE_ENUM.get(datatype, "kString") if datatype else "kString",
+        "cpp_type_enum": _CPP_TYPE_ENUM.get(cpp_type_str, "kConstCharPtr"),
+        "unit_enum": unit_map.get(unit, "kNone") if unit else "kNone",
+        "description": _str_literal(data.description),
+        "min_value": _double_literal(min_val) if min_val is not None else "kNoValue",
+        "max_value": _double_literal(max_val) if max_val is not None else "kNoValue",
+        "allowed": [f'"{_escape(str(v))}"' for v in allowed] if allowed else None,
+        "allowed_ref": f"{ident}_kAllowed" if allowed else "nullptr",
+        "default_value": _str_literal(default),
+    }
 
-    lines: list[str] = []
 
-    if allowed:
-        lines.append(f"constexpr const char* {ident}_kAllowed[] = {{")
-        for v in allowed:
-            lines.append(f'    "{_escape(str(v))}",')
-        lines.append("    nullptr,")
-        lines.append("};")
-        allowed_ref = f"{ident}_kAllowed"
+def generate(
+    root: VSSNode,
+    namespace: str,
+    include_branches: bool,
+    signal_patterns: tuple[str, ...] = (),
+) -> str:
+    all_nodes = [n for n in PreOrderIter(root) if n.parent is not None]
+
+    if signal_patterns:
+        leaf_nodes = [
+            n
+            for n in all_nodes
+            if not isinstance(n.data, VSSDataBranch)
+            and any(fnmatch.fnmatch(n.get_fqn(), pattern) for pattern in signal_patterns)
+        ]
+        if not leaf_nodes:
+            log.warning(f"No signals matched --signal filter(s): {', '.join(signal_patterns)}")
+        emitted_nodes = leaf_nodes
+        if include_branches:
+            # Only pull in branches that are actual ancestors of a matched
+            # signal, not every branch in the tree - that would defeat the
+            # point of filtering for embedded/MCU memory footprint.
+            wanted_branches: set[VSSNode] = set()
+            for n in leaf_nodes:
+                parent = n.parent
+                while parent is not None and parent.parent is not None:
+                    wanted_branches.add(parent)
+                    parent = parent.parent
+            emitted_set = set(leaf_nodes) | wanted_branches
+            emitted_nodes = [n for n in all_nodes if n in emitted_set]
     else:
-        allowed_ref = "nullptr"
+        emitted_nodes = [n for n in all_nodes if include_branches or not isinstance(n.data, VSSDataBranch)]
 
-    lines.append(f"constexpr VssSignal {ident} = {{")
-    lines.append(f"    {_str_literal(fqn)},")
-    lines.append(f"    {type_enum},")
-    lines.append(f"    {datatype_enum},")
-    lines.append(f"    {cpp_type_enum},")
-    lines.append(f"    {unit_enum_val},")
-    lines.append(f"    {_str_literal(data.description)},")
-    lines.append(f"    {_double_literal(min_val) if min_val is not None else 'kNoValue'},")
-    lines.append(f"    {_double_literal(max_val) if max_val is not None else 'kNoValue'},")
-    lines.append(f"    {allowed_ref},")
-    lines.append(f"    {_str_literal(default)},")
-    lines.append("};")
-    return lines
-
-
-def generate(root: VSSNode, namespace: str, include_branches: bool) -> str:
-    leaf_nodes = [
-        n
-        for n in PreOrderIter(root)
-        if n.parent is not None and (include_branches or not isinstance(n.data, VSSDataBranch))
-    ]
-
-    signal_idents = [_identifier(n.get_fqn()) for n in leaf_nodes]
-
-    # Collect ordered unique units from the signal set
-    seen_units: dict[str, str] = {}  # unit_str → enum member name
-    for node in leaf_nodes:
+    # Collect ordered unique units from the emitted signal set
+    seen_units: dict[str, str] = {}  # unit_str -> enum member name
+    for node in emitted_nodes:
         u = getattr(node.get_vss_data(), "unit", None)
         if u and u not in seen_units:
             seen_units[u] = _unit_enum_member(u)
 
-    unit_map = {u: f"VssUnit::{m}" for u, m in seen_units.items()}
+    signals = [_signal_context(node, seen_units) for node in emitted_nodes]
 
-    out: list[str] = []
-    out.append("// SPDX-FileCopyrightText: Copyright (c) 2026 Contributors to COVESA")
-    out.append("// SPDX-License-Identifier: MPL-2.0")
-    out.append("")
-    out.append("// Auto-generated from the Vehicle Signal Specification.")
-    out.append("// Do not edit manually.")
-    out.append("")
-    out.append("#pragma once")
-    out.append("")
-    out.append("#include <cstddef>")
-    out.append("#include <cstdint>")
-    out.append("#include <limits>")
-    out.append("")
-    out.append(f"namespace {namespace} {{")
-    out.append("")
-    out.append("constexpr double kNoValue = std::numeric_limits<double>::quiet_NaN();")
-    out.append("")
-    out.append("enum class VssNodeType : uint8_t {")
-    out.append("    kSensor = 0,")
-    out.append("    kActuator,")
-    out.append("    kAttribute,")
-    out.append("    kBranch,")
-    out.append("};")
-    out.append("")
-    out.append("enum class VssDataType : uint8_t {")
-    out.append("    kUnknown = 0,")
-    out.append("    kUint8,")
-    out.append("    kInt8,")
-    out.append("    kUint16,")
-    out.append("    kInt16,")
-    out.append("    kUint32,")
-    out.append("    kInt32,")
-    out.append("    kUint64,")
-    out.append("    kInt64,")
-    out.append("    kFloat,")
-    out.append("    kDouble,")
-    out.append("    kBoolean,")
-    out.append("    kString,")
-    out.append("    kUint8Array,")
-    out.append("    kInt8Array,")
-    out.append("    kUint16Array,")
-    out.append("    kInt16Array,")
-    out.append("    kUint32Array,")
-    out.append("    kInt32Array,")
-    out.append("    kUint64Array,")
-    out.append("    kInt64Array,")
-    out.append("    kFloatArray,")
-    out.append("    kDoubleArray,")
-    out.append("    kBooleanArray,")
-    out.append("    kStringArray,")
-    out.append("    kNumeric,")
-    out.append("    kNumericArray,")
-    out.append("};")
-    out.append("")
-    out.append("enum class VssCppType : uint8_t {")
-    out.append("    kUnknown = 0,")
-    out.append("    kUint8T,")
-    out.append("    kInt8T,")
-    out.append("    kUint16T,")
-    out.append("    kInt16T,")
-    out.append("    kUint32T,")
-    out.append("    kInt32T,")
-    out.append("    kUint64T,")
-    out.append("    kInt64T,")
-    out.append("    kFloat,")
-    out.append("    kDouble,")
-    out.append("    kBool,")
-    out.append("    kConstCharPtr,")
-    out.append("    kConstUint8TPtr,")
-    out.append("    kConstInt8TPtr,")
-    out.append("    kConstUint16TPtr,")
-    out.append("    kConstInt16TPtr,")
-    out.append("    kConstUint32TPtr,")
-    out.append("    kConstInt32TPtr,")
-    out.append("    kConstUint64TPtr,")
-    out.append("    kConstInt64TPtr,")
-    out.append("    kConstFloatPtr,")
-    out.append("    kConstDoublePtr,")
-    out.append("    kConstBoolPtr,")
-    out.append("    kConstCharConstPtr,")
-    out.append("};")
-    out.append("")
-    out.append("enum class VssUnit : uint8_t {")
-    out.append("    kNone = 0,")
-    for member in seen_units.values():
-        out.append(f"    {member},")
-    out.append("};")
-    out.append("")
-    out.append("struct VssSignal {")
-    out.append("    const char* const path;")
-    out.append("    VssNodeType type;")
-    out.append("    VssDataType datatype;")
-    out.append("    VssCppType cpp_type;")
-    out.append("    VssUnit unit;")
-    out.append("    const char* const description;")
-    out.append("    double min_value;   // kNoValue if unset")
-    out.append("    double max_value;   // kNoValue if unset")
-    out.append("    const char* const* const allowed_values;  // null-terminated, or nullptr")
-    out.append("    const char* const default_value;")
-    out.append("};")
-    out.append("")
-
-    for node in leaf_nodes:
-        for line in _emit_signal(node, unit_map):
-            out.append(line)
-        out.append("")
-
-    out.append("constexpr VssSignal kSignals[] = {")
-    for ident in signal_idents:
-        out.append(f"    {ident},")
-    out.append("};")
-    out.append("")
-    out.append("constexpr std::size_t kSignalCount = sizeof(kSignals) / sizeof(kSignals[0]);")
-    out.append("")
-    out.append(f"}}  // namespace {namespace}")
-    out.append("")
-
-    return "\n".join(out)
+    template = _ENV.get_template("cpp_header.hpp.j2")
+    return template.render(
+        namespace=namespace,
+        units=list(seen_units.values()),
+        signals=signals,
+    )
 
 
 @click.command()
@@ -357,6 +267,17 @@ def generate(root: VSSNode, namespace: str, include_branches: bool) -> str:
     show_default=True,
     help="Include branch nodes in addition to leaf signals.",
 )
+@click.option(
+    "--signal",
+    "signals",
+    multiple=True,
+    default=(),
+    help=(
+        "Restrict output to specific signal paths (dotted, glob '*' supported, e.g. "
+        "'Vehicle.ADAS.*'). Repeatable. If --include-branches is set, only the "
+        "ancestor branches of matched signals are included. Omit to export every signal."
+    ),
+)
 def cli(
     vspec: Path,
     output: Path,
@@ -370,6 +291,7 @@ def cli(
     types: tuple[Path],
     namespace: str,
     include_branches: bool,
+    signals: tuple[str],
     strict_exceptions: Path | None,
 ):
     """
@@ -388,6 +310,6 @@ def cli(
         overlays=overlays,
         strict_exceptions_file=strict_exceptions,
     )
-    content = generate(tree, namespace, include_branches)
+    content = generate(tree, namespace, include_branches, signals)
     output.write_text(content, encoding="utf-8")
     log.info(f"C++ header written to {output}")
