@@ -62,6 +62,45 @@ class NodeType(str, Enum):
     ACTUATOR = "actuator"
     STRUCT = "struct"
     PROPERTY = "property"
+    # HIM "Data" profile node types
+    RO = "ro"
+    RW = "rw"
+    # HIM "Service" profile node types
+    PROCEDURE = "procedure"
+    IOSTRUCT = "iostruct"
+    SYMLINK = "symlink"
+
+
+class Profile(str, Enum):
+    """
+    The HIM (Hierarchical Information Model, see
+    https://github.com/COVESA/hierarchical_information_model) profile
+    that determines which node 'type' values are allowed and how nodes
+    may be nested. 'vehicle-data' is the historic/default VSS rule set.
+    """
+
+    VEHICLE_DATA = "vehicle-data"
+    DATA = "data"
+    SERVICE = "service"
+
+
+# Node types that are part of the HIM "Common"/"Type Definition" rule
+# sets and are therefore usable regardless of the active profile:
+# - branch/struct/property are needed to build a 'Types' tree (loaded via
+#   '--types') in any profile.
+# - attribute is needed both for the 'Types' tree version node and for the
+#   'Version' node of a 'procedure' in the 'service' profile.
+_COMMON_NODE_TYPES = {NodeType.BRANCH, NodeType.STRUCT, NodeType.PROPERTY, NodeType.ATTRIBUTE}
+
+PROFILE_ALLOWED_TYPES: dict[Profile, set[NodeType]] = {
+    Profile.VEHICLE_DATA: _COMMON_NODE_TYPES | {NodeType.SENSOR, NodeType.ACTUATOR},
+    Profile.DATA: _COMMON_NODE_TYPES | {NodeType.RO, NodeType.RW},
+    Profile.SERVICE: _COMMON_NODE_TYPES | {NodeType.PROCEDURE, NodeType.IOSTRUCT, NodeType.SYMLINK},
+}
+
+# Active profile, selected via the top level '--profile' CLI option
+# (see 'vss_tools.cli'). Defaults to the historic VSS/'vehicle-data' rule set.
+active_profile: Profile = Profile.VEHICLE_DATA
 
 
 class VSSRaw(BaseModel):
@@ -127,6 +166,17 @@ class VSSData(VSSRaw):
             raise ValueError(f"'{v}' is not a valid 'constUID'")
         return v
 
+    @field_validator("type")
+    @classmethod
+    def check_type_allowed_in_profile(cls, v: NodeType) -> NodeType:
+        allowed = PROFILE_ALLOWED_TYPES[active_profile]
+        if v not in allowed:
+            raise ValueError(
+                f"'{v.value}' is not a valid 'type' for the '{active_profile.value}' profile. "
+                f"Allowed types: {sorted(t.value for t in allowed)}"
+            )
+        return v
+
     @model_validator(mode="after")
     def ensure_description(self) -> Self:
         """Give better explanation for empty description."""
@@ -138,6 +188,21 @@ class VSSData(VSSRaw):
         return self
 
 
+def normalize_instances(v: Any) -> list[str]:
+    """
+    Instances can be specified as a string or a list
+    and even of a list of lists.
+    Normalizing it to be a list
+    """
+    if v is None:
+        return []
+    if not (isinstance(v, str) or isinstance(v, list)):
+        raise ValueError(f"'{v}' is not a valid 'instances' content")
+    if isinstance(v, str):
+        return [v]
+    return v
+
+
 class VSSDataBranch(VSSData):
     instances: Any = None
     aggregate: bool = False
@@ -146,18 +211,7 @@ class VSSDataBranch(VSSData):
     @field_validator("instances")
     @classmethod
     def fill_instances(cls, v: Any) -> list[str]:
-        """
-        Instances can be specified as a string or a list
-        and even of a list of lists.
-        Normalizing it to be a list
-        """
-        if v is None:
-            return []
-        if not (isinstance(v, str) or isinstance(v, list)):
-            raise ValueError(f"'{v}' is not a valid 'instances' content")
-        if isinstance(v, str):
-            return [v]
-        return v
+        return normalize_instances(v)
 
 
 class VSSUnit(BaseModel):
@@ -504,13 +558,82 @@ class VSSDataAttribute(VSSDataDatatype):
     pass
 
 
+class VSSDataRo(VSSDataDatatype):
+    """HIM 'Data' profile read-only node (HIM node type name 'ro')."""
+
+    pass
+
+
+class VSSDataRw(VSSDataDatatype):
+    """HIM 'Data' profile read-write node (HIM node type name 'rw')."""
+
+    pass
+
+
+class VSSDataIostruct(VSSData):
+    """
+    HIM 'Service' profile 'iostruct' node.
+    Must be named 'Input' or 'Output', must have a 'procedure' or
+    'branch' parent, and must have at least one 'property' or
+    'symlink' child. Name/parent/child-count/child-type rules are
+    enforced in 'vss_tools.main.get_invalid_node_msgs'.
+    """
+
+    @model_validator(mode="after")
+    def check_iostruct_name(self) -> Self:
+        name = self.fqn.split(".")[-1] if self.fqn else None
+        if name is not None and name not in ("Input", "Output"):
+            raise ValueError(f"'iostruct' node must be named 'Input' or 'Output', got '{name}'")
+        return self
+
+
+class VSSDataProcedure(VSSData):
+    """
+    HIM 'Service' profile 'procedure' node, representing a microservice.
+    """
+
+    instances: Any = None
+    nativeRate: int | None = None
+    timeToLive: int | None = None
+
+    @field_validator("instances")
+    @classmethod
+    def fill_instances(cls, v: Any) -> list[str]:
+        return normalize_instances(v)
+
+    @field_validator("nativeRate", "timeToLive")
+    @classmethod
+    def check_non_negative(cls, v: int | None) -> int | None:
+        if v is not None and v < 0:
+            raise ValueError("must be a non-negative integer")
+        return v
+
+
+class VSSDataSymlink(VSSData):
+    """
+    HIM 'Service' profile 'symlink' node. Links an 'Input'/'Output'
+    parameter to a leaf node in a HIM tree of information type 'Data'.
+    Cross-tree resolution of 'path'/'domain'/'version' is out of scope
+    for vss-tools (single-tree tool) and is not validated here.
+    """
+
+    path: str
+    domain: str
+    version: str
+
+
 TYPE_CLASS_MAP = {
     NodeType.BRANCH: VSSDataBranch,
     NodeType.ATTRIBUTE: VSSDataAttribute,
     NodeType.SENSOR: VSSDataSensor,
-    NodeType.ACTUATOR: VSSDataSensor,
+    NodeType.ACTUATOR: VSSDataActuator,
     NodeType.STRUCT: VSSDataStruct,
     NodeType.PROPERTY: VSSDataProperty,
+    NodeType.RO: VSSDataRo,
+    NodeType.RW: VSSDataRw,
+    NodeType.PROCEDURE: VSSDataProcedure,
+    NodeType.IOSTRUCT: VSSDataIostruct,
+    NodeType.SYMLINK: VSSDataSymlink,
 }
 
 

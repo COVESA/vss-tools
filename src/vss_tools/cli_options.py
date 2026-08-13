@@ -11,7 +11,7 @@ from pathlib import Path
 import rich_click as click
 from rich_click import option
 
-from vss_tools.model import get_all_model_fields
+from vss_tools.model import Profile, get_all_model_fields
 from vss_tools.strict import StrictOption
 
 
@@ -39,6 +39,20 @@ log_file_opt = click.option(
     "--log-file",
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     help="Log file.",
+)
+
+profile_opt = click.option(
+    "--profile",
+    type=click.Choice([p.value for p in Profile], case_sensitive=False),
+    default=Profile.VEHICLE_DATA.value,
+    show_default=True,
+    help="""
+        HIM (Hierarchical Information Model) profile to validate against.
+        'vehicle-data' is the historic VSS rule set (sensor/actuator/attribute).
+        'data' uses the HIM Data rule set (ro/rw).
+        'service' uses the HIM Service rule set (procedure/iostruct/symlink).
+        See https://github.com/COVESA/hierarchical_information_model
+    """,
 )
 
 include_dirs_opt = option(

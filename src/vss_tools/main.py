@@ -17,9 +17,13 @@ from vss_tools.datatypes import (
     dynamic_units,
 )
 from vss_tools.model import (
+    VSSDataAttribute,
     VSSDataBranch,
+    VSSDataIostruct,
+    VSSDataProcedure,
     VSSDataProperty,
     VSSDataStruct,
+    VSSDataSymlink,
     get_all_model_fields,
 )
 from vss_tools.strict import StrictExceptions, StrictOption, load_strict_exceptions
@@ -163,9 +167,22 @@ def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode
 
 def get_invalid_node_msgs(root: VSSNode) -> list[str]:
     """
-    Validating whether tree nodes have correct parents
-    All nodes need 'branch' parents except 'properties'.
-    Properties need a 'struct' as a parent.
+    Validating whether tree nodes have correct parents.
+    Rules are common across profiles (see 'vss_tools.model' for the
+    node types allowed per profile), since a given data/type/service
+    tree can only contain node types allowed for the active profile
+    in the first place:
+
+    - 'property' needs a 'struct' parent (Type Definition tree, any
+      profile) or an 'iostruct' parent ('service' profile).
+    - 'struct' needs a 'struct' or 'branch' parent.
+    - 'iostruct' needs a 'procedure' or 'branch' parent.
+    - 'symlink' needs an 'iostruct' parent.
+    - 'attribute' needs a 'branch' parent, or ('service' profile) a
+      'procedure' parent (the mandatory 'Version' node of a procedure).
+    - All other node types (branch, sensor, actuator, ro, rw,
+      procedure) need a 'branch' parent.
+
     Returning error msgs
     """
     invalid_nodes = []
@@ -173,14 +190,24 @@ def get_invalid_node_msgs(root: VSSNode) -> list[str]:
         ok = True
         if node.parent is None:
             continue
+        parent_data = node.parent.data
         if isinstance(node.data, VSSDataProperty):
-            if not isinstance(node.parent.data, VSSDataStruct):
+            if not isinstance(parent_data, (VSSDataStruct, VSSDataIostruct)):
                 ok = False
         elif isinstance(node.data, VSSDataStruct):
-            if not isinstance(node.parent.data, VSSDataStruct) and not isinstance(node.parent.data, VSSDataBranch):
+            if not isinstance(parent_data, (VSSDataStruct, VSSDataBranch)):
+                ok = False
+        elif isinstance(node.data, VSSDataIostruct):
+            if not isinstance(parent_data, (VSSDataProcedure, VSSDataBranch)):
+                ok = False
+        elif isinstance(node.data, VSSDataSymlink):
+            if not isinstance(parent_data, VSSDataIostruct):
+                ok = False
+        elif isinstance(node.data, VSSDataAttribute):
+            if not isinstance(parent_data, (VSSDataBranch, VSSDataProcedure)):
                 ok = False
         else:
-            if not isinstance(node.parent.data, VSSDataBranch):
+            if not isinstance(parent_data, VSSDataBranch):
                 ok = False
         if not ok:
             entry = f"'{node.get_fqn()} ({node.data.__class__.__name__})',"
