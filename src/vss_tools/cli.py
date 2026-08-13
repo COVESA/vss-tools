@@ -14,11 +14,16 @@ import rich_click as click
 import vss_tools.cli_options as clo
 import vss_tools.model as model
 from vss_tools import log
+from vss_tools.compose import cli as compose_cli
+from vss_tools.diff_cmd import cli as diff_cli
 from vss_tools.lazy_group import LazyGroup
 from vss_tools.model import Profile
 
 
-@click.group(context_settings={"auto_envvar_prefix": "vss_tools"}, invoke_without_command=True)
+@click.group(
+    context_settings={"auto_envvar_prefix": "vss_tools"},
+    invoke_without_command=True,
+)
 @clo.log_level_opt
 @clo.log_file_opt
 @clo.profile_opt
@@ -40,6 +45,10 @@ def cli(ctx: click.Context, log_level: str, log_file: Path, profile: str):
     model.active_profile = Profile(profile)
     if model.active_profile is not Profile.VEHICLE_DATA:
         log.info(f"Using HIM profile: '{model.active_profile.value}'")
+
+
+cli.add_command(compose_cli, "compose")
+cli.add_command(diff_cli, "diff")
 
 
 @cli.group(

@@ -33,15 +33,17 @@ def load_units_or_quantities(
             continue
         log.info(f"Loaded '{class_type.__name__}', file={file.absolute()}, elements={len(content)}")
         for k, v in content.items():
+            k_original = k
+            k = k.lower()
             if v is None:
                 raise MalformedDictException(f"'{class_type.__name__}', '{k}' is 'None'")
             overwrite = False
             if k in data:
                 overwrite = True
             try:
-                # For VSSUnit, inject the key from the YAML dictionary key
+                # For VSSUnit, inject the canonical key (original casing) from the YAML key
                 if class_type == VSSUnit and isinstance(v, dict):
-                    v["key"] = k
+                    v["key"] = k_original
                 val = class_type(**v)
                 if overwrite:
                     log.warning(

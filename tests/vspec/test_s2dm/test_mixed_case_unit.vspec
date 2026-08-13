@@ -1,0 +1,19 @@
+Vehicle:
+  type: branch
+  description: Top-level vehicle branch.
+
+Vehicle.Engine:
+  type: branch
+  description: Engine signals.
+
+Vehicle.Engine.Speed:
+  datatype: uint16
+  type: sensor
+  unit: rpm
+  description: Engine rotational speed.
+
+Vehicle.Engine.Power:
+  datatype: uint16
+  type: sensor
+  unit: W
+  description: Engine power output in watts.

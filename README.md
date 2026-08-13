@@ -52,7 +52,7 @@ vspec export --help
 vspec export json --help
 ```
 
-Please check [here](./docs/vspec.md) for generic info about exporters and their arguments
+Please check [here](./docs/export.md) for generic info about exporters and their arguments
 as well as [here](./docs/vspec_arch.md) for design decision, architecture and limitations.
 
 ### HIM Profiles
@@ -68,6 +68,13 @@ vspec --profile service export json --vspec my_service.vspec --output my_service
 ```
 
 See [vspec_arch.md](./docs/vspec_arch.md#him-profiles) for details.
+vss-tools provides three top-level commands:
+
+| Command | Description | Documentation |
+|---|---|---|
+| `vspec export` | Convert a vspec model to a target format (JSON, YAML, Protobuf, …) | [export.md](./docs/export.md) |
+| `vspec compose` | Bundle a vspec model and all its dependencies into a self-contained snapshot folder | [compose.md](./docs/compose.md) |
+| `vspec diff` | Compare two compose snapshots and report every change as structured JSON | [diff.md](./docs/diff.md) |
 
 ## Compatibility with VSS
 

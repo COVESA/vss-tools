@@ -1,0 +1,10 @@
+# No-change snapshot: identical model
+A:
+  description: Root branch.
+  type: branch
+
+A.Speed:
+  datatype: float
+  description: Vehicle speed.
+  type: sensor
+  unit: km/h

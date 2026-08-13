@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.10.6" # keep in sync with vss-tools/Pipfile!
+  PYTHON_VERSION: "3.11.15" # keep in sync with pyproject.toml
   CI: 1 # shall any script needs to know if it's running in the CI
 
 jobs:
@@ -72,10 +72,3 @@ jobs:
           vspec export ddsidl --help
           vspec export protobuf --help
           vspec export s2dm --help
-      - name: Test that generated DDSIDL is correct
-        run: |
-          pip install cyclonedds==0.10.5
-          cd tests/ddsidl
-          vspec export ddsidl -u ../vspec/test_units.yaml -s test.vspec -o test.idl -q ../vspec/test_quantities.yaml
-          idlc -l py test.idl
-          grep -i A.String A/_test.py

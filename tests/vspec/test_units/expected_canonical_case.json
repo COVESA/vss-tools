@@ -1,0 +1,14 @@
+{
+  "A": {
+    "children": {
+      "SignalEnergy": {
+        "datatype": "float",
+        "description": "Energy in kilowatt hours.",
+        "type": "sensor",
+        "unit": "kWh"
+      }
+    },
+    "description": "Branch A.",
+    "type": "branch"
+  }
+}

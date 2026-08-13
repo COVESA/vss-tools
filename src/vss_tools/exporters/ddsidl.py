@@ -160,7 +160,8 @@ def get_allowed_enum_literal(name: str):
     return name
 
 
-idl_file_buffer = []
+idl_file_buffer: list[str] = []
+
 
 dataTypesMap_covesa_dds = {
     "uint8": "octet",
@@ -291,10 +292,10 @@ def export_node(node: VSSNode, generate_all_idl_features: bool) -> None:
         idl_file_buffer.append(
             ("" if generate_all_idl_features else "//") + 'const string type ="' + str(data.type.value) + '";'
         )
-
-        idl_file_buffer.append(
-            ("" if generate_all_idl_features else "//") + 'const string description="' + data.description + '";'
-        )
+        if data.description is not None:
+            idl_file_buffer.append(
+                ("" if generate_all_idl_features else "//") + 'const string description="' + data.description + '";'
+            )
         idl_file_buffer.append("};")
 
 

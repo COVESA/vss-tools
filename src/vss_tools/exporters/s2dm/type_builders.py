@@ -453,7 +453,7 @@ def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) 
     if not unit:
         return {}
 
-    unit_data = dynamic_units[unit]
+    unit_data = dynamic_units[unit.lower()]
     if not unit_data.quantity:
         return {}
 

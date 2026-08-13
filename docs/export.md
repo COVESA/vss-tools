@@ -100,7 +100,7 @@ Instead instance information will be kept as additional information for the bran
 
 ### -e, --extended-attributes
 
-See section on [overlays](vspec.md#handling-of-overlays-and-extensions) below
+See section on [overlays](export.md#handling-of-overlays-and-extensions) below
 
 ### --strict-exceptions
 

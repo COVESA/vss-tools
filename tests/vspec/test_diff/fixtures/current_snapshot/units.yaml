@@ -1,0 +1,14 @@
+# Units snapshot — current (km/h removed, percent added)
+m/s:
+  allowed-datatypes:
+  - float
+  definition: Metres per second
+  quantity: speed
+  unit: m/s
+
+percent:
+  allowed-datatypes:
+  - float
+  definition: Percentage
+  quantity: relation
+  unit: percent

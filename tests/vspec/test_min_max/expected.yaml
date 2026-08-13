@@ -1,87 +1,87 @@
 A:
-  description: Branch A.
   type: branch
-
-A.FloatMaxZero:
-  datatype: float
-  description: Max Zero.
-  max: 0.0
-  type: sensor
-
-A.FloatMaxZeroInt:
-  datatype: float
-  description: Max Zero.
-  max: 0
-  type: sensor
-
-A.FloatMinMax:
-  datatype: float
-  description: Min & Max.
-  max: 236723.4
-  min: -165.56323
-  type: sensor
-
-A.FloatMinZero:
-  datatype: float
-  description: Min Zero.
-  min: 0.0
-  type: sensor
-
-A.FloatMinZeroInt:
-  datatype: float
-  description: Min Zero.
-  min: 0
-  type: sensor
-
-A.FloatNoMinMax:
-  datatype: float
-  description: No Min Max.
-  type: sensor
-
-A.FloatOnlyMax:
-  datatype: float
-  description: Only Max.
-  max: 32.3
-  type: sensor
-
-A.FloatOnlyMin:
-  datatype: float
-  description: Only Min.
-  min: -2.5
-  type: sensor
-
-A.IntMaxZero:
-  datatype: int8
-  description: Max Zero.
-  max: 0
-  type: sensor
-
-A.IntMinMax:
-  datatype: int8
-  description: Min & Max.
-  max: 6
-  min: 3
-  type: sensor
-
-A.IntMinZero:
-  datatype: int8
-  description: Min Zero.
-  min: 0
-  type: sensor
+  description: Branch A.
 
 A.IntNoMinMax:
-  datatype: int8
-  description: No Min Max.
   type: sensor
+  description: No Min Max.
+  datatype: int8
 
 A.IntOnlyMax:
-  datatype: int8
-  description: Only Max.
-  max: 32
   type: sensor
+  description: Only Max.
+  datatype: int8
+  max: 32
 
 A.IntOnlyMin:
-  datatype: int8
-  description: Only Min.
-  min: 3
   type: sensor
+  description: Only Min.
+  datatype: int8
+  min: 3
+
+A.IntMinMax:
+  type: sensor
+  description: Min & Max.
+  datatype: int8
+  min: 3
+  max: 6
+
+A.IntMaxZero:
+  type: sensor
+  description: Max Zero.
+  datatype: int8
+  max: 0
+
+A.IntMinZero:
+  type: sensor
+  description: Min Zero.
+  datatype: int8
+  min: 0
+
+A.FloatNoMinMax:
+  type: sensor
+  description: No Min Max.
+  datatype: float
+
+A.FloatOnlyMax:
+  type: sensor
+  description: Only Max.
+  datatype: float
+  max: 32.3
+
+A.FloatOnlyMin:
+  type: sensor
+  description: Only Min.
+  datatype: float
+  min: -2.5
+
+A.FloatMinMax:
+  type: sensor
+  description: Min & Max.
+  datatype: float
+  min: -165.56323
+  max: 236723.4
+
+A.FloatMaxZero:
+  type: sensor
+  description: Max Zero.
+  datatype: float
+  max: 0.0
+
+A.FloatMinZero:
+  type: sensor
+  description: Min Zero.
+  datatype: float
+  min: 0.0
+
+A.FloatMaxZeroInt:
+  type: sensor
+  description: Max Zero.
+  datatype: float
+  max: 0
+
+A.FloatMinZeroInt:
+  type: sensor
+  description: Min Zero.
+  datatype: float
+  min: 0

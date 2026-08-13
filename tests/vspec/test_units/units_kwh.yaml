@@ -1,0 +1,5 @@
+kWh:
+  unit: kilowatt hour
+  definition: Energy measured in kilowatt hours
+  quantity: volume
+  allowed-datatypes: [numeric]

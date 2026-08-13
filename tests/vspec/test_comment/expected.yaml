@@ -1,81 +1,81 @@
 A:
-  description: Branch A.
   type: branch
+  description: Branch A.
+
+A.SingleLineNotQuoted:
+  type: sensor
+  description: A sensor.
+  comment: January is a great month!
+  datatype: float
+  unit: km
+
+A.SingleLineInternalQuotes:
+  type: sensor
+  description: A sensor.
+  comment: February is a "great" month!
+  datatype: float
+  unit: km
+
+A.SingleLineQuoted:
+  type: sensor
+  description: A sensor.
+  comment: March is a great month!
+  datatype: float
+  unit: km
+
+A.SingleLineQuotedInternalQuotes:
+  type: sensor
+  description: A sensor.
+  comment: April is a "great" month!
+  datatype: float
+  unit: km
+
+A.SingleLineComma:
+  type: sensor
+  description: A sensor.
+  comment: May, is a great month!
+  datatype: float
+  unit: km
+
+A.SingleLineCommaQuoted:
+  type: sensor
+  description: A sensor.
+  comment: June, is a great month!
+  datatype: float
+  unit: km
 
 A.MultiLineCommaNotQuoted:
+  type: sensor
+  description: A sensor.
   comment: July, is a great month!
   datatype: float
-  description: A sensor.
-  type: sensor
   unit: km
 
 A.MultiLineCommaQuoted:
+  type: sensor
+  description: A sensor.
   comment: August, is a great month!
   datatype: float
-  description: A sensor.
-  type: sensor
-  unit: km
-
-A.MultiLineLiteralStyleQuote:
-  comment: 'November,
-
-    is a "great" month!
-
-    '
-  datatype: float
-  description: A sensor.
-  type: sensor
   unit: km
 
 A.MultiLineStyleInitialBreak:
+  type: sensor
+  description: A sensor.
   comment: 'October,
 
     is a great month!
 
     '
   datatype: float
-  description: A sensor.
-  type: sensor
   unit: km
 
-A.SingleLineComma:
-  comment: May, is a great month!
-  datatype: float
-  description: A sensor.
+A.MultiLineLiteralStyleQuote:
   type: sensor
-  unit: km
+  description: A sensor.
+  comment: 'November,
 
-A.SingleLineCommaQuoted:
-  comment: June, is a great month!
-  datatype: float
-  description: A sensor.
-  type: sensor
-  unit: km
+    is a "great" month!
 
-A.SingleLineInternalQuotes:
-  comment: February is a "great" month!
+    '
   datatype: float
-  description: A sensor.
-  type: sensor
-  unit: km
-
-A.SingleLineNotQuoted:
-  comment: January is a great month!
-  datatype: float
-  description: A sensor.
-  type: sensor
-  unit: km
-
-A.SingleLineQuoted:
-  comment: March is a great month!
-  datatype: float
-  description: A sensor.
-  type: sensor
-  unit: km
-
-A.SingleLineQuotedInternalQuotes:
-  comment: April is a "great" month!
-  datatype: float
-  description: A sensor.
-  type: sensor
   unit: km
