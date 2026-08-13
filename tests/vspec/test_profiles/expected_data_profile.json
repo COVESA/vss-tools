@@ -1,0 +1,19 @@
+{
+  "Occupant": {
+    "children": {
+      "LocalTemperature": {
+        "datatype": "float",
+        "description": "The vehicle occupant-local temperature setting.",
+        "type": "rw",
+        "unit": "celsius"
+      },
+      "Name": {
+        "datatype": "string",
+        "description": "The name of a vehicle occupant.",
+        "type": "ro"
+      }
+    },
+    "description": "Occupant root branch.",
+    "type": "branch"
+  }
+}

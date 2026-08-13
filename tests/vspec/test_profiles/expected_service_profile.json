@@ -1,0 +1,38 @@
+{
+  "VehicleService": {
+    "children": {
+      "GetPosition": {
+        "children": {
+          "Output": {
+            "children": {
+              "Latitude": {
+                "datatype": "float",
+                "description": "Latitude output.",
+                "type": "property"
+              },
+              "LatitudeLink": {
+                "description": "Symlink to a VSS tree leaf.",
+                "domain": "Automotive.Vehicle.Car.Data",
+                "path": "Vehicle.CurrentLocation.Latitude",
+                "type": "symlink",
+                "version": "3.0.0+"
+              }
+            },
+            "description": "Output parameters of GetPosition.",
+            "type": "iostruct"
+          },
+          "Version": {
+            "datatype": "string",
+            "default": "0.0.1",
+            "description": "The version of the GetPosition procedure.",
+            "type": "attribute"
+          }
+        },
+        "description": "Gets the current position.",
+        "type": "procedure"
+      }
+    },
+    "description": "Root branch of a service tree.",
+    "type": "branch"
+  }
+}

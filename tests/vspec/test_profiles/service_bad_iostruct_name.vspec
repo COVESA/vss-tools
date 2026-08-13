@@ -1,0 +1,32 @@
+# Copyright (c) 2023 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# 'iostruct' nodes must be named 'Input' or 'Output'.
+
+VehicleService:
+  type: branch
+  description: Root branch of a service tree.
+
+VehicleService.GetPosition:
+  type: procedure
+  description: Gets the current position.
+
+VehicleService.GetPosition.Version:
+  type: attribute
+  datatype: string
+  default: "0.0.1"
+  description: The version of the GetPosition procedure.
+
+VehicleService.GetPosition.Result:
+  type: iostruct
+  description: Badly named iostruct (should be Input/Output).
+
+VehicleService.GetPosition.Result.Latitude:
+  type: property
+  datatype: float
+  description: Latitude output.

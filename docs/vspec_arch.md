@@ -129,6 +129,39 @@ instance declaration of type `Row[m,n]`,
 even if the the value of `Row*` is outside the range. It will however in that case not inherit values from the base
 branch.
 
+## HIM Profiles
+
+vss-tools validates node `type` values and their allowed parent/child nesting against a rule set
+defined by the [COVESA Hierarchical Information Model (HIM)](https://github.com/COVESA/hierarchical_information_model),
+of which VSS is one taxonomy. HIM defines multiple *profiles*, each allowing a different set of node types:
+
+* `vehicle-data` (default): the historic VSS rule set. Allowed node types are
+  `branch`, `sensor`, `actuator`, `attribute`, `struct` and `property`.
+* `data`: the HIM Data Rule Set, for describing read-only/read-write data that is not vehicle-specific.
+  Allowed node types are `branch`, `ro`, `rw`, `struct` and `property`.
+* `service`: the HIM Service Rule Set, for describing microservices as procedure signatures.
+  Allowed node types are `branch`, `procedure`, `iostruct`, `symlink`, `attribute`, `struct` and `property`.
+  A `procedure` node's HIM-mandatory `Version` child is expected to be an `attribute` node, and vss-tools
+  allows `attribute` nodes to have a `procedure` parent for this purpose. An `iostruct` node must be named
+  `Input` or `Output` and must have a `procedure` or `branch` parent. A `symlink` node must have an
+  `iostruct` parent. vss-tools does not currently enforce that a `procedure` has a `Version` child, nor
+  does it resolve `symlink` targets across trees (`path`/`domain`/`version`) since it operates on a
+  single tree at a time.
+
+The active profile is selected with the toplevel `--profile` option, e.g.:
+
+```bash
+vspec --profile service export json --vspec my_service.vspec --output my_service.json
+```
+
+If `--profile` is not given, vss-tools defaults to `vehicle-data`, so existing invocations and
+VSS catalogs are unaffected. `struct`, `property` and `branch` are common to every profile (they
+are needed to build a `Types` tree passed via `--types` regardless of which profile is active for
+the main tree). The profile-specific model classes and the `PROFILE_ALLOWED_TYPES` mapping are
+defined in [model.py](../src/vss_tools/model.py); the additional parent/child structural rules for
+each node type (e.g. `symlink` needing an `iostruct` parent) are enforced in
+`get_invalid_node_msgs()` in [main.py](../src/vss_tools/main.py).
+
 ## CLI Design
 
 The command line interface is designed with [click](https://click.palletsprojects.com/).
@@ -141,7 +174,8 @@ as creating a new file similar to the other exporters in [exporters](../src/vss_
 
 It is also possible to build a complete different script entrypoint and not hook into the current interface.
 All cli options can be imported and used via [cli_options.py](../src/vss_tools/cli_options.py).
-Only a few are left out which are defined on the toplevel command just as `--log-level`, `--log-file` and `--version`.
+Only a few are left out which are defined on the toplevel command just as `--log-level`, `--log-file`,
+`--profile` and `--version`.
 
 ## Linters and Static Code Checkers
 

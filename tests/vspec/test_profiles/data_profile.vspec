@@ -1,0 +1,24 @@
+# Copyright (c) 2023 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# HIM 'data' profile (HIM Data Rule Set): 'ro'/'rw' node types.
+
+Occupant:
+  type: branch
+  description: Occupant root branch.
+
+Occupant.Name:
+  type: ro
+  datatype: string
+  description: The name of a vehicle occupant.
+
+Occupant.LocalTemperature:
+  type: rw
+  datatype: float
+  unit: celsius
+  description: The vehicle occupant-local temperature setting.

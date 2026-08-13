@@ -1,0 +1,40 @@
+# Copyright (c) 2023 Contributors to COVESA
+#
+# This program and the accompanying materials are made available under the
+# terms of the Mozilla Public License 2.0 which is available at
+# https://www.mozilla.org/en-US/MPL/2.0/
+#
+# SPDX-License-Identifier: MPL-2.0
+
+# HIM 'service' profile (HIM Service Rule Set):
+# 'procedure'/'iostruct'/'symlink' node types.
+
+VehicleService:
+  type: branch
+  description: Root branch of a service tree.
+
+VehicleService.GetPosition:
+  type: procedure
+  description: Gets the current position.
+
+VehicleService.GetPosition.Version:
+  type: attribute
+  datatype: string
+  default: "0.0.1"
+  description: The version of the GetPosition procedure.
+
+VehicleService.GetPosition.Output:
+  type: iostruct
+  description: Output parameters of GetPosition.
+
+VehicleService.GetPosition.Output.Latitude:
+  type: property
+  datatype: float
+  description: Latitude output.
+
+VehicleService.GetPosition.Output.LatitudeLink:
+  type: symlink
+  path: Vehicle.CurrentLocation.Latitude
+  domain: Automotive.Vehicle.Car.Data
+  version: 3.0.0+
+  description: Symlink to a VSS tree leaf.

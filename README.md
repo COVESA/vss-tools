@@ -55,6 +55,20 @@ vspec export json --help
 Please check [here](./docs/vspec.md) for generic info about exporters and their arguments
 as well as [here](./docs/vspec_arch.md) for design decision, architecture and limitations.
 
+### HIM Profiles
+
+By default vss-tools validates node `type` values against the historic VSS rule set
+(`sensor`/`actuator`/`attribute`/`branch`/`struct`/`property`), which corresponds to the
+`vehicle-data` profile of the [COVESA Hierarchical Information Model (HIM)](https://github.com/COVESA/hierarchical_information_model).
+The toplevel `--profile` option can be used to instead validate against the HIM `data`
+(`ro`/`rw`) or `service` (`procedure`/`iostruct`/`symlink`) profiles:
+
+```bash
+vspec --profile service export json --vspec my_service.vspec --output my_service.json
+```
+
+See [vspec_arch.md](./docs/vspec_arch.md#him-profiles) for details.
+
 ## Compatibility with VSS
 
 The [COVESA VSS project repository](https://github.com/COVESA/vehicle_signal_specification) includes vss-tools as a submodule.

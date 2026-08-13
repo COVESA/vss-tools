@@ -1,0 +1,26 @@
+{
+  "Vehicle": {
+    "children": {
+      "IsMoving": {
+        "datatype": "boolean",
+        "default": false,
+        "description": "Whether the vehicle is moving.",
+        "type": "attribute"
+      },
+      "Speed": {
+        "datatype": "float",
+        "description": "Vehicle speed.",
+        "type": "sensor",
+        "unit": "km"
+      },
+      "TripMeterReading": {
+        "datatype": "float",
+        "description": "Trip meter reading.",
+        "type": "actuator",
+        "unit": "km"
+      }
+    },
+    "description": "Root branch.",
+    "type": "branch"
+  }
+}
