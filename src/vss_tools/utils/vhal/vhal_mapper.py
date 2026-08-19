@@ -20,14 +20,17 @@ from pydantic import TypeAdapter
 from vss_tools.model import NodeType
 from vss_tools.tree import VSSNode
 from vss_tools.utils.misc import getattr_nn
+from vss_tools.utils.vhal.area_constants import get_extracted_instance_parts
 from vss_tools.utils.vhal.property_constants import (
     VehiclePropertyAccess,
     VehiclePropertyChangeMode,
     VhalAreaType,
     VhalPropertyGroup,
+    VhalPropertyType,
     VSSDatatypesToVhal,
 )
 from vss_tools.utils.vhal.vehicle_mapping import VehicleMappingItem
+from vss_tools.utils.vhal.vhal_area_config import VhalAreaConfigItem, VhalAreaRuleItem
 
 
 class VhalMapper:
@@ -64,10 +67,13 @@ class VhalMapper:
         self.__property_map: Dict[str, VehicleMappingItem] = {}
         self.__properties_without_source: List[VehicleMappingItem] = []
         self.__properties_with_continuous_change_mode: List[str] = []
+        self.__area_config: List[VhalAreaConfigItem] = []
         self.__min_vhal_id: int = starting_id
         self.__next_vhal_id: int = starting_id
 
-    def __get_next_vhal_property_id(self, node: VSSNode) -> int:
+    def __get_next_vhal_property_id(
+        self, area_type: int | VhalAreaType, property_type: int | VhalPropertyType, unique_id: int | None = None
+    ) -> int:
         """
         Generates static VHAL propertyIds as described here
         https://source.android.com/docs/automotive/vhal/property-configuration
@@ -81,23 +87,16 @@ class VhalMapper:
         The ID - vspec static UID generator (https://github.com/COVESA/vss-tools/blob/master/docs/id.md) cannot be used
         since it needs 4-bytes.
 
-        :param node: VSS node that we want to generate a unique VHAL property ID for.
-        :returns: 2 bytes unique ID value for the VSS node.
+        :param area_type: Area type.
+        :param property_type: Property type.
+        :param unique_id: Unique ID to reuse or `None` to generate next.
+        :returns: Full property ID including all its parts.
         """
-        node_data = node.get_vss_data()
-        datatype = getattr_nn(node_data, "datatype", None)
-
-        if not datatype:
-            raise Exception(f"Datatype not given for the VSS leaf {node.get_fqn()}")
-
-        node_uid = self.__next_vhal_id
-        self.__next_vhal_id += 1
-
-        vhal_property_type = VSSDatatypesToVhal.get_property_type_id(datatype)
-        vhal_area_type = VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL_AIDL.value
-        vhal_property_group = VhalPropertyGroup.get(self.__group).value
-
-        property_id = node_uid | vhal_property_group | vhal_area_type | vhal_property_type
+        property_id = VehicleMappingItem.vhal_property_id(
+            self.__group, area_type, property_type, unique_id or self.__next_vhal_id
+        )
+        if unique_id is None:
+            self.__next_vhal_id += 1
 
         return property_id
 
@@ -113,13 +112,13 @@ class VhalMapper:
         for item in mapping:
             if item.vhal_group != self.__group:
                 logging.error(
-                    f"Invalid group {item.vhal_group} of VSS leaf {item.source}! "
+                    f"Invalid group {item.vhal_group} of VSS leaf {item.name}! "
                     f"Group must be in {[self.__group]}! You are probably regenerating a configuration "
                     f"originally generated with a different group."
                 )
             if item.vhal_id < self.__min_vhal_id or item.vhal_id > VhalMapper.MAX_VHAL_ID:
                 logging.error(
-                    f"Invalid unique ID {item.vhal_id} of VSS leaf {item.source}! "
+                    f"Invalid unique ID {item.vhal_id} of VSS leaf {item.name}! "
                     f"ID must be in range {[self.__min_vhal_id, VhalMapper.MAX_VHAL_ID]}"
                 )
             else:
@@ -129,6 +128,21 @@ class VhalMapper:
         if total != valid:
             raise Exception(f"Number of valid IDs {valid} of {total} in total.")
         return True
+
+    def load_area_config(self, file_path: Path):
+        """
+        Loads and compiles the VSS-to-VHAL area configuration rules.
+
+        Parses the provided JSON file to build the internal mapping rules. These rules
+        determine which Android Vehicle Area Type (e.g., Seat, Wheel, Door) applies
+        to specific VSS paths.
+
+        :param file_path: Path to the JSON area configuration file.
+        """
+        with open(file_path, "r") as f:
+            rules = TypeAdapter(Dict[str, VhalAreaRuleItem]).validate_json(f.read())
+        for pattern, rule in rules.items():
+            self.__area_config.append(VhalAreaConfigItem(rule=rule, pattern=pattern, depth=len(pattern.split("."))))
 
     def load_continuous_list(self, file_path: Path):
         """
@@ -171,14 +185,14 @@ class VhalMapper:
                 and self.__next_vhal_id < 1000
             ):
                 logging.error(
-                    f"When generating {VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_SYSTEM} properties starting"
-                    f" ID must be greater than 1000 to prevent conflicts with Google defined properties."
+                    f"When generating VehiclePropertyGroup.{VhalPropertyGroup.VEHICLE_PROPERTY_GROUP_SYSTEM} properties"
+                    f" starting ID must be greater than 1000 to prevent conflicts with Google defined properties."
                     f" Current start is {self.__min_vhal_id}!"
                 )
                 sys.exit(1)
-            self.__property_map = {item.source: item for item in [item for item in data if item.source != ""]}
-            self.__properties_without_source = [item for item in data if item.source == ""]
-            for invalid in [item for item in data if item.source == "" and item.formula == ""]:
+            self.__property_map = {item.name: item for item in [item for item in data if len(item.sources) > 0]}
+            self.__properties_without_source = [item for item in data if len(item.sources) == 0]
+            for invalid in [item for item in data if len(item.sources) == 0 and item.formula == ""]:
                 logging.warning(f"For standard property {invalid.name} no mapping to VSS was found.")
 
         return self.__property_map, self.__properties_without_source
@@ -192,39 +206,78 @@ class VhalMapper:
             node_name_flat = node.get_fqn()
             node_data = node.get_vss_data()
 
-            mapping = self.__property_map.get(node_name_flat)
+            matches = [v for v in self.__property_map.values() if any(s == node_name_flat for s in v.sources)]
+            if len(matches) > 1:
+                raise Exception(f"Multiple mapping entries found for VSS node '{node_name_flat}'!")
+            mapping = matches[0] if matches else None
             if mapping or self.__include_new:
                 if node_data.deprecation:  # ignore deprecated property
                     return
 
-                vss_property = VehicleMappingItem(
-                    name=mapping.name
-                    if mapping
-                    else re.sub(
-                        r"([a-z])([A-Z])", r"\1_\2", node_name_flat.replace("Vehicle.", "").replace(".", "_")
-                    ).upper(),
-                    property_id=mapping.property_id if mapping else self.__get_next_vhal_property_id(node),
-                    area_id=mapping.area_id if mapping else self.__get_vhal_vehicle_area_id(node),
-                    access=mapping.access if mapping else VhalMapper.__get_vhal_access(node),
-                    change_mode=mapping.change_mode if mapping else self.__get_vhal_change_mode(node),
-                    unit=mapping.unit
-                    if mapping and not self.__override_units
-                    else getattr_nn(node_data, "unit", mapping.unit if mapping else ""),
-                    source=node_name_flat,
-                    formula=mapping.formula if mapping and mapping.formula else None,
-                    comment=getattr_nn(node_data, "comment", mapping.comment if mapping and mapping.comment else None),
-                    config_string=mapping.config_string if mapping and mapping.config_string else node_data.description,
-                    datatype=mapping.datatype
-                    if mapping and mapping.datatype and not self.__override_datatype
-                    else getattr_nn(node_data, "datatype", None),
-                    type=str(node_data.type.value),
-                    min=getattr_nn(node_data, "min", None),
-                    max=getattr_nn(node_data, "max", None),
-                    allowed=mapping.allowed if mapping and mapping.allowed else getattr_nn(node_data, "allowed", None),
-                    default=getattr_nn(node_data, "default", None),
-                    deprecation=node_data.deprecation,
-                )
-                self.__property_map[node_name_flat] = vss_property
+                area_type, area_id = self.__get_vhal_vehicle_area(node)
+                if area_type == VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL.value:
+                    item_name = node_name_flat
+                else:
+                    instance_parts = get_extracted_instance_parts(node_name_flat)
+                    parts = node_name_flat.split(".")
+                    item_name = ".".join(p for p in parts if p not in instance_parts)
+                item_name = re.sub(
+                    r"([a-z])([A-Z])", r"\1_\2", item_name.replace("Vehicle.", "").replace(".", "_")
+                ).upper()
+
+                datatype = getattr_nn(node_data, "datatype", None)
+                if not datatype:
+                    raise Exception(f"Datatype not given for the VSS leaf {node.get_fqn()}")
+                property_type = VSSDatatypesToVhal.get(datatype)
+
+                if item_name in self.__property_map:
+                    self.__property_map[item_name].sources[node_name_flat] = area_id
+                    area_type_changed = self.__property_map[item_name].vhal_area != area_type
+                    property_type_changed = self.__property_map[item_name].vhal_type != property_type.value
+
+                    if property_type_changed and self.__override_datatype or area_type_changed:
+                        self.__property_map[item_name] = self.__property_map[item_name].model_copy(
+                            update={
+                                "property_id": self.__get_next_vhal_property_id(
+                                    area_type,
+                                    property_type if self.__override_datatype else property_type.value,
+                                    self.__property_map[item_name].vhal_id,
+                                )
+                            }
+                        )
+                else:
+                    vss_property = VehicleMappingItem(
+                        name=item_name,
+                        property_id=mapping.property_id
+                        if mapping
+                        else self.__get_next_vhal_property_id(area_type, property_type),
+                        access=mapping.access if mapping else VhalMapper.__get_vhal_access(node),
+                        change_mode=mapping.change_mode if mapping else self.__get_vhal_change_mode(node),
+                        unit=mapping.unit
+                        if mapping and not self.__override_units
+                        else getattr_nn(node_data, "unit", mapping.unit if mapping else ""),
+                        sources={node_name_flat: area_id},
+                        formula=mapping.formula if mapping and mapping.formula else None,
+                        comment=getattr_nn(
+                            node_data, "comment", mapping.comment if mapping and mapping.comment else None
+                        ),
+                        config_string=mapping.config_string
+                        if mapping and mapping.config_string
+                        else node_data.description,
+                        type=str(node_data.type.value),
+                        min=getattr_nn(node_data, "min", None),
+                        max=getattr_nn(node_data, "max", None),
+                        allowed=mapping.allowed
+                        if mapping and mapping.allowed
+                        else getattr_nn(node_data, "allowed", None),
+                        default=getattr_nn(node_data, "default", None),
+                        deprecation=node_data.deprecation,
+                    )
+                    self.__property_map[item_name] = vss_property
+
+                # Remove duplicate item
+                if mapping and item_name != mapping.name:
+                    self.__property_map.pop(mapping.name)
 
         for child in node.children:
             self.load_vss_tree(child)
@@ -279,14 +332,11 @@ class VhalMapper:
                 content_lines.append("\t/**")
                 content_lines.extend(f"\t * {line}" for line in lines)
 
-                access = VehiclePropertyAccess.get_java_doc(item.access)
-                area_type = VhalAreaType.get_java_doc(item.area_id)
-                change_mode = VehiclePropertyChangeMode.get_java_doc(item.change_mode)
-                if item.datatype is not None:
-                    type_id = VSSDatatypesToVhal.get_property_type_id(item.datatype)
-                    property_type = VSSDatatypesToVhal.get_property_type_repr(type_id).split(".")[1].capitalize()
-                else:
-                    property_type = "Unknown"
+                access = VehiclePropertyAccess.get(item.access)
+                area_type = VhalAreaType.get(item.vhal_area)
+                change_mode = VehiclePropertyChangeMode.get(item.change_mode)
+                type_id = item.vhal_type
+                property_type = str(VhalPropertyType(type_id)).capitalize()
 
                 if item.access in (VehiclePropertyAccess.WRITE.value, VehiclePropertyAccess.READ_WRITE.value):
                     write_permission_str = (
@@ -300,9 +350,10 @@ class VhalMapper:
                     [
                         "\t * <p>Property Config:",
                         "\t * <ul>",  # the below @link entries must be fully qualified for VehiclePropertyIdsParser
-                        f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#{access}}}",
-                        f"\t *  <li>{{@link android.car.VehicleAreaType#{area_type}}}",
-                        f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#{change_mode}}}",
+                        f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_ACCESS_{access}}}",
+                        f"\t *  <li>{{@link android.car.VehicleAreaType#VEHICLE_AREA_TYPE_{area_type}}}",
+                        f"\t *  <li>{{@link android.car.hardware.CarPropertyConfig#VEHICLE_PROPERTY_CHANGE_MODE_"
+                        f"{str(change_mode).replace('_', '')}}}",
                         f"\t *  <li>{{@code {property_type}}} property type",
                         "\t * </ul>",
                         "\t *",
@@ -419,17 +470,10 @@ class VhalMapper:
 
         for item in mapping:
             if item.vhal_id >= self.__min_vhal_id:
-                vhal_property_group_str = str(VhalPropertyGroup.get(self.__group))
-                vhal_area_type_str = str(VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL)
-                vhal_property_type_str = VSSDatatypesToVhal.get_property_type_repr(item.vhal_type << 16)
-
                 # JavaDoc
-                description = item.comment
-                if description is None:
-                    description = item.config_string
-                elif not description.endswith("."):
-                    description = f"{item.comment}. {item.config_string}"
-
+                description = " ".join(
+                    [s.removesuffix(".") + "." for s in [item.config_string, item.comment] if s is not None]
+                )
                 lines = textwrap.wrap(description, width=120) if description is not None else []
 
                 comment = "\n".join(f"\t * {line}" for line in lines)
@@ -437,8 +481,8 @@ class VhalMapper:
                     f"\t/**\n"
                     f"{comment}\n"
                     f"\t *\n"
-                    f"\t * @change_mode {str(VehiclePropertyChangeMode(item.change_mode))}\n"
-                    f"\t * @access {str(VehiclePropertyAccess(item.access))}\n"
+                    f"\t * @change_mode VehiclePropertyChangeMode.{str(VehiclePropertyChangeMode(item.change_mode))}\n"
+                    f"\t * @access VehiclePropertyAccess.{str(VehiclePropertyAccess(item.access))}\n"
                     f"\t * @version {property_version}\n"
                     f"\t */\n"
                 )
@@ -446,9 +490,9 @@ class VhalMapper:
                 aidl_variable = (
                     f"\t{item.name} = "
                     f"{(item.vhal_id << 0):#0{6}x} + "
-                    f"{vhal_property_group_str} + "
-                    f"{vhal_area_type_str} + "
-                    f"{vhal_property_type_str},\n"
+                    f"VehiclePropertyGroup.{VhalPropertyGroup.get(self.__group)} + "
+                    f"VehicleArea.{VhalAreaType.get(item.vhal_area)} + "
+                    f"VehiclePropertyType.{VhalPropertyType(item.vhal_type)},\n"
                 )
 
                 aidl_variable_with_comment = java_doc + aidl_variable
@@ -569,27 +613,31 @@ class VhalMapper:
 
         return manifest_xml_str, strings_xml_str
 
-    def __get_vhal_vehicle_area_id(self, node: VSSNode) -> int:
+    def __get_vhal_vehicle_area(self, node: VSSNode) -> Tuple[int, int]:
         """
         Android VHAL area ID is described here:
         https://android.googlesource.com/platform/packages/services/Car/+/refs/heads/main/car-lib/src/android/car/VehicleAreaType.java
         and
         https://cs.android.com/android/platform/superproject/main/+/main:hardware/interfaces/automotive/vehicle/aidl_property/android/hardware/automotive/vehicle/VehicleArea.aidl
 
-        Area type is always generated as GLOBAL. As of now the resulting mapping file needs to be manually edited
-        when GLOBAL is not fitting. Consequent runs will keep those edits.
+        Evaluates a VSSNode, finds the longest matching rule, and returns the actual VHAL Area ID.
 
-        A detection of area ID based on VSS tree may be implemented in the future.
-
-        Note that for vendor properties the area type VENDOR should be used.
-
-        :returns: VHAL Area ID.
+        :param node: VSS node (sensor, attribute or actuator).
+        :returns: VHAL Area type integer and area ID.
         """
-        return (
-            VhalAreaType.VEHICLE_AREA_TYPE_VENDOR.value
-            if self.__group == 2
-            else VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL.value
-        )
+        node_name_flat = node.get_fqn()
+        matched_depth = 0
+        best_match = (VhalAreaType.VEHICLE_AREA_TYPE_GLOBAL, 0)
+
+        for config in self.__area_config:
+            if config.depth <= matched_depth:
+                continue
+
+            match = config.resolve_area_type(node_name_flat)
+            if match:
+                best_match = match
+                matched_depth = config.depth
+        return best_match
 
     @staticmethod
     def __get_vhal_access(node: VSSNode) -> int:

@@ -9,10 +9,10 @@ import android.hardware.automotive.vehicle.VehiclePropertyGroup;
 enum VehiclePropertyOem {
 
 	/**
-	 * A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is
-	 * considered to end when engine is no longer enabled. The signal may however keep the value of the last trip until a new
-	 * trip is started. Calculation of average speed may exclude periods when the vehicle for example is not moving or
-	 * transmission is in neutral.
+	 * Average speed for the current trip. A new trip is considered to start when engine gets enabled (e.g.
+	 * LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The signal may
+	 * however keep the value of the last trip until a new trip is started. Calculation of average speed may exclude periods
+	 * when the vehicle for example is not moving or transmission is in neutral.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.ON_CHANGE
 	 * @access VehiclePropertyAccess.READ
@@ -179,7 +179,10 @@ enum VehiclePropertyOem {
 	HEIGHT = 0x0021 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.INT32,
 
 	/**
-	 * Actual criteria and method used to decide if a vehicle is broken down is implementation specific.
+	 * Vehicle breakdown or any similar event causing vehicle to stop on the road, that might pose a risk to other road users.
+	 * True = Vehicle broken down on the road, due to e.g. engine problems, flat tire, out of gas, brake problems. False =
+	 * Vehicle not broken down. Actual criteria and method used to decide if a vehicle is broken down is implementation
+	 * specific.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.ON_CHANGE
 	 * @access VehiclePropertyAccess.READ
@@ -323,7 +326,7 @@ enum VehiclePropertyOem {
 	POWERTRAIN_FUEL_SYSTEM_AVERAGE_CONSUMPTION = 0x0046 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.FLOAT,
 
 	/**
-	 * Amount of fuel consumed since last refueling.
+	 * Fuel consumption since last refueling. Amount of fuel consumed since last refueling.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.ON_CHANGE
 	 * @access VehiclePropertyAccess.READ
@@ -332,9 +335,9 @@ enum VehiclePropertyOem {
 	POWERTRAIN_FUEL_SYSTEM_CONSUMPTION_SINCE_LAST_REFUEL = 0x0048 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.FLOAT,
 
 	/**
-	 * A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is
-	 * considered to end when engine is no longer enabled. The signal may however keep the value of the last trip until a new
-	 * trip is started.
+	 * Fuel amount in liters consumed since start of current trip. A new trip is considered to start when engine gets enabled
+	 * (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The
+	 * signal may however keep the value of the last trip until a new trip is started.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.ON_CHANGE
 	 * @access VehiclePropertyAccess.READ
@@ -415,7 +418,8 @@ enum VehiclePropertyOem {
 	POWERTRAIN_FUEL_SYSTEM_RELATIVE_LEVEL = 0x0042 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.INT32,
 
 	/**
-	 * RON 95 is sometimes referred to as Super, RON 98 as Super Plus.
+	 * Detailed information on fuels supported by the vehicle. Identifiers originating from DIN EN 16942:2021-08, appendix B,
+	 * with additional suffix for octane (RON) where relevant. RON 95 is sometimes referred to as Super, RON 98 as Super Plus.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.STATIC
 	 * @access VehiclePropertyAccess.READ
@@ -424,7 +428,8 @@ enum VehiclePropertyOem {
 	POWERTRAIN_FUEL_SYSTEM_SUPPORTED_FUEL = 0x003e + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.STRING,
 
 	/**
-	 * If a vehicle also has an electric drivetrain (e.g. hybrid) that will be obvious from the PowerTrain.Type signal.
+	 * High level information of fuel types supported. If a vehicle also has an electric drivetrain (e.g. hybrid) that will be
+	 * obvious from the PowerTrain.Type signal.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.STATIC
 	 * @access VehiclePropertyAccess.READ
@@ -469,8 +474,8 @@ enum VehiclePropertyOem {
 	POWERTRAIN_TIME_REMAINING = 0x0034 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.INT32,
 
 	/**
-	 * For vehicles with a combustion engine (including hybrids) more detailed information on fuels supported can be found in
-	 * FuelSystem.SupportedFuelTypes and FuelSystem.SupportedFuels.
+	 * Defines the powertrain type of the vehicle. For vehicles with a combustion engine (including hybrids) more detailed
+	 * information on fuels supported can be found in FuelSystem.SupportedFuelTypes and FuelSystem.SupportedFuels.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.STATIC
 	 * @access VehiclePropertyAccess.READ
@@ -497,9 +502,10 @@ enum VehiclePropertyOem {
 	SPEED = 0x000f + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.FLOAT,
 
 	/**
-	 * This signal is supposed to be set whenever a new trip starts. A new trip is considered to start when engine gets enabled
-	 * (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The
-	 * default value indicates that the vehicle never has been started, or that latest start time is unknown.
+	 * Start time of current or latest trip, formatted according to ISO 8601 with UTC time zone. This signal is supposed to be
+	 * set whenever a new trip starts. A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState
+	 * in ON or START mode). A trip is considered to end when engine is no longer enabled. The default value indicates that the
+	 * vehicle never has been started, or that latest start time is unknown.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.STATIC
 	 * @access VehiclePropertyAccess.READ
@@ -526,9 +532,9 @@ enum VehiclePropertyOem {
 	TRAVELED_DISTANCE = 0x0010 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.FLOAT,
 
 	/**
-	 * A new trip is considered to start when engine gets enabled (e.g. LowVoltageSystemState in ON or START mode). A trip is
-	 * considered to end when engine is no longer enabled. The signal may however keep the value of the last trip until a new
-	 * trip is started.
+	 * Distance traveled since start of current trip. A new trip is considered to start when engine gets enabled (e.g.
+	 * LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled. The signal may
+	 * however keep the value of the last trip until a new trip is started.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.ON_CHANGE
 	 * @access VehiclePropertyAccess.READ
@@ -537,9 +543,9 @@ enum VehiclePropertyOem {
 	TRAVELED_DISTANCE_SINCE_START = 0x0011 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.FLOAT,
 
 	/**
-	 * This signal is not assumed to be continuously updated, but instead set to 0 when a trip starts and set to the actual
-	 * duration of the trip when a trip ends. A new trip is considered to start when engine gets enabled (e.g.
-	 * LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled.
+	 * Duration of latest trip. This signal is not assumed to be continuously updated, but instead set to 0 when a trip starts
+	 * and set to the actual duration of the trip when a trip ends. A new trip is considered to start when engine gets enabled
+	 * (e.g. LowVoltageSystemState in ON or START mode). A trip is considered to end when engine is no longer enabled.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.ON_CHANGE
 	 * @access VehiclePropertyAccess.READ
@@ -548,7 +554,7 @@ enum VehiclePropertyOem {
 	TRIP_DURATION = 0x0013 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.FLOAT,
 
 	/**
-	 * The trip meter is an odometer that can be manually reset by the driver. Trip meter reading.
+	 * Trip meter reading. The trip meter is an odometer that can be manually reset by the driver.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.ON_CHANGE
 	 * @access VehiclePropertyAccess.READ_WRITE
@@ -593,8 +599,8 @@ enum VehiclePropertyOem {
 	VEHICLE_IDENTIFICATION_DATE_VEHICLE_FIRST_REGISTERED = 0x0007 + VehiclePropertyGroup.OEM + VehicleArea.GLOBAL + VehiclePropertyType.STRING,
 
 	/**
-	 * Depending on the context, this attribute might not be up to date or might be misconfigured, and therefore should be
-	 * considered untrustworthy in the absence of another method of verification.
+	 * The license plate of the vehicle. Depending on the context, this attribute might not be up to date or might be
+	 * misconfigured, and therefore should be considered untrustworthy in the absence of another method of verification.
 	 *
 	 * @change_mode VehiclePropertyChangeMode.STATIC
 	 * @access VehiclePropertyAccess.READ
