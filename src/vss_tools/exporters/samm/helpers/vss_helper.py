@@ -214,12 +214,28 @@ def get_node_property_name(vss_node: VSSNode) -> str:
     return str_to_lc_first_camel_case(vss_node.ttl_name)  # type: ignore
 
 
-# Helper function to build VSSnode description in the form:
-# VSS path   : ...
-# Description: ...
-# Comment    : ...
-# and return it for addition to a graph node for specified vss_node
 def get_node_description(vss_node: VSSNode) -> str:
+    """Helper function to build VSSNode description in the form:
+
+    <code>
+        DEPRECATION: ...
+        VSS path   : ...
+        Description: ...
+        Comment    : ...
+    </code>
+
+    and return it for addition to a graph node for specified vss_node.
+
+    NOTE:<br/>
+    The "DEPRECATION:..." will be provided ONLY when the VSSNode or any of its child nodes has any deprecation.
+
+    Args:
+        vss_node (VSSNode): The VSSNode to build ist description.
+
+    Returns:
+        str: Formatted string with corresponding VSSNode information.
+    """
+
     # Set description for this vss_node.
     # Will include its: VSS path, Description, Comment and Unit if any of these is available.
     description = ""
@@ -237,8 +253,16 @@ def get_node_description(vss_node: VSSNode) -> str:
             vss_node.data.description = vss_node.data.description.replace('"', f'{cfg.CUSTOM_ESCAPE_CHAR}"')
 
         # Set 3 spaces spacer, so to align 'VSS path:' with 'Description:'
-        spacer = "    "
+        spacer = "   "
         description = f"\n\nDescription: {vss_node.data.description}"
+
+    # Check VSSNode for any deprecations
+    deprecation = get_deprecation_message(vss_node)
+
+    if deprecation and len(deprecation.strip()) > 0:
+        # Set 3 spaces spacer, so to align 'VSS path:' with 'Deprecation:'
+        # NOTE: Description and Deprecation are with same length so same spacer!
+        spacer = spacer if description else "   "
 
     # NOTE: there is also a vss_node.comment field which also holds some details
     #       Add the vss_node.comment to its description
@@ -254,9 +278,11 @@ def get_node_description(vss_node: VSSNode) -> str:
         description = f"{description}\n\nComment{'   ' if description else ''}: {vss_node.data.comment}"
 
     if hasattr(vss_node.data, "unit") and vss_node.data.unit and len(vss_node.data.unit.strip()) > 0:
-        description = f"{description}\n\nUnit{'             ' if description else ''}: {vss_node.data.unit}"
+        description = f"{description}\n\nUnit{'       ' if description else ''}: {vss_node.data.unit}"
 
-    return f"\nVSS path{spacer}: {vss_node.get_fqn()}{description}"
+    # NOTE: By DEFAULT, VSS Path is provided at the top of the Node's description.
+    #       In case when there is any DEPRECATION, it will be provided on top of the description, to make it stand out.
+    return f"{deprecation if deprecation else ''}\nVSS path{spacer}: {vss_node.get_fqn()}{description}"
 
 
 def has_constraints(vss_node: VSSNode) -> bool:
@@ -264,6 +290,44 @@ def has_constraints(vss_node: VSSNode) -> bool:
         isinstance(vss_node.data, VSSDataDatatype)
         and (vss_node.data.max is not None or vss_node.data.min is not None or vss_node.data.pattern is not None)
     )
+
+
+def get_deprecation_message(vss_node: VSSNode) -> str | None:
+    """Helper function to check provided VSSNode for any deprecations and return corresponding message.
+    If all node's child nodes are deprecated, a corresponding "DEPRECATION:..." message will be provided.
+
+    Args:
+        vss_node (VSSNode): VSS Node to check
+
+    Returns:
+        str | None: Formatted string with corresponding VSSNode deprecation \
+        or None in case that there were no deprecations.
+    """
+
+    deprecation = None
+
+    if hasattr(vss_node, "children") and vss_node.children:
+        deprecated_children = list(filter(lambda n: n.data.deprecation, vss_node.children))
+
+        if bool(len(deprecated_children) == len(vss_node.children)):
+            deprecation = "\nDEPRECATION: ALL nodes in this branch are DEPRECATED\n"
+
+        elif deprecated_children:
+            deprecation = f"\nDEPRECATION: Node '{vss_node.name}' has DEPRECATED child node(s).\n"
+
+    if (
+        hasattr(vss_node.data, "deprecation")
+        and vss_node.data.deprecation
+        and len(vss_node.data.deprecation.strip()) > 0
+    ):
+        if deprecation:
+            # Append VSSNode specific deprecation message.
+            deprecation = f"{deprecation}             {vss_node.data.deprecation}\n"
+        else:
+            # Read VSSNode deprecation message as provided.
+            deprecation = f"\nDEPRECATION: {vss_node.data.deprecation}\n"
+
+    return deprecation
 
 
 def get_instances_dict_tree(vss_node_instances: list | None, node_instance_name: str) -> dict[str, Any]:
