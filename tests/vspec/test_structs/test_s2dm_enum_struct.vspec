@@ -1,0 +1,8 @@
+TestRoot:
+  type: branch
+  description: Root branch for testing.
+
+TestRoot.EnumStructSensor:
+  datatype: EnumTestBranch.NestedStruct
+  type: sensor
+  description: A sensor with a struct type that has an allowed-values property.

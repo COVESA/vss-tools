@@ -38,6 +38,23 @@ class TestS2DMStructs:
         )
         return tree, data_type_tree
 
+    @pytest.fixture
+    def enum_struct_trees(self):
+        """Load VSS trees with a struct type that has an allowed-values (enum) property."""
+        tree, data_type_tree = get_trees(
+            vspec=Path("tests/vspec/test_structs/test_s2dm_enum_struct.vspec"),
+            include_dirs=(),
+            aborts=(),
+            strict=False,
+            extended_attributes=(),
+            quantities=(),
+            units=(),
+            types=(Path("tests/vspec/test_structs/EnumTypes.vspec"),),
+            overlays=(),
+            expand=False,
+        )
+        return tree, data_type_tree
+
     def test_data_type_tree_is_captured(self, struct_trees):
         """Test that data_type_tree is properly captured from get_trees."""
         tree, data_type_tree = struct_trees
@@ -322,17 +339,17 @@ class TestS2DMStructs:
         assert isinstance(x_property_type, GraphQLNonNull)
         assert x_property_type.of_type == nested_struct_type, f"Expected NestedStruct but got {x_property_type.of_type}"
 
-    def test_struct_property_with_allowed_values_resolves_to_enum(self, struct_trees):
+    def test_struct_property_with_allowed_values_resolves_to_enum(self, enum_struct_trees):
         """Test that struct properties with `allowed` values resolve to an enum type, not a scalar."""
-        tree, data_type_tree = struct_trees
+        tree, data_type_tree = enum_struct_trees
         schema, _, allowed_metadata, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=False)
 
         nested_struct_name = convert_name_for_graphql_schema(
-            "VehicleDataTypes.TestBranch1.NestedStruct", GraphQLElementType.TYPE, S2DM_CONVERSIONS
+            "EnumTestBranch.NestedStruct", GraphQLElementType.TYPE, S2DM_CONVERSIONS
         )
         enum_name = (
             convert_name_for_graphql_schema(
-                "VehicleDataTypes.TestBranch1.NestedStruct.mode", GraphQLElementType.TYPE, S2DM_CONVERSIONS
+                "EnumTestBranch.NestedStruct.mode", GraphQLElementType.TYPE, S2DM_CONVERSIONS
             )
             + "_Enum"
         )
@@ -352,9 +369,9 @@ class TestS2DMStructs:
         assert enum_name in allowed_metadata
         assert set(allowed_metadata[enum_name]["allowed_values"].values()) == {"ACTIVE", "INACTIVE", "ERROR"}
 
-    def test_struct_property_allowed_enum_short_names(self, struct_trees):
+    def test_struct_property_allowed_enum_short_names(self, enum_struct_trees):
         """Test allowed-value enum resolution for struct properties when using short names."""
-        tree, data_type_tree = struct_trees
+        tree, data_type_tree = enum_struct_trees
         schema, _, _, _ = generate_s2dm_schema(tree, data_type_tree, use_short_names=True)
 
         nested_struct_type = schema.type_map.get("NestedStruct")
