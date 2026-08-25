@@ -17,7 +17,7 @@ from vss_tools.utils.vhal.property_constants import (
     VhalAreaType,
 )
 
-# All possible VSS positional instance strings (lowercase)
+# All possible VSS positional instance strings
 VSS_POSITIONAL_KEYWORDS: frozenset[str] = frozenset(
     [
         "row1",

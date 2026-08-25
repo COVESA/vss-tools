@@ -201,9 +201,8 @@ def test_vhal_area_type():
     assert VhalAreaType.get("DOOR") == VhalAreaType.VEHICLE_AREA_TYPE_DOOR
     assert VhalAreaType.get("WHEEL") == VhalAreaType.VEHICLE_AREA_TYPE_WHEEL
     assert VhalAreaType.get("VENDOR") == VhalAreaType.VEHICLE_AREA_TYPE_VENDOR
-    with pytest.raises(SystemExit) as e:
+    with pytest.raises(Exception):
         VhalAreaType.get(2)
-    assert e.value.code == 1
 
 
 def test_vhal_property_group():
@@ -222,9 +221,8 @@ def test_vhal_property_group():
     assert str(VhalPropertyGroup.get(3)) == "BACKPORTED"
     assert str(VhalPropertyGroup.get(4)) == "OEM"
 
-    with pytest.raises(SystemExit) as e:
+    with pytest.raises(Exception):
         VhalPropertyGroup.get(5)
-    assert e.value.code == 1
 
 
 def test_vhal_vehicle_property_access():
@@ -239,9 +237,8 @@ def test_vhal_vehicle_property_access():
     assert str(VehiclePropertyAccess.get(1)) == "READ"
     assert str(VehiclePropertyAccess.get(2)) == "WRITE"
     assert str(VehiclePropertyAccess.get(3)) == "READ_WRITE"
-    with pytest.raises(SystemExit) as e:
+    with pytest.raises(Exception):
         VehiclePropertyAccess.get(4)
-    assert e.value.code == 1
 
 
 def test_vhal_vehicle_property_change_mode():
@@ -256,9 +253,8 @@ def test_vhal_vehicle_property_change_mode():
     assert str(VehiclePropertyChangeMode.get(0)) == "STATIC"
     assert str(VehiclePropertyChangeMode.get(1)) == "ON_CHANGE"
     assert str(VehiclePropertyChangeMode.get(2)) == "CONTINUOUS"
-    with pytest.raises(SystemExit) as e:
+    with pytest.raises(Exception):
         VehiclePropertyChangeMode.get(3)
-    assert e.value.code == 1
 
 
 def test_vhal_vehicle_area_door():

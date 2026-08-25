@@ -6,8 +6,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import logging
-import sys
 from enum import IntEnum
 
 from vss_tools.datatypes import Datatypes
@@ -22,8 +20,7 @@ class VhalEnum(IntEnum):
             options.append(f"{item} ({item.value})")
             if str(item) == value or item.name == value or item.value == value:
                 return item
-        logging.error(f"{cls} can have values: {', '.join(options)}; but was {value}")
-        sys.exit(1)
+        raise Exception(f"{cls} can have values: {', '.join(options)}; but was {value}")
 
     def __str__(self) -> str:
         return self.name
