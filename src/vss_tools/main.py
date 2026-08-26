@@ -223,14 +223,9 @@ def get_trees(
         log.critical(e)
         exit(1)
 
-    unique_include_dirs = []
-    for include_dir in include_dirs:
-        if include_dir not in unique_include_dirs:
-            unique_include_dirs.append(include_dir)
-
     try:
-        types_root = get_types_root(types, unique_include_dirs)
-        vspec_data = load_vspec(unique_include_dirs, [vspec] + list(overlays))
+        types_root = get_types_root(types, list(include_dirs))
+        vspec_data = load_vspec(list(include_dirs), [vspec] + list(overlays))
     except (InvalidSpecDuplicatedEntryException, InvalidSpecException) as e:
         log.critical(e)
         exit(1)

@@ -1,0 +1,5 @@
+B:
+  type: branch
+  description: d
+  includes:
+    - B2.vspec

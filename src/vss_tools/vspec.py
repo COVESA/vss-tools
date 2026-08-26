@@ -15,6 +15,7 @@ from typing import Any
 import yaml
 
 from vss_tools import log
+from vss_tools.model import NodeType
 
 
 class IncludeStatementException(Exception):
@@ -43,7 +44,7 @@ class Include:
         split = statement.split()
         if len(split) < 2:
             raise IncludeStatementException(f"Malformed include statement: {statement}")
-        self.target = split[1]
+        self.target = Path(split[1])
         self.prefix = prefix
         if len(split) == 3:
             if self.prefix is not None:
@@ -52,12 +53,23 @@ class Include:
                 self.prefix = split[2]
 
     def resolve_path(self, include_dirs: list[Path]) -> Path:
-        for dir in include_dirs:
-            path = dir / self.target
-            if path.exists():
-                log.debug(f"'{self.statement}', resolved={path}")
-                return path
-        raise IncludeNotFoundException(f"Unable to find include {self.target}. Include dirs: {include_dirs}")
+        unique_include_dirs = list(dict.fromkeys(include_dirs))
+        candidates = [self.target]
+
+        if self.target.suffix == "":
+            candidates = [
+                self.target.with_suffix(".vspec"),
+                self.target.with_suffix(".yaml"),
+                self.target.with_suffix(".yml"),
+            ]
+
+        for dir in unique_include_dirs:
+            for candidate in candidates:
+                path = dir / candidate
+                if path.exists():
+                    log.debug(f"'{self.statement}', resolved={path.absolute()}")
+                    return path
+        raise IncludeNotFoundException(f"Unable to find include {self.target}. Include dirs: {unique_include_dirs}")
 
 
 def deep_update(base: dict[str, Any], update: dict[str, Any]) -> None:
@@ -86,9 +98,32 @@ class VSpec:
         if self.data is None:
             self.data = {}
 
+        self.includes = []
+
         for key, value in self.data.items():
             if not isinstance(value, dict):
                 raise InvalidSpecException(f"{self.source.absolute()}, Invalid key value: {key}={value}")
+
+            # only branches can include things
+            if value.get("type") != NodeType.BRANCH.value:
+                continue
+
+            includes = value.get("includes", None)
+            if includes is None:
+                continue
+
+            if not isinstance(includes, list):
+                raise InvalidSpecException(f"{self.source.absolute()}, Invalid 'includes' definition (not a list)")
+
+            for include in includes:
+                if not isinstance(include, str):
+                    raise InvalidSpecException(
+                        f"{self.source.absolute()}, Invalid 'include' definition (not a str): {include}"
+                    )
+
+                self.includes.append(Include(f"#include {include} {key}", prefix))
+
+            del value["includes"]
 
         if prefix:
             tmp_data = {}
@@ -99,7 +134,7 @@ class VSpec:
 
         lines = content.splitlines()
         include_statements = [line.strip() for line in lines if line.strip().startswith("#include")]
-        self.includes = [Include(statement, prefix) for statement in include_statements]
+        self.includes.extend([Include(statement, prefix) for statement in include_statements])
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}, src={self.source}, prefix={self.prefix}, includes={len(self.includes)}"

@@ -11,23 +11,21 @@ import subprocess
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TEST_UNITS = HERE / ".." / "test_units.yaml"
-TEST_QUANT = HERE / ".." / "test_quantities.yaml"
 
 
 def test_include(tmp_path):
-    spec = HERE / "test.vspec"
-    output = tmp_path / "out.json"
-    expected = HERE / "expected.json"
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {spec} --output {output}"
+    spec = HERE / "A.vspec"
+    output = tmp_path / "out.yaml"
+    expected = HERE / "expected.yaml"
+    cmd = f"vspec export yaml --vspec {spec} --output {output}"
     subprocess.run(cmd.split(), check=True)
-    filecmp.cmp(output, expected)
+    assert filecmp.cmp(output, expected)
 
 
 def test_error(tmp_path):
     spec = HERE / "test_error.vspec"
-    output = tmp_path / "out.json"
-    cmd = f"vspec export json -u {TEST_UNITS} -q {TEST_QUANT} --pretty --vspec {spec} --output {output}"
+    output = tmp_path / "out.yaml"
+    cmd = f"vspec export yaml --vspec {spec} --output {output}"
     process = subprocess.run(cmd.split(), capture_output=True, text=True)
     assert process.returncode != 0
 

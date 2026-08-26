@@ -5,10 +5,10 @@ A:
 
 # Not specifying prefix, then we will have a dual root problem as contents from file
 # are added on root level
-#include include.vspec
+#include B.vspec
 
 # Make sure that we can have additional signals after
-A.S1:
+A.X:
   datatype: float
   type: sensor
   unit: km
@@ -20,4 +20,4 @@ A.B:
 
 # As "A.BBBBBB" does not exist we shall get a warning
 # It will be treated as an implicit branch, which likely is not intentional
-#include include_b.vspec A.BBBBBB
+#include B.vspec A.BBBBBB
