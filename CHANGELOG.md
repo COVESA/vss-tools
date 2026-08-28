@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Breaking**: Unit descriptions (`unit` field) must now be globally unique across all quantities. Previously accepted duplicate unit descriptions in `units.yaml` will now fail validation with a clear error message identifying the conflicting unit keys.
+- **Breaking**: `vspec export id` now writes struct/type static UIDs to `--types-output` (or, if omitted, to a file named `structs_<output>` next to `--output`) instead of merging them into the main `--output` file. Previously, using `--types` produced a vspec with two top-level roots that other tools cannot load.
 - Enhanced `s2dm` exporter that provides increased traceability of the performed mapping, reporting name conversions, correspondences, etc.
 
 ## 6.0
