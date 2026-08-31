@@ -1,0 +1,78 @@
+@prefix : <urn:samm:com.covesa.vss.spec:1.0.0#> .
+@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> .
+@prefix samm-c: <urn:samm:org.eclipse.esmf.samm:characteristic:2.1.0#> .
+@prefix unit: <urn:samm:org.eclipse.esmf.samm:unit:2.1.0#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Ab a samm:Aspect ;
+    samm:events () ;
+    samm:operations () ;
+    samm:preferredName "B"@en ;
+    samm:properties ( :ab ) .
+
+:ab a samm:Property ;
+    samm:characteristic :AbInstanceSingleEntity ;
+    samm:preferredName "AB"@en .
+
+:abRow1 a samm:Property ;
+    samm:characteristic :AbRowSingleEntity ;
+    samm:preferredName "Ab Row1"@en .
+
+:abRow2 a samm:Property ;
+    samm:characteristic :AbRowSingleEntity ;
+    samm:preferredName "Ab Row2"@en .
+
+:abRowLeft a samm:Property ;
+    samm:characteristic :AbCharacteristic ;
+    samm:preferredName "Ab Row Left"@en .
+
+:abRowRight a samm:Property ;
+    samm:characteristic :AbCharacteristic ;
+    samm:preferredName "Ab Row Right"@en .
+
+:bc a samm:Property ;
+    samm:characteristic :BcCharacteristic ;
+    samm:preferredName "BC"@en .
+
+:AbEntity a samm:Entity ;
+    samm:properties ( [ samm:property :bc; samm:payloadName "c" ] ) .
+
+:AbInstanceEntity a samm:Entity ;
+    samm:properties ( [ samm:property :abRow1; samm:optional true; samm:payloadName "row1" ] [ samm:property :abRow2; samm:optional true; samm:payloadName "row2" ] ) .
+
+:AbInstanceSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :AbInstanceEntity ;
+    samm:name "AbInstance" ;
+    samm:preferredName "Ab Instance"@en .
+
+:AbRowEntity a samm:Entity ;
+    samm:properties ( [ samm:property :abRowLeft; samm:optional true; samm:payloadName "left" ] [ samm:property :abRowRight; samm:optional true; samm:payloadName "right" ] ) .
+
+:BcCharacteristic a samm-c:Measurement ;
+    samm-c:unit unit:kilometre ;
+    samm:dataType xsd:byte ;
+    samm:description """
+VSS path    : A.B.C
+
+Description: This description will also exist multiple times.
+
+Comment   : As well as this comment.
+
+Unit             : km"""@en .
+
+:AbCharacteristic a samm:Characteristic ;
+    samm:dataType :AbEntity ;
+    samm:description """
+VSS path    : A.B
+
+Description: This description will be duplicated.
+
+Comment   : This comment will be duplicated"""@en ;
+    samm:name "AbCharacteristic" .
+
+:AbRowSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :AbRowEntity ;
+    samm:name "AbRow" ;
+    samm:preferredName "Ab Row"@en .
+
+

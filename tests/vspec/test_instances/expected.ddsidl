@@ -56,4 +56,110 @@ octet value;
 
 };
 
+module Y
+{
+struct Count
+{
+octet value;
+//const string type ="attribute";
+//const string description="d";
+};
+};
+
+module X
+{
+module B
+{
+struct Count
+{
+octet value;
+//const string type ="attribute";
+//const string description="d";
+};
+};
+
+module C
+{
+struct Count
+{
+octet value;
+//const string type ="attribute";
+//const string description="d";
+};
+};
+
+module B1
+{
+struct Value
+{
+boolean value;
+//const string type ="sensor";
+//const string description="d";
+};
+};
+
+module B2
+{
+struct Value
+{
+boolean value;
+//const string type ="sensor";
+//const string description="d";
+};
+};
+
+module C1
+{
+struct Value
+{
+boolean value;
+//const string type ="sensor";
+//const string description="d";
+};
+};
+
+module C2
+{
+struct Value
+{
+boolean value;
+//const string type ="sensor";
+//const string description="d";
+};
+};
+
+};
+
+module Y1
+{
+module Z
+{
+module Z1
+{
+};
+
+module Z2
+{
+};
+
+};
+
+};
+
+module Y2
+{
+module Z
+{
+module Z1
+{
+};
+
+module Z2
+{
+};
+
+};
+
+};
+
 };

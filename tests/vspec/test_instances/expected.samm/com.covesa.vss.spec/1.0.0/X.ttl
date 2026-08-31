@@ -1,0 +1,133 @@
+@prefix : <urn:samm:com.covesa.vss.spec:1.0.0#> .
+@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> .
+@prefix samm-c: <urn:samm:org.eclipse.esmf.samm:characteristic:2.1.0#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:X a samm:Aspect ;
+    samm:events () ;
+    samm:operations () ;
+    samm:preferredName "X"@en ;
+    samm:properties ( :x ) .
+
+:bCount a samm:Property ;
+    samm:characteristic :BCountCharacteristic ;
+    samm:preferredName "B Count"@en .
+
+:bValue a samm:Property ;
+    samm:characteristic :BValueCharacteristic ;
+    samm:preferredName "B Value"@en .
+
+:cValue a samm:Property ;
+    samm:characteristic :CValueCharacteristic ;
+    samm:preferredName "C Value"@en .
+
+:x a samm:Property ;
+    samm:characteristic :XCharacteristic ;
+    samm:preferredName "X"@en .
+
+:xb a samm:Property ;
+    samm:characteristic :XbInstanceSingleEntity ;
+    samm:preferredName "XB"@en .
+
+:xbb1 a samm:Property ;
+    samm:characteristic :XbCharacteristic ;
+    samm:preferredName "XbB1"@en .
+
+:xbb2 a samm:Property ;
+    samm:characteristic :XbCharacteristic ;
+    samm:preferredName "XbB2"@en .
+
+:xc a samm:Property ;
+    samm:characteristic :XcInstanceSingleEntity ;
+    samm:preferredName "XC"@en .
+
+:xcCount a samm:Property ;
+    samm:characteristic :XcCountCharacteristic ;
+    samm:preferredName "XC Count"@en .
+
+:xcc1 a samm:Property ;
+    samm:characteristic :XcCharacteristic ;
+    samm:preferredName "XcC1"@en .
+
+:xcc2 a samm:Property ;
+    samm:characteristic :XcCharacteristic ;
+    samm:preferredName "XcC2"@en .
+
+:BCountCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:unsignedByte ;
+    samm:description """
+VSS path    : A.X.B.Count
+
+Description: d"""@en .
+
+:BValueCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:boolean ;
+    samm:description """
+VSS path    : A.X.B.Value
+
+Description: d"""@en .
+
+:CValueCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:boolean ;
+    samm:description """
+VSS path    : A.X.C.Value
+
+Description: d"""@en .
+
+:XCharacteristic a samm:Characteristic ;
+    samm:dataType :XEntity ;
+    samm:description """
+VSS path    : A.X
+
+Description: d"""@en ;
+    samm:name "XCharacteristic" .
+
+:XEntity a samm:Entity ;
+    samm:properties ( [ samm:property :xb; samm:payloadName "b" ] [ samm:property :xc; samm:payloadName "c" ] ) .
+
+:XbEntity a samm:Entity ;
+    samm:properties ( [ samm:property :bCount; samm:payloadName "count" ] [ samm:property :bValue; samm:payloadName "value" ] ) .
+
+:XbInstanceEntity a samm:Entity ;
+    samm:properties ( [ samm:property :xbb1; samm:optional true; samm:payloadName "b1" ] [ samm:property :xbb2; samm:optional true; samm:payloadName "b2" ] ) .
+
+:XbInstanceSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :XbInstanceEntity ;
+    samm:name "XbInstance" ;
+    samm:preferredName "Xb Instance"@en .
+
+:XcCountCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:unsignedByte ;
+    samm:description """
+VSS path    : A.X.C.Count
+
+Description: d"""@en .
+
+:XcEntity a samm:Entity ;
+    samm:properties ( [ samm:property :xcCount; samm:payloadName "count" ] [ samm:property :cValue; samm:payloadName "value" ] ) .
+
+:XcInstanceEntity a samm:Entity ;
+    samm:properties ( [ samm:property :xcc1; samm:optional true; samm:payloadName "c1" ] [ samm:property :xcc2; samm:optional true; samm:payloadName "c2" ] ) .
+
+:XcInstanceSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :XcInstanceEntity ;
+    samm:name "XcInstance" ;
+    samm:preferredName "Xc Instance"@en .
+
+:XbCharacteristic a samm:Characteristic ;
+    samm:dataType :XbEntity ;
+    samm:description """
+VSS path    : A.X.B
+
+Description: d"""@en ;
+    samm:name "XbCharacteristic" .
+
+:XcCharacteristic a samm:Characteristic ;
+    samm:dataType :XcEntity ;
+    samm:description """
+VSS path    : A.X.C
+
+Description: d"""@en ;
+    samm:name "XcCharacteristic" .
+
+

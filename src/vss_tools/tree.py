@@ -57,6 +57,10 @@ class NoVSSDataException(Exception):
     pass
 
 
+class InvalidInstanceNodeException(Exception):
+    pass
+
+
 class VSSNode(Node):  # type: ignore[misc]
     """
     Our Anytree node class
@@ -208,6 +212,10 @@ class VSSNode(Node):  # type: ignore[misc]
             n_instance_nodes += len(instance_nodes)
             iterations += 1
             for instance_node in instance_nodes:
+                data = instance_node.get_vss_data()
+                if not isinstance(data, VSSDataBranch):
+                    raise InvalidInstanceNodeException(instance_node.get_fqn())
+
                 log.debug(f"'{instance_node.get_fqn()}', expanding...")
                 # Copy the reference node for creating instances
                 instance_node_copy = deepcopy(instance_node)
@@ -234,6 +242,13 @@ class VSSNode(Node):  # type: ignore[misc]
                 # Roots to attach generated nodes
                 # Initialized with the instance node itself
                 roots = [instance_node]
+
+                if data.instances_relation == "sibling":
+                    if instance_node.parent is None:
+                        instance_node.data.instances = []  # type: ignore
+                        continue
+                    roots = [instance_node.parent]
+
                 log.debug(f"Roots: {[r.get_fqn() for r in roots]}")
 
                 # We want to keep track of generated nodes
@@ -242,7 +257,7 @@ class VSSNode(Node):  # type: ignore[misc]
                 generated_instance_nodes = []
                 # On every iteration, we get back new nodes to attach new instances to (roots)
                 # as well as the nodes that have been generated
-                for instance in instance_node.data.instances:  # type: ignore
+                for instance in data.instances:
                     roots, generated = expand_instance(roots, instance_node_copy, instance)
                     generated_instance_nodes.extend(generated)
 
@@ -495,7 +510,6 @@ def expand_instance(
     # Instances could be again a list of strings
     # We want to harmonize that
     # The info however is used to decide what new root points to return
-    requested_instances = []
     if isinstance(instance, list):
         requested_instances = instance
     else:

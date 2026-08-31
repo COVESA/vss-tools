@@ -22,3 +22,38 @@ interfaces:
   - name: C
     type: int32
     description: This description will also exist multiple times.
+- name: A_Y
+  properties:
+  - name: Count
+    type: int32
+    description: d
+- name: A_X_B
+  properties:
+  - name: Count
+    type: int32
+    description: d
+- name: A_X_C
+  properties:
+  - name: Count
+    type: int32
+    description: d
+- name: A_X_B1
+  properties:
+  - name: Value
+    type: bool
+    description: d
+- name: A_X_B2
+  properties:
+  - name: Value
+    type: bool
+    description: d
+- name: A_X_C1
+  properties:
+  - name: Value
+    type: bool
+    description: d
+- name: A_X_C2
+  properties:
+  - name: Value
+    type: bool
+    description: d

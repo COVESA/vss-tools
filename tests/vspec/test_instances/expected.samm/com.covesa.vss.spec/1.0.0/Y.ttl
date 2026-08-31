@@ -1,0 +1,86 @@
+@prefix : <urn:samm:com.covesa.vss.spec:1.0.0#> .
+@prefix samm: <urn:samm:org.eclipse.esmf.samm:meta-model:2.1.0#> .
+@prefix samm-c: <urn:samm:org.eclipse.esmf.samm:characteristic:2.1.0#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Y a samm:Aspect ;
+    samm:events () ;
+    samm:operations () ;
+    samm:preferredName "Y"@en ;
+    samm:properties ( :y ) .
+
+:y a samm:Property ;
+    samm:characteristic :YInstanceSingleEntity ;
+    samm:preferredName "Y"@en .
+
+:yCount a samm:Property ;
+    samm:characteristic :YCountCharacteristic ;
+    samm:preferredName "Y Count"@en .
+
+:yy1 a samm:Property ;
+    samm:characteristic :YCharacteristic ;
+    samm:preferredName "YY1"@en .
+
+:yy2 a samm:Property ;
+    samm:characteristic :YCharacteristic ;
+    samm:preferredName "YY2"@en .
+
+:z a samm:Property ;
+    samm:characteristic :ZCharacteristic,
+        :ZInstanceSingleEntity ;
+    samm:preferredName "Z"@en .
+
+:zz1 a samm:Property ;
+    samm:characteristic :ZCharacteristic ;
+    samm:preferredName "ZZ1"@en .
+
+:zz2 a samm:Property ;
+    samm:characteristic :ZCharacteristic ;
+    samm:preferredName "ZZ2"@en .
+
+:YCountCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:unsignedByte ;
+    samm:description """
+VSS path    : A.Y.Count
+
+Description: d"""@en .
+
+:YEntity a samm:Entity ;
+    samm:properties ( [ samm:property :yCount; samm:payloadName "count" ] [ samm:property :z; samm:payloadName "z" ] ) .
+
+:YInstanceEntity a samm:Entity ;
+    samm:properties ( [ samm:property :yy1; samm:optional true; samm:payloadName "y1" ] [ samm:property :yy2; samm:optional true; samm:payloadName "y2" ] ) .
+
+:YInstanceSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :YInstanceEntity ;
+    samm:name "YInstance" ;
+    samm:preferredName "Y Instance"@en .
+
+:ZEntity a samm:Entity .
+
+:ZInstanceEntity a samm:Entity ;
+    samm:properties ( [ samm:property :zz1; samm:optional true; samm:payloadName "z1" ] [ samm:property :zz2; samm:optional true; samm:payloadName "z2" ] ) .
+
+:ZInstanceSingleEntity a samm-c:SingleEntity ;
+    samm:dataType :ZInstanceEntity ;
+    samm:name "ZInstance" ;
+    samm:preferredName "Z Instance"@en .
+
+:YCharacteristic a samm:Characteristic ;
+    samm:dataType :YEntity ;
+    samm:description """
+VSS path    : A.Y
+
+Description: d"""@en ;
+    samm:name "YCharacteristic" .
+
+:ZCharacteristic a samm:Characteristic ;
+    samm:dataType xsd:double,
+        :ZEntity ;
+    samm:description """
+VSS path    : A.Y.Z
+
+Description: d"""@en ;
+    samm:name "ZCharacteristic" .
+
+
