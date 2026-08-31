@@ -13,7 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, cast
 
-from graphql import GraphQLEnumType, GraphQLObjectType, GraphQLSchema, is_enum_type, is_object_type, print_type
+from graphql import GraphQLObjectType, GraphQLSchema, is_enum_type, is_object_type, print_type
 
 
 def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str]]:
@@ -57,7 +57,7 @@ def analyze_schema_for_flat_domains(schema: GraphQLSchema) -> dict[str, list[str
                 domain_files[file_name] = [type_name]
         elif is_enum_type(graphql_type):
             # Group enums by category
-            if "UnitEnum" in type_name:
+            if type_name.endswith("Unit") and "_" not in type_name:
                 # Unit enums go to other/units.graphql
                 enum_file = "other/units.graphql"
                 if enum_file not in domain_files:
@@ -170,7 +170,7 @@ def analyze_schema_for_nested_domains(schema: GraphQLSchema) -> dict[str, list[s
                 type_groups[domain_path].append(type_name)
         elif is_enum_type(graphql_type):
             # Group enums by category
-            if "UnitEnum" in type_name:
+            if type_name.endswith("Unit") and "_" not in type_name:
                 # Unit enums go to other/units.graphql
                 enum_file = "other/units.graphql"
                 if enum_file not in type_groups:
@@ -206,6 +206,7 @@ def write_domain_files(
     output_dir: Path,
     vspec_comments: dict[str, Any],
     directive_processor: Any,
+    unit_enums_metadata: dict[str, Any],
     allowed_enums_metadata: dict[str, Any],
 ) -> None:
     """
@@ -217,6 +218,7 @@ def write_domain_files(
         output_dir: Output directory
         vspec_comments: VSS comments for directive processing
         directive_processor: Processor for adding @vspec directives
+        unit_enums_metadata: Metadata for unit enums
         allowed_enums_metadata: Metadata for allowed value enums
     """
     for file_path, type_names in domain_structure.items():
@@ -270,6 +272,9 @@ def write_domain_files(
             # Apply vspec directives to instance tag files
             if directive_processor and hasattr(directive_processor, "process_schema"):
                 lines = file_content.split("\n")
+                lines = directive_processor._process_instance_dimension_enum_directives(
+                    lines, vspec_comments.get("instance_dimension_enums", {}), set()
+                )
                 lines = directive_processor._process_type_directives(lines, vspec_comments)
                 file_content = "\n".join(lines)
 
@@ -332,6 +337,9 @@ def write_domain_files(
             # Process the SDL string to add directives
             # We need to split into lines and process
             lines = file_content.split("\n")
+            # Process unit enum directives for units file
+            if file_path == "other/units.graphql":
+                lines = directive_processor._process_unit_enum_directives(lines, unit_enums_metadata, set())
             lines = directive_processor._process_allowed_enum_directives(lines, allowed_enums_metadata, set())
             lines = directive_processor._process_field_directives(lines, vspec_comments)
             lines = directive_processor._process_deprecated_directives(
@@ -364,8 +372,6 @@ def write_common_files(
     """
     from graphql import is_scalar_type, print_type
 
-    from vss_tools.utils.graphql_utils import extract_custom_directives_from_schema
-
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -373,61 +379,12 @@ def write_common_files(
     other_dir = output_dir / "other"
     other_dir.mkdir(parents=True, exist_ok=True)
 
-    # Extract and write directives using GraphQL introspection
-    custom_directives = extract_custom_directives_from_schema(schema)
-
-    if custom_directives:
-        directives_content = ["# GraphQL directive definitions\n"]
-
-        # For each custom directive, use GraphQL's print function or reconstruct the SDL
-        for directive_name, directive_obj in custom_directives.items():
-            # Build directive definition string
-            args_parts = []
-            for arg_name, arg in directive_obj.args.items():
-                arg_type_str = str(arg.type)
-
-                # Check if default_value is actually set (not None and not Undefined sentinel)
-                # GraphQL uses a special Undefined sentinel, check by string representation
-                has_default = arg.default_value is not None and str(arg.default_value) != "Undefined"
-
-                if has_default:
-                    args_parts.append(f"  {arg_name}: {arg_type_str} = {arg.default_value}")
-                else:
-                    args_parts.append(f"  {arg_name}: {arg_type_str}")
-
-                # Add description if available
-                if arg.description:
-                    # Use triple-quoted string for description, ensure proper formatting
-                    desc_lines = arg.description.split("\n")
-                    if len(desc_lines) == 1:
-                        args_parts[-1] = f'  """{arg.description}"""\n  {args_parts[-1].strip()}'
-                    else:
-                        # Multi-line description
-                        desc = "\n  ".join(desc_lines)
-                        args_parts[-1] = f'  """\n  {desc}\n  """\n  {args_parts[-1].strip()}'
-
-            # Build locations string
-            locations = " | ".join([loc.name for loc in directive_obj.locations])
-
-            # Construct the directive
-            directive_def = f"directive @{directive_name}"
-            if args_parts:
-                directive_def += f"(\n{chr(10).join(args_parts)}\n)"
-            directive_def += f" on {locations}"
-
-            directives_content.append(directive_def)
-
-        # Add schema enums that belong with directives (VspecElement, etc.)
-        schema_enums = []
-        for type_name, type_def in schema.type_map.items():
-            if isinstance(type_def, GraphQLEnumType) and type_name in ["VspecElement"]:
-                schema_enums.append(print_type(type_def))
-
-        if schema_enums:
-            directives_content.extend(schema_enums)
-
+    # Copy predefined directives file directly instead of reconstructing from introspection
+    predefined_directives_file = Path(__file__).parent / "predefined_elements" / "directives.graphql"
+    if predefined_directives_file.exists():
+        directives_content = predefined_directives_file.read_text(encoding="utf-8")
         with open(other_dir / "directives.graphql", "w") as f:
-            f.write("\n\n".join(directives_content))
+            f.write(directives_content)
 
     # Extract custom scalars using GraphQL introspection
     custom_scalars = []

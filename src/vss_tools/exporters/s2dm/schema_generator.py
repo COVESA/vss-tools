@@ -19,21 +19,24 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 from graphql import GraphQLField, GraphQLObjectType, GraphQLSchema, GraphQLString
 
+from vss_tools import log
+from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from vss_tools.tree import VSSNode
-from vss_tools.utils.graphql_directive_processor import GraphQLDirectiveProcessor
-from vss_tools.utils.graphql_scalars import get_vss_scalar_types
-from vss_tools.utils.modular_export_utils import (
+from vss_tools.utils.pandas_utils import detect_and_resolve_short_name_collisions, get_metadata_df
+
+from .constants import CUSTOM_DIRECTIVES, S2DM_CONVERSIONS, S2DMExporterException
+from .graphql_directive_processor import GraphQLDirectiveProcessor
+from .graphql_scalars import get_vss_scalar_types
+from .metadata_tracker import init_vspec_comments
+from .modular_export_utils import (
     analyze_schema_for_flat_domains,
     analyze_schema_for_nested_domains,
     write_common_files,
     write_domain_files,
 )
-from vss_tools.utils.pandas_utils import get_metadata_df
-
-from .constants import CUSTOM_DIRECTIVES, S2DMExporterException
-from .metadata_tracker import init_vspec_comments
 from .type_builders import (
     create_allowed_enums,
     create_instance_types,
@@ -46,6 +49,7 @@ from .type_builders import (
 VSpecDirective = CUSTOM_DIRECTIVES["vspec"]
 RangeDirective = CUSTOM_DIRECTIVES["range"]
 InstanceTagDirective = CUSTOM_DIRECTIVES["instanceTag"]
+ReferenceDirective = CUSTOM_DIRECTIVES["reference"]
 
 # Initialize directive processor
 directive_processor = GraphQLDirectiveProcessor()
@@ -55,6 +59,7 @@ def generate_s2dm_schema(
     tree: VSSNode,
     data_type_tree: VSSNode | None = None,
     extended_attributes: tuple[str, ...] = (),
+    use_short_names: bool = True,
 ) -> tuple[
     GraphQLSchema,
     dict[str, dict[str, dict[str, str]]],
@@ -66,14 +71,17 @@ def generate_s2dm_schema(
 
     Orchestrates the complete schema generation process:
     1. Extract metadata from VSS tree
-    2. Create unit enums, instance types, allowed value enums, struct types
-    3. Create object types for all branches
-    4. Assemble complete GraphQL schema
+    2. Optionally detect and resolve short name collisions
+    3. Create unit enums, instance types, allowed value enums, struct types
+    4. Create object types for all branches
+    5. Assemble complete GraphQL schema
 
     Args:
         tree: Main VSS tree with vehicle signals
         data_type_tree: Optional user-defined struct types
         extended_attributes: Extended attribute names from CLI flags
+        use_short_names: If True, use short names with collision resolution (default: True).
+                        If False, use fully qualified names with underscores.
 
     Returns:
         Tuple of (schema, unit_enums_metadata, allowed_enums_metadata, vspec_comments)
@@ -85,13 +93,50 @@ def generate_s2dm_schema(
         branches_df, leaves_df = get_metadata_df(tree, extended_attributes=extended_attributes)
         vspec_comments = init_vspec_comments()
 
+        # Combine branches from both main tree and data type tree for joint collision detection
+        # since they share the same GraphQL type namespace
+        combined_branches_df = branches_df
+        struct_leaves_df: pd.DataFrame | None = None
+        if data_type_tree:
+            struct_branches_df, struct_leaves_df = get_metadata_df(
+                data_type_tree, extended_attributes=extended_attributes
+            )
+            combined_branches_df = pd.concat([branches_df, struct_branches_df], axis=0, verify_integrity=True)
+
+        # Detect and resolve short name collisions if requested
+        short_name_mapping: dict[str, str] | None = None
+        if use_short_names:
+            short_name_mapping, collision_warnings, collision_stats = detect_and_resolve_short_name_collisions(
+                combined_branches_df
+            )
+            vspec_comments["short_name_mapping"] = short_name_mapping
+            vspec_comments["short_name_collisions"] = collision_warnings
+            vspec_comments["short_name_stats"] = collision_stats
+        else:
+            # When using FQN names, store empty mapping to indicate FQN mode
+            vspec_comments["short_name_mapping"] = None
+            vspec_comments["short_name_collisions"] = []
+            vspec_comments["short_name_stats"] = {}
+
         # Create all types in logical order
         unit_enums, unit_metadata = create_unit_enums()
-        instance_types = create_instance_types(branches_df, vspec_comments)
+        instance_types = create_instance_types(branches_df, vspec_comments, short_name_mapping)
         allowed_enums, allowed_metadata = create_allowed_enums(leaves_df)
 
+        # Also create allowed enums for struct properties (properties with `allowed` values)
+        if struct_leaves_df is not None:
+            struct_allowed_enums, struct_allowed_metadata = create_allowed_enums(struct_leaves_df)
+            allowed_enums.update(struct_allowed_enums)
+            allowed_metadata.update(struct_allowed_metadata)
+
         # Create struct types from data type tree
-        struct_types = create_struct_types(data_type_tree, vspec_comments, extended_attributes=extended_attributes)
+        struct_types = create_struct_types(
+            data_type_tree,
+            vspec_comments,
+            extended_attributes=extended_attributes,
+            short_name_mapping=short_name_mapping,
+            allowed_enums=allowed_enums,
+        )
 
         # Combine all types
         types_registry = {**instance_types, **allowed_enums, **struct_types}
@@ -99,17 +144,56 @@ def generate_s2dm_schema(
         # Create object types for all branches
         for fqn in branches_df.index:
             if fqn not in types_registry:
+                # Check if branch is empty (has no children)
+                node = tree.get_node_with_fqn(fqn)
+                if node is None:
+                    log.error(f"Branch '{fqn}' not found in tree but present in DataFrame. Skipping.")
+                    continue
+
+                if node.is_leaf:
+                    # Branch has no children - skip creating empty type
+                    # Use same logic as create_object_type for type name
+                    if short_name_mapping and fqn in short_name_mapping:
+                        type_name = short_name_mapping[fqn]
+                    else:
+                        type_name = convert_name_for_graphql_schema(fqn, GraphQLElementType.TYPE, S2DM_CONVERSIONS)
+                    log.warning(
+                        f"Branch '{fqn}' (GraphQL type: '{type_name}') was skipped because "
+                        f"the reference vspec does not define any sub-elements inside."
+                    )
+                    # Track skipped branch for reporting
+                    vspec_comments["skipped_empty_branches"].append(
+                        {
+                            "fqn": fqn,
+                            "graphql_type_name": type_name,
+                            "reason": "Empty branch (no children)",
+                        }
+                    )
+                    continue
+
                 types_registry[fqn] = create_object_type(
-                    fqn, branches_df, leaves_df, types_registry, unit_enums, vspec_comments
+                    fqn,
+                    branches_df,
+                    leaves_df,
+                    types_registry,
+                    unit_enums,
+                    vspec_comments,
+                    extended_attributes,
+                    short_name_mapping,
                 )
 
         # Assemble complete schema
-        vehicle_type = types_registry.get("Vehicle", GraphQLString)
-        query = GraphQLObjectType("Query", {"vehicle": GraphQLField(vehicle_type)})
+        from .graphql_utils import sanitize_graphql_name
+
+        root_type_name = sanitize_graphql_name(tree.name, element_type=GraphQLElementType.TYPE)
+        root_type = types_registry.get(root_type_name, GraphQLString)
+        query = GraphQLObjectType(
+            "Query", {sanitize_graphql_name(tree.name, element_type=GraphQLElementType.FIELD): GraphQLField(root_type)}
+        )
         schema = GraphQLSchema(
             query=query,
             types=get_vss_scalar_types() + list(types_registry.values()) + list(unit_enums.values()),
-            directives=[VSpecDirective, RangeDirective, InstanceTagDirective],
+            directives=[VSpecDirective, RangeDirective, InstanceTagDirective, ReferenceDirective],
         )
 
         return schema, unit_metadata, allowed_metadata, vspec_comments
@@ -197,7 +281,13 @@ def write_modular_schema(
 
         # Write domain-specific files
         write_domain_files(
-            domain_structure, schema, output_dir, vspec_comments, directive_processor, allowed_enums_metadata
+            domain_structure,
+            schema,
+            output_dir,
+            vspec_comments,
+            directive_processor,
+            unit_enums_metadata,
+            allowed_enums_metadata,
         )
 
     except Exception as e:

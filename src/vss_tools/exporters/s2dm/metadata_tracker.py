@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 
-def init_vspec_comments() -> dict[str, dict[str, Any]]:
+def init_vspec_comments() -> dict[str, Any]:
     """
     Initialize dictionary for storing VSS metadata for directives.
 
@@ -24,6 +24,7 @@ def init_vspec_comments() -> dict[str, dict[str, Any]]:
     - field_deprecated: field_path -> "deprecation reason" for @deprecated directive
     - instance_tags: tag_name -> {"element": "BRANCH", "fqn": "...", "instances": "..."}
     - instance_tag_types: type_name -> tag_name
+    - skipped_empty_branches: list of branches skipped during export (no children)
 
     Returns:
         Initialized metadata tracking dictionary
@@ -35,6 +36,7 @@ def init_vspec_comments() -> dict[str, dict[str, Any]]:
         "field_vss_types": {},
         "field_ranges": {},
         "field_deprecated": {},
+        "skipped_empty_branches": [],
     }
 
 

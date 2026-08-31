@@ -15,16 +15,16 @@ a real VSS tree is processed.
 
 from pathlib import Path
 
-from graphql import GraphQLObjectType, GraphQLString, print_schema
+from graphql import GraphQLObjectType, print_schema
 from vss_tools.exporters.s2dm import generate_s2dm_schema
+from vss_tools.exporters.s2dm.graphql_scalars import VSS_DATATYPE_MAP
 from vss_tools.exporters.s2dm.type_builders import (
-    _clean_enum_name,
     _parse_instances_simple,
+    _sanitize_enum_value_for_graphql,
     create_unit_enums,
     resolve_datatype_to_graphql,
 )
 from vss_tools.main import get_trees
-from vss_tools.utils.graphql_scalars import VSS_DATATYPE_MAP
 
 HERE = Path(__file__).parent
 TEST_UNITS = HERE / "vspec" / "test_s2dm" / "test_units.yaml"
@@ -50,34 +50,34 @@ def _load_s2dm(vspec: Path) -> str:
     return print_schema(schema)
 
 
-class TestCleanEnumName:
-    """_clean_enum_name converts arbitrary strings to valid GraphQL enum member names."""
+class TestSanitizeEnumValueForGraphql:
+    """_sanitize_enum_value_for_graphql converts arbitrary strings to SCREAMING_SNAKE_CASE."""
 
-    def test_plain_string_unchanged(self):
-        assert _clean_enum_name("PARK") == "PARK"
+    def test_plain_uppercase_string_unchanged(self):
+        assert _sanitize_enum_value_for_graphql("PARK") == ("PARK", False)
 
     def test_digit_prefix_gets_underscore(self):
-        assert _clean_enum_name("1") == "_1"
-        assert _clean_enum_name("42") == "_42"
+        assert _sanitize_enum_value_for_graphql("1") == ("_1", True)
+        assert _sanitize_enum_value_for_graphql("42") == ("_42", True)
 
-    def test_decimal_dot_replaced(self):
-        assert _clean_enum_name("2.5") == "_2_DOT_5"
-        assert _clean_enum_name("1.0") == "_1_DOT_0"
+    def test_decimal_dot_replaced_with_underscore(self):
+        assert _sanitize_enum_value_for_graphql("2.5") == ("_2_5", True)
+        assert _sanitize_enum_value_for_graphql("1.0") == ("_1_0", True)
 
-    def test_dash_replaced(self):
-        assert _clean_enum_name("some-value") == "some_DASH_value"
+    def test_dash_converted_to_screaming_snake_case(self):
+        assert _sanitize_enum_value_for_graphql("some-value") == ("SOME_VALUE", True)
 
-    def test_combined_transformations(self):
-        # Starts with digit AND contains dot
-        assert _clean_enum_name("3.14") == "_3_DOT_14"
+    def test_combined_digit_and_dot(self):
+        # Starts with digit AND contains dot → digit-prefixed underscore-joined
+        assert _sanitize_enum_value_for_graphql("3.14") == ("_3_14", True)
 
     def test_negative_number(self):
-        # Leading minus is not a digit, so no underscore prefix — dash is replaced
-        assert _clean_enum_name("-100") == "_DASH_100"
+        # Leading minus becomes underscore and the whole value is digit-prefixed
+        assert _sanitize_enum_value_for_graphql("-100") == ("_100", True)
 
     def test_string_starting_with_letter_unchanged(self):
-        assert _clean_enum_name("DRIVE") == "DRIVE"
-        assert _clean_enum_name("NEUTRAL") == "NEUTRAL"
+        assert _sanitize_enum_value_for_graphql("DRIVE") == ("DRIVE", False)
+        assert _sanitize_enum_value_for_graphql("NEUTRAL") == ("NEUTRAL", False)
 
 
 class TestParseInstancesSimple:
@@ -124,9 +124,11 @@ class TestResolveDatatype:
         result = resolve_datatype_to_graphql("uint8[]", {})
         assert isinstance(result, GraphQLList)
 
-    def test_unknown_type_falls_back_to_string(self):
-        result = resolve_datatype_to_graphql("unknown_datatype_xyz", {})
-        assert result == GraphQLString
+    def test_unknown_type_raises_value_error(self):
+        import pytest
+
+        with pytest.raises(ValueError, match="unknown_datatype_xyz"):
+            resolve_datatype_to_graphql("unknown_datatype_xyz", {})
 
     def test_custom_struct_type_resolved_from_registry(self):
         mock_struct = GraphQLObjectType("MyStruct", {})
@@ -142,11 +144,11 @@ class TestResolveDatatype:
         result = resolve_datatype_to_graphql("MyStruct[]", registry)
         assert isinstance(result, GraphQLList)
 
-    def test_unknown_struct_array_falls_back_to_string_list(self):
-        from graphql import GraphQLList
+    def test_unknown_struct_array_raises_value_error(self):
+        import pytest
 
-        result = resolve_datatype_to_graphql("NoSuchStruct[]", {})
-        assert isinstance(result, GraphQLList)
+        with pytest.raises(ValueError, match="NoSuchStruct"):
+            resolve_datatype_to_graphql("NoSuchStruct[]", {})
 
 
 class TestCreateUnitEnums:
@@ -167,9 +169,10 @@ class TestCreateUnitEnums:
         )
         unit_enums, unit_metadata = create_unit_enums()
 
-        assert "length" in unit_enums
-        assert "angle" in unit_enums
-        assert "relation" in unit_enums
+        # Keys are QUDT quantity kinds (PascalCase), not VSS quantity names
+        assert "Length" in unit_enums
+        assert "Angle" in unit_enums
+        assert "DimensionlessRatio" in unit_enums
 
     def test_enum_type_names_are_pascal_cased_with_suffix(self):
         get_trees(
@@ -184,8 +187,8 @@ class TestCreateUnitEnums:
             expand=False,
         )
         unit_enums, _ = create_unit_enums()
-        assert unit_enums["length"].name == "LengthUnitEnum"
-        assert unit_enums["angle"].name == "AngleUnitEnum"
+        assert unit_enums["Length"].name == "LengthUnit"
+        assert unit_enums["Angle"].name == "AngleUnit"
 
     def test_new_quantities_generate_enums(self):
         """angular_velocity and power quantities added to test fixtures generate enums."""
@@ -201,10 +204,11 @@ class TestCreateUnitEnums:
             expand=False,
         )
         unit_enums, _ = create_unit_enums()
-        assert "angular_velocity" in unit_enums
-        assert "power" in unit_enums
-        assert unit_enums["angular_velocity"].name == "AngularVelocityUnitEnum"
-        assert unit_enums["power"].name == "PowerUnitEnum"
+        # rpm maps to QUDT quantity kind "RotationalVelocity"; W maps to "Power"
+        assert "RotationalVelocity" in unit_enums
+        assert "Power" in unit_enums
+        assert unit_enums["RotationalVelocity"].name == "RotationalVelocityUnit"
+        assert unit_enums["Power"].name == "PowerUnit"
 
 
 class TestUnitCaseSensitivityRegression:
@@ -217,46 +221,47 @@ class TestUnitCaseSensitivityRegression:
     """
 
     def test_lowercase_unit_key_generates_schema(self):
-        """rpm (lowercase YAML key) produces AngularVelocityUnitEnum without error."""
+        """rpm (lowercase YAML key) produces RotationalVelocityUnit enum without error."""
         sdl = _load_s2dm(MIXED_CASE_VSPEC)
-        assert "AngularVelocityUnitEnum" in sdl
+        assert "RotationalVelocityUnit" in sdl
 
     def test_uppercase_unit_key_generates_schema(self):
-        """W (uppercase YAML key) produces PowerUnitEnum without KeyError — regression for #535."""
+        """W (uppercase YAML key) produces PowerUnit without KeyError — regression for #535."""
         sdl = _load_s2dm(MIXED_CASE_VSPEC)
-        assert "PowerUnitEnum" in sdl
+        assert "PowerUnit" in sdl
 
     def test_uppercase_unit_field_has_unit_argument(self):
         """Fields using an uppercase-keyed unit get a unit argument in the schema."""
         sdl = _load_s2dm(MIXED_CASE_VSPEC)
-        assert "unit: PowerUnitEnum" in sdl
+        assert "unit: PowerUnit" in sdl
 
     def test_lowercase_unit_field_has_unit_argument(self):
         sdl = _load_s2dm(MIXED_CASE_VSPEC)
-        assert "unit: AngularVelocityUnitEnum" in sdl
+        assert "unit: RotationalVelocityUnit" in sdl
 
-    def test_enum_value_names_are_uppercase(self):
-        """Unit display names are converted to UPPERCASE for GraphQL enum member names."""
+    def test_enum_value_names_use_qudt_unit_codes(self):
+        """Unit enum values use QUDT unit codes (e.g. W for watt, REV_PER_MIN for rpm)."""
         sdl = _load_s2dm(MIXED_CASE_VSPEC)
-        assert "WATT" in sdl
-        assert "REVOLUTION_PER_MINUTE" in sdl or "REVOLUTION" in sdl
+        assert "W" in sdl  # QUDT unit code for watt
+        assert "REV_PER_MIN" in sdl  # QUDT unit code for rpm
 
 
 class TestAllowedValueEdgeCases:
-    """Edge cases in _clean_enum_name for allowed-value enum generation."""
+    """Edge cases in _sanitize_enum_value_for_graphql for allowed-value enum generation."""
 
     def test_float_allowed_values_with_dot(self):
-        # 2.5 → _2_DOT_5
-        assert _clean_enum_name("2.5") == "_2_DOT_5"
+        # 2.5 → _2_5 (dot becomes underscore, digit prefix added)
+        assert _sanitize_enum_value_for_graphql("2.5") == ("_2_5", True)
 
     def test_negative_integer_allowed_value(self):
-        # -1 → _DASH_1 (leading dash, not digit)
-        result = _clean_enum_name("-1")
-        assert result.startswith("_DASH_") or result == "_DASH_1"
+        # -1 → _1 (leading dash removed as special char, digit prefix added)
+        result, was_modified = _sanitize_enum_value_for_graphql("-1")
+        assert result == "_1"
+        assert was_modified
 
     def test_zero_allowed_value(self):
-        assert _clean_enum_name("0") == "_0"
+        assert _sanitize_enum_value_for_graphql("0") == ("_0", True)
 
     def test_string_with_no_transformation_needed(self):
-        assert _clean_enum_name("ACTIVE") == "ACTIVE"
-        assert _clean_enum_name("REVERSE") == "REVERSE"
+        assert _sanitize_enum_value_for_graphql("ACTIVE") == ("ACTIVE", False)
+        assert _sanitize_enum_value_for_graphql("REVERSE") == ("REVERSE", False)

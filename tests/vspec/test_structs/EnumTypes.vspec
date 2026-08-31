@@ -1,0 +1,16 @@
+EnumTestBranch:
+  type: branch
+  description: "Branch for testing struct properties with allowed (enum) values."
+
+EnumTestBranch.NestedStruct:
+  type: struct
+  description: "A struct with a property that has allowed values."
+
+EnumTestBranch.NestedStruct.mode:
+  type: property
+  description: "Mode of the nested struct"
+  datatype: string
+  allowed:
+    - ACTIVE
+    - INACTIVE
+    - ERROR
