@@ -1,12 +1,35 @@
 A
-└── B
-    ├── Row1
-    │   ├── Left
-    │   │   └── C
-    │   └── Right
-    │       └── C
-    └── Row2
-        ├── Left
-        │   └── C
-        └── Right
-            └── C
+├── B
+│   ├── Row1
+│   │   ├── Left
+│   │   │   └── C
+│   │   └── Right
+│   │       └── C
+│   └── Row2
+│       ├── Left
+│       │   └── C
+│       └── Right
+│           └── C
+├── Y
+│   └── Count
+├── X
+│   ├── B
+│   │   └── Count
+│   ├── C
+│   │   └── Count
+│   ├── B1
+│   │   └── Value
+│   ├── B2
+│   │   └── Value
+│   ├── C1
+│   │   └── Value
+│   └── C2
+│       └── Value
+├── Y1
+│   └── Z
+│       ├── Z1
+│       └── Z2
+└── Y2
+    └── Z
+        ├── Z1
+        └── Z2
