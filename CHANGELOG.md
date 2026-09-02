@@ -5,20 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> [!IMPORTANT]
-> This document only contain changes introduced in VSS-Tools 3.0 or later
 
 ## [Unreleased]
+
+## 6.1
 
 ### Added
 
 - `vspec compose` command: bundles a vspec model and all its dependencies (includes, overlays, units, quantities) into a self-contained snapshot folder. Validates the full expanded model before writing, then serialises the raw authored content faithfully — preserving `instances`, instance-level overrides, and custom struct types. See [compose.md](docs/compose.md).
 - `vspec diff` command: compares two compose snapshots and reports every change (ADDED, REMOVED, MODIFIED) as structured JSON. Detects renames via the `fka` field and cascades them to child nodes automatically. See [diff.md](docs/diff.md).
+- `includes` now supported as property as an alternative to `#include`
+- New attribute `instances_relation` to support sibling relationship
+- qudt supported for units
+- Avro exporter added
+- VHAL exporter added
 
 ### Changed
 
 - **Breaking**: Unit descriptions (`unit` field) must now be globally unique across all quantities. Previously accepted duplicate unit descriptions in `units.yaml` will now fail validation with a clear error message identifying the conflicting unit keys.
 - Enhanced `s2dm` exporter that provides increased traceability of the performed mapping, reporting name conversions, correspondences, etc.
+- Minimum Python version is now 3.11
+
 
 ## 6.0
 
