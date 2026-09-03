@@ -102,6 +102,8 @@ class TestSignalChanges:
         assert rename["change_type"] == MODIFIED
         assert rename["parent_label"] == "A"
         assert rename["renamed_from"] == "A.Door"
+        # Branch-duality pointer events always reference another entity, never a leaf.
+        assert rename["is_leaf"] is False
 
     def test_root_branch_not_dual_reported(self, result: dict[str, Any]):
         # 'A' is a root branch (no parent) — must never get a synthetic PROPERTY event
@@ -116,6 +118,8 @@ class TestSignalChanges:
         assert cascade["kind"] == PROPERTY
         assert cascade["renamed_from"] == "A.Door.IsOpen"
         assert cascade["parent_label"] == "A.Portal"
+        # datatype is 'string' (current state) — a primitive, so is_leaf is True.
+        assert cascade["is_leaf"] is True
 
     def test_cascade_rename_includes_aspect_change(self, result: dict[str, Any]):
         by_label = changes_by_label(result)
@@ -135,6 +139,8 @@ class TestSignalChanges:
         assert removed["kind"] == PROPERTY
         assert removed["aspects"] == {}
         assert removed["previous_aspects"]["output_type"] == "string"
+        # datatype 'string' is a primitive, so is_leaf reflects the removed (previous) state.
+        assert removed["is_leaf"] is True
 
     def test_added_signal(self, result: dict[str, Any]):
         by_label = changes_by_label(result)
@@ -146,6 +152,8 @@ class TestSignalChanges:
         assert added["aspects"]["output_type"] == "float"
         assert added["aspects"]["is_list"] is False
         assert added["aspects"]["is_required"] is False
+        # 'float' is a primitive datatype, so is_leaf is True.
+        assert added["is_leaf"] is True
 
     def test_modified_attribute(self, result: dict[str, Any]):
         by_label = changes_by_label(result)
@@ -153,6 +161,8 @@ class TestSignalChanges:
         assert modified is not None, "A.Speed unit change not detected"
         assert modified["change_type"] == MODIFIED
         assert modified["aspects"]["unit"] == {"_op": "modified", "_value": "m/s", "_previous": "km/h"}
+        # datatype 'float' unchanged but still a primitive, so is_leaf must still be reported.
+        assert modified["is_leaf"] is True
 
     def test_no_summary_field(self, result: dict[str, Any]):
         assert "summary" not in result
@@ -185,6 +195,8 @@ class TestUnitChanges:
         assert removed["parent_label"] == "speed"
         assert removed["aspects"] == {}
         assert removed["previous_aspects"]["symbol"] == "km/h"
+        # is_leaf is forbidden on ENUM_VALUE events.
+        assert "is_leaf" not in removed
 
     def test_unit_added(self, result: dict[str, Any]):
         by_label = changes_by_label(result)
@@ -196,6 +208,8 @@ class TestUnitChanges:
         # 'unit' renamed to 'symbol' in aspects
         assert "symbol" in added["aspects"]
         assert "unit" not in added["aspects"]
+        # is_leaf is forbidden on ENUM_VALUE events.
+        assert "is_leaf" not in added
 
     def test_unit_has_no_output_type(self, result: dict[str, Any]):
         by_label = changes_by_label(result)
@@ -301,6 +315,7 @@ class TestFkaTypeMismatch:
         by_label = changes_by_label(result)
         # Type mismatch → no rename; both reported independently
         assert by_label["A.OldSignal"]["change_type"] == REMOVED
+        assert by_label["A.OldSignal"]["is_leaf"] is True
         assert by_label["A.NewBranch"]["change_type"] == ADDED
 
 
@@ -340,6 +355,8 @@ class TestDatatypeMapping:
         assert signal is not None
         assert signal["aspects"]["output_type"] == "string"
         assert signal["aspects"]["is_list"] is True
+        # 'string' is a primitive datatype (array or not), so is_leaf is True.
+        assert signal["is_leaf"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -500,6 +517,8 @@ class TestExpandInstances:
         assert seat_property["parent_label"] == "Vehicle"
         assert seat_property["aspects"] == {"is_list": True, "is_required": False}
         assert "output_type" not in seat_property["aspects"]
+        # Branch-duality pointer events always reference another entity, never a leaf.
+        assert seat_property["is_leaf"] is False
 
 
 # ---------------------------------------------------------------------------
@@ -534,6 +553,7 @@ class TestBranchDuality:
         assert cabin_property["parent_label"] == "Vehicle"
         assert cabin_property["aspects"] == {"is_list": False, "is_required": False}
         assert "output_type" not in cabin_property["aspects"]
+        assert cabin_property["is_leaf"] is False
 
         # Root branch never gets a synthetic PROPERTY event
         assert "Vehicle" not in properties
@@ -565,6 +585,7 @@ class TestBranchDuality:
         assert cabin_property["parent_label"] == "Vehicle"
         assert cabin_property["aspects"] == {}
         assert cabin_property["previous_aspects"] == {"is_list": False, "is_required": False}
+        assert cabin_property["is_leaf"] is False
 
     def test_modified_nested_branch_always_dual_reported(self, tmp_path: Path):
         # Description-only change (not property-relevant) still emits both MODIFIED events.
@@ -601,6 +622,7 @@ class TestBranchDuality:
         assert cabin_property is not None
         assert cabin_property["change_type"] == MODIFIED
         assert cabin_property["aspects"] == {}
+        assert cabin_property["is_leaf"] is False
 
     def test_instances_change_reports_directional_delta_and_is_list_flip(self, tmp_path: Path):
         prev_dir = tmp_path / "prev"
@@ -632,3 +654,100 @@ class TestBranchDuality:
         assert door_property is not None
         assert door_property["change_type"] == MODIFIED
         assert door_property["aspects"]["is_list"] == {"_op": "modified", "_value": True, "_previous": False}
+        assert door_property["is_leaf"] is False
+
+
+# ---------------------------------------------------------------------------
+# is_leaf — mandatory on every PROPERTY event; distinguishes primitive/scalar
+# properties (binding-eligible) from properties that reference another entity.
+# ---------------------------------------------------------------------------
+
+
+class TestIsLeaf:
+    def test_primitive_datatype_signal_added_is_leaf_true(self, tmp_path: Path):
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("")
+        (curr_dir / "model.vspec").write_text("A.Speed:\n  type: sensor\n  description: speed\n  datatype: float\n")
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        assert by_label["A.Speed"]["is_leaf"] is True
+
+    def test_struct_referencing_signal_added_is_leaf_false(self, tmp_path: Path):
+        # Mirrors tests/vspec/test_structs/TestBranch2.vspec's A.ParentStructSensor: a
+        # sensor whose datatype names a struct, not a primitive.
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("")
+        (curr_dir / "model.vspec").write_text(
+            "A.ParentStructSensor:\n"
+            "  type: sensor\n"
+            "  description: rich sensor\n"
+            "  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        assert by_label["A.ParentStructSensor"]["is_leaf"] is False
+
+    def test_struct_referencing_array_datatype_is_leaf_false(self, tmp_path: Path):
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("")
+        (curr_dir / "model.vspec").write_text(
+            "A.NestedStructs:\n"
+            "  type: sensor\n"
+            "  description: rich sensor array\n"
+            "  datatype: VehicleDataTypes.TestBranch1.NestedStruct[]\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        assert by_label["A.NestedStructs"]["is_leaf"] is False
+
+    def test_modified_unrelated_change_still_reports_current_is_leaf(self, tmp_path: Path):
+        # is_leaf must be recomputed from current state on MODIFIED even when the
+        # change itself is unrelated (e.g. a description edit).
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("A.Speed:\n  type: sensor\n  description: old\n  datatype: float\n")
+        (curr_dir / "model.vspec").write_text("A.Speed:\n  type: sensor\n  description: new\n  datatype: float\n")
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        speed = by_label["A.Speed"]
+        assert speed["change_type"] == MODIFIED
+        assert speed["is_leaf"] is True
+
+    def test_removed_property_reports_previous_is_leaf(self, tmp_path: Path):
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.ParentStructSensor:\n"
+            "  type: sensor\n"
+            "  description: rich sensor\n"
+            "  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text("")
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        removed = by_label["A.ParentStructSensor"]
+        assert removed["change_type"] == REMOVED
+        assert removed["is_leaf"] is False

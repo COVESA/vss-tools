@@ -34,6 +34,7 @@ from vss_tools.compose import (
     STRUCTS_SNAPSHOT_FILENAME,
     UNITS_SNAPSHOT_FILENAME,
 )
+from vss_tools.datatypes import Datatypes
 from vss_tools.tree import expand_string
 
 # ---------------------------------------------------------------------------
@@ -267,6 +268,20 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
     return aspects
 
 
+def _is_leaf(attrs: dict[str, Any]) -> bool:
+    """
+    Whether a PROPERTY event's `datatype` resolves to a primitive/scalar (a leaf,
+    binding-eligible) rather than another entity (a struct reference).
+
+    Missing/None datatype defensively defaults to True (shouldn't occur for valid VSS
+    signals). Array datatypes (`"Foo[]"`) are checked on their base type.
+    """
+    base_type, _ = _extract_datatype(attrs.get("datatype"))
+    if base_type is None:
+        return True
+    return Datatypes.get_type(base_type) is not None
+
+
 def _wrap_op(previous: Any, current: Any) -> dict[str, Any]:
     """
     Wrap a single changed aspect value with its modl `_op` annotation.
@@ -350,6 +365,8 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
     }
     if parent is not None:
         event["parent_label"] = parent
+    if kind == PROPERTY:
+        event["is_leaf"] = _is_leaf(attrs)
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
@@ -387,6 +404,8 @@ def _build_property_pointer_event(ev: dict[str, Any], parent: str) -> dict[str, 
         "parent_label": parent,
         "kind": PROPERTY,
         "change_type": change_type,
+        # A branch/struct pointer always references another entity, never a leaf.
+        "is_leaf": False,
     }
 
     if change_type == ADDED:
@@ -538,6 +557,7 @@ def _diff_dicts(
                             "node_type": new_nt,
                             "cascade": False,
                             "attribute_changes": attr_changes,
+                            "attributes": new_attrs,
                         }
                     )
                     consumed_added.add(new_path)
@@ -573,6 +593,7 @@ def _diff_dicts(
                         "node_type": new_nt,
                         "cascade": True,
                         "attribute_changes": attr_changes,
+                        "attributes": new_attrs,
                     }
                 )
                 consumed_added.add(new_path)
@@ -621,6 +642,7 @@ def _diff_dicts(
                 "path": path,
                 "node_type": nt,
                 "attribute_changes": attr_changes,
+                "attributes": current[path],
             }
         )
 

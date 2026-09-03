@@ -36,6 +36,7 @@ Each entry in `changes` is a modl IR event. Fields present depend on `kind` and 
 | `aspects` | `ADDED`/`MODIFIED` | Full snapshot on `ADDED`; changed-keys-only delta on `MODIFIED`, each value wrapped with `_op` (see [Aspect wrapping](#aspect-wrapping-on-modified-events)). Empty `{}` on `REMOVED`. |
 | `previous_aspects` | `REMOVED` only | Full prior-state snapshot of the removed element — mandatory and non-empty. |
 | `content` | `MODIFIED` `ENTITY`/`ENUMERATION_SET` | List of `{label, change_type}` summarising which children changed. |
+| `is_leaf` | every `PROPERTY` event | `true` for a primitive/scalar property (binding-eligible); `false` when the property references another entity. Mandatory on every `PROPERTY` event (`ADDED`/`REMOVED`/`MODIFIED`), reflecting the current (or, on `REMOVED`, previous) state. Forbidden on `ENUM_VALUE`. See [is_leaf](#is_leaf). |
 
 ## Kind mapping
 
@@ -70,7 +71,9 @@ Rule: every branch/struct that has a parent (i.e. its FQN contains a `.`) is rep
 - an `ENTITY` event, carrying its real attributes (`description`, `instances`, etc.), and
 - a `PROPERTY` event with `parent_label` set to the immediate parent, carrying only
   `is_list` (`true` when the branch defines `instances`) and `is_required` — never `output_type`,
-  since vspec branches have no standalone type to point to.
+  since vspec branches have no standalone type to point to. This `PROPERTY` event always has
+  `is_leaf: false`, since it references another entity (the branch/struct itself) rather than a
+  primitive value.
 
 Root-level branches (no parent, e.g. the top-level `Vehicle` branch) are reported as `ENTITY` only —
 there is nothing for them to be "a field of".
@@ -79,6 +82,33 @@ On `MODIFIED`, both events are **always** emitted together, even when the change
 edit) has no property-relevant effect — in that case the `PROPERTY`-side event simply carries empty
 `aspects: {}`. When the change is instance-relevant (instances added/removed), the `PROPERTY`-side
 event carries a wrapped `is_list` delta if it flips between `true`/`false`.
+
+## is_leaf
+
+`is_leaf` is a first-class field on `PROPERTY` events — not an aspect — required by modl so it
+knows which properties are eligible for binding generation: only leaf (primitive/scalar) properties
+get bindings; properties that reference another entity never do.
+
+It is derived with two rules:
+
+1. **Branch/struct duality pointer events** (see [Branch duality](#branch-duality)) always get
+   `is_leaf: false` — they represent a reference to another entity by construction.
+2. **Real signals and struct members** get `is_leaf` based on whether their base `datatype`
+   (stripped of any trailing `[]`) resolves to a known primitive VSS type. A `sensor`/`actuator`/
+   `attribute` whose `datatype` names a struct (e.g. `datatype: VehicleDataTypes.MyStruct`) is
+   `is_leaf: false`, even though it isn't a duality pointer itself:
+
+```yaml
+A.Speed:
+  type: sensor
+  datatype: float                          # primitive → is_leaf: true
+
+A.RichSensor:
+  type: sensor
+  datatype: VehicleDataTypes.MyStruct      # struct reference → is_leaf: false
+```
+
+`is_leaf` is never present on `ENUM_VALUE` events.
 
 ## Aspect wrapping on MODIFIED events
 
@@ -159,7 +189,8 @@ If `fka` is missing, or the node type doesn't match, the pair is reported as ind
   "parent_label": "A",
   "change_type": "MODIFIED",
   "renamed_from": "A.Door",
-  "aspects": {}
+  "aspects": {},
+  "is_leaf": false
 },
 {
   "label": "A.Portal.IsOpen",
@@ -169,7 +200,8 @@ If `fka` is missing, or the node type doesn't match, the pair is reported as ind
   "renamed_from": "A.Door.IsOpen",
   "aspects": {
     "output_type": { "_op": "modified", "_value": "string", "_previous": "boolean" }
-  }
+  },
+  "is_leaf": true
 }
 ```
 
