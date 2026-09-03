@@ -34,6 +34,7 @@ from vss_tools.compose import (
     STRUCTS_SNAPSHOT_FILENAME,
     UNITS_SNAPSHOT_FILENAME,
 )
+from vss_tools.datatypes import Datatypes
 from vss_tools.tree import expand_string
 
 # ---------------------------------------------------------------------------
@@ -241,9 +242,14 @@ def _inject_instance_expansions(raw_events: list[dict[str, Any]]) -> list[dict[s
     return result
 
 
-def _map_aspects_added(attrs: dict[str, Any], source: str, node_type: str) -> dict[str, Any]:
-    """Build the full aspects snapshot for an ADDED event."""
-    aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity")}
+def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dict[str, Any]:
+    """
+    Build a full aspects snapshot.
+
+    Used both for an ADDED event's `aspects` and a REMOVED event's `previous_aspects`
+    (the modl IR requires the latter to carry the full prior-state snapshot).
+    """
+    aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name")}
     kind = _vss_kind(node_type, source)
     if kind == PROPERTY:
         raw_dt = aspects.pop("datatype", None)
@@ -262,22 +268,66 @@ def _map_aspects_added(attrs: dict[str, Any], source: str, node_type: str) -> di
     return aspects
 
 
+def _is_leaf(attrs: dict[str, Any]) -> bool:
+    """
+    Whether a PROPERTY event's `datatype` resolves to a primitive/scalar (a leaf,
+    binding-eligible) rather than another entity (a struct reference).
+
+    Missing/None datatype defensively defaults to True (shouldn't occur for valid VSS
+    signals). Array datatypes (`"Foo[]"`) are checked on their base type.
+    """
+    base_type, _ = _extract_datatype(attrs.get("datatype"))
+    if base_type is None:
+        return True
+    return Datatypes.get_type(base_type) is not None
+
+
+def _wrap_op(previous: Any, current: Any) -> dict[str, Any]:
+    """
+    Wrap a single changed aspect value with its modl `_op` annotation.
+
+    `_op` is "added" when there was no previous value, "removed" when there is no
+    current value, and "modified" otherwise — each variant carries only the fields
+    the modl IR requires for that operation.
+    """
+    if previous is None and current is not None:
+        return {"_op": "added", "_value": current}
+    if previous is not None and current is None:
+        return {"_op": "removed", "_previous": previous}
+    return {"_op": "modified", "_value": current, "_previous": previous}
+
+
 def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any]:
-    """Build the changed-keys-only aspects dict for a MODIFIED event."""
+    """
+    Build the changed-keys-only aspects dict for a MODIFIED event.
+
+    Every key is wrapped with its `_op` annotation via `_wrap_op`, except the
+    directional instance-list keys `instances_added`/`instances_removed`, which the
+    modl IR requires to stay as plain, unwrapped lists.
+    """
     delta: dict[str, Any] = {}
     for ac in attribute_changes:
-        attr, current = ac["attribute"], ac["current"]
-        if attr == "fka":
+        attr, previous, current = ac["attribute"], ac["previous"], ac["current"]
+        if attr in ("fka", "name"):
             continue
         if attr == "datatype":
-            output_type, is_list = _extract_datatype(current)
-            if output_type is not None:
-                delta["output_type"] = output_type
-                delta["is_list"] = is_list
+            prev_type, prev_is_list = _extract_datatype(previous)
+            curr_type, curr_is_list = _extract_datatype(current)
+            if prev_type != curr_type:
+                delta["output_type"] = _wrap_op(prev_type, curr_type)
+            if prev_is_list != curr_is_list:
+                delta["is_list"] = _wrap_op(prev_is_list, curr_is_list)
         elif attr == "instances":
-            delta["instances"] = _expand_instances(current)
+            prev_expanded = _expand_instances(previous)
+            curr_expanded = _expand_instances(current)
+            added = [x for x in curr_expanded if x not in prev_expanded]
+            removed = [x for x in prev_expanded if x not in curr_expanded]
+            if added:
+                delta["instances_added"] = added
+            if removed:
+                delta["instances_removed"] = removed
         else:
-            delta[attr] = current
+            delta[attr] = _wrap_op(previous, current)
     return delta
 
 
@@ -297,37 +347,108 @@ def _parent_label(path: str, source: str, attrs: dict[str, Any]) -> str | None:
     return None
 
 
+def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
+    """Build the primary modl event for a raw diff event (ENTITY/PROPERTY/vocabulary as mapped by `_vss_kind`)."""
+    source = ev["source"]
+    node_type = ev["node_type"]
+    path = ev["path"]
+    change_type = ev["type"]
+    attrs = ev.get("attributes") or {}
+
+    kind = _vss_kind(node_type, source)
+    parent = _parent_label(path, source, attrs)
+
+    event: dict[str, Any] = {
+        "label": path,
+        "kind": kind,
+        "change_type": change_type,
+    }
+    if parent is not None:
+        event["parent_label"] = parent
+    if kind == PROPERTY:
+        event["is_leaf"] = _is_leaf(attrs)
+
+    if change_type == ADDED:
+        event["aspects"] = _map_full_aspects(attrs, source, node_type)
+    elif change_type == REMOVED:
+        event["aspects"] = {}
+        event["previous_aspects"] = _map_full_aspects(attrs, source, node_type)
+    else:  # MODIFIED
+        if ev.get("previous_path"):
+            event["renamed_from"] = ev["previous_path"]
+        event["aspects"] = _map_aspects_delta(ev.get("attribute_changes") or [])
+
+    return event
+
+
+def _build_property_pointer_event(ev: dict[str, Any], parent: str) -> dict[str, Any]:
+    """
+    Build the synthetic PROPERTY-side event for a branch/struct that is itself a child
+    of another branch/struct.
+
+    Mirrors how a GraphQL field like `cabin: Cabin` is reported as both a PROPERTY on
+    its parent type and a standalone ENTITY: every branch/struct with a parent is
+    dual-reported as PROPERTY (this event) + ENTITY (the primary event). Root-level
+    containers (no parent) are ENTITY only — see `_to_modl_events`.
+
+    Kept intentionally minimal — no `output_type`, since vspec branches have no
+    standalone type layer to point to. Only `is_list` (true when the branch defines
+    instances) and `is_required` are reported.
+    """
+    path = ev["path"]
+    change_type = ev["type"]
+    attrs = ev.get("attributes") or {}
+
+    event: dict[str, Any] = {
+        "label": path,
+        "parent_label": parent,
+        "kind": PROPERTY,
+        "change_type": change_type,
+        # A branch/struct pointer always references another entity, never a leaf.
+        "is_leaf": False,
+    }
+
+    if change_type == ADDED:
+        event["aspects"] = {"is_list": bool(attrs.get("instances")), "is_required": False}
+    elif change_type == REMOVED:
+        event["aspects"] = {}
+        event["previous_aspects"] = {"is_list": bool(attrs.get("instances")), "is_required": False}
+    else:  # MODIFIED — always emitted alongside the ENTITY-side MODIFIED event
+        if ev.get("previous_path"):
+            event["renamed_from"] = ev["previous_path"]
+        event["aspects"] = _property_pointer_delta(ev.get("attribute_changes") or [])
+
+    return event
+
+
+def _property_pointer_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any]:
+    """Build the `is_list` delta (if any) for a branch/struct's PROPERTY-side MODIFIED event."""
+    delta: dict[str, Any] = {}
+    for ac in attribute_changes:
+        if ac["attribute"] != "instances":
+            continue
+        prev_has = bool(ac["previous"])
+        curr_has = bool(ac["current"])
+        if prev_has != curr_has:
+            delta["is_list"] = _wrap_op(prev_has, curr_has)
+    return delta
+
+
 def _to_modl_events(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Translate internal diff events to the modl adapter IR format."""
-    result = []
+    """
+    Translate internal diff events to the modl adapter IR format.
+
+    A branch/struct that is itself a child of another branch is dual-reported: once
+    as an ENTITY (the primary event) and once as a PROPERTY (the synthetic pointer
+    event from `_build_property_pointer_event`) — mirroring GraphQL's `cabin: Cabin`
+    field. Root-level containers (no parent) are reported as ENTITY only.
+    """
+    result: list[dict[str, Any]] = []
     for ev in raw_events:
-        source = ev["source"]
-        node_type = ev["node_type"]
-        path = ev["path"]
-        change_type = ev["type"]
-        attrs = ev.get("attributes") or {}
-
-        kind = _vss_kind(node_type, source)
-        parent = _parent_label(path, source, attrs)
-
-        event: dict[str, Any] = {
-            "label": path,
-            "kind": kind,
-            "change_type": change_type,
-        }
-        if parent is not None:
-            event["parent_label"] = parent
-
-        if change_type == ADDED:
-            event["aspects"] = _map_aspects_added(attrs, source, node_type)
-        elif change_type == REMOVED:
-            pass  # modl: REMOVED must carry no aspects
-        else:  # MODIFIED
-            if ev.get("previous_path"):
-                event["renamed_from"] = ev["previous_path"]
-            event["aspects"] = _map_aspects_delta(ev.get("attribute_changes") or [])
-
-        result.append(event)
+        primary = _build_primary_event(ev)
+        result.append(primary)
+        if primary["kind"] == ENTITY and "parent_label" in primary:
+            result.append(_build_property_pointer_event(ev, primary["parent_label"]))
     return result
 
 
@@ -436,6 +557,7 @@ def _diff_dicts(
                             "node_type": new_nt,
                             "cascade": False,
                             "attribute_changes": attr_changes,
+                            "attributes": new_attrs,
                         }
                     )
                     consumed_added.add(new_path)
@@ -471,6 +593,7 @@ def _diff_dicts(
                         "node_type": new_nt,
                         "cascade": True,
                         "attribute_changes": attr_changes,
+                        "attributes": new_attrs,
                     }
                 )
                 consumed_added.add(new_path)
@@ -519,6 +642,7 @@ def _diff_dicts(
                 "path": path,
                 "node_type": nt,
                 "attribute_changes": attr_changes,
+                "attributes": current[path],
             }
         )
 
