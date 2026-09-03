@@ -145,6 +145,7 @@ def export_node(data: dict[str, Any], node: VSSNode, id_counter, strict_mode: bo
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.types_output_opt
 @clo.strict_exceptions_opt
 @click.option(
     "--validate-static-uid",
@@ -169,6 +170,7 @@ def cli(
     quantities: tuple[Path],
     units: tuple[Path],
     types: tuple[Path],
+    types_output: Path | None,
     validate_static_uid: Path,
     validate_only: bool,
     case_sensitive: bool,
@@ -192,11 +194,21 @@ def cli(
     )
     log.info("Generating vspec output including static UIDs...")
 
+    if datatype_tree and not types_output:
+        types_output = output.with_name(f"structs_{output.name}")
+        log.info(
+            f"'--types' was provided but no '--types-output' was given. Struct/type IDs will "
+            f"be written to '{types_output}' instead of being merged into '{output}', since "
+            "that would produce a vspec with multiple roots, which is unsupported downstream."
+        )
+
     id_counter: int = 0
     signals_yaml_dict: Dict[str, str] = {}  # Use str for ID values
     id_counter, _ = export_node(signals_yaml_dict, tree, id_counter, case_sensitive)
+
+    types_signals_yaml_dict: Dict[str, str] = {}
     if datatype_tree:
-        id_counter, _ = export_node(signals_yaml_dict, datatype_tree, id_counter, case_sensitive)
+        id_counter, _ = export_node(types_signals_yaml_dict, datatype_tree, id_counter, case_sensitive)
 
     if validate_static_uid:
         log.info(f"Now validating nodes, static UIDs, types, units and description with file '{validate_static_uid}'")
@@ -217,3 +229,6 @@ def cli(
     if not validate_only:
         with open(output, "w", encoding="utf-8") as f:
             yaml.dump(signals_yaml_dict, f)
+        if types_output and types_signals_yaml_dict:
+            with open(types_output, "w", encoding="utf-8") as f:
+                yaml.dump(types_signals_yaml_dict, f)

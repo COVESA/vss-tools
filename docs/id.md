@@ -32,11 +32,10 @@ identifiers.
 │                                                               VSPEC/quantities.yaml]                       │
 │    --units                -u  FILE                            Unit files. [default: VSPEC/units.yaml]      │
 │    --types                -t  FILE                            Data types files.                            │
-│    --types-output             FILE                            Output file for writing data types from      │
-│                                                               vspec file. If not specified, a single file  │
-│                                                               is used where applicable. In case of JSON    │
-│                                                               and YAML, the data is exported under a       │
-│                                                               special key: "ComplexDataTypes",             │
+│    --types-output             FILE                            Output file for writing static UIDs of      │
+│                                                               struct/type nodes. If '--types' is used and  │
+│                                                               '--types-output' is not given, it defaults   │
+│                                                               to 'structs_<output>' next to '--output'.    │
 │    --validate-static-uid      FILE                            Validation file.                             │
 │    --validate-only                                            Only validating. Not exporting.              │
 │    --case-sensitive                                           Whether the generation of static UIDs is     │
@@ -78,6 +77,38 @@ using `-u`.
 ```bash
 cd path/to/your/vss
 vspec export yaml --vspec output_id_v1.vspec --output vehicle_specification_with_uids.yaml -e staticUID -u spec/units.yaml
+```
+
+### Custom data types (structs)
+
+If your specification uses custom struct types (passed via `--types`/`-t`), the
+`id` exporter generates static UIDs for the struct and property nodes as well.
+However, since the main tree and the types tree each have their own root, they
+cannot be written into the same vspec file (a single vspec file can only have
+one root). For that reason struct/type static UIDs are always written to a
+separate file, specified with `--types-output`:
+
+```bash
+cd path/to/your/vss
+vspec export id --vspec spec/VehicleSignalSpecification.vspec \
+  --types spec/types.vspec \
+  --output output_id_v1.vspec \
+  --types-output output_id_v1_types.vspec
+```
+
+If you omit `--types-output`, it defaults to `structs_<output-filename>` in the
+same directory as `--output`. For example, `--output output_id_v1.vspec`
+without `--types-output` will write struct UIDs to `structs_output_id_v1.vspec`.
+
+When chaining this into another exporter, pass both generated files back in:
+the main output as an overlay (`-l`/`--overlays`) and the types output as the
+types file (`-t`/`--types`), replacing the original types file:
+
+```bash
+vspec export yaml --vspec spec/VehicleSignalSpecification.vspec \
+  --overlays output_id_v1.vspec \
+  --types output_id_v1_types.vspec \
+  --output vehicle_specification_with_uids.yaml -e staticUID -u spec/units.yaml
 ```
 
 ### Using constant UIDs for specific attributes
