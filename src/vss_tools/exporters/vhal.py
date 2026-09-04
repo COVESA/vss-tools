@@ -30,6 +30,12 @@ from vss_tools.utils.vhal.vhal_mapper import VhalMapper
     """,
 )
 @click.option(
+    "--vhal-area-config",
+    type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=True),
+    required=False,
+    help="Path to the JSON file containing the VSS area configuration rules.",
+)
+@click.option(
     "--continuous-change-mode",
     type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=True),
     required=False,
@@ -101,6 +107,7 @@ from vss_tools.utils.vhal.vhal_mapper import VhalMapper
 def cli(
     vspec: Path,
     vhal_map: Path | None,
+    vhal_area_config: Path | None,
     continuous_change_mode: Path | None,
     extend_new: bool,
     property_group: int,
@@ -134,6 +141,13 @@ def cli(
         override_units=override_vhal_units,
         override_datatype=override_vhal_datatype,
     )
+
+    vhal_area_config_file = (
+        vhal_area_config
+        if vhal_area_config is not None
+        else (aosp_workspace_path / "device/generic/car/emulator/vhalmap/vhal_area_config.json")
+    )
+    mapper.load_area_config(vhal_area_config_file)
 
     if continuous_change_mode is not None:
         mapper.load_continuous_list(continuous_change_mode)
