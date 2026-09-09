@@ -152,8 +152,11 @@ def add_node(
         schema["description"] = vss_data.description
     if extend_all_attributes:
         add_x_attributes(schema, node)
-    for field in vss_data.get_extra_attributes():
-        schema[field] = getattr(vss_data, field)
+    extra_attributes = vss_data.get_extra_attributes()
+    if extra_attributes:
+        schema["x-extra"] = {}
+    for field in extra_attributes:
+        schema["x-extra"][field] = getattr(vss_data, field)
     if isinstance(node.data, VSSDataDatatype):
         ref = schema
         if is_array(node.data.datatype):
