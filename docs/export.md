@@ -362,7 +362,7 @@ In this case the expectation is, that the generated output will contain the whit
 
 > [!WARNING]
 > Not all exporters (need to) support (all) extended metadata attributes!
-> Currently, the `yaml`, `csv`, and `json` exporters support arbitrary metadata.
+> Currently, the `yaml`, `csv`, `jsonschema` and `json` exporters support arbitrary metadata.
 
 ## JSON exporter notes
 
