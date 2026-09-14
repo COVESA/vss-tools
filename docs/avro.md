@@ -7,11 +7,11 @@ This exporter converts VSS struct definitions into [Apache Avro IDL (`.avdl`)](h
 For every top-level `struct` found in the `--types` files, the exporter writes one `.avdl` file into the output directory. Each file defines a self-contained Avro protocol that includes:
 
 - All **enum types** required by the struct (one per field with `allowed` values).
-- All **nested record types** defined inside the struct.
+- All **record types** the struct depends on: structs **nested** as tree children, and structs **referenced** by a property's `datatype` (e.g. `datatype: Types.Address` or `datatype: Types.Address[]`).
 - The **main record** for the struct itself.
 - An optional **array container record** (enabled with `--include-array-record`).
 
-Only top-level structs produce output files. Nested structs (structs defined inside another struct) are included as records inside their parent's file, not as separate files.
+Only top-level structs produce output files. Structs that are only reached as a dependency (nested or referenced) of another struct are included as records inside the dependent struct's file, not as separate files — unless they are themselves also a top-level struct, in which case they additionally get their own file.
 
 ## Usage
 
@@ -55,6 +55,8 @@ VSS datatypes map to Avro types as follows:
 | `string` (with `allowed`) | enum type (see [Enums](#enums)) |
 | any array type (`T[]`) | `bytes` |
 | nested struct field | record reference by short name |
+| struct-reference field (`datatype: Types.X`) | record reference by short name |
+| struct-reference array field (`datatype: Types.X[]`) | `array<X>` |
 
 Every field is wrapped in `union { null, T }`, making all fields nullable by default. This is intentional and aligns with Avro community conventions for optional fields.
 
@@ -85,9 +87,33 @@ enum LogEntryLevelValue {
 
 ## Nested structs
 
-Structs defined inside another struct become records within the same protocol file. They are declared in post-order (deepest nested first) so that every type is defined before it is referenced.
+Structs defined inside another struct become records within the same protocol file. They are declared in dependency order (dependencies first) so that every type is defined before it is referenced.
 
 The nested record uses only its own short name (last path segment), not the fully-qualified path. Because each top-level struct lives in its own file and namespace, short names are unambiguous.
+
+## Struct references
+
+A property's `datatype` may reference another struct instead of a primitive, either by its fully-qualified name or by its short name:
+
+```yaml
+Types.Contact.HomeAddress:
+  type: property
+  datatype: Types.Address        # single struct reference
+  description: The contact's home address.
+
+Types.Contact.AlternateAddresses:
+  type: property
+  datatype: Types.Address[]      # array-of-struct reference
+  description: Additional addresses.
+```
+
+The referenced struct (and, transitively, anything *it* depends on) is inlined into the same `.avdl` file as an additional record, declared before the record that uses it — exactly like a nested struct. A single reference is rendered as `union { null, Address } homeAddress;`; an array-of-struct reference is rendered as `union { null, array<Address> } alternateAddresses;`.
+
+If the referenced struct is also a top-level struct in its own right, it additionally gets its own separate `.avdl` file, independent of also being inlined wherever it is referenced.
+
+A struct that is referenced through more than one property (or through both nesting and a reference) is only declared once per file.
+
+**Note:** Referencing your own containing struct (directly or transitively) is not a valid `datatype` and is rejected by vss-tools' own model validation before this exporter runs.
 
 ## Array container record
 
@@ -105,8 +131,8 @@ record ColorArray {
 
 Each generated protocol follows this fixed order:
 
-1. Enums (depth-first across all nested levels)
-2. Nested records (deepest first)
+1. Enums (one per record with `allowed` fields, in dependency order)
+2. Dependency records — nested structs and struct references, dependencies first
 3. Main record
 4. Array container record (if requested)
 

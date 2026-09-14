@@ -14,11 +14,14 @@ import inflect
 import pytest
 from vss_tools.exporters.avro import (
     build_enum_name,
+    build_struct_index,
     collect_enums,
     collect_nested_structs_ordered,
+    collect_records_ordered,
     ensure_unknown_first,
     generate_protocol,
     get_top_level_structs,
+    resolve_struct_datatype,
     to_avro_field_name,
     vss_type_to_avro,
 )
@@ -71,6 +74,22 @@ def alert_record_node(top_level_structs):
 @pytest.fixture(scope="module")
 def schedule_node(top_level_structs):
     return next(n for n in top_level_structs if n.name == "Schedule")
+
+
+@pytest.fixture(scope="module")
+def address_node(top_level_structs):
+    return next(n for n in top_level_structs if n.name == "Address")
+
+
+@pytest.fixture(scope="module")
+def contact_node(top_level_structs):
+    return next(n for n in top_level_structs if n.name == "Contact")
+
+
+@pytest.fixture(scope="module")
+def struct_index(type_trees):
+    _, data_type_tree = type_trees
+    return build_struct_index(data_type_tree)
 
 
 # ---------------------------------------------------------------------------
@@ -207,6 +226,124 @@ class TestCollectNestedStructs:
         assert names.index("Window") < len(names)  # Window is in the list
 
 
+class TestResolveStructDatatype:
+    def test_resolves_by_fqn(self, struct_index):
+        by_fqn, by_short = struct_index
+        node, is_array = resolve_struct_datatype("Types.Address", by_fqn, by_short)
+        assert node is not None
+        assert node.name == "Address"
+        assert is_array is False
+
+    def test_resolves_by_short_name(self, struct_index):
+        by_fqn, by_short = struct_index
+        node, is_array = resolve_struct_datatype("Address", by_fqn, by_short)
+        assert node is not None
+        assert node.name == "Address"
+        assert is_array is False
+
+    def test_resolves_array_reference(self, struct_index):
+        by_fqn, by_short = struct_index
+        node, is_array = resolve_struct_datatype("Types.Address[]", by_fqn, by_short)
+        assert node is not None
+        assert node.name == "Address"
+        assert is_array is True
+
+    def test_primitive_does_not_resolve(self, struct_index):
+        by_fqn, by_short = struct_index
+        node, is_array = resolve_struct_datatype("uint32", by_fqn, by_short)
+        assert node is None
+        assert is_array is False
+
+    def test_primitive_array_does_not_resolve(self, struct_index):
+        by_fqn, by_short = struct_index
+        node, is_array = resolve_struct_datatype("uint32[]", by_fqn, by_short)
+        assert node is None
+        assert is_array is True
+
+
+class TestBuildStructIndex:
+    def test_indexes_every_struct_by_fqn(self, struct_index):
+        by_fqn, _ = struct_index
+        assert "Types.Address" in by_fqn
+        assert "Types.Contact" in by_fqn
+        assert "Types.Schedule.Window" in by_fqn
+
+    def test_indexes_every_struct_by_short_name(self, struct_index):
+        _, by_short = struct_index
+        assert "Address" in by_short
+        assert "Contact" in by_short
+        assert "Window" in by_short
+
+
+class TestCollectRecordsOrdered:
+    def test_flat_struct_returns_only_itself(self, sensor_node, struct_index):
+        by_fqn, by_short = struct_index
+        records = collect_records_ordered(sensor_node, by_fqn, by_short)
+        assert [n.name for n in records] == ["Sensor"]
+
+    def test_nested_struct_declared_before_parent(self, schedule_node, struct_index):
+        by_fqn, by_short = struct_index
+        records = collect_records_ordered(schedule_node, by_fqn, by_short)
+        names = [n.name for n in records]
+        assert names.index("Window") < names.index("Schedule")
+
+    def test_referenced_struct_declared_before_dependent(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        records = collect_records_ordered(contact_node, by_fqn, by_short)
+        names = [n.name for n in records]
+        assert "Address" in names
+        assert names.index("Address") < names.index("Contact")
+
+    def test_top_level_struct_is_always_last(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        records = collect_records_ordered(contact_node, by_fqn, by_short)
+        assert records[-1].name == "Contact"
+
+    def test_shared_dependency_is_not_duplicated(self, contact_node, struct_index):
+        """Address is referenced twice (single + array) but must appear once."""
+        by_fqn, by_short = struct_index
+        records = collect_records_ordered(contact_node, by_fqn, by_short)
+        names = [n.name for n in records]
+        assert names.count("Address") == 1
+
+    def test_terminates_for_self_referencing_synthetic_tree(self):
+        """Cycle guard: a synthetic node graph with a self-reference must not hang.
+
+        vss-tools' own model validation already rejects self-referential and
+        circular struct definitions in real vspec files (see
+        ``VehicleDataTypesWithCircularRefs.vspec`` in test_structs), so this
+        scenario cannot occur via a valid vspec today. This test constructs the
+        cycle directly against ``collect_records_ordered`` to prove the guard
+        works independently of that upstream validation.
+        """
+        from anytree import Node
+        from vss_tools.model import VSSDataProperty, VSSDataStruct
+
+        # model_construct() bypasses pydantic validation (which would otherwise
+        # reject this self-reference, matching vss-tools' real behaviour for
+        # circular struct definitions - see VehicleDataTypesWithCircularRefs.vspec
+        # in test_structs). We only need plain attribute access here to exercise
+        # collect_records_ordered's cycle guard in isolation.
+        root = Node("Root", data=VSSDataStruct.model_construct(fqn="Root", type="struct", description="root"))
+        cyclic = Node(
+            "Cyclic",
+            parent=root,
+            data=VSSDataStruct.model_construct(fqn="Root.Cyclic", type="struct", description="self-referencing"),
+        )
+        Node(
+            "SelfRef",
+            parent=cyclic,
+            data=VSSDataProperty.model_construct(
+                fqn="Root.Cyclic.SelfRef", type="property", datatype="Root.Cyclic", description="d", allowed=None
+            ),
+        )
+
+        by_fqn = {"Root.Cyclic": cyclic}
+        by_short = {"Cyclic": cyclic}
+        records = collect_records_ordered(cyclic, by_fqn, by_short)
+        assert [n.name for n in records] == ["Cyclic"]
+
+
 class TestGenerateProtocol:
     _NS = "com.test.vss.struct"
     _ENGINE = inflect.engine()
@@ -296,6 +433,54 @@ class TestGenerateProtocol:
         assert content.endswith("\n")
 
 
+class TestGenerateProtocolStructReferences:
+    """Tests for struct-typed ``datatype`` references (not nested tree children)."""
+
+    _NS = "com.test.vss.struct"
+    _ENGINE = inflect.engine()
+
+    def test_referenced_struct_inlined_as_record(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        content = generate_protocol(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert "record Address {" in content
+        assert "record Contact {" in content
+
+    def test_referenced_record_declared_before_dependent(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        content = generate_protocol(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert content.index("record Address {") < content.index("record Contact {")
+
+    def test_single_struct_reference_field(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        content = generate_protocol(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert "union { null, Address } homeAddress;" in content
+
+    def test_array_of_struct_reference_field(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        content = generate_protocol(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert "union { null, array<Address> } alternateAddresses;" in content
+
+    def test_referenced_struct_only_declared_once(self, contact_node, struct_index):
+        """Address is referenced twice (single + array) but must be declared once."""
+        by_fqn, by_short = struct_index
+        content = generate_protocol(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert content.count("record Address {") == 1
+
+    def test_unresolvable_struct_reference_without_full_index_raises(self, contact_node):
+        """Without a tree-wide index, a struct reference outside the struct's own
+        subtree cannot be resolved and falls back to the pre-existing behaviour
+        (raising, exactly like referencing any other unknown datatype)."""
+        with pytest.raises(ValueError, match="Unsupported"):
+            generate_protocol(contact_node, self._NS, False, self._ENGINE)
+
+    def test_standalone_struct_still_generated_separately(self, address_node, struct_index):
+        """Address is also a top-level struct in its own right and gets its own file."""
+        by_fqn, by_short = struct_index
+        content = generate_protocol(address_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert "protocol Address {" in content
+        assert "union { null, string } street;" in content
+
+
 class TestFilePrefix:
     def test_file_prefix_applied(self, sensor_node, tmp_path, type_trees):
         _, data_type_tree = type_trees
@@ -339,6 +524,42 @@ class TestCLIIntegration:
         assert "Sensor.avdl" in generated
         assert "AlertRecord.avdl" in generated
         assert "Schedule.avdl" in generated
+        assert "Contact.avdl" in generated
+        assert "Address.avdl" in generated
+
+    def test_cli_resolves_struct_reference_across_files(self, tmp_path):
+        """Regression test: previously this raised ValueError('Unsupported VSS
+        datatype for AVRO mapping: ...') because the CLI passed no struct index
+        to generate_protocol and struct-typed datatype references were not
+        resolved at all."""
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        content = (tmp_path / "Contact.avdl").read_text()
+        assert "record Address {" in content
+        assert "record Contact {" in content
+        assert content.index("record Address {") < content.index("record Contact {")
+        assert "union { null, Address } homeAddress;" in content
+        assert "union { null, array<Address> } alternateAddresses;" in content
 
     def test_cli_file_prefix(self, tmp_path):
         from click.testing import CliRunner
