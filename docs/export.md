@@ -17,7 +17,6 @@ vspec export --help
 │ csv           Export as CSV.                                                                                         │
 │ ddsidl        Export as DDSIDL.                                                                                      │
 │ plantuml      Export as PlantUML.                                                                                    │
-│ franca        Export as Franca.                                                                                      │
 │ id            Export as IDs.                                                                                         │
 │ json          Export as JSON.                                                                                        │
 │ jsonschema    Export as a jsonschema.                                                                                │

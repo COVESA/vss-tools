@@ -49,7 +49,6 @@ cli.add_command(diff_cli, "diff")
         "binary": "vss_tools.exporters.binary:cli",
         "csv": "vss_tools.exporters.csv:cli",
         "ddsidl": "vss_tools.exporters.ddsidl:cli",
-        "franca": "vss_tools.exporters.franca:cli",
         "plantuml": "vss_tools.exporters.plantuml:cli",
         "id": "vss_tools.exporters.id:cli",
         "json": "vss_tools.exporters.json:cli",
