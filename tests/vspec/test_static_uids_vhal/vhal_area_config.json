@@ -1,0 +1,51 @@
+{
+  "Vehicle.Cabin.Door.*": "DOOR",
+
+  "Vehicle.Body.Trunk.*": {
+    "areaType": "DOOR",
+    "map": {
+      "front": "HOOD",
+      "rear": "REAR"
+    },
+    "_comment": "Trunk explicitly maps 'front' to HOOD and 'rear' to REAR."
+  },
+  "Vehicle.Body.Mirrors.*": "MIRROR",
+
+  "Vehicle.Occupant.*": "SEAT",
+  "Vehicle.Cabin.Seat.*": "SEAT",
+  "Vehicle.Cabin.HVAC.Station.*": {
+    "areaType": "SEAT",
+    "ignore": ["row4"]
+  },
+  "Vehicle.Cabin.Light.Spotlight.*": "SEAT",
+  "Vehicle.Cabin.Light.AmbientLight.*": "SEAT",
+
+  "Vehicle.Chassis.Axle.*.Wheel.*": "WHEEL",
+  "Vehicle.MotionManagement.Brake.Axle.*.Wheel.*": "WHEEL",
+  "Vehicle.MotionManagement.Suspension.Axle.*.Wheel.*": {
+    "areaType": "WHEEL",
+    "map": {
+      "row1, left": "LEFT_FRONT"
+    },
+    "keep": [
+      ["row1", "left"],
+      ["row1", "right"],
+      "row2"
+    ]
+  },
+  "Vehicle.Powertrain.ElectricMotor.*": {
+    "areaType": "WHEEL",
+    "ignore": ["front", "rear"]
+  },
+
+  "Vehicle.Body.Windshield.*": "WINDOW",
+
+  "Vehicle.ADAS.ObstacleDetection.*": "GLOBAL",
+  "Vehicle.Body.Lights.Beam.*": "GLOBAL",
+  "Vehicle.Body.Lights.Fog.*": "GLOBAL",
+  "Vehicle.Body.Lights.DirectionIndicator.*": "GLOBAL",
+  "Vehicle.ControlUnit.*": "GLOBAL",
+  "Vehicle.MotionManagement.ElectricAxle.*": "GLOBAL",
+  "Vehicle.Powertrain.Tractionbattery.Charging.ChargingPort.*": "GLOBAL"
+}
+
