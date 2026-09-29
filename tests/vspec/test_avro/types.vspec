@@ -58,3 +58,36 @@ Types.Schedule.RepeatCount:
   type: property
   datatype: uint8
   description: How many times the schedule repeats per week (0 means once).
+
+Types.Address:
+  type: struct
+  description: A postal address. Referenced by other structs via 'datatype'.
+
+Types.Address.Street:
+  type: property
+  datatype: string
+  description: Street name and number.
+
+Types.Address.City:
+  type: property
+  datatype: string
+  description: City name.
+
+Types.Contact:
+  type: struct
+  description: A contact with a home address and a list of alternate addresses.
+
+Types.Contact.Name:
+  type: property
+  datatype: string
+  description: The contact's full name.
+
+Types.Contact.HomeAddress:
+  type: property
+  datatype: Types.Address
+  description: The contact's primary home address (single struct reference).
+
+Types.Contact.AlternateAddresses:
+  type: property
+  datatype: Types.Address[]
+  description: Additional addresses for the contact (array-of-struct reference).

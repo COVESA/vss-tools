@@ -12,7 +12,11 @@ Each top-level struct in the provided ``--types`` files is written to its own
 ``.avdl`` file inside the output directory.  The file contains:
 
 1. Enum declarations (one per property with ``allowed`` values).
-2. Nested record declarations (bottom-up so each type is declared before use).
+2. Record declarations for every struct the top-level struct depends on,
+   either because it is nested as a tree child or because a property's
+   ``datatype`` references it directly (e.g. ``datatype: Types.Address`` or
+   ``datatype: Types.Address[]``), declared bottom-up so each type is
+   declared before use.
 3. The main record.
 4. An optional array-container record (``--include-array-record``).
 """
@@ -156,15 +160,160 @@ def _collect_nested_postorder(node: VSSNode, result: list[VSSNode]) -> None:
             result.append(child)
 
 
-def _get_path_segments(node: VSSNode, top_level: VSSNode) -> list[str]:
-    """Return path segment names from *top_level* down to *node* (both inclusive)."""
-    segments: list[str] = []
-    current: VSSNode = node
-    while current is not top_level:
+def _path_from_toplevel(node: VSSNode) -> list[str]:
+    """Return path segments from the nearest top-level struct ancestor down to *node*.
+
+    A top-level struct (whose parent is not itself a struct) returns
+    ``[node.name]``. A struct nested inside another struct returns the full
+    chain of struct names down to *node*, e.g. ``["Schedule", "Window"]``.
+    Works for any struct node regardless of where it lives in the data type
+    tree, which is required because a struct referenced via a property's
+    ``datatype`` (see below) is not necessarily an ancestor/descendant of the
+    struct that references it.
+    """
+    segments: list[str] = [node.name]
+    current = node
+    while current.parent is not None and isinstance(current.parent.data, VSSDataStruct):
+        current = current.parent
         segments.append(current.name)
-        current = current.parent  # type: ignore[assignment]
-    segments.append(top_level.name)
     return list(reversed(segments))
+
+
+# ---------------------------------------------------------------------------
+# Struct-reference resolution
+# ---------------------------------------------------------------------------
+#
+# A struct property's ``datatype`` may reference another struct instead of a
+# primitive, e.g. ``datatype: Types.Address`` or ``datatype: Types.Address[]``.
+# vss-tools' core model already validates and loads such references (self- and
+# circular references are rejected upstream by vss-tools itself), but this
+# exporter previously only inlined structs that were *nested* as direct tree
+# children, so it crashed on this pattern with a "not a valid AVRO datatype"
+# style error. The helpers below resolve these references and ensure the
+# referenced struct (and anything it transitively depends on) is declared in
+# the same protocol before it is used.
+
+
+def _node_fqn(node: VSSNode) -> str:
+    """Return the dotted fully-qualified name of *node* (root included)."""
+    segments: list[str] = []
+    current: VSSNode | None = node
+    while current is not None:
+        segments.append(current.name)
+        current = current.parent
+    return ".".join(reversed(segments))
+
+
+def build_struct_index(data_type_tree: VSSNode) -> tuple[dict[str, VSSNode], dict[str, VSSNode]]:
+    """Index every struct node under *data_type_tree* by FQN and by short name.
+
+    Used to resolve a property's ``datatype`` when it references another
+    struct (e.g. ``datatype: Types.Address``) instead of a primitive.
+    """
+    by_fqn: dict[str, VSSNode] = {}
+    by_short: dict[str, VSSNode] = {}
+    for node in findall(data_type_tree, filter_=lambda n: isinstance(n.data, VSSDataStruct)):
+        by_fqn[_node_fqn(node)] = node
+        # First writer wins for short names; ambiguous short names across
+        # distinct structs are rare in practice and are unambiguous when
+        # referenced by their fully-qualified name instead.
+        by_short.setdefault(node.name, node)
+    return by_fqn, by_short
+
+
+def resolve_struct_datatype(
+    datatype: str,
+    by_fqn: dict[str, VSSNode],
+    by_short: dict[str, VSSNode],
+) -> tuple[VSSNode | None, bool]:
+    """Resolve *datatype* to a struct node if it references one.
+
+    Returns ``(struct_node, is_array)`` when *datatype* (optionally suffixed
+    with ``[]`` for an array of structs) matches a known struct by
+    fully-qualified or short name. Returns ``(None, is_array)`` when
+    *datatype* is a primitive (or an array of a primitive), in which case the
+    caller should fall back to :func:`vss_type_to_avro`.
+    """
+    is_array = datatype.endswith("[]")
+    base = datatype[:-2] if is_array else datatype
+    node = by_fqn.get(base) or by_short.get(base)
+    return node, is_array
+
+
+def _struct_dependencies(
+    node: VSSNode,
+    by_fqn: dict[str, VSSNode],
+    by_short: dict[str, VSSNode],
+) -> list[VSSNode]:
+    """Direct struct dependencies of *node*.
+
+    Includes both structs nested as tree children and structs referenced by a
+    property's ``datatype`` (single struct or array-of-struct reference).
+    """
+    deps: list[VSSNode] = []
+    for child in node.children:
+        if isinstance(child.data, VSSDataStruct):
+            deps.append(child)
+        elif isinstance(child.data, VSSDataProperty) and not child.data.allowed:
+            ref, _ = resolve_struct_datatype(child.data.datatype, by_fqn, by_short)
+            if ref is not None:
+                deps.append(ref)
+    return deps
+
+
+def collect_records_ordered(
+    top: VSSNode,
+    by_fqn: dict[str, VSSNode],
+    by_short: dict[str, VSSNode],
+) -> list[VSSNode]:
+    """Return every struct node that must be declared for *top*, dependencies first.
+
+    Combines nested tree children and structs referenced via ``datatype`` into
+    a single dependency-ordered (post-order), de-duplicated list: each
+    record is declared only after every record it depends on. *top* itself is
+    always the last element.
+
+    Cycle-safe: a struct that (directly or transitively) depends on itself is
+    only visited once. In practice vss-tools' own model validation already
+    rejects self-referential and circular struct definitions before this
+    exporter runs, so this guard mainly protects against future model changes
+    rather than a case reachable via a valid vspec file today.
+    """
+    order: list[VSSNode] = []
+    done: set[str] = set()
+    stack: set[str] = set()
+
+    def visit(node: VSSNode) -> None:
+        key = _node_fqn(node)
+        if key in done or key in stack:
+            return
+        stack.add(key)
+        for dep in _struct_dependencies(node, by_fqn, by_short):
+            visit(dep)
+        stack.discard(key)
+        done.add(key)
+        order.append(node)
+
+    visit(top)
+    return order
+
+
+def _direct_enums(node: VSSNode, path_segments: list[str]) -> list[tuple[str, list[str]]]:
+    """Return ``(enum_name, values)`` pairs for the direct ``allowed`` properties of *node*.
+
+    Unlike :func:`collect_enums`, this does not recurse into nested structs.
+    It is meant to be called once per record while assembling a protocol so
+    that every record's own enums are collected exactly once, regardless of
+    whether that record is the main struct, a nested struct, or a struct
+    reached through a ``datatype`` reference.
+    """
+    result: list[tuple[str, list[str]]] = []
+    for child in node.children:
+        if isinstance(child.data, VSSDataProperty) and child.data.allowed:
+            enum_name = build_enum_name(path_segments, child.name)
+            values = [str(v) for v in child.data.allowed]
+            result.append((enum_name, ensure_unknown_first(values)))
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -172,11 +321,19 @@ def _get_path_segments(node: VSSNode, top_level: VSSNode) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def _generate_record_fields(struct_node: VSSNode, path_segments: list[str]) -> list[str]:
+def _generate_record_fields(
+    struct_node: VSSNode,
+    path_segments: list[str],
+    by_fqn: dict[str, VSSNode],
+    by_short: dict[str, VSSNode],
+) -> list[str]:
     """Generate ``union { null, T } fieldName;`` lines for each direct child of *struct_node*.
 
     *path_segments* is the list of struct names from the top-level struct down
     to *struct_node* (inclusive) and is used to build enum type names.
+    *by_fqn* / *by_short* (see :func:`build_struct_index`) are used to resolve
+    a property's ``datatype`` when it references another struct rather than a
+    primitive.
     """
     fields: list[str] = []
     for child in struct_node.children:
@@ -188,7 +345,11 @@ def _generate_record_fields(struct_node: VSSNode, path_segments: list[str]) -> l
             if data.allowed:
                 avro_type = build_enum_name(path_segments, child.name)
             else:
-                avro_type = vss_type_to_avro(data.datatype)
+                ref, is_array = resolve_struct_datatype(data.datatype, by_fqn, by_short)
+                if ref is not None:
+                    avro_type = f"array<{ref.name}>" if is_array else ref.name
+                else:
+                    avro_type = vss_type_to_avro(data.datatype)
         else:
             continue
         fields.append(f"union {{ null, {avro_type} }} {field_name};")
@@ -213,42 +374,65 @@ def generate_protocol(
     namespace: str,
     include_array: bool,
     plural_engine: inflect.engine,
+    by_fqn: dict[str, VSSNode] | None = None,
+    by_short: dict[str, VSSNode] | None = None,
 ) -> str:
     """Generate the complete ``.avdl`` text for a single top-level struct.
 
     Declaration order (per AVDL best practices):
 
-    1. Enums (depth-first, one per field with ``allowed`` values)
-    2. Nested records (post-order so leaves are declared before parents)
+    1. Enums (one per record with ``allowed`` fields, dependency order)
+    2. Dependency records: nested structs and structs referenced via a
+       property's ``datatype`` (post-order so each is declared before use)
     3. Main record
     4. Array container record (only when *include_array* is ``True``)
+
+    *by_fqn* / *by_short* are the struct index built by
+    :func:`build_struct_index`, used to resolve struct-typed ``datatype``
+    references anywhere in the wider data type tree. When omitted, an index
+    scoped to *struct_node*'s own subtree is built instead, which only
+    resolves nested (tree-child) structs; a struct referenced via ``datatype``
+    from outside that subtree still raises ``ValueError``, exactly like
+    before this feature was added. The CLI always builds and passes the full
+    index so this limitation is never hit in practice.
     """
+    if by_fqn is None or by_short is None:
+        by_fqn, by_short = build_struct_index(struct_node)
+
     struct_name = struct_node.name
     ns_full = f"{namespace}.{struct_name.lower()}"
+
+    records = collect_records_ordered(struct_node, by_fqn, by_short)
 
     lines: list[str] = []
     lines.append(f'@namespace("{ns_full}")')
     lines.append(f"protocol {struct_name} {{")
     lines.append("")
 
-    # 1. Enums
-    for enum_name, values in collect_enums(struct_node):
-        lines.append(f"    enum {enum_name} {{")
-        for i, v in enumerate(values):
-            suffix = "," if i < len(values) - 1 else ""
-            lines.append(f"        {v}{suffix}")
-        lines.append("    } = UNKNOWN;")
-        lines.append("")
+    # 1. Enums (declared once per record, in dependency order)
+    seen_enums: set[str] = set()
+    for record in records:
+        path_segments = _path_from_toplevel(record)
+        for enum_name, values in _direct_enums(record, path_segments):
+            if enum_name in seen_enums:
+                continue
+            seen_enums.add(enum_name)
+            lines.append(f"    enum {enum_name} {{")
+            for i, v in enumerate(values):
+                suffix = "," if i < len(values) - 1 else ""
+                lines.append(f"        {v}{suffix}")
+            lines.append("    } = UNKNOWN;")
+            lines.append("")
 
-    # 2. Nested records (post-order: leaves first)
-    for nested in collect_nested_structs_ordered(struct_node):
-        path_segs = _get_path_segments(nested, struct_node)
-        fields = _generate_record_fields(nested, path_segs)
-        lines.extend(_render_record_lines(nested.name, fields))
+    # 2. Dependency records (post-order: leaves/references first)
+    for record in records[:-1]:
+        path_segs = _path_from_toplevel(record)
+        fields = _generate_record_fields(record, path_segs, by_fqn, by_short)
+        lines.extend(_render_record_lines(record.name, fields))
         lines.append("")
 
     # 3. Main record
-    main_fields = _generate_record_fields(struct_node, [struct_node.name])
+    main_fields = _generate_record_fields(struct_node, [struct_node.name], by_fqn, by_short)
     lines.extend(_render_record_lines(struct_name, main_fields))
 
     # 4. Array container record (optional)
@@ -346,6 +530,7 @@ def cli(
 
     output.mkdir(parents=True, exist_ok=True)
     plural_engine = inflect.engine()
+    by_fqn, by_short = build_struct_index(data_type_tree)
     structs = get_top_level_structs(data_type_tree)
 
     if not structs:
@@ -354,7 +539,7 @@ def cli(
 
     log.info(f"Generating AVRO IDL for {len(structs)} struct(s) into '{output}'...")
     for struct_node in structs:
-        content = generate_protocol(struct_node, namespace, include_array_record, plural_engine)
+        content = generate_protocol(struct_node, namespace, include_array_record, plural_engine, by_fqn, by_short)
         filename = f"{file_prefix}{struct_node.name}.avdl"
         out_path = output / filename
         out_path.write_text(content, encoding="utf-8")
