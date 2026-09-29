@@ -28,7 +28,7 @@ from .string_helper import str_to_lc_first_camel_case, str_to_uc_first_camel_cas
 
 
 # A DICT collection of key => value entries, where:
-#   :key   - vss_node.name of a node from provided VSSNote (tree) for parsing.
+#   :key   - UPPER CASE vss_node.name of a node from provided VSSNote (tree) for parsing.
 #   :value - object of type: { counter: int, vss_paths: [str]}
 #            where:
 #                  - counter   - holds number of occurrences of the corresponding :key in the main VSSNode
@@ -52,13 +52,16 @@ def count_vss_tree_unique_node_names(vss_node: VSSNode) -> None:
 # their number of occurrences and vss_paths for their duplicates if there is any.
 # For more details, check comment for: top_vss_tree_unique_node_names field on lines: 33-44.
 def populate_unique_node_names(node_names_dict: dict[str, Any], vss_node: VSSNode) -> None:
-    if not node_names_dict.get(vss_node.name):
+    # Make sure that VSSNode names are all in same case to avoid any mix of lower/upper case nodes with same name.
+    node_key = vss_node.name.upper()
+
+    if not node_names_dict.get(node_key):
         # ADD vss_node to node_names_dict
-        node_names_dict.__setitem__(vss_node.name, {"counter": 1, "vss_paths": [vss_node.get_fqn()]})
+        node_names_dict.__setitem__(node_key, {"counter": 1, "vss_paths": [vss_node.get_fqn()]})
     else:
         # UPDATE vss_node counters in the node_names_dict
-        node_names_dict[vss_node.name]["counter"] += 1  # type: ignore
-        node_names_dict[vss_node.name]["vss_paths"].append(vss_node.get_fqn())  # type: ignore
+        node_names_dict[node_key]["counter"] += 1  # type: ignore
+        node_names_dict[node_key]["vss_paths"].append(vss_node.get_fqn())  # type: ignore
 
     # Process vss_node children
     if vss_node.children and len(vss_node.children) > 0:
@@ -82,12 +85,12 @@ def get_parent_prefix_for_ttl_name(vss_node: VSSNode, ttl_name: str, use_vehicle
         # in order it can be loaded across different models.
         #
         # This is specially, when a user is using the split option
+        node_key = vss_node.name.upper()
         if (
             vss_node.parent.name != vss_node.parent.ttl_name
-            and top_vss_tree_unique_node_names[vss_node.name]["counter"] > 0
+            and top_vss_tree_unique_node_names[node_key]["counter"] > 0
             and sum(
-                vss_node.parent.name in vss_path
-                for vss_path in top_vss_tree_unique_node_names[vss_node.name]["vss_paths"]
+                vss_node.parent.name in vss_path for vss_path in top_vss_tree_unique_node_names[node_key]["vss_paths"]
             )
             > 1
         ):
@@ -122,21 +125,37 @@ def set_ttl_name(vss_node: VSSNode, use_parent_prefix: bool, overwrite_ttl_name=
         log.debug("  -- node ttl name: '%s' is already set.", vss_node.ttl_name)
 
     else:
-        ttl_name = vss_node.ttl_name if vss_node.ttl_name and preserve_ttl_name else vss_node.name
+        ttl_name: str = vss_node.ttl_name if vss_node.ttl_name and preserve_ttl_name else vss_node.name
+
+        if not ttl_name.isupper():
+            # Set ttl_name to camel case if it was not a constant or ALL_UPPER_CASE
+            ttl_name = str_to_uc_first_camel_case(ttl_name)
+
+        # else: read it as it is
 
         if use_parent_prefix:
-            parent_prefix = get_parent_prefix_for_ttl_name(vss_node, ttl_name)
-            vss_node.ttl_name = parent_prefix + ttl_name
+            parent_prefix: str = get_parent_prefix_for_ttl_name(vss_node, ttl_name)
+
+            if parent_prefix.isupper():
+                # If parent name is a CONSTANT or ALL UPPER CASE, set it to all lower case
+                # to preserve casing when converting it to UC First CamelCase
+                parent_prefix = parent_prefix.lower()
+
+            # else: read it as it is
+
+            # Make sure that parent prefix is UC First CamelCase
+            vss_node.__setattr__("ttl_name", str_to_uc_first_camel_case(parent_prefix) + ttl_name)
 
         else:
-            vss_node.ttl_name = ttl_name
+            vss_node.__setattr__("ttl_name", ttl_name)
 
         log.debug("  -- %s node ttl name: '%s'.", "updated" if overwrite_ttl_name else "added", vss_node.ttl_name)
 
 
 # Helper function, to check whether to use parent prefix for a vss_node or not
 def should_use_parent_prefix(vss_node: VSSNode) -> bool:
-    if top_vss_tree_unique_node_names[vss_node.name]["counter"] > 1 or (
+    node_key = vss_node.name.upper()
+    if top_vss_tree_unique_node_names[node_key]["counter"] > 1 or (
         vss_node.is_leaf
         and hasattr(vss_node.data, "datatype")
         and vss_node.data.datatype is Datatypes.BOOLEAN
@@ -275,7 +294,7 @@ def get_node_description(vss_node: VSSNode) -> str:
         spacer = spacer if description else " "
 
         # Align 'Comment:' with 'Description:' and 'VSS path:'
-        description = f"{description}\n\nComment{'   ' if description else ''}: {vss_node.data.comment}"
+        description = f"{description}\n\nComment{'    ' if description else ''}: {vss_node.data.comment}"
 
     if hasattr(vss_node.data, "unit") and vss_node.data.unit and len(vss_node.data.unit.strip()) > 0:
         description = f"{description}\n\nUnit{'       ' if description else ''}: {vss_node.data.unit}"
