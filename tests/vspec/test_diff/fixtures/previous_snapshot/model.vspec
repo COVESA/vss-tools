@@ -23,3 +23,13 @@ A.Speed:
   description: Vehicle speed.
   type: sensor
   unit: km/h
+
+A.OldPosition:
+  datatype: Types.Position
+  description: Position signal to be removed.
+  type: sensor
+
+A.Location:
+  datatype: Types.Position
+  description: Current location (old description).
+  type: sensor

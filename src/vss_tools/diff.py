@@ -366,7 +366,14 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
     if parent is not None:
         event["parent_label"] = parent
     if kind == PROPERTY:
-        event["is_leaf"] = _is_leaf(attrs)
+        is_leaf = _is_leaf(attrs)
+        event["is_leaf"] = is_leaf
+        # A non-leaf PROPERTY's datatype always resolves to a struct (vspec datatypes
+        # are either primitives or struct FQNs — never branches), so the struct value
+        # itself is read/written as one atomic unit and is eligible for its own binding,
+        # on top of the bindings already minted for each of its child properties.
+        if not is_leaf:
+            event["binding_eligible"] = True
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
