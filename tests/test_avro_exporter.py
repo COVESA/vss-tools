@@ -8,6 +8,7 @@
 
 """Tests for the AVRO IDL exporter."""
 
+import json
 from pathlib import Path
 
 import inflect
@@ -19,6 +20,7 @@ from vss_tools.exporters.avro import (
     collect_nested_structs_ordered,
     collect_records_ordered,
     ensure_unknown_first,
+    generate_avsc_schema,
     generate_protocol,
     get_top_level_structs,
     resolve_struct_datatype,
@@ -560,6 +562,261 @@ class TestCLIIntegration:
         assert content.index("record Address {") < content.index("record Contact {")
         assert "union { null, Address } homeAddress;" in content
         assert "union { null, array<Address> } alternateAddresses;" in content
+
+
+# ---------------------------------------------------------------------------
+# --format avsc tests
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateAvscSchema:
+    _NS = "com.test.vss.struct"
+    _ENGINE = inflect.engine()
+
+    def test_namespace_in_output(self, sensor_node):
+        schema = generate_avsc_schema(sensor_node, self._NS, False, self._ENGINE)
+        assert schema["namespace"] == "com.test.vss.struct.sensor"
+
+    def test_record_type_and_name(self, sensor_node):
+        schema = generate_avsc_schema(sensor_node, self._NS, False, self._ENGINE)
+        assert schema["type"] == "record"
+        assert schema["name"] == "Sensor"
+
+    def test_simple_struct_fields(self, sensor_node):
+        schema = generate_avsc_schema(sensor_node, self._NS, False, self._ENGINE)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        assert fields["value"] == ["null", "double"]
+        assert fields["quality"] == ["null", "int"]
+
+    def test_no_array_record_by_default(self, sensor_node):
+        schema = generate_avsc_schema(sensor_node, self._NS, False, self._ENGINE)
+        assert schema["name"] == "Sensor"
+
+    def test_array_record_generated_when_requested(self, sensor_node):
+        schema = generate_avsc_schema(sensor_node, self._NS, True, self._ENGINE)
+        assert schema["name"] == "SensorArray"
+        field = schema["fields"][0]
+        assert field["name"] == "sensors"
+        assert field["type"]["type"] == "array"
+        assert field["type"]["items"]["name"] == "Sensor"
+
+    def test_enum_present_for_alert_record(self, alert_record_node):
+        schema = generate_avsc_schema(alert_record_node, self._NS, False, self._ENGINE)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        severity = fields["severity"][1]
+        assert severity["type"] == "enum"
+        assert severity["name"] == "AlertRecordSeverityValue"
+
+    def test_unknown_is_first_in_enum_symbols(self, alert_record_node):
+        schema = generate_avsc_schema(alert_record_node, self._NS, False, self._ENGINE)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        symbols = fields["severity"][1]["symbols"]
+        assert symbols[0] == "UNKNOWN"
+        assert "LOW" in symbols
+        assert "MEDIUM" in symbols
+        assert "HIGH" in symbols
+        assert "CRITICAL" in symbols
+
+    def test_uint64_maps_to_long(self, alert_record_node):
+        schema = generate_avsc_schema(alert_record_node, self._NS, False, self._ENGINE)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        assert fields["occurredAt"] == ["null", "long"]
+
+    def test_nested_struct_embedded_inline(self, schedule_node):
+        schema = generate_avsc_schema(schedule_node, self._NS, False, self._ENGINE)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        window = fields["window"][1]
+        assert window["type"] == "record"
+        assert window["name"] == "Window"
+        window_fields = {f["name"]: f["type"] for f in window["fields"]}
+        assert window_fields["startMinute"] == ["null", "int"]
+        assert window_fields["durationMinutes"] == ["null", "int"]
+
+    def test_boolean_field(self, schedule_node):
+        schema = generate_avsc_schema(schedule_node, self._NS, False, self._ENGINE)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        assert fields["isEnabled"] == ["null", "boolean"]
+
+    def test_array_record_plural_field_name(self, schedule_node):
+        schema = generate_avsc_schema(schedule_node, self._NS, True, self._ENGINE)
+        assert schema["fields"][0]["name"] == "schedules"
+
+    def test_referenced_struct_resolved_as_record(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        home = fields["homeAddress"][1]
+        assert home["type"] == "record"
+        assert home["name"] == "Address"
+
+    def test_shared_dependency_declared_once(self, contact_node, struct_index):
+        """Address is referenced twice (single + array); only the first use is a
+        full definition, the second is a bare name reference."""
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        fields = {f["name"]: f["type"] for f in schema["fields"]}
+        home = fields["homeAddress"][1]
+        alternates = fields["alternateAddresses"][1]
+        assert isinstance(home, dict)
+        assert home["name"] == "Address"
+        assert alternates["items"] == "Address"
+
+    def test_unresolvable_struct_reference_without_full_index_raises(self, contact_node):
+        with pytest.raises(ValueError, match="Unsupported"):
+            generate_avsc_schema(contact_node, self._NS, False, self._ENGINE)
+
+    def test_standalone_struct_still_generated_separately(self, address_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(address_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert schema["name"] == "Address"
+
+    def test_output_is_json_serializable(self, contact_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        json.dumps(schema)  # must not raise
+
+
+class TestCLIFormatOption:
+    def test_default_format_still_writes_avdl(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / "Sensor.avdl").exists()
+        assert not (tmp_path / "Sensor.avsc").exists()
+
+    def test_format_avsc_writes_avsc_files(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+                "--format",
+                "avsc",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        generated = {p.name for p in tmp_path.glob("*.avsc")}
+        assert "Sensor.avsc" in generated
+        assert "AlertRecord.avsc" in generated
+        assert "Schedule.avsc" in generated
+        assert "Contact.avsc" in generated
+        assert "Address.avsc" in generated
+        assert not (tmp_path / "Sensor.avdl").exists()
+
+    def test_format_avsc_output_is_valid_json(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+                "--format",
+                "avsc",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        data = json.loads((tmp_path / "Contact.avsc").read_text())
+        assert data["name"] == "Contact"
+        fields = {f["name"]: f["type"] for f in data["fields"]}
+        assert fields["homeAddress"][1]["name"] == "Address"
+
+    def test_format_avsc_include_array_record(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+                "--format",
+                "avsc",
+                "--include-array-record",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        data = json.loads((tmp_path / "Sensor.avsc").read_text())
+        assert data["name"] == "SensorArray"
+        assert data["fields"][0]["name"] == "sensors"
+
+    def test_invalid_format_rejected(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+                "--format",
+                "bogus",
+            ],
+        )
+        assert result.exit_code != 0
 
     def test_cli_file_prefix(self, tmp_path):
         from click.testing import CliRunner

@@ -23,6 +23,8 @@ Each top-level struct in the provided ``--types`` files is written to its own
 
 from __future__ import annotations
 
+import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import caseconverter
@@ -450,6 +452,135 @@ def generate_protocol(
 
 
 # ---------------------------------------------------------------------------
+# AVSC (Avro JSON Schema) rendering
+# ---------------------------------------------------------------------------
+#
+# Counterpart to the AVDL renderer above for --format avsc. A single Avro
+# JSON Schema document has exactly one root type, so instead of declaring
+# every record/enum side-by-side like an AVDL protocol body does, each
+# dependency is embedded as the field type where it is first referenced and
+# is a bare name reference (same namespace, so no qualification needed) on
+# every subsequent use. Reuses the same struct/enum helpers as the AVDL
+# renderer (vss_type_to_avro, build_enum_name, ensure_unknown_first,
+# to_avro_field_name, resolve_struct_datatype, _path_from_toplevel) so the
+# two formats stay equivalent for the same input.
+
+
+def _avsc_enum_schema(
+    path_segments: list[str],
+    field_name: str,
+    allowed: Sequence[object],
+    defined_enums: set[str],
+) -> str | dict:
+    """Return the enum's full AVSC schema the first time it's seen, else its bare name."""
+    enum_name = build_enum_name(path_segments, field_name)
+    if enum_name in defined_enums:
+        return enum_name
+    defined_enums.add(enum_name)
+    values = ensure_unknown_first([str(v) for v in allowed])
+    return {"type": "enum", "name": enum_name, "symbols": values}
+
+
+def _avsc_record_schema(
+    node: VSSNode,
+    by_fqn: dict[str, VSSNode],
+    by_short: dict[str, VSSNode],
+    defined_records: set[str],
+    defined_enums: set[str],
+) -> str | dict:
+    """Return *node*'s full AVSC record schema the first time it's seen, else its bare name."""
+    if node.name in defined_records:
+        return node.name
+    defined_records.add(node.name)
+    return {
+        "type": "record",
+        "name": node.name,
+        "fields": _avsc_record_fields(node, by_fqn, by_short, defined_records, defined_enums),
+    }
+
+
+def _avsc_record_fields(
+    struct_node: VSSNode,
+    by_fqn: dict[str, VSSNode],
+    by_short: dict[str, VSSNode],
+    defined_records: set[str],
+    defined_enums: set[str],
+) -> list[dict]:
+    """AVSC equivalent of :func:`_generate_record_fields`.
+
+    Every field is ``["null", T]`` (optional, nullable), matching the AVDL
+    renderer's ``union { null, T } field;`` pattern. Nested records/enums are
+    embedded in full the first time they are referenced anywhere in the
+    document and referenced by bare name afterwards.
+    """
+    path_segments = _path_from_toplevel(struct_node)
+    fields: list[dict] = []
+    for child in struct_node.children:
+        field_name = to_avro_field_name(child.name)
+        if isinstance(child.data, VSSDataStruct):
+            avro_type: str | dict = _avsc_record_schema(child, by_fqn, by_short, defined_records, defined_enums)
+        elif isinstance(child.data, VSSDataProperty):
+            data = child.data
+            if data.allowed:
+                avro_type = _avsc_enum_schema(path_segments, child.name, data.allowed, defined_enums)
+            else:
+                ref, is_array = resolve_struct_datatype(data.datatype, by_fqn, by_short)
+                if ref is not None:
+                    item_type = _avsc_record_schema(ref, by_fqn, by_short, defined_records, defined_enums)
+                    avro_type = {"type": "array", "items": item_type} if is_array else item_type
+                else:
+                    avro_type = vss_type_to_avro(data.datatype)
+        else:
+            continue
+        fields.append({"name": field_name, "type": ["null", avro_type]})
+    return fields
+
+
+def generate_avsc_schema(
+    struct_node: VSSNode,
+    namespace: str,
+    include_array: bool,
+    plural_engine: inflect.engine,
+    by_fqn: dict[str, VSSNode] | None = None,
+    by_short: dict[str, VSSNode] | None = None,
+) -> dict:
+    """Generate the complete Avro JSON Schema (``.avsc`` content) for a single top-level struct.
+
+    This is the ``--format avsc`` counterpart to :func:`generate_protocol`
+    (``--format idl``, the default). *by_fqn* / *by_short* behave exactly as
+    they do for :func:`generate_protocol`.
+    """
+    if by_fqn is None or by_short is None:
+        by_fqn, by_short = build_struct_index(struct_node)
+
+    struct_name = struct_node.name
+    ns_full = f"{namespace}.{struct_name.lower()}"
+
+    defined_records: set[str] = set()
+    defined_enums: set[str] = set()
+    fields = _avsc_record_fields(struct_node, by_fqn, by_short, defined_records, defined_enums)
+    schema: dict = {
+        "type": "record",
+        "name": struct_name,
+        "namespace": ns_full,
+        "fields": fields,
+    }
+
+    if include_array:
+        array_name = f"{struct_name}Array"
+        field_singular = to_avro_field_name(struct_name)
+        field_plural = plural_engine.plural(field_singular)
+        schema = {
+            "type": "record",
+            "name": array_name,
+            "namespace": ns_full,
+            "fields": [{"name": field_plural, "type": {"type": "array", "items": schema}}],
+        }
+
+    return schema
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -480,6 +611,14 @@ def generate_protocol(
     show_default=True,
     help="Generate an array container record for each struct.",
 )
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["idl", "avsc"], case_sensitive=False),
+    default="idl",
+    show_default=True,
+    help="Output format: 'idl' for AVRO IDL (.avdl), 'avsc' for AVRO Schema (JSON, .avsc).",
+)
 @clo.include_dirs_opt
 @clo.extended_attributes_opt
 @clo.strict_opt
@@ -497,6 +636,7 @@ def cli(
     namespace: str,
     file_prefix: str,
     include_array_record: bool,
+    output_format: str,
     include_dirs: tuple[Path, ...],
     extended_attributes: tuple[str, ...],
     strict: bool,
@@ -507,7 +647,7 @@ def cli(
     types: tuple[Path, ...],
     strict_exceptions: Path | None,
 ) -> None:
-    """Export VSS struct definitions to AVRO IDL (.avdl) files."""
+    """Export VSS struct definitions to AVRO IDL (.avdl) or AVRO Schema (.avsc) files."""
     if not types:
         raise click.ClickException("At least one --types / -t file must be provided for AVRO export.")
 
@@ -535,6 +675,17 @@ def cli(
 
     if not structs:
         log.warning("No top-level structs found in the provided --types files.")
+        return
+
+    if output_format == "avsc":
+        log.info(f"Generating AVRO Schema (.avsc) for {len(structs)} struct(s) into '{output}'...")
+        for struct_node in structs:
+            schema = generate_avsc_schema(struct_node, namespace, include_array_record, plural_engine, by_fqn, by_short)
+            filename = f"{file_prefix}{struct_node.name}.avsc"
+            out_path = output / filename
+            out_path.write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
+            log.debug(f"  Written: {out_path}")
+        log.info("AVRO Schema export complete.")
         return
 
     log.info(f"Generating AVRO IDL for {len(structs)} struct(s) into '{output}'...")
