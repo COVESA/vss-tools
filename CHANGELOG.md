@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `avro` exporter: new `--format [idl|avsc]` option (default `idl`, unchanged
+  behavior). `--format avsc` writes native Avro JSON Schema (`.avsc`) files
+  directly, one self-contained file per top-level struct, instead of AVRO IDL
+  (`.avdl`). Reuses the exporter's existing struct/enum/dependency-resolution
+  logic; removes the need to export `.avdl` and separately convert it with
+  `avro-tools idl2schemata` to get `.avsc` output.
+
 ## 6.1
 
 ### Added
