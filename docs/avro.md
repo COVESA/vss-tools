@@ -1,6 +1,11 @@
 # AVRO Exporter
 
-This exporter converts VSS struct definitions into [Apache Avro IDL (`.avdl`)](https://avro.apache.org/docs/current/idl-language/) files, one file per top-level struct. The output is ready to be compiled into `.avsc` schemas and used with [Avro single-object encoding](https://avro.apache.org/docs/current/specification/#single-object-encoding) for efficient binary serialization over the wire.
+This exporter converts VSS struct definitions into Apache Avro schemas, one file per top-level struct. Two output formats are supported (see [Output formats](#output-formats)):
+
+- **`idl`** (default): [Apache Avro IDL (`.avdl`)](https://avro.apache.org/docs/current/idl-language/) files, which can be compiled into `.avsc` schemas with Avro tooling.
+- **`avsc`**: native [Avro JSON Schema (`.avsc`)](https://avro.apache.org/docs/current/specification/#schema-declaration) files, usable without a conversion step.
+
+The schemas can be used with [Avro single-object encoding](https://avro.apache.org/docs/current/specification/#single-object-encoding) for efficient binary serialization over the wire.
 
 ## What it does
 
@@ -35,6 +40,7 @@ The main signals file (`-s`) is required by the VSS toolchain but is not exporte
 | `--namespace` | yes | Avro namespace prefix (e.g. `com.example.vss.struct`). |
 | `--file-prefix` | no | String prepended to each output filename (e.g. `struct` → `structColor.avdl`). Default: empty. |
 | `--include-array-record` | no | Also generate an array container record for each struct. Default: off. |
+| `--format` | no | Output format: `idl` (Avro IDL, `.avdl`) or `avsc` (Avro JSON Schema, `.avsc`). Case-insensitive. Default: `idl`. |
 | `-u` / `--units` | no | Unit definition files. Required only when the vspec uses `unit:` fields. |
 | `-q` / `--quantities` | no | Quantity definition files. Required only when the vspec uses `unit:` fields. |
 | `-l` / `--overlays` | no | Overlay files applied on top of the vspec. |
@@ -58,7 +64,7 @@ VSS datatypes map to Avro types as follows:
 | struct-reference field (`datatype: Types.X`) | record reference by short name |
 | struct-reference array field (`datatype: Types.X[]`) | `array<X>` |
 
-Every field is wrapped in `union { null, T }`, making all fields nullable by default. This is intentional and aligns with Avro community conventions for optional fields.
+Every field is wrapped in `union { null, T }` (AVSC: `["null", T]`), making all fields nullable by default. This is intentional and aligns with Avro community conventions for optional fields.
 
 ## Enums
 
@@ -207,3 +213,111 @@ protocol LogEntry {
 ## Namespace
 
 The full Avro namespace for each struct is `<--namespace>.<structnamelowercase>`. For example, with `--namespace com.example.struct` and a struct named `DataPacket`, the namespace becomes `com.example.struct.datapacket`.
+
+## Output formats
+
+The `--format` option selects how each struct is rendered. Both formats are generated from the same struct, enum and dependency-resolution logic, so they describe the same types: identical record/enum names, field names and types, nullable fields, and `UNKNOWN`-first enums.
+
+| | `--format idl` (default) | `--format avsc` |
+|---|---|---|
+| File extension | `.avdl` | `.avsc` |
+| Content | Avro IDL protocol | Avro JSON Schema (one root record) |
+| Nullable field | `union { null, T } name;` | `{"name": "name", "type": ["null", T]}` |
+| Enum default | `} = UNKNOWN;` | `"default": "UNKNOWN"` |
+| Dependency types | Declared side by side, dependencies first | Embedded at first use, bare name reference afterwards |
+| Array container record | Second record in the protocol | Root record, wrapping the struct in an `array` |
+| Namespace | `@namespace(...)` on the protocol | `"namespace"` on the root record |
+
+### AVSC specifics
+
+An Avro JSON Schema document has exactly one root type and a named type may be defined only once. The `avsc` renderer therefore follows the Avro parsing rules:
+
+- Records and enums are **embedded in full where they are first referenced** (depth-first, in field order). Every later reference to the same type, anywhere in the document, is just its name, e.g. `["null", "Address"]` or `{"type": "array", "items": "Address"}`.
+- Nested records and enums do not repeat the `namespace`; they inherit the one of the enclosing record.
+- With `--include-array-record`, the root record is `<Struct>Array` and the struct itself is embedded as the array's `items` type (carrying the same `namespace`).
+- Output is pretty-printed JSON (2-space indent) with a trailing newline.
+
+### Example (AVSC)
+
+The `LogEntry` example above, exported with `--format avsc --file-prefix struct` (without `--include-array-record`), produces `out/structLogEntry.avsc`:
+
+```json
+{
+  "type": "record",
+  "name": "LogEntry",
+  "namespace": "com.example.struct.logentry",
+  "fields": [
+    {
+      "name": "level",
+      "type": [
+        "null",
+        {
+          "type": "enum",
+          "name": "LogEntryLevelValue",
+          "symbols": ["UNKNOWN", "DEBUG", "INFO", "WARNING", "ERROR"],
+          "default": "UNKNOWN"
+        }
+      ]
+    },
+    { "name": "message", "type": ["null", "string"] },
+    { "name": "sequenceNumber", "type": ["null", "long"] }
+  ]
+}
+```
+
+(The exporter writes the JSON expanded over more lines than shown here; the content is the same.)
+
+With `--include-array-record` the root becomes:
+
+```json
+{
+  "type": "record",
+  "name": "LogEntryArray",
+  "namespace": "com.example.struct.logentry",
+  "fields": [
+    {
+      "name": "logEntries",
+      "type": { "type": "array", "items": { "type": "record", "name": "LogEntry", "...": "..." } }
+    }
+  ]
+}
+```
+
+### Shared types in AVSC
+
+Given a `Device` struct with a nested `Location` struct whose `Primary` property references `Types.Address`, and a second property `BackupAddress` of the same type, `Address` is embedded where first used and referenced by name afterwards:
+
+```json
+{
+  "type": "record",
+  "name": "Device",
+  "namespace": "com.example.struct.device",
+  "fields": [
+    {
+      "name": "location",
+      "type": ["null", {
+        "type": "record",
+        "name": "Location",
+        "fields": [
+          { "name": "primary", "type": ["null", { "type": "record", "name": "Address", "fields": ["..."] }] }
+        ]
+      }]
+    },
+    { "name": "backupAddress", "type": ["null", "Address"] }
+  ]
+}
+```
+
+### Choosing a format
+
+- Use **`avsc`** when the consumer expects `.avsc` files (most Avro libraries, schema registries) and you want to avoid running `avro-tools idl2schemata`.
+- Use **`idl`** when you want human-readable, reviewable schema sources, or when the files are fed into IDL-based tooling.
+
+```bash
+vspec export avro \
+  -s signals.vspec \
+  -t types.vspec \
+  -o ./out \
+  --namespace com.example.struct \
+  --format avsc
+```

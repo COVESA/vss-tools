@@ -91,3 +91,43 @@ Types.Contact.AlternateAddresses:
   type: property
   datatype: Types.Address[]
   description: Additional addresses for the contact (array-of-struct reference).
+
+Types.Device:
+  type: struct
+  description: A device with a status, a nested location and a backup address (exercises shared enums/records).
+
+Types.Device.Name:
+  type: property
+  datatype: string
+  description: Device name.
+
+Types.Device.Status:
+  type: property
+  datatype: string
+  allowed: ["ONLINE", "OFFLINE"]
+  description: Connectivity status.
+
+Types.Device.Location:
+  type: struct
+  description: Where the device is installed.
+
+Types.Device.Location.Primary:
+  type: property
+  datatype: Types.Address
+  description: Primary installation address (first reference to Address).
+
+Types.Device.Location.Source:
+  type: property
+  datatype: string
+  allowed: ["GPS", "MANUAL"]
+  description: How the location was determined (enum inside a nested struct).
+
+Types.Device.BackupAddress:
+  type: property
+  datatype: Types.Address
+  description: Second reference to Address (must be a bare name in AVSC).
+
+Types.Device.KnownAddresses:
+  type: property
+  datatype: Types.Address[]
+  description: Third reference to Address, as an array.
