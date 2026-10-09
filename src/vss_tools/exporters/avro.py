@@ -478,7 +478,7 @@ def _avsc_enum_schema(
         return enum_name
     defined_enums.add(enum_name)
     values = ensure_unknown_first([str(v) for v in allowed])
-    return {"type": "enum", "name": enum_name, "symbols": values}
+    return {"type": "enum", "name": enum_name, "symbols": values, "default": "UNKNOWN"}
 
 
 def _avsc_record_schema(

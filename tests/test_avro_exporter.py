@@ -89,6 +89,11 @@ def contact_node(top_level_structs):
 
 
 @pytest.fixture(scope="module")
+def device_node(top_level_structs):
+    return next(n for n in top_level_structs if n.name == "Device")
+
+
+@pytest.fixture(scope="module")
 def struct_index(type_trees):
     _, data_type_tree = type_trees
     return build_struct_index(data_type_tree)
@@ -612,6 +617,7 @@ class TestGenerateAvscSchema:
         fields = {f["name"]: f["type"] for f in schema["fields"]}
         symbols = fields["severity"][1]["symbols"]
         assert symbols[0] == "UNKNOWN"
+        assert fields["severity"][1]["default"] == "UNKNOWN"
         assert "LOW" in symbols
         assert "MEDIUM" in symbols
         assert "HIGH" in symbols
@@ -674,6 +680,157 @@ class TestGenerateAvscSchema:
         by_fqn, by_short = struct_index
         schema = generate_avsc_schema(contact_node, self._NS, False, self._ENGINE, by_fqn, by_short)
         json.dumps(schema)  # must not raise
+
+
+_AVRO_PRIMITIVES = {"null", "boolean", "int", "long", "float", "double", "bytes", "string"}
+
+
+def _assert_valid_avsc(schema, defined: set[str] | None = None) -> None:
+    """Check Avro's parse-order rule: a named type is defined before any bare reference to it."""
+    defined = set() if defined is None else defined
+    if isinstance(schema, str):
+        assert schema in _AVRO_PRIMITIVES or schema in defined, f"undefined type reference: {schema}"
+    elif isinstance(schema, list):
+        for branch in schema:
+            _assert_valid_avsc(branch, defined)
+    elif isinstance(schema, dict):
+        kind = schema["type"]
+        if kind == "record":
+            assert schema["name"] not in defined, f"duplicate definition: {schema['name']}"
+            defined.add(schema["name"])
+            for field in schema["fields"]:
+                _assert_valid_avsc(field["type"], defined)
+        elif kind == "enum":
+            assert schema["name"] not in defined, f"duplicate definition: {schema['name']}"
+            assert len(schema["symbols"]) == len(set(schema["symbols"]))
+            defined.add(schema["name"])
+        elif kind == "array":
+            _assert_valid_avsc(schema["items"], defined)
+        else:
+            _assert_valid_avsc(kind, defined)
+
+
+class TestAvscStructure:
+    """Embedding / reference rules and spec conformance of the generated AVSC."""
+
+    _NS = "com.test.vss.struct"
+    _ENGINE = inflect.engine()
+
+    def _fields(self, record: dict) -> dict:
+        return {f["name"]: f["type"] for f in record["fields"]}
+
+    def test_enum_inside_nested_struct_is_embedded(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        location = self._fields(schema)["location"][1]
+        source = self._fields(location)["source"][1]
+        assert source["type"] == "enum"
+        assert source["name"] == "DeviceLocationSourceValue"
+        assert source["symbols"] == ["UNKNOWN", "GPS", "MANUAL"]
+        assert source["default"] == "UNKNOWN"
+
+    def test_top_level_enum_is_embedded(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        status = self._fields(schema)["status"][1]
+        assert status["name"] == "DeviceStatusValue"
+        assert status["symbols"] == ["UNKNOWN", "ONLINE", "OFFLINE"]
+
+    def test_record_first_referenced_in_nested_struct_is_defined_there(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        location = self._fields(schema)["location"][1]
+        primary = self._fields(location)["primary"][1]
+        assert primary["type"] == "record"
+        assert primary["name"] == "Address"
+
+    def test_later_references_to_shared_record_are_bare_names(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        fields = self._fields(schema)
+        assert fields["backupAddress"] == ["null", "Address"]
+        assert fields["knownAddresses"] == ["null", {"type": "array", "items": "Address"}]
+
+    def test_each_named_type_defined_exactly_once_and_before_use(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        for include_array in (False, True):
+            schema = generate_avsc_schema(device_node, self._NS, include_array, self._ENGINE, by_fqn, by_short)
+            _assert_valid_avsc(schema)
+
+    def test_every_top_level_struct_yields_valid_avsc(self, top_level_structs, struct_index):
+        by_fqn, by_short = struct_index
+        for node in top_level_structs:
+            for include_array in (False, True):
+                schema = generate_avsc_schema(node, self._NS, include_array, self._ENGINE, by_fqn, by_short)
+                _assert_valid_avsc(schema)
+
+    def test_every_field_is_nullable_union_with_null_first(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        for field in schema["fields"]:
+            assert isinstance(field["type"], list)
+            assert field["type"][0] == "null"
+            assert len(field["type"]) == 2
+
+    def test_namespace_only_on_root_record(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert schema["namespace"] == "com.test.vss.struct.device"
+        location = self._fields(schema)["location"][1]
+        assert "namespace" not in location
+
+    def test_array_wrapper_embeds_full_struct_once(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        schema = generate_avsc_schema(device_node, self._NS, True, self._ENGINE, by_fqn, by_short)
+        assert schema["name"] == "DeviceArray"
+        assert schema["namespace"] == "com.test.vss.struct.device"
+        items = schema["fields"][0]["type"]["items"]
+        assert items["type"] == "record"
+        assert items["name"] == "Device"
+        assert items["namespace"] == schema["namespace"]
+
+    def test_avdl_and_avsc_declare_the_same_names(self, device_node, struct_index):
+        """Both renderers must emit the same set of records/enums for the same struct."""
+        import re
+
+        by_fqn, by_short = struct_index
+        avdl = generate_protocol(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        avdl_names = set(re.findall(r"^\s*(?:record|enum) (\w+) \{", avdl, flags=re.MULTILINE))
+
+        avsc_names: set[str] = set()
+
+        def walk(node):
+            if isinstance(node, list):
+                for n in node:
+                    walk(n)
+            elif isinstance(node, dict):
+                if node.get("type") in ("record", "enum"):
+                    avsc_names.add(node["name"])
+                for f in node.get("fields", []):
+                    walk(f["type"])
+                if node.get("type") == "array":
+                    walk(node["items"])
+
+        walk(generate_avsc_schema(device_node, self._NS, False, self._ENGINE, by_fqn, by_short))
+        assert avsc_names == avdl_names
+
+
+class TestGenerateProtocolSharedTypes:
+    """IDL regression coverage for the Device struct (shared record, enum in nested struct)."""
+
+    _NS = "com.test.vss.struct"
+    _ENGINE = inflect.engine()
+
+    def test_shared_record_declared_once(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        content = generate_protocol(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert content.count("record Address {") == 1
+
+    def test_enums_declared_for_top_level_and_nested_struct(self, device_node, struct_index):
+        by_fqn, by_short = struct_index
+        content = generate_protocol(device_node, self._NS, False, self._ENGINE, by_fqn, by_short)
+        assert "enum DeviceStatusValue {" in content
+        assert "enum DeviceLocationSourceValue {" in content
 
 
 class TestCLIFormatOption:
@@ -795,6 +952,120 @@ class TestCLIFormatOption:
         data = json.loads((tmp_path / "Sensor.avsc").read_text())
         assert data["name"] == "SensorArray"
         assert data["fields"][0]["name"] == "sensors"
+
+    def test_format_avsc_file_prefix(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        result = CliRunner().invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+                "--format",
+                "avsc",
+                "--file-prefix",
+                "struct",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        generated = {p.name for p in tmp_path.glob("*.avsc")}
+        assert "structSensor.avsc" in generated
+        assert "structDevice.avsc" in generated
+        assert "Sensor.avsc" not in generated
+
+    def test_format_is_case_insensitive(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        result = CliRunner().invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+                "--format",
+                "AVSC",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / "Sensor.avsc").exists()
+
+    def test_format_idl_explicit_matches_default(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        base = [
+            "-s",
+            str(_SIGNALS),
+            "-t",
+            str(_TYPES),
+            "-u",
+            str(_UNITS),
+            "-q",
+            str(_QUANTITIES),
+            "--namespace",
+            "com.test.struct",
+        ]
+        default_dir = tmp_path / "default"
+        idl_dir = tmp_path / "idl"
+        assert CliRunner().invoke(cli, [*base, "-o", str(default_dir)]).exit_code == 0
+        assert CliRunner().invoke(cli, [*base, "-o", str(idl_dir), "--format", "idl"]).exit_code == 0
+        default_files = sorted(p.name for p in default_dir.iterdir())
+        assert default_files == sorted(p.name for p in idl_dir.iterdir())
+        for name in default_files:
+            assert (default_dir / name).read_text() == (idl_dir / name).read_text()
+
+    def test_format_avsc_files_are_valid_avro_json(self, tmp_path):
+        from click.testing import CliRunner
+        from vss_tools.exporters.avro import cli
+
+        result = CliRunner().invoke(
+            cli,
+            [
+                "-s",
+                str(_SIGNALS),
+                "-t",
+                str(_TYPES),
+                "-u",
+                str(_UNITS),
+                "-q",
+                str(_QUANTITIES),
+                "-o",
+                str(tmp_path),
+                "--namespace",
+                "com.test.struct",
+                "--format",
+                "avsc",
+                "--include-array-record",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        files = list(tmp_path.glob("*.avsc"))
+        assert files
+        for f in files:
+            text = f.read_text(encoding="utf-8")
+            assert text.endswith("\n")
+            _assert_valid_avsc(json.loads(text))
 
     def test_invalid_format_rejected(self, tmp_path):
         from click.testing import CliRunner
