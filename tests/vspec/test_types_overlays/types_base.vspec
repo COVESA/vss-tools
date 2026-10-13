@@ -1,0 +1,12 @@
+Types:
+  type: branch
+  description: Root branch for data types.
+
+Types.Struct1:
+  type: struct
+  description: A struct.
+
+Types.Struct1.x:
+  type: property
+  description: x property.
+  datatype: double

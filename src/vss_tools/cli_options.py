@@ -14,6 +14,8 @@ from rich_click import option
 from vss_tools.model import get_all_model_fields
 from vss_tools.strict import StrictOption
 
+TYPES_OVERLAYS_META_KEY = "vss_tools.types_overlays"
+
 
 def validate_attribute(value):
     """
@@ -157,6 +159,35 @@ types_opt = option(
     help="Data types files.",
 )
 
+
+def _store_types_overlays(ctx: click.Context, param: click.Parameter, value: tuple[Path, ...]) -> tuple[Path, ...]:
+    ctx.meta[TYPES_OVERLAYS_META_KEY] = tuple(value)
+    return value
+
+
+def get_types_overlays_from_context() -> tuple[Path, ...]:
+    """
+    Returns the '--types-overlays' given on the command line.
+    Empty if not running inside a command or if the option is not available.
+    """
+    ctx = click.get_current_context(silent=True)
+    if ctx is None:
+        return ()
+    return tuple(ctx.meta.get(TYPES_OVERLAYS_META_KEY, ()))
+
+
+# The value is not passed to the command function. It is stored in the click
+# context and picked up by 'get_trees', so it can be registered on any command
+# with '--types' without touching the command itself.
+types_overlays_opt = option(
+    "--types-overlays",
+    "-L",
+    multiple=True,
+    type=click.Path(dir_okay=False, readable=True, path_type=Path, exists=True),
+    expose_value=False,
+    callback=_store_types_overlays,
+    help="Overlay files to apply on top of the types given with '--types'.",
+)
 
 types_output_opt = option(
     "--types-output",

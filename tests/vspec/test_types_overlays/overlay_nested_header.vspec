@@ -1,0 +1,3 @@
+Types.Sub:
+  type: branch
+  description: Header for the nested types.

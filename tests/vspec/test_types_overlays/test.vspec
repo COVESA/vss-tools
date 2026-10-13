@@ -1,0 +1,13 @@
+A:
+  type: branch
+  description: Branch A.
+
+A.Signal1:
+  datatype: Types.Struct1
+  type: sensor
+  description: Signal using a struct from the base types.
+
+A.Signal3:
+  datatype: Types.Struct3
+  type: sensor
+  description: Signal using a struct from an overlay.

@@ -10,6 +10,11 @@ import importlib
 import click
 from rich_click import RichGroup
 
+from vss_tools.cli_options import types_overlays_opt
+
+# Commands that have '--types' but must not get '--types-overlays'
+TYPES_OVERLAYS_EXCLUDED_COMMANDS = {"id"}
+
 
 class LazyGroup(RichGroup):
     def __init__(self, *args, lazy_subcommands=None, **kwargs):
@@ -42,4 +47,16 @@ class LazyGroup(RichGroup):
         if not isinstance(cmd_object, click.BaseCommand):
             raise ValueError(f"Lazy loading of {import_path} failed by returning " "a non-command object")
         cmd_object.name = cmd_name
+        self._add_types_overlays_option(cmd_object)
         return cmd_object
+
+    @staticmethod
+    def _add_types_overlays_option(cmd_object):
+        """
+        Adds the common '--types-overlays' option to every command that supports '--types'.
+        """
+        if cmd_object.name in TYPES_OVERLAYS_EXCLUDED_COMMANDS:
+            return
+        param_names = {p.name for p in cmd_object.params}
+        if "types" in param_names and "types_overlays" not in param_names:
+            types_overlays_opt(cmd_object)
