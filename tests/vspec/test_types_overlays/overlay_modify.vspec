@@ -1,0 +1,5 @@
+Types.Struct1:
+  description: Modified struct description.
+
+Types.Struct1.x:
+  datatype: float

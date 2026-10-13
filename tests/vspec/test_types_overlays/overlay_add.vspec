@@ -1,0 +1,13 @@
+Types.Struct1.y:
+  type: property
+  description: y property.
+  datatype: uint16
+
+Types.Struct3:
+  type: struct
+  description: A struct added by an overlay.
+
+Types.Struct3.a:
+  type: property
+  description: a property.
+  datatype: string
