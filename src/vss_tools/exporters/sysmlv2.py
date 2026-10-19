@@ -12,6 +12,7 @@ import rich_click as click
 
 import vss_tools.cli_options as clo
 from vss_tools import log
+from vss_tools.datatypes import Datatypes
 from vss_tools.main import get_trees
 from vss_tools.model import VSSDataBranch
 from vss_tools.tree import VSSNode
@@ -19,16 +20,16 @@ from vss_tools.tree import VSSNode
 fqns: set[str] = set()
 
 # Translate SysML types (TODO: use better suited SysML types)
-primitiveDict = {
-    "string": "ScalarValues::String",
-    "float": "ScalarValues::Real",
-    "boolean": "ScalarValues::Boolean",
-    "int8": "ScalarValues::Integer",
-    "uint8": "ScalarValues::Integer",
-    "int16": "ScalarValues::Integer",
-    "uint16": "ScalarValues::Integer",
-    "int32": "ScalarValues::Integer",
-    "uint32": "ScalarValues::Integer",
+datatype_map = {
+    Datatypes.STRING[0]: "ScalarValues::String",
+    Datatypes.FLOAT[0]: "ScalarValues::Real",
+    Datatypes.BOOLEAN[0]: "ScalarValues::Boolean",
+    Datatypes.INT8[0]: "ScalarValues::Integer",
+    Datatypes.UINT8[0]: "ScalarValues::Integer",
+    Datatypes.INT16[0]: "ScalarValues::Integer",
+    Datatypes.UINT16[0]: "ScalarValues::Integer",
+    Datatypes.INT32[0]: "ScalarValues::Integer",
+    Datatypes.UINT32[0]: "ScalarValues::Integer",
 }
 
 
@@ -119,11 +120,8 @@ def get_enum(tree: VSSNode, fill: str, attributes: tuple[str]) -> str:
 
 
 def translatePrimitive(name: str) -> str:
-    if primitiveDict.get(name):
-        # entry is always a string, if it exists
-        return str(primitiveDict.get(name))
-    else:
-        return name
+    # use original name when unmapped
+    return datatype_map.get(name, name)
 
 
 def get_rendered_class(tree: VSSNode, fill, attributes: tuple[str]) -> str:
@@ -163,8 +161,8 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
 
     tree_content_lines = []
     data = node.get_vss_data()
-    needPkg = node.parent and (node.is_leaf or not (isinstance(data, VSSDataBranch) and data.is_instance))
-    if needPkg:
+    need_pkg = node.parent and (node.is_leaf or not (isinstance(data, VSSDataBranch) and data.is_instance))
+    if need_pkg:
         tree_content_lines.append("%s// %s" % (fill, data.description))
         tree_content_lines.append("%spackage P%s {" % (fill, node.name))
         nFill = fill + "\t"
@@ -189,7 +187,7 @@ def get_rendered_tree(node: VSSNode, fill, attributes: tuple[str]) -> str:
             if isinstance(data, VSSDataBranch) and data.is_instance:
                 break
 
-    if needPkg:
+    if need_pkg:
         tree_content_lines.append("%s}" % (fill))
 
     return "\n".join(tree_content_lines)
@@ -238,13 +236,14 @@ def cli(
         expand=expand,
     )
 
-    plant_code = get_rendered_tree(tree, "", attr) + "\n"
+    sysml_code = get_rendered_tree(tree, "", attr) + "\n"
     if datatype_tree:
-        plant_code += "\n// datatype tree:\n" + get_rendered_tree(datatype_tree, "", attr)
+        sysml_code += "\n// datatype tree:\n" + get_rendered_tree(datatype_tree, "", attr)
 
     if output:
-        log.info(f"Writing tree to: {output.absolute()}")
+        log.info(f"Writing output to {output.absolute()}")
         with open(output, "w") as f:
-            f.write(plant_code)
+            f.write(sysml_code)
     else:
-        log.info(plant_code)
+        log.info("Writing output to stdout")
+        print(sysml_code)
