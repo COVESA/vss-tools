@@ -1,8 +1,7 @@
 # Vspec SysML v2 Exporter
 
-### developed in the context of HAL4SDV, contact ansgar.radermacher@cea.fr
-
-This vspec exporter is used to export a VSS file to SysML v2
+This vspec exporter is used to export a VSS file to SysML v2.
+*Developed in the context of HAL4SDV, contact ansgar.radermacher@cea.fr*
 
 ## Why?
 - Link with OMG standard [SysML](https://www.omg.org/spec/SysML/), access from tools used in automotive
