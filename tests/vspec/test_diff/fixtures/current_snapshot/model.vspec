@@ -29,3 +29,13 @@ A.Speed:
   description: Vehicle speed.
   type: sensor
   unit: m/s
+
+A.Location:
+  datatype: Types.Position
+  description: Current location (new description).
+  type: sensor
+
+A.Position:
+  datatype: Types.Position
+  description: Struct-typed position signal.
+  type: sensor

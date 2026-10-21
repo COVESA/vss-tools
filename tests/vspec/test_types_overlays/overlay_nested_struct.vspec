@@ -1,0 +1,8 @@
+Types.Sub.Struct4:
+  type: struct
+  description: A struct below a header that is not in the base types.
+
+Types.Sub.Struct4.b:
+  type: property
+  description: b property.
+  datatype: boolean

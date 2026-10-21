@@ -71,16 +71,28 @@ def _node_type(attrs: dict[str, Any]) -> str:
     return str(attrs.get("type", "unknown"))
 
 
+def _effective_instantiate(attrs: dict[str, Any]) -> bool:
+    """Indicates whether the property is expanded per parent instance (anything but an explicit `false`)."""
+    return attrs.get("instantiate") is not False
+
+
 def _field_diff(prev_attrs: dict[str, Any], curr_attrs: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Return a list of per-attribute change dicts for fields that differ.
     Includes fields that appeared or disappeared (previous/current = None).
+
+    `instantiate` is compared by its effective outcome, so an absent value and an explicit
+    `true` are not a change.
     """
     all_keys = set(prev_attrs) | set(curr_attrs)
     changes = []
     for k in sorted(all_keys):
         pv = prev_attrs.get(k)
         cv = curr_attrs.get(k)
+        if k == "instantiate":
+            if _effective_instantiate(prev_attrs) != _effective_instantiate(curr_attrs):
+                changes.append({"attribute": k, "previous": pv, "current": cv})
+            continue
         if pv != cv:
             changes.append({"attribute": k, "previous": pv, "current": cv})
     return changes
@@ -248,8 +260,10 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
 
     Used both for an ADDED event's `aspects` and a REMOVED event's `previous_aspects`
     (the modl IR requires the latter to carry the full prior-state snapshot).
+
+    `instantiate` is excluded: modl reads it as a top-level PROPERTY field, never as an aspect.
     """
-    aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name")}
+    aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name", "instantiate")}
     kind = _vss_kind(node_type, source)
     if kind == PROPERTY:
         raw_dt = aspects.pop("datatype", None)
@@ -308,7 +322,7 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
     delta: dict[str, Any] = {}
     for ac in attribute_changes:
         attr, previous, current = ac["attribute"], ac["previous"], ac["current"]
-        if attr in ("fka", "name"):
+        if attr in ("fka", "name", "instantiate"):
             continue
         if attr == "datatype":
             prev_type, prev_is_list = _extract_datatype(previous)
@@ -366,7 +380,21 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
     if parent is not None:
         event["parent_label"] = parent
     if kind == PROPERTY:
-        event["is_leaf"] = _is_leaf(attrs)
+        is_leaf = _is_leaf(attrs)
+        event["is_leaf"] = is_leaf
+        # A non-leaf PROPERTY's datatype always resolves to a struct (vspec datatypes
+        # are either primitives or struct FQNs — never branches), so the struct value
+        # itself is read/written as one atomic unit and is eligible for its own binding,
+        # on top of the bindings already minted for each of its child properties.
+        if not is_leaf:
+            event["binding_eligible"] = True
+        # `instantiate` is a top-level field (not an aspect). ADDED/REMOVED only pin it when the
+        # leaf declares `instantiate: false`; MODIFIED always carries the current effective value
+        # so the ledger can detect a transition. Never set on ENUM_VALUE (not a PROPERTY).
+        if change_type == MODIFIED:
+            event["instantiate"] = _effective_instantiate(attrs)
+        elif not _effective_instantiate(attrs):
+            event["instantiate"] = False
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)

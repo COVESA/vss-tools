@@ -8,6 +8,7 @@
 
 import pandas as pd
 import pytest
+
 import vss_tools.exporters.s2dm.type_builders as type_builders_module
 from vss_tools.exporters.s2dm.type_builders import _get_unit_args, create_unit_enums
 from vss_tools.model import VSSUnit

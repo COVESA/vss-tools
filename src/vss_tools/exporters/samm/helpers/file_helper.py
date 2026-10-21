@@ -9,6 +9,7 @@
 from pathlib import Path
 
 from rdflib import Graph
+
 from vss_tools import log
 
 from ..config import config as cfg
