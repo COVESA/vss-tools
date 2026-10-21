@@ -56,7 +56,7 @@ def run_exporter(directory, exporter, tmp_path):
     elif exporter in ["ros2interface"]:
         # Generate a topics file for test, shall not be checked in
         topics_file = tmp_path / "ros_test_topics.txt"
-        topics_file.write_text("# includes only branch A\n" "A.*", encoding="utf-8")
+        topics_file.write_text("# includes only branch A\nA.*", encoding="utf-8")
 
         cmd += f" --output {output}"
         cmd += f" --topics-file {topics_file} --topics A.* --topics A.Double --topics fqn:A.Uint8"
@@ -89,6 +89,7 @@ def test_exporters(directory, tmp_path):
         "jsonschema",
         "ddsidl",
         "plantuml",
+        "sysmlv2",
         "csv",
         "yaml",
         "go",

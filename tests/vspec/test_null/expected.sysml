@@ -1,0 +1,3 @@
+part def Vehicle {
+
+}

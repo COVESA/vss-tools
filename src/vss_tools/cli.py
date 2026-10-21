@@ -50,6 +50,7 @@ cli.add_command(diff_cli, "diff")
         "csv": "vss_tools.exporters.csv:cli",
         "ddsidl": "vss_tools.exporters.ddsidl:cli",
         "plantuml": "vss_tools.exporters.plantuml:cli",
+        "sysmlv2": "vss_tools.exporters.sysmlv2:cli",
         "id": "vss_tools.exporters.id:cli",
         "json": "vss_tools.exporters.json:cli",
         "jsonschema": "vss_tools.exporters.jsonschema:cli",
