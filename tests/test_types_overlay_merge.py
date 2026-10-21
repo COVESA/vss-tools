@@ -9,6 +9,7 @@
 import logging
 
 import pytest
+
 from vss_tools.datatypes import dynamic_datatypes
 from vss_tools.main import TypesOverlayException, merge_types_overlay
 from vss_tools.tree import VSSNode, build_tree

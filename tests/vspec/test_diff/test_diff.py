@@ -14,6 +14,7 @@ from typing import Any
 
 import pytest
 from click.testing import CliRunner
+
 from vss_tools.diff import (
     ADDED,
     ENTITY,
@@ -594,7 +595,7 @@ class TestBranchDuality:
 
         (prev_dir / "model.vspec").write_text("Vehicle:\n  type: branch\n  description: root\n")
         (curr_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Cabin:\n  type: branch\n  description: cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: cabin\n"
         )
 
         result = diff_folders(prev_dir, curr_dir)
@@ -623,7 +624,7 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Cabin:\n  type: branch\n  description: cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: cabin\n"
         )
         (curr_dir / "model.vspec").write_text("Vehicle:\n  type: branch\n  description: root\n")
 
@@ -653,12 +654,10 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n"
-            "Vehicle.Cabin:\n  type: branch\n  description: old cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: old cabin\n"
         )
         (curr_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n"
-            "Vehicle.Cabin:\n  type: branch\n  description: new cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: new cabin\n"
         )
 
         result = diff_folders(prev_dir, curr_dir)
@@ -689,7 +688,7 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Door:\n  type: branch\n  description: door\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Door:\n  type: branch\n  description: door\n"
         )
         (curr_dir / "model.vspec").write_text(
             "Vehicle:\n  type: branch\n  description: root\n"

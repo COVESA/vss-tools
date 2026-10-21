@@ -607,7 +607,7 @@ A.Level:
   description: Level setting.
 """
     topics_file = tmp_path / "topics.txt"
-    topics_file.write_text("# include only branch A signals\n" "A.Speed\nA.RPM\n", encoding="utf-8")
+    topics_file.write_text("# include only branch A signals\nA.Speed\nA.RPM\n", encoding="utf-8")
 
     pkg_dir = run_ros2_exporter(
         vspec,

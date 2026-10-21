@@ -15,6 +15,7 @@ from typing import Any
 
 import pytest
 import yaml
+
 from vss_tools.diff import ADDED, ENUM_VALUE, MODIFIED, PROPERTY, REMOVED, diff_folders
 
 BASE: dict[str, Any] = {

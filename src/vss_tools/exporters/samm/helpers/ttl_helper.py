@@ -10,6 +10,7 @@ from pathlib import Path
 
 from rdflib import Graph, URIRef
 from rdflib.namespace import RDF
+
 from vss_tools import log
 from vss_tools.model import VSSDataBranch
 from vss_tools.tree import VSSNode

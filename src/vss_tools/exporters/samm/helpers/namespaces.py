@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from rdflib import URIRef
+
 from vss_tools import log
 
 from ..config import config as cfg

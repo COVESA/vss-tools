@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from graphql import build_schema, print_schema
+
 from vss_tools.exporters.s2dm import (
     S2DM_CONVERSIONS,
     generate_s2dm_schema,
