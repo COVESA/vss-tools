@@ -37,6 +37,7 @@ Each entry in `changes` is a modl IR event. Fields present depend on `kind` and 
 | `previous_aspects` | `REMOVED` only | Full prior-state snapshot of the removed element — mandatory and non-empty. |
 | `content` | `MODIFIED` `ENTITY`/`ENUMERATION_SET` | List of `{label, change_type}` summarising which children changed. |
 | `is_leaf` | every `PROPERTY` event | `true` for a primitive/scalar property (binding-eligible); `false` when the property references another entity. Mandatory on every `PROPERTY` event (`ADDED`/`REMOVED`/`MODIFIED`), reflecting the current (or, on `REMOVED`, previous) state. Forbidden on `ENUM_VALUE`. See [is_leaf](#is_leaf). |
+| `references` | struct-typed `PROPERTY` events only | `{"output_type": "<struct label>"}` declaring the struct entity this property's `output_type` points at. `ADDED`: always present for non-leaf properties. `MODIFIED`: present only when `datatype` changed — omitted otherwise to keep modl's stored edge. Forbidden on `REMOVED` and `ENUM_VALUE`. See [references](#references). |
 
 ## Kind mapping
 
@@ -109,6 +110,50 @@ A.RichSensor:
 ```
 
 `is_leaf` is never present on `ENUM_VALUE` events.
+
+## references
+
+`references` declares which `ENTITY` a struct-typed property's contract depends on, as a
+`{"output_type": "<struct label>"}` map. This lets `modl` cascade a new contract onto the property
+whenever the referenced struct itself gets a new contract (see modl's own
+`diff_report_template.md` for the full cascade rules), without vss-tools having to compute any
+digest or helper aspect.
+
+`output_type` is the only role vss-tools ever declares: it is the only VSS aspect whose value names
+another `ENTITY` (a struct). Units are plain opaque strings matching an `ENUM_VALUE` label, not an
+`ENTITY`/`ENUMERATION_SET` label, so they are never eligible for `references` and are not declared.
+
+- **ADDED**: always present for a non-leaf property (`is_leaf: false`), carrying the struct label
+  from `aspects.output_type`.
+- **MODIFIED**: present only when `datatype` changed in this release:
+  - the property now points at a struct (newly or retargeted to a different one) →
+    `{"output_type": "<new struct label>"}`
+  - the property now resolves to a primitive, dropping a previously-held struct reference → `{}`
+  - `datatype` unchanged → `references` is omitted entirely, keeping modl's stored edge (e.g. a
+    plain description edit on a struct-typed property never touches `references`).
+- **REMOVED**: never present — forbidden by the modl IR.
+- **`ENUM_VALUE`**: never present — forbidden by the modl IR.
+- **Branch/struct duality pointer events** (see [Branch duality](#branch-duality)): never present —
+  these events never carry `output_type` in the first place.
+
+```yaml
+A.Location:
+  type: sensor
+  datatype: Types.Position
+```
+
+```json
+{
+  "label":        "A.Location",
+  "parent_label": "A",
+  "kind":         "PROPERTY",
+  "change_type":  "ADDED",
+  "is_leaf":      false,
+  "binding_eligible": true,
+  "references":   { "output_type": "Types.Position" },
+  "aspects": { "output_type": "Types.Position", "is_list": false, "is_required": false }
+}
+```
 
 ## Aspect wrapping on MODIFIED events
 
