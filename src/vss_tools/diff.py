@@ -282,18 +282,43 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
     return aspects
 
 
-def _is_leaf(attrs: dict[str, Any]) -> bool:
+def _datatype_is_leaf(raw_datatype: str | None) -> bool:
     """
-    Whether a PROPERTY event's `datatype` resolves to a primitive/scalar (a leaf,
+    Whether a raw VSS `datatype` string resolves to a primitive/scalar (a leaf,
     binding-eligible) rather than another entity (a struct reference).
 
     Missing/None datatype defensively defaults to True (shouldn't occur for valid VSS
     signals). Array datatypes (`"Foo[]"`) are checked on their base type.
     """
-    base_type, _ = _extract_datatype(attrs.get("datatype"))
+    base_type, _ = _extract_datatype(raw_datatype)
     if base_type is None:
         return True
     return Datatypes.get_type(base_type) is not None
+
+
+def _is_leaf(attrs: dict[str, Any]) -> bool:
+    """Whether a PROPERTY event's `datatype` attribute resolves to a primitive/scalar."""
+    return _datatype_is_leaf(attrs.get("datatype"))
+
+
+def _references_delta(attribute_changes: list[dict[str, Any]], current_is_leaf: bool) -> dict[str, Any] | None:
+    """
+    Compute the `references` field for a MODIFIED PROPERTY event's `output_type` role.
+
+    Returns `None` when `datatype` didn't change — omit the field entirely, keeping modl's
+    stored edge. Returns `{}` when the property dropped a struct reference in favour of a
+    primitive. Returns the full `{"output_type": <label>}` map when the property now points
+    at a struct — whether newly (added) or retargeted (a different struct than before).
+    """
+    datatype_change = next((c for c in attribute_changes if c["attribute"] == "datatype"), None)
+    if datatype_change is None:
+        return None
+    if not current_is_leaf:
+        current_base, _ = _extract_datatype(datatype_change["current"])
+        return {"output_type": current_base}
+    if not _datatype_is_leaf(datatype_change["previous"]):
+        return {}
+    return None
 
 
 def _wrap_op(previous: Any, current: Any) -> dict[str, Any]:
@@ -398,13 +423,22 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
+        if kind == PROPERTY and not is_leaf:
+            output_type = event["aspects"].get("output_type")
+            if output_type is not None:
+                event["references"] = {"output_type": output_type}
     elif change_type == REMOVED:
         event["aspects"] = {}
         event["previous_aspects"] = _map_full_aspects(attrs, source, node_type)
     else:  # MODIFIED
         if ev.get("previous_path"):
             event["renamed_from"] = ev["previous_path"]
-        event["aspects"] = _map_aspects_delta(ev.get("attribute_changes") or [])
+        attribute_changes = ev.get("attribute_changes") or []
+        event["aspects"] = _map_aspects_delta(attribute_changes)
+        if kind == PROPERTY:
+            references = _references_delta(attribute_changes, is_leaf)
+            if references is not None:
+                event["references"] = references
 
     return event
 
