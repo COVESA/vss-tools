@@ -17,6 +17,7 @@ from typing import List, Optional
 
 import pytest
 from pydantic import ValidationError
+
 from vss_tools.exporters.vhal import VhalMapper
 from vss_tools.main import get_trees
 from vss_tools.utils.vhal.area_constants import (

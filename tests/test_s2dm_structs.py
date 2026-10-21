@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 from graphql import GraphQLList, GraphQLNonNull, GraphQLObjectType, is_object_type
+
 from vss_tools.exporters.s2dm import S2DM_CONVERSIONS, generate_s2dm_schema
 from vss_tools.exporters.s2dm.graphql_scalars import VSS_DATATYPE_MAP
 from vss_tools.exporters.s2dm.graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
@@ -309,16 +310,16 @@ class TestS2DMStructs:
         # ParentStructSensor should reference ParentStruct (short name)
         assert "parentStructSensor" in fields
         parent_sensor_type = fields["parentStructSensor"].type
-        assert (
-            parent_sensor_type == schema.type_map[parent_struct_name]
-        ), f"Expected ParentStruct but got {parent_sensor_type}"
+        assert parent_sensor_type == schema.type_map[parent_struct_name], (
+            f"Expected ParentStruct but got {parent_sensor_type}"
+        )
 
         # NestedStructSensor should reference NestedStruct (short name)
         assert "nestedStructSensor" in fields
         nested_sensor_type = fields["nestedStructSensor"].type
-        assert (
-            nested_sensor_type == schema.type_map[nested_struct_name]
-        ), f"Expected NestedStruct but got {nested_sensor_type}"
+        assert nested_sensor_type == schema.type_map[nested_struct_name], (
+            f"Expected NestedStruct but got {nested_sensor_type}"
+        )
 
     def test_struct_in_property_short_names(self, struct_trees):
         """Test that struct properties correctly reference other structs with short names."""
@@ -384,9 +385,9 @@ class TestS2DMStructs:
         # The wrapped type must be an enum (not a scalar like String)
         from graphql import GraphQLEnumType
 
-        assert isinstance(
-            mode_field_type.of_type, GraphQLEnumType
-        ), f"Expected GraphQLEnumType for 'mode' field, got {type(mode_field_type.of_type)}"
+        assert isinstance(mode_field_type.of_type, GraphQLEnumType), (
+            f"Expected GraphQLEnumType for 'mode' field, got {type(mode_field_type.of_type)}"
+        )
 
 
 class TestS2DMStructsModular:

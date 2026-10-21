@@ -120,7 +120,7 @@ def validate_static_uids(signals_dict: dict, validation_tree: VSSNode, strict: b
                         )
                     else:
                         log.warning(
-                            f"[Validation] ADDED ATTRIBUTE: " f"The node '{key}' was added since the last validation."
+                            f"[Validation] ADDED ATTRIBUTE: The node '{key}' was added since the last validation."
                         )
                 else:
                     validation_tree_nodes.pop(semantic_match)
@@ -141,9 +141,7 @@ def validate_static_uids(signals_dict: dict, validation_tree: VSSNode, strict: b
 
         for node in validation_tree_nodes:
             log.warning(
-                "[Validation] DELETED ATTRIBUTE: "
-                f"'{node.get_fqn()}' was not matched so it must have "
-                f"been deleted."
+                f"[Validation] DELETED ATTRIBUTE: '{node.get_fqn()}' was not matched so it must have been deleted."
             )
 
     if validation_tree.parent:

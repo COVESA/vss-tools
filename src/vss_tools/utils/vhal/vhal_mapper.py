@@ -506,7 +506,7 @@ class VhalMapper:
             "import android.hardware.automotive.vehicle.VehiclePropertyGroup;\n\n"
         )
 
-        aidl_annotations = "@VintfStability\n" '@Backing(type="int")\n'
+        aidl_annotations = '@VintfStability\n@Backing(type="int")\n'
         aidl_class = "enum VehiclePropertyOem {\n\n" + "\n".join(aidl_variables) + "\n}"
         aidl_file = aidl_head + aidl_annotations + aidl_class
 

@@ -45,7 +45,7 @@ class LazyGroup(RichGroup):
         cmd_object = getattr(mod, cmd_object_name)
         # check the result to make debugging easier
         if not isinstance(cmd_object, click.BaseCommand):
-            raise ValueError(f"Lazy loading of {import_path} failed by returning " "a non-command object")
+            raise ValueError(f"Lazy loading of {import_path} failed by returning a non-command object")
         cmd_object.name = cmd_name
         self._add_types_overlays_option(cmd_object)
         return cmd_object

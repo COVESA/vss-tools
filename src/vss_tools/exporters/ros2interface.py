@@ -895,7 +895,7 @@ def render_delete_timeseries_srv(
 @click.option(
     "--exclude-topics",
     multiple=True,
-    help=("Exclude patterns (same syntax as --topics). " "Applied after includes; any match here is removed."),
+    help=("Exclude patterns (same syntax as --topics). Applied after includes; any match here is removed."),
 )
 @click.option(
     "--topics-file",

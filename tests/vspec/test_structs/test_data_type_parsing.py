@@ -139,8 +139,7 @@ def test_data_types_export_multi_file(
 
 
 @pytest.mark.parametrize(
-    "signal_vspec_file,type_vspec_file,expected_signal_file,actual_signal_file,expected_type_files,"
-    "actual_type_files",
+    "signal_vspec_file,type_vspec_file,expected_signal_file,actual_signal_file,expected_type_files,actual_type_files",
     [
         (
             "test.vspec",

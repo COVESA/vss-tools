@@ -11,6 +11,7 @@ from ast import literal_eval
 from typing import Any
 
 from rdflib import URIRef
+
 from vss_tools import log
 from vss_tools.datatypes import Datatypes
 from vss_tools.model import NodeType, VSSDataBranch, VSSDataDatatype

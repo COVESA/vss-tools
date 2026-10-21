@@ -16,6 +16,7 @@ a real VSS tree is processed.
 from pathlib import Path
 
 from graphql import GraphQLObjectType, print_schema
+
 from vss_tools.exporters.s2dm import generate_s2dm_schema
 from vss_tools.exporters.s2dm.graphql_scalars import VSS_DATATYPE_MAP
 from vss_tools.exporters.s2dm.type_builders import (
