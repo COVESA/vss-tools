@@ -67,6 +67,7 @@ def _resolve_paths(files: tuple[Path, ...], default: Path) -> list[Path]:
 @clo.quantities_opt
 @clo.units_opt
 @clo.types_opt
+@clo.types_overlays_opt
 @clo.strict_exceptions_opt
 @click.option(
     "--output-dir",
@@ -109,6 +110,7 @@ def cli(
         output_dir.mkdir(parents=True)
 
     # Phase 1: validate the full model with expansion — any real error aborts here.
+    types_overlays = clo.get_types_overlays_from_context()
     get_trees(
         vspec=vspec,
         include_dirs=include_dirs,
@@ -121,6 +123,7 @@ def cli(
         overlays=overlays,
         expand=True,
         strict_exceptions_file=strict_exceptions,
+        types_overlays=types_overlays,
     )
 
     log.info(f"Composing vspec model into {output_dir}...")
@@ -137,7 +140,8 @@ def cli(
     log.info(f"Signal tree written to {model_out}")
 
     if types:
-        raw_types = load_vspec(include_dirs_list, list(types), "Types")
+        # Types overlays are merged into the snapshot so that it is self-contained
+        raw_types = load_vspec(include_dirs_list, list(types) + list(types_overlays), "Types")
         structs_data = {fqn: _filter_raw_node(attrs, SNAPSHOT_EXCLUDE_FIELDS) for fqn, attrs in raw_types.data.items()}
         structs_out = output_dir / STRUCTS_SNAPSHOT_FILENAME
         if structs_out.exists():

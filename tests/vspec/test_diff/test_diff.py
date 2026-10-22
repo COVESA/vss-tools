@@ -14,6 +14,7 @@ from typing import Any
 
 import pytest
 from click.testing import CliRunner
+
 from vss_tools.diff import (
     ADDED,
     ENTITY,
@@ -174,6 +175,73 @@ class TestSignalChanges:
     def test_no_cascade_field_on_any_change(self, result: dict[str, Any]):
         for c in result["changes"]:
             assert "cascade" not in c, f"Unexpected 'cascade' on change: {c}"
+
+
+# ---------------------------------------------------------------------------
+# diff_folders — struct-typed properties (binding_eligible)
+# ---------------------------------------------------------------------------
+
+
+class TestStructBindingEligible:
+    """
+    A PROPERTY whose datatype resolves to a struct (e.g. 'Types.Position') is non-leaf,
+    but the struct value itself is still read/written as one atomic unit, so it must be
+    reported with binding_eligible=True on top of is_leaf=False.
+    """
+
+    @pytest.fixture(scope="class")
+    def result(self):
+        return diff_folders(PREVIOUS, CURRENT)
+
+    def test_added_struct_property(self, result: dict[str, Any]):
+        by_label = changes_by_label(result)
+        added = by_label.get("A.Position")
+        assert added is not None
+        assert added["change_type"] == ADDED
+        assert added["kind"] == PROPERTY
+        assert added["is_leaf"] is False
+        assert added["binding_eligible"] is True
+        assert added["references"] == {"output_type": "Types.Position"}
+
+    def test_removed_struct_property(self, result: dict[str, Any]):
+        by_label = changes_by_label(result)
+        removed = by_label.get("A.OldPosition")
+        assert removed is not None
+        assert removed["change_type"] == REMOVED
+        assert removed["is_leaf"] is False
+        assert removed["binding_eligible"] is True
+        # references is forbidden on REMOVED events.
+        assert "references" not in removed
+
+    def test_modified_struct_property(self, result: dict[str, Any]):
+        by_label = changes_by_label(result)
+        modified = by_label.get("A.Location")
+        assert modified is not None
+        assert modified["change_type"] == MODIFIED
+        assert modified["is_leaf"] is False
+        assert modified["binding_eligible"] is True
+        # datatype (output_type) is unchanged (only description changed) — omit
+        # references entirely to keep modl's stored edge.
+        assert "references" not in modified
+
+    def test_primitive_property_has_no_binding_eligible_key(self, result: dict[str, Any]):
+        # binding_eligible is additive-only and must be omitted (not False) for leaf properties.
+        by_label = changes_by_label(result)
+        added = by_label.get("A.Humidity")
+        assert added is not None
+        assert added["is_leaf"] is True
+        assert "binding_eligible" not in added
+        assert "references" not in added
+
+    def test_nested_branch_pointer_has_no_binding_eligible_key(self, result: dict[str, Any]):
+        # A.Portal is a branch-in-branch pointer event (never atomically bound).
+        by_label = changes_by_label(result, kind=PROPERTY)
+        rename = by_label.get("A.Portal")
+        assert rename is not None
+        assert rename["is_leaf"] is False
+        assert "binding_eligible" not in rename
+        # Duality pointer events never carry output_type, so never references either.
+        assert "references" not in rename
 
 
 # ---------------------------------------------------------------------------
@@ -536,7 +604,7 @@ class TestBranchDuality:
 
         (prev_dir / "model.vspec").write_text("Vehicle:\n  type: branch\n  description: root\n")
         (curr_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Cabin:\n  type: branch\n  description: cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: cabin\n"
         )
 
         result = diff_folders(prev_dir, curr_dir)
@@ -565,7 +633,7 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Cabin:\n  type: branch\n  description: cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: cabin\n"
         )
         (curr_dir / "model.vspec").write_text("Vehicle:\n  type: branch\n  description: root\n")
 
@@ -595,12 +663,10 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n"
-            "Vehicle.Cabin:\n  type: branch\n  description: old cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: old cabin\n"
         )
         (curr_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n"
-            "Vehicle.Cabin:\n  type: branch\n  description: new cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: new cabin\n"
         )
 
         result = diff_folders(prev_dir, curr_dir)
@@ -631,7 +697,7 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Door:\n  type: branch\n  description: door\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Door:\n  type: branch\n  description: door\n"
         )
         (curr_dir / "model.vspec").write_text(
             "Vehicle:\n  type: branch\n  description: root\n"
@@ -751,3 +817,128 @@ class TestIsLeaf:
         removed = by_label["A.ParentStructSensor"]
         assert removed["change_type"] == REMOVED
         assert removed["is_leaf"] is False
+
+
+# ---------------------------------------------------------------------------
+# diff_folders — references (struct-typed PROPERTY events declaring their
+# dependency on the referenced struct ENTITY, for modl's contract-cascade).
+# ---------------------------------------------------------------------------
+
+
+class TestReferences:
+    def test_added_struct_property_has_references(self, tmp_path: Path):
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("")
+        (curr_dir / "model.vspec").write_text(
+            "A.ParentStructSensor:\n"
+            "  type: sensor\n"
+            "  description: rich sensor\n"
+            "  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        added = by_label["A.ParentStructSensor"]
+        assert added["references"] == {"output_type": "VehicleDataTypes.TestBranch1.ParentStruct"}
+
+    def test_removed_struct_property_has_no_references(self, tmp_path: Path):
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.ParentStructSensor:\n"
+            "  type: sensor\n"
+            "  description: rich sensor\n"
+            "  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text("")
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        removed = by_label["A.ParentStructSensor"]
+        assert "references" not in removed
+
+    def test_modified_unrelated_change_omits_references(self, tmp_path: Path):
+        # datatype (output_type) unchanged — references must be omitted entirely so
+        # modl keeps its stored edge, rather than being sent as an unnecessary no-op.
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: old\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: new\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["change_type"] == MODIFIED
+        assert "references" not in modified
+
+    def test_retargeted_struct_sends_full_map(self, tmp_path: Path):
+        # datatype changed from one struct to a different struct — references must
+        # carry the new target (a retarget always forces a new contract in modl).
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.NestedStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["references"] == {"output_type": "VehicleDataTypes.TestBranch1.NestedStruct"}
+
+    def test_struct_to_primitive_clears_references(self, tmp_path: Path):
+        # datatype changed from a struct to a primitive — references must be cleared
+        # with an explicit empty map, since the property no longer references anything.
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text("A.Position:\n  type: sensor\n  description: pos\n  datatype: float\n")
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["is_leaf"] is True
+        assert modified["references"] == {}
+
+    def test_primitive_to_struct_adds_references(self, tmp_path: Path):
+        # datatype changed from a primitive to a struct — references must be added
+        # with the full map, since this is a brand-new dependency edge.
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("A.Position:\n  type: sensor\n  description: pos\n  datatype: float\n")
+        (curr_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["is_leaf"] is False
+        assert modified["references"] == {"output_type": "VehicleDataTypes.TestBranch1.ParentStruct"}

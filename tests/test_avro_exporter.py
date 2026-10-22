@@ -13,6 +13,7 @@ from pathlib import Path
 
 import inflect
 import pytest
+
 from vss_tools.exporters.avro import (
     build_enum_name,
     build_struct_index,
@@ -324,6 +325,7 @@ class TestCollectRecordsOrdered:
         works independently of that upstream validation.
         """
         from anytree import Node
+
         from vss_tools.model import VSSDataProperty, VSSDataStruct
 
         # model_construct() bypasses pydantic validation (which would otherwise
@@ -506,6 +508,7 @@ class TestFilePrefix:
 class TestCLIIntegration:
     def test_cli_writes_files_to_output_dir(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -540,6 +543,7 @@ class TestCLIIntegration:
         to generate_protocol and struct-typed datatype references were not
         resolved at all."""
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -836,6 +840,7 @@ class TestGenerateProtocolSharedTypes:
 class TestCLIFormatOption:
     def test_default_format_still_writes_avdl(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -862,6 +867,7 @@ class TestCLIFormatOption:
 
     def test_format_avsc_writes_avsc_files(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -895,6 +901,7 @@ class TestCLIFormatOption:
 
     def test_format_avsc_output_is_valid_json(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -925,6 +932,7 @@ class TestCLIFormatOption:
 
     def test_format_avsc_include_array_record(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -955,6 +963,7 @@ class TestCLIFormatOption:
 
     def test_format_avsc_file_prefix(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         result = CliRunner().invoke(
@@ -986,6 +995,7 @@ class TestCLIFormatOption:
 
     def test_format_is_case_insensitive(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         result = CliRunner().invoke(
@@ -1012,6 +1022,7 @@ class TestCLIFormatOption:
 
     def test_format_idl_explicit_matches_default(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         base = [
@@ -1037,6 +1048,7 @@ class TestCLIFormatOption:
 
     def test_format_avsc_files_are_valid_avro_json(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         result = CliRunner().invoke(
@@ -1069,6 +1081,7 @@ class TestCLIFormatOption:
 
     def test_invalid_format_rejected(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -1091,6 +1104,7 @@ class TestCLIFormatOption:
 
     def test_cli_file_prefix(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -1120,6 +1134,7 @@ class TestCLIFormatOption:
 
     def test_cli_include_array_record(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -1148,6 +1163,7 @@ class TestCLIFormatOption:
 
     def test_cli_requires_namespace(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()
@@ -1167,6 +1183,7 @@ class TestCLIFormatOption:
 
     def test_cli_requires_types(self, tmp_path):
         from click.testing import CliRunner
+
         from vss_tools.exporters.avro import cli
 
         runner = CliRunner()

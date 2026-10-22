@@ -16,8 +16,9 @@ from pathlib import Path
 from typing import Dict
 
 import pytest
-import vss_tools.exporters.id as vss2id
 import yaml
+
+import vss_tools.exporters.id as vss2id
 from vss_tools.datatypes import Datatypes
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode

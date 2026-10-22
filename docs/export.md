@@ -136,6 +136,18 @@ a user-defined type. If no matching type is found an error will be given.
 It is possible to use `--types/-t <file>` multiple times. Any additional files after the first one is then treated similar
 to overlay files, i.e. they are merged into previous file and it is if needed possible to redefine already defined types.
 
+Each `--types/-t` file must be self-contained. To complement the types with partial files, use
+`--types-overlays/-L <file>` (can be given multiple times). Overlays are merged into the types given with `--types`:
+
+- New types and properties are added. A new branch, struct or property needs its parent to be defined in a `--types` file or in any of the overlays, otherwise an error is given.
+- Attributes of already defined nodes are overwritten. Every modified attribute is logged as a warning.
+- All nodes must be below the root of the `--types` files. Wildcards are not supported.
+- `--types-overlays` requires `--types`. It is not available for `vspec export id`.
+
+```bash
+vspec export json --types VehicleDataTypes.vspec --types-overlays MoreTypes.vspec --vspec test.vspec --output out.json
+```
+
 Depending on exporter, type definitions may either be transformed to a separate file with structure similar to the
 "normal" output file, or integrated into the "normal" output file. If type output is given to a separate file then
 the name of that file can be specified by the `--types-output` argument.

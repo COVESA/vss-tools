@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`.avdl`). Reuses the exporter's existing struct/enum/dependency-resolution
   logic; removes the need to export `.avdl` and separately convert it with
   `avro-tools idl2schemata` to get `.avsc` output.
+- `--types-overlays/-L` option for all commands supporting `--types` (except `vspec export id`). Partial types files are merged into the types tree, so headers can be defined in any of the files. Modifications of existing nodes are logged as warnings.
+- `vspec diff` now emits a top-level `references` map (`{"output_type": "<struct label>"}`) on struct-typed `PROPERTY` events, declaring the dependency on the referenced struct `ENTITY`. Lets `modl sync` (ddmodl>=0.7.0) re-contract dependent properties when the referenced struct itself gets a new contract. See [diff.md](docs/diff.md#references).
+
+### Changed
+
+- Bumped `ddmodl` to `0.7.0`.
+
 
 ## 6.1
 

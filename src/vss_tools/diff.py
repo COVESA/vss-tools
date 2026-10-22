@@ -71,16 +71,28 @@ def _node_type(attrs: dict[str, Any]) -> str:
     return str(attrs.get("type", "unknown"))
 
 
+def _effective_instantiate(attrs: dict[str, Any]) -> bool:
+    """Indicates whether the property is expanded per parent instance (anything but an explicit `false`)."""
+    return attrs.get("instantiate") is not False
+
+
 def _field_diff(prev_attrs: dict[str, Any], curr_attrs: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Return a list of per-attribute change dicts for fields that differ.
     Includes fields that appeared or disappeared (previous/current = None).
+
+    `instantiate` is compared by its effective outcome, so an absent value and an explicit
+    `true` are not a change.
     """
     all_keys = set(prev_attrs) | set(curr_attrs)
     changes = []
     for k in sorted(all_keys):
         pv = prev_attrs.get(k)
         cv = curr_attrs.get(k)
+        if k == "instantiate":
+            if _effective_instantiate(prev_attrs) != _effective_instantiate(curr_attrs):
+                changes.append({"attribute": k, "previous": pv, "current": cv})
+            continue
         if pv != cv:
             changes.append({"attribute": k, "previous": pv, "current": cv})
     return changes
@@ -248,8 +260,10 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
 
     Used both for an ADDED event's `aspects` and a REMOVED event's `previous_aspects`
     (the modl IR requires the latter to carry the full prior-state snapshot).
+
+    `instantiate` is excluded: modl reads it as a top-level PROPERTY field, never as an aspect.
     """
-    aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name")}
+    aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name", "instantiate")}
     kind = _vss_kind(node_type, source)
     if kind == PROPERTY:
         raw_dt = aspects.pop("datatype", None)
@@ -268,18 +282,43 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
     return aspects
 
 
-def _is_leaf(attrs: dict[str, Any]) -> bool:
+def _datatype_is_leaf(raw_datatype: str | None) -> bool:
     """
-    Whether a PROPERTY event's `datatype` resolves to a primitive/scalar (a leaf,
+    Whether a raw VSS `datatype` string resolves to a primitive/scalar (a leaf,
     binding-eligible) rather than another entity (a struct reference).
 
     Missing/None datatype defensively defaults to True (shouldn't occur for valid VSS
     signals). Array datatypes (`"Foo[]"`) are checked on their base type.
     """
-    base_type, _ = _extract_datatype(attrs.get("datatype"))
+    base_type, _ = _extract_datatype(raw_datatype)
     if base_type is None:
         return True
     return Datatypes.get_type(base_type) is not None
+
+
+def _is_leaf(attrs: dict[str, Any]) -> bool:
+    """Whether a PROPERTY event's `datatype` attribute resolves to a primitive/scalar."""
+    return _datatype_is_leaf(attrs.get("datatype"))
+
+
+def _references_delta(attribute_changes: list[dict[str, Any]], current_is_leaf: bool) -> dict[str, Any] | None:
+    """
+    Compute the `references` field for a MODIFIED PROPERTY event's `output_type` role.
+
+    Returns `None` when `datatype` didn't change — omit the field entirely, keeping modl's
+    stored edge. Returns `{}` when the property dropped a struct reference in favour of a
+    primitive. Returns the full `{"output_type": <label>}` map when the property now points
+    at a struct — whether newly (added) or retargeted (a different struct than before).
+    """
+    datatype_change = next((c for c in attribute_changes if c["attribute"] == "datatype"), None)
+    if datatype_change is None:
+        return None
+    if not current_is_leaf:
+        current_base, _ = _extract_datatype(datatype_change["current"])
+        return {"output_type": current_base}
+    if not _datatype_is_leaf(datatype_change["previous"]):
+        return {}
+    return None
 
 
 def _wrap_op(previous: Any, current: Any) -> dict[str, Any]:
@@ -308,7 +347,7 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
     delta: dict[str, Any] = {}
     for ac in attribute_changes:
         attr, previous, current = ac["attribute"], ac["previous"], ac["current"]
-        if attr in ("fka", "name"):
+        if attr in ("fka", "name", "instantiate"):
             continue
         if attr == "datatype":
             prev_type, prev_is_list = _extract_datatype(previous)
@@ -366,17 +405,40 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
     if parent is not None:
         event["parent_label"] = parent
     if kind == PROPERTY:
-        event["is_leaf"] = _is_leaf(attrs)
+        is_leaf = _is_leaf(attrs)
+        event["is_leaf"] = is_leaf
+        # A non-leaf PROPERTY's datatype always resolves to a struct (vspec datatypes
+        # are either primitives or struct FQNs — never branches), so the struct value
+        # itself is read/written as one atomic unit and is eligible for its own binding,
+        # on top of the bindings already minted for each of its child properties.
+        if not is_leaf:
+            event["binding_eligible"] = True
+        # `instantiate` is a top-level field (not an aspect). ADDED/REMOVED only pin it when the
+        # leaf declares `instantiate: false`; MODIFIED always carries the current effective value
+        # so the ledger can detect a transition. Never set on ENUM_VALUE (not a PROPERTY).
+        if change_type == MODIFIED:
+            event["instantiate"] = _effective_instantiate(attrs)
+        elif not _effective_instantiate(attrs):
+            event["instantiate"] = False
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
+        if kind == PROPERTY and not is_leaf:
+            output_type = event["aspects"].get("output_type")
+            if output_type is not None:
+                event["references"] = {"output_type": output_type}
     elif change_type == REMOVED:
         event["aspects"] = {}
         event["previous_aspects"] = _map_full_aspects(attrs, source, node_type)
     else:  # MODIFIED
         if ev.get("previous_path"):
             event["renamed_from"] = ev["previous_path"]
-        event["aspects"] = _map_aspects_delta(ev.get("attribute_changes") or [])
+        attribute_changes = ev.get("attribute_changes") or []
+        event["aspects"] = _map_aspects_delta(attribute_changes)
+        if kind == PROPERTY:
+            references = _references_delta(attribute_changes, is_leaf)
+            if references is not None:
+                event["references"] = references
 
     return event
 
