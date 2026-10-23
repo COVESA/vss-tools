@@ -8,11 +8,13 @@
 
 """Tests for vss_tools.diff (pure logic) and `vspec diff` CLI."""
 
+import datetime
 import json
 from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from click.testing import CliRunner
 
 from vss_tools.diff import (
@@ -465,6 +467,102 @@ class TestDiffCli:
         # All leaf events must be ADDED; ENTITY MODIFIED may be injected as parent summaries
         non_entity_types = {c["change_type"] for c in data["changes"] if c["kind"] not in (ENTITY, "ENUMERATION_SET")}
         assert non_entity_types == {ADDED}
+
+
+# ---------------------------------------------------------------------------
+# CLI — non-JSON-native attribute values (YAML dates)
+# ---------------------------------------------------------------------------
+
+
+def _dated_snapshot(root: Path, name: str, review_date: Any) -> Path:
+    """Write a snapshot whose sensor carries an extended attribute holding `review_date`."""
+    folder = root / name
+    folder.mkdir()
+    model = {
+        "A": {"type": "branch", "description": "Branch."},
+        "A.Speed": {
+            "type": "sensor",
+            "datatype": "float",
+            "description": "Speed.",
+            "Custom_ReviewDate": review_date,
+        },
+    }
+    # safe_dump emits datetime.date as an unquoted YAML date, which the loader reads back as a date.
+    (folder / "model.vspec").write_text(yaml.safe_dump(model), encoding="utf-8")
+    return folder
+
+
+class TestDiffCliDateValues:
+    def test_snapshot_dates_load_as_date_objects(self, tmp_path: Path):
+        snap = _dated_snapshot(tmp_path, "cur", datetime.date(2025, 7, 18))
+        loaded = load_snapshot_yaml(snap / "model.vspec")
+        assert loaded["A.Speed"]["Custom_ReviewDate"] == datetime.date(2025, 7, 18)
+
+    @pytest.mark.parametrize("to_file", [False, True], ids=["stdout", "file"])
+    def test_first_run_added_serializes_date_as_iso(self, tmp_path: Path, to_file: bool):
+        current = _dated_snapshot(tmp_path, "cur", datetime.date(2025, 7, 18))
+        args = ["-c", str(current)]
+        out = tmp_path / "diff.json"
+        if to_file:
+            args += ["-o", str(out)]
+        result = CliRunner().invoke(cli, args)
+        assert result.exit_code == 0, result.output
+        data = json.loads(out.read_text(encoding="utf-8") if to_file else result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        assert speed["change_type"] == ADDED
+        assert speed["aspects"]["Custom_ReviewDate"] == "2025-07-18"
+
+    def test_datetime_serializes_as_iso(self, tmp_path: Path):
+        stamp = datetime.datetime(2025, 7, 18, 10, 30, 0)
+        current = _dated_snapshot(tmp_path, "cur", stamp)
+        result = CliRunner().invoke(cli, ["-c", str(current)])
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        assert speed["aspects"]["Custom_ReviewDate"] == "2025-07-18T10:30:00"
+
+    @pytest.mark.parametrize("to_file", [False, True], ids=["stdout", "file"])
+    def test_modified_serializes_previous_and_current_dates_as_iso(self, tmp_path: Path, to_file: bool):
+        previous = _dated_snapshot(tmp_path, "prev", datetime.date(2025, 7, 18))
+        current = _dated_snapshot(tmp_path, "cur", datetime.date(2026, 1, 5))
+        args = ["-p", str(previous), "-c", str(current)]
+        out = tmp_path / "diff.json"
+        if to_file:
+            args += ["-o", str(out)]
+        result = CliRunner().invoke(cli, args)
+        assert result.exit_code == 0, result.output
+        data = json.loads(out.read_text(encoding="utf-8") if to_file else result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        assert speed["change_type"] == MODIFIED
+        change = speed["aspects"]["Custom_ReviewDate"]
+        assert change["_op"] == "modified"
+        assert change["_previous"] == "2025-07-18"
+        assert change["_value"] == "2026-01-05"
+
+    @pytest.mark.parametrize(
+        ("yaml_value", "expected"),
+        [
+            ("!!set {b: null, a: null}", ["a", "b"]),
+            ("!!binary aGVsbG8=", "hello"),
+            ("2025-07-18T10:30:00Z", "2025-07-18T10:30:00Z"),
+        ],
+        ids=["set", "binary", "tz_aware_datetime"],
+    )
+    def test_other_yaml_native_types_do_not_break_diff(self, tmp_path: Path, yaml_value: str, expected: Any):
+        folder = tmp_path / "cur"
+        folder.mkdir()
+        (folder / "model.vspec").write_text(
+            "A:\n  type: branch\n  description: Branch.\n"
+            "A.Speed:\n  type: sensor\n  datatype: float\n  description: Speed.\n"
+            f"  Custom_Value: {yaml_value}\n",
+            encoding="utf-8",
+        )
+        result = CliRunner().invoke(cli, ["-c", str(folder)])
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        value = speed["aspects"]["Custom_Value"]
+        assert (sorted(value) if isinstance(value, list) else value) == expected
 
 
 # ---------------------------------------------------------------------------
