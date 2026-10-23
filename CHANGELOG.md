@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   logic; removes the need to export `.avdl` and separately convert it with
   `avro-tools idl2schemata` to get `.avsc` output.
 
+
+### Removed
+
+Franca export removed
+
 ## 6.1
 
 ### Added
