@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 import rich_click as click
+from pydantic_core import to_jsonable_python
 
 from vss_tools import log
 from vss_tools.diff import diff_folders
@@ -54,7 +55,9 @@ def cli(previous: Path | None, current: Path, output: Path | None) -> None:
         log.info(f"Diffing snapshots: {previous} → {current}")
     else:
         log.info(f"First-run mode: treating all elements in {current} as ADDED")
-    result = diff_folders(previous, current)
+    # Snapshot attribute values come straight from YAML and may be non-JSON types (e.g. unquoted
+    # dates). Convert them the same way the model-based exporters do (`model_dump(mode="json")`).
+    result = to_jsonable_python(diff_folders(previous, current))
 
     if output:
         with open(output, "w", encoding="utf-8") as f:
