@@ -566,50 +566,43 @@ class TestDiffCliDateValues:
 
 
 # ---------------------------------------------------------------------------
-# _expand_instances — Cartesian product
+# _expand_instances — dimension map
 # ---------------------------------------------------------------------------
 
 
 class TestExpandInstances:
     """Unit tests for the _expand_instances helper."""
 
-    def _expand(self, value: Any) -> list[str]:
+    def _expand(self, value: Any) -> dict[str, list[str]]:
         from vss_tools.diff import _expand_instances
 
         return _expand_instances(value)
 
     def test_single_plain_string(self):
-        assert self._expand("Row[1,3]") == ["Row1", "Row2", "Row3"]
+        assert self._expand("Row[1,3]") == {"dimension1": ["Row1", "Row2", "Row3"]}
 
     def test_plain_list_is_single_dimension(self):
-        assert self._expand(["Left", "Right"]) == ["Left", "Right"]
+        assert self._expand(["Left", "Right"]) == {"dimension1": ["Left", "Right"]}
 
     def test_range_string_in_list_is_single_dimension(self):
-        assert self._expand(["Row[1,2]"]) == ["Row1", "Row2"]
+        assert self._expand(["Row[1,2]"]) == {"dimension1": ["Row1", "Row2"]}
 
     def test_multidimensional_cartesian_product(self):
-        # ["Row[1,4]", ["DriverSide","PassengerSide"]] → 8 combinations
+        # ["Row[1,4]", ["DriverSide","PassengerSide"]] → two separate dimensions, no join
         value = ["Row[1,4]", ["DriverSide", "PassengerSide"]]
         result = self._expand(value)
-        expected = [
-            "Row1.DriverSide",
-            "Row1.PassengerSide",
-            "Row2.DriverSide",
-            "Row2.PassengerSide",
-            "Row3.DriverSide",
-            "Row3.PassengerSide",
-            "Row4.DriverSide",
-            "Row4.PassengerSide",
-        ]
-        assert result == expected
+        assert result == {
+            "dimension1": ["Row1", "Row2", "Row3", "Row4"],
+            "dimension2": ["DriverSide", "PassengerSide"],
+        }
 
     def test_two_range_dimensions(self):
         value = ["Row[1,2]", "Pos[1,2]"]
         result = self._expand(value)
-        assert result == ["Row1.Pos1", "Row1.Pos2", "Row2.Pos1", "Row2.Pos2"]
+        assert result == {"dimension1": ["Row1", "Row2"], "dimension2": ["Pos1", "Pos2"]}
 
     def test_none_returns_empty(self):
-        assert self._expand(None) == []
+        assert self._expand(None) == {}
 
     def test_multidimensional_in_diff_output(self, tmp_path: Path):
         """Cartesian product instances appear correctly in diff_folders output."""
@@ -643,7 +636,7 @@ class TestExpandInstances:
         assert result["changes"] == []
 
     def test_instances_added_with_cartesian_product(self, tmp_path: Path):
-        """An ADDED ENTITY node with multi-dimensional instances has Cartesian product in aspects."""
+        """An ADDED ENTITY node with multi-dimensional instances has a dimension map in aspects."""
         from vss_tools.diff import ADDED, ENTITY, PROPERTY, diff_folders
 
         prev_dir = tmp_path / "prev"
@@ -668,12 +661,10 @@ class TestExpandInstances:
         assert seat is not None
         assert seat["change_type"] == ADDED
         assert seat["kind"] == ENTITY
-        assert seat["aspects"]["instances"] == [
-            "Row1.DriverSide",
-            "Row1.PassengerSide",
-            "Row2.DriverSide",
-            "Row2.PassengerSide",
-        ]
+        assert seat["aspects"]["instances"] == {
+            "dimension1": ["Row1", "Row2"],
+            "dimension2": ["DriverSide", "PassengerSide"],
+        }
 
         # Vehicle.Seat is a branch child of Vehicle — dual-reported as PROPERTY too,
         # with is_list=True since it defines instances (no output_type: no type layer in vspec).
@@ -809,7 +800,7 @@ class TestBranchDuality:
         door_entity = entities.get("Vehicle.Door")
         assert door_entity is not None
         assert door_entity["change_type"] == MODIFIED
-        assert door_entity["aspects"]["instances_added"] == ["Left", "Right"]
+        assert door_entity["aspects"]["instances_added"] == {"dimension1": ["Left", "Right"]}
         assert "instances_removed" not in door_entity["aspects"]
         assert "instances" not in door_entity["aspects"]
 

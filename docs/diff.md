@@ -20,7 +20,8 @@ vspec diff -c snapshot_v1/
 {
   "previous": "snapshot_v1/",
   "current":  "snapshot_v2/",
-  "changes":  [ ... ]
+  "changes":  [ ... ],
+  "property_paths": [ ... ]
 }
 ```
 
@@ -168,11 +169,17 @@ IR contract:
 }
 ```
 
-The two exceptions are the directional instance-list keys, which stay as plain unwrapped arrays since
-they carry a delta rather than a single old/new pair:
+The two exceptions are the directional instance dimension-map keys, which stay as plain unwrapped
+maps since they carry a per-dimension delta rather than a single old/new pair. `instances`,
+`instances_added`, and `instances_removed` all share the same dimension-map shape: one entry per
+instance dimension, positionally named `dimension1`, `dimension2`, ... (no Cartesian join across
+dimensions):
 
 ```json
-"aspects": { "instances_added": ["Center"], "instances_removed": ["Row3"] }
+"aspects": {
+  "instances_added":   { "dimension1": ["Center"] },
+  "instances_removed": { "dimension2": ["Row3"] }
+}
 ```
 
 ## Change types
@@ -213,6 +220,49 @@ flowchart LR
 
 If `fka` is missing, or the node type doesn't match, the pair is reported as independent `REMOVED` +
 `ADDED`.
+
+## property_paths
+
+Alongside `changes`, every binding-eligible `PROPERTY` (`is_leaf: true`, or `binding_eligible: true`
+for struct-typed properties) gets an entry in the top-level `property_paths` list, declaring every
+concrete literal runtime path at which it occurs:
+
+```json
+{
+  "label": "Vehicle.Axle.Wheel.Speed",
+  "parent_label": "Vehicle.Axle.Wheel",
+  "paths": [
+    { "tags": { "Vehicle.Axle": { "dimension1": "Axle1" }, "Vehicle.Axle.Wheel": { "dimension1": "Left" } },
+      "path": "Vehicle.Axle.Axle1.Wheel.Left.Speed", "change": "unchanged" },
+    { "tags": { "Vehicle.Axle": { "dimension1": "Axle1" }, "Vehicle.Axle.Wheel": { "dimension1": "Right" } },
+      "path": "Vehicle.Axle.Axle1.Wheel.Right.Speed", "change": "unchanged" }
+  ]
+}
+```
+
+- **Instanced ancestors** fan out the Cartesian product of their own dimensions (and of every other
+  instanced ancestor above them) into one `paths` entry per combination. Each contributing
+  ancestor's chosen hop is inserted as an extra dotted path segment immediately *after* its own
+  name — e.g. `Vehicle.Axle.Axle1.Wheel.Left.Speed`, not `Vehicle.Axle1.WheelLeft.Speed`.
+- A property's immediate parent's instances are skipped (not fanned out) when the property declares
+  `instantiate: false`.
+- **`tags`** maps each contributing ancestor's FQN label to the `{dimension1: value, ...}`
+  combination it contributed to that path — the same dimension-map shape used for `instances`. This
+  is the canonical identity used for `change` classification: renaming an instanced ancestor changes
+  the literal `path` string but not its `tags`, so the entry stays `"unchanged"` (only `path` is
+  refreshed) rather than manufacturing a spurious add+remove pair.
+- **`change`** is `"added"`/`"removed"`/`"unchanged"` for that specific path+tags combination,
+  independent of the parent property's own `change_type` — e.g. an entity gaining a new instance
+  value re-reports every property under it with one new `"added"` path entry, even though the
+  property itself has no event of its own in `changes` (the *entity instance-delta cascade*).
+- **Struct-typed properties** are flattened onto every usage site: a struct field's `paths` entries
+  are built relative to every property (anywhere in the model, or another struct) whose `datatype`
+  resolves to that struct, recursing through struct-of-struct nesting. A struct with no referencing
+  property anywhere (an orphan struct) gets `"paths": []` and a logged warning.
+- **Known limitation**: branches using `instances_relation: sibling` (where the generated instance
+  attaches next to the branch's own parent rather than nesting under the branch) are not supported —
+  `property_paths` resolution assumes the default `"child"` relation, matching the existing
+  `_expand_instance_fqns` branch-hop injection used for `changes`.
 
 ## Example output
 

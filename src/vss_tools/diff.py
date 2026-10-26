@@ -124,45 +124,52 @@ def _extract_datatype(value: str | None) -> tuple[str | None, bool]:
     return value, False
 
 
-def _expand_instances(value: Any) -> list[str]:
+def _instance_dimensions(instances_value: Any) -> list[list[str]]:
     """
-    Expand a VSS instances value into fully-qualified instance path labels.
+    Split a VSS `instances` value into its individual dimensions, each a list of
+    concrete instance values — without computing their Cartesian product.
 
-    Each top-level list item is one dimension; the result is the Cartesian
-    product of all dimensions joined with '.'.  Examples:
-
-      "Row[1,4]"                                    → ["Row1","Row2","Row3","Row4"]
-      ["Left", "Right"]                             → ["Left", "Right"]
-      ["Row[1,2]", ["DriverSide","PassengerSide"]]  → ["Row1.DriverSide",
-                                                         "Row1.PassengerSide",
-                                                         "Row2.DriverSide",
-                                                         "Row2.PassengerSide"]
+      "Row[1,4]"                                    → [["Row1","Row2","Row3","Row4"]]
+      ["Left", "Right"]                             → [["Left", "Right"]]
+      ["Row[1,2]", ["DriverSide","PassengerSide"]]  → [["Row1","Row2"],
+                                                         ["DriverSide","PassengerSide"]]
     """
-    if value is None:
+    if not instances_value:
         return []
-    if isinstance(value, str):
-        return expand_string(value)
-    if not isinstance(value, list):
-        return [str(value)]
+    if isinstance(instances_value, str):
+        return [expand_string(instances_value)]
+    if not isinstance(instances_value, list):
+        return [[str(instances_value)]]
 
     # If every item is a plain string with no range syntax the whole list is
     # a single dimension (e.g. ["Left", "Right"]).
-    if all(isinstance(item, str) and "[" not in item for item in value):
-        return [str(item) for item in value]
+    if all(isinstance(item, str) and "[" not in item for item in instances_value):
+        return [[str(item) for item in instances_value]]
 
-    # Otherwise each item is its own dimension; compute Cartesian product.
+    # Otherwise each item is its own dimension.
     dimensions: list[list[str]] = []
-    for item in value:
+    for item in instances_value:
         if isinstance(item, list):
             dimensions.append([str(x) for x in item])
         elif isinstance(item, str) and "[" in item:
             dimensions.append(expand_string(item))
         else:
             dimensions.append([str(item)])
+    return dimensions
 
-    if not dimensions:
-        return []
-    return [".".join(combo) for combo in itertools.product(*dimensions)]
+
+def _expand_instances(value: Any) -> dict[str, list[str]]:
+    """
+    Expand a VSS `instances` value into modl's dimension-map form: one entry per
+    dimension, positionally named `dimension1`, `dimension2`, ... (no Cartesian join).
+
+      "Row[1,4]"                                    → {"dimension1": ["Row1","Row2","Row3","Row4"]}
+      ["Left", "Right"]                             → {"dimension1": ["Left", "Right"]}
+      ["Row[1,2]", ["DriverSide","PassengerSide"]]  → {"dimension1": ["Row1","Row2"],
+                                                         "dimension2": ["DriverSide","PassengerSide"]}
+    """
+    dimensions = _instance_dimensions(value)
+    return {f"dimension{i + 1}": values for i, values in enumerate(dimensions)}
 
 
 def _expand_instance_fqns(base_fqn: str, instances_value: Any) -> list[str]:
@@ -261,7 +268,9 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
     Used both for an ADDED event's `aspects` and a REMOVED event's `previous_aspects`
     (the modl IR requires the latter to carry the full prior-state snapshot).
 
-    `instantiate` is excluded: modl reads it as a top-level PROPERTY field, never as an aspect.
+    `instantiate` is excluded: it has no representation at all in modl's IR — it only
+    gates how vss-tools resolves literal runtime paths internally (see
+    `_effective_instantiate`/`_direct_path_occurrences`).
     """
     aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name", "instantiate")}
     kind = _vss_kind(node_type, source)
@@ -341,8 +350,8 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
     Build the changed-keys-only aspects dict for a MODIFIED event.
 
     Every key is wrapped with its `_op` annotation via `_wrap_op`, except the
-    directional instance-list keys `instances_added`/`instances_removed`, which the
-    modl IR requires to stay as plain, unwrapped lists.
+    directional instance dimension-map keys `instances_added`/`instances_removed`, which
+    the modl IR requires to stay as plain, unwrapped dimension maps.
     """
     delta: dict[str, Any] = {}
     for ac in attribute_changes:
@@ -357,10 +366,7 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
             if prev_is_list != curr_is_list:
                 delta["is_list"] = _wrap_op(prev_is_list, curr_is_list)
         elif attr == "instances":
-            prev_expanded = _expand_instances(previous)
-            curr_expanded = _expand_instances(current)
-            added = [x for x in curr_expanded if x not in prev_expanded]
-            removed = [x for x in prev_expanded if x not in curr_expanded]
+            added, removed = _instances_dimension_delta(previous, current)
             if added:
                 delta["instances_added"] = added
             if removed:
@@ -368,6 +374,31 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
         else:
             delta[attr] = _wrap_op(previous, current)
     return delta
+
+
+def _instances_dimension_delta(previous: Any, current: Any) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """
+    Diff two VSS `instances` values per-dimension (by positional dimension name),
+    returning `(added, removed)` dimension maps suitable for modl's
+    `instances_added`/`instances_removed` aspects.
+
+    A dimension that only exists on one side reports all of its values as added or
+    removed; a dimension present on both sides reports only the values that changed.
+    """
+    prev_map = _expand_instances(previous)
+    curr_map = _expand_instances(current)
+    added: dict[str, list[str]] = {}
+    removed: dict[str, list[str]] = {}
+    for dim in sorted(set(prev_map) | set(curr_map)):
+        pv = prev_map.get(dim, [])
+        cv = curr_map.get(dim, [])
+        add_vals = [v for v in cv if v not in pv]
+        rem_vals = [v for v in pv if v not in cv]
+        if add_vals:
+            added[dim] = add_vals
+        if rem_vals:
+            removed[dim] = rem_vals
+    return added, removed
 
 
 def _parent_label(path: str, source: str, attrs: dict[str, Any]) -> str | None:
@@ -413,13 +444,6 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
         # on top of the bindings already minted for each of its child properties.
         if not is_leaf:
             event["binding_eligible"] = True
-        # `instantiate` is a top-level field (not an aspect). ADDED/REMOVED only pin it when the
-        # leaf declares `instantiate: false`; MODIFIED always carries the current effective value
-        # so the ledger can detect a transition. Never set on ENUM_VALUE (not a PROPERTY).
-        if change_type == MODIFIED:
-            event["instantiate"] = _effective_instantiate(attrs)
-        elif not _effective_instantiate(attrs):
-            event["instantiate"] = False
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
@@ -560,6 +584,377 @@ def _inject_entity_content(modl_events: list[dict[str, Any]]) -> list[dict[str, 
             events.append(new_entity_event)
 
     return events
+
+
+# ---------------------------------------------------------------------------
+# property_paths resolution
+# ---------------------------------------------------------------------------
+
+
+def _direct_path_occurrences(
+    fqn: str,
+    prop_attrs: dict[str, Any],
+    attrs_by_path: dict[str, dict[str, Any]],
+) -> list[tuple[str, dict[str, dict[str, str]]]]:
+    """
+    Resolve every literal runtime-path occurrence of a model/structs property by walking
+    its ancestor branch chain and fanning out over every instanced ancestor's dimensions.
+
+    Each instanced ancestor contributes one chosen combination of its dimension values,
+    inserted as an extra dotted path segment immediately after the ancestor's own name
+    (e.g. `Vehicle.Door.Left.IsOpen`, not `Vehicle.DoorLeft.IsOpen`). The immediate parent's
+    instances are skipped when `prop_attrs` declares `instantiate: false`. Returns a list of
+    `(path, tags)` pairs, where `tags` maps each contributing ancestor's FQN label to its
+    chosen `{dimension1: value, ...}` selection.
+
+    Known limitation: branches using `instances_relation: sibling` are not supported here —
+    same limitation as the existing `_expand_instance_fqns` branch-hop injection.
+    """
+    parts = fqn.split(".")
+    if len(parts) == 1:
+        return [(fqn, {})]
+    prop_name = parts[-1]
+    ancestor_segments = parts[:-1]
+    immediate_parent = ".".join(ancestor_segments)
+
+    contributions: list[tuple[str, list[list[str]]]] = []
+    running = ""
+    for seg in ancestor_segments:
+        running = seg if not running else f"{running}.{seg}"
+        if running == immediate_parent and not _effective_instantiate(prop_attrs):
+            continue
+        anc_attrs = attrs_by_path.get(running) or {}
+        dims = _instance_dimensions(anc_attrs.get("instances"))
+        if dims:
+            contributions.append((running, dims))
+
+    if not contributions:
+        return [(fqn, {})]
+
+    choice_lists: list[list[tuple[str, tuple[str, ...]]]] = [
+        [(ancestor_label, combo) for combo in itertools.product(*dims)] for ancestor_label, dims in contributions
+    ]
+
+    occurrences: list[tuple[str, dict[str, dict[str, str]]]] = []
+    for selection in itertools.product(*choice_lists):
+        tags: dict[str, dict[str, str]] = {}
+        hops: dict[str, str] = {}
+        for ancestor_label, combo in selection:
+            tags[ancestor_label] = {f"dimension{i + 1}": v for i, v in enumerate(combo)}
+            hops[ancestor_label] = ".".join(combo)
+
+        path_parts: list[str] = []
+        running = ""
+        for seg in ancestor_segments:
+            running = seg if not running else f"{running}.{seg}"
+            path_parts.append(seg)
+            if running in hops:
+                path_parts.append(hops[running])
+        path_parts.append(prop_name)
+        occurrences.append((".".join(path_parts), tags))
+
+    return occurrences
+
+
+def _struct_reverse_refs(attrs_by_path: dict[str, dict[str, Any]]) -> dict[str, list[str]]:
+    """
+    Build a struct-label → referencing-FQNs reverse map from a combined model+structs
+    attrs snapshot, used to flatten struct fields onto every property that uses them.
+
+    Known limitation: a relative (non fully-qualified) struct reference is matched
+    verbatim against the referencing node's own `datatype` string — vss-tools does not
+    build a real tree here, so short struct names are not resolved against their
+    declaring branch, mirroring the existing `references`/`output_type` behaviour
+    elsewhere in this module.
+    """
+    reverse: dict[str, list[str]] = {}
+    for fqn, attrs in attrs_by_path.items():
+        if _node_type(attrs) in ("branch", "struct"):
+            continue
+        base_type, _ = _extract_datatype(attrs.get("datatype"))
+        if base_type is None:
+            continue
+        reverse.setdefault(base_type, []).append(fqn)
+    return reverse
+
+
+def _struct_field_occurrences(
+    fqn: str,
+    attrs_by_path: dict[str, dict[str, Any]],
+    reverse_refs: dict[str, list[str]],
+    _visiting: frozenset[str] = frozenset(),
+) -> list[tuple[str, dict[str, dict[str, str]]]]:
+    """
+    Resolve every literal runtime-path occurrence of a struct field by flattening it onto
+    every property (anywhere in the model, or another struct) whose datatype names the
+    field's own struct, recursing through struct-of-struct nesting.
+
+    Returns `[]` when the struct has no referencing property anywhere (an orphan struct) —
+    callers report an empty `paths: []` entry and log a warning in that case.
+    """
+    parent_label, _, field_name = fqn.rpartition(".")
+    if not parent_label or parent_label in _visiting:
+        if parent_label in _visiting:
+            log.warning(f"Circular struct reference detected while resolving '{fqn}' — skipping")
+        return []
+    visiting = _visiting | {parent_label}
+
+    occurrences: list[tuple[str, dict[str, dict[str, str]]]] = []
+    for usage_fqn in reverse_refs.get(parent_label, []):
+        usage_attrs = attrs_by_path.get(usage_fqn)
+        if usage_attrs is None:
+            continue
+        if _node_type(usage_attrs) == "property":
+            base_occurrences = _struct_field_occurrences(usage_fqn, attrs_by_path, reverse_refs, visiting)
+        else:
+            base_occurrences = _direct_path_occurrences(usage_fqn, usage_attrs, attrs_by_path)
+        for base_path, tags in base_occurrences:
+            occurrences.append((f"{base_path}.{field_name}", tags))
+    return occurrences
+
+
+def _merge_occurrences_into_bucket(
+    bucket: dict[str, tuple[dict[str, dict[str, str]], str]],
+    curr_occurrences: list[tuple[str, dict[str, dict[str, str]]]],
+    prev_occurrences: list[tuple[str, dict[str, dict[str, str]]]],
+) -> None:
+    """
+    Classify a property's current/previous runtime-path occurrences by their literal path
+    string and merge the result into `bucket`, keyed by path.
+
+    Callers must pre-canonicalize previous-side occurrence paths/tags through any ancestor
+    rename map (see `_canonicalize_path`/`_canonicalize_tags`) before calling this, so that an
+    ancestor rename only refreshes `tags` without manufacturing a spurious add+remove pair.
+    """
+    curr_by_path = dict(curr_occurrences)
+    prev_by_path = dict(prev_occurrences)
+    for path, tags in curr_by_path.items():
+        change = "unchanged" if path in prev_by_path else "added"
+        bucket[path] = (tags, change)
+    for path, tags in prev_by_path.items():
+        if path not in curr_by_path:
+            bucket[path] = (tags, "removed")
+
+
+def _build_rename_map(modl_events: list[dict[str, Any]]) -> dict[str, str]:
+    """
+    Build a previous-label \u2192 current-label map from every renamed ENTITY event in this diff
+    (including cascaded descendant renames, each of which gets its own ENTITY MODIFIED event).
+
+    Used to canonicalize an ancestor's tag key before classifying a property's path occurrences,
+    so an ancestor rename doesn't defeat tags-based unchanged/added/removed classification.
+    """
+    rename_map: dict[str, str] = {}
+    for ev in modl_events:
+        if ev["kind"] == ENTITY and ev["change_type"] == MODIFIED and ev.get("renamed_from"):
+            rename_map[ev["renamed_from"]] = ev["label"]
+    return rename_map
+
+
+def _canonicalize_tags(tags: dict[str, dict[str, str]], rename_map: dict[str, str]) -> dict[str, dict[str, str]]:
+    """Remap each ancestor FQN key in `tags` through `rename_map` to its current-label equivalent."""
+    if not rename_map:
+        return tags
+    return {rename_map.get(label, label): dims for label, dims in tags.items()}
+
+
+def _canonicalize_path(path: str, rename_map: dict[str, str]) -> str:
+    """
+    Rewrite the longest renamed-ancestor prefix of a previous-snapshot runtime path to its
+    current-label equivalent, so a pure ancestor rename resolves to the same literal path as
+    the current occurrence (classified as `unchanged` instead of a spurious add+remove pair).
+    """
+    if not rename_map:
+        return path
+    best_old: str | None = None
+    for old in rename_map:
+        if path == old or path.startswith(old + "."):
+            if best_old is None or len(old) > len(best_old):
+                best_old = old
+    if best_old is None:
+        return path
+    return rename_map[best_old] + path[len(best_old) :]
+
+
+def _all_struct_field_fqns(
+    struct_label: str,
+    attrs_by_path: dict[str, dict[str, Any]],
+    _visiting: frozenset[str] = frozenset(),
+) -> set[str]:
+    """
+    Recursively collect every property FQN that is a direct or nested field of `struct_label`
+    (nested through struct-of-struct fields), within a single snapshot's attrs map.
+    """
+    if struct_label in _visiting:
+        return set()
+    visiting = _visiting | {struct_label}
+    prefix = struct_label + "."
+    result: set[str] = set()
+    for fqn, attrs in attrs_by_path.items():
+        if not fqn.startswith(prefix) or "." in fqn[len(prefix) :]:
+            continue
+        if _node_type(attrs) in ("branch", "struct"):
+            continue
+        result.add(fqn)
+        base_type, _ = _extract_datatype(attrs.get("datatype"))
+        if base_type is not None and not _datatype_is_leaf(attrs.get("datatype")):
+            result |= _all_struct_field_fqns(base_type, attrs_by_path, visiting)
+    return result
+
+
+def _struct_reference(attrs: dict[str, Any] | None) -> str | None:
+    """Return the struct label a property's `datatype` points at, or `None` for a leaf/branch/struct."""
+    if attrs is None or _node_type(attrs) in ("branch", "struct"):
+        return None
+    base_type, _ = _extract_datatype(attrs.get("datatype"))
+    if base_type is None or _datatype_is_leaf(attrs.get("datatype")):
+        return None
+    return base_type
+
+
+def _build_property_paths(
+    modl_events: list[dict[str, Any]],
+    current_attrs_by_path: dict[str, dict[str, Any]],
+    previous_attrs_by_path: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Build the top-level `property_paths` list required by modl >=0.8.0.
+
+    For every ADDED/MODIFIED/REMOVED PROPERTY event that is binding-eligible
+    (`is_leaf` or `binding_eligible`), resolves every literal runtime-path occurrence in
+    the current and/or previous snapshot. Also re-reports every binding-eligible property
+    tagged with an entity whose `instances` changed in this diff (the entity instance-delta
+    cascade), and every field of a struct whose set of referencing properties changed in this
+    diff (the struct usage-site cascade) — in both cases even when the property itself has no
+    standalone event of its own.
+    """
+    current_reverse_refs = _struct_reverse_refs(current_attrs_by_path)
+    previous_reverse_refs = _struct_reverse_refs(previous_attrs_by_path)
+    rename_map = _build_rename_map(modl_events)
+
+    def resolve(
+        fqn: str | None, attrs_by_path: dict[str, dict[str, Any]], reverse_refs: dict[str, list[str]]
+    ) -> list[tuple[str, dict[str, dict[str, str]]]]:
+        if fqn is None:
+            return []
+        attrs = attrs_by_path.get(fqn)
+        if attrs is None:
+            return []
+        if _node_type(attrs) == "property":
+            return _struct_field_occurrences(fqn, attrs_by_path, reverse_refs)
+        return _direct_path_occurrences(fqn, attrs, attrs_by_path)
+
+    def resolve_previous(fqn: str | None) -> list[tuple[str, dict[str, dict[str, str]]]]:
+        occ = resolve(fqn, previous_attrs_by_path, previous_reverse_refs)
+        return [(_canonicalize_path(path, rename_map), _canonicalize_tags(tags, rename_map)) for path, tags in occ]
+
+    entries: dict[tuple[str, str], dict[str, tuple[dict[str, dict[str, str]], str]]] = {}
+
+    def merge_fqns(label: str, parent_label: str, curr_fqn: str | None, prev_fqn: str | None) -> None:
+        curr_occ = resolve(curr_fqn, current_attrs_by_path, current_reverse_refs)
+        prev_occ = resolve_previous(prev_fqn)
+        bucket = entries.setdefault((label, parent_label), {})
+        _merge_occurrences_into_bucket(bucket, curr_occ, prev_occ)
+
+    def merge(label: str, parent_label: str, curr_fqn: str | None, prev_fqn: str | None, warn_if_orphan: bool) -> None:
+        curr_occ = resolve(curr_fqn, current_attrs_by_path, current_reverse_refs)
+        prev_occ = resolve_previous(prev_fqn)
+        if warn_if_orphan and not curr_occ and not prev_occ:
+            log.warning(
+                f"No runtime path could be resolved for binding-eligible property '{label}' "
+                "— likely an orphan struct type with no referencing property; reporting empty paths."
+            )
+        bucket = entries.setdefault((label, parent_label), {})
+        _merge_occurrences_into_bucket(bucket, curr_occ, prev_occ)
+
+    # ADDED/MODIFIED/REMOVED binding-eligible PROPERTY events.
+    changed_entities: set[str] = set()
+    for ev in modl_events:
+        if ev["kind"] == ENTITY and ev["change_type"] == MODIFIED:
+            if ev["aspects"].get("instances_added") or ev["aspects"].get("instances_removed"):
+                changed_entities.add(ev["label"])
+
+    for ev in modl_events:
+        if ev["kind"] != PROPERTY:
+            continue
+        if not (ev.get("is_leaf") or ev.get("binding_eligible", False)):
+            continue
+        label = ev["label"]
+        parent_label = ev.get("parent_label")
+        if parent_label is None:
+            continue
+        change_type = ev["change_type"]
+        if change_type == ADDED:
+            merge(label, parent_label, label, None, warn_if_orphan=True)
+        elif change_type == REMOVED:
+            merge(label, parent_label, None, label, warn_if_orphan=False)
+        else:
+            prev_label = ev.get("renamed_from") or label
+            merge(label, parent_label, label, prev_label, warn_if_orphan=False)
+
+    # Entity instance-delta cascade: re-report every binding-eligible property tagged
+    # with a changed entity, even without its own event.
+    if changed_entities:
+        all_fqns = set(current_attrs_by_path) | set(previous_attrs_by_path)
+        for fqn in sorted(all_fqns):
+            curr_attrs = current_attrs_by_path.get(fqn)
+            prev_attrs = previous_attrs_by_path.get(fqn)
+            rep_attrs = curr_attrs if curr_attrs is not None else prev_attrs
+            if rep_attrs is None or _node_type(rep_attrs) in ("branch", "struct"):
+                continue
+            parent_label = fqn.rsplit(".", 1)[0] if "." in fqn else None
+            if parent_label is None or (fqn, parent_label) in entries:
+                continue
+            curr_occ = resolve(fqn if curr_attrs is not None else None, current_attrs_by_path, current_reverse_refs)
+            prev_occ = resolve_previous(fqn if prev_attrs is not None else None)
+            touches_changed_entity = any(
+                entity_label in tags for _, tags in (*curr_occ, *prev_occ) for entity_label in changed_entities
+            )
+            if not touches_changed_entity:
+                continue
+            bucket = entries.setdefault((fqn, parent_label), {})
+            _merge_occurrences_into_bucket(bucket, curr_occ, prev_occ)
+
+    # Struct usage-site cascade: whenever a property's struct reference is gained, lost, or
+    # retargeted, re-report every field of every struct involved, even when the fields
+    # themselves are unchanged (only their set of usage sites changed).
+    changed_structs: set[str] = set()
+    for fqn in set(current_attrs_by_path) | set(previous_attrs_by_path):
+        curr_struct = _struct_reference(current_attrs_by_path.get(fqn))
+        prev_struct = _struct_reference(previous_attrs_by_path.get(fqn))
+        if curr_struct != prev_struct:
+            if curr_struct is not None:
+                changed_structs.add(curr_struct)
+            if prev_struct is not None:
+                changed_structs.add(prev_struct)
+
+    if changed_structs:
+        candidate_fqns: set[str] = set()
+        for struct_label in changed_structs:
+            candidate_fqns |= _all_struct_field_fqns(struct_label, current_attrs_by_path)
+            candidate_fqns |= _all_struct_field_fqns(struct_label, previous_attrs_by_path)
+        for fqn in sorted(candidate_fqns):
+            curr_attrs = current_attrs_by_path.get(fqn)
+            prev_attrs = previous_attrs_by_path.get(fqn)
+            parent_label = fqn.rsplit(".", 1)[0] if "." in fqn else None
+            if parent_label is None or (fqn, parent_label) in entries:
+                continue
+            merge_fqns(
+                fqn,
+                parent_label,
+                fqn if curr_attrs is not None else None,
+                fqn if prev_attrs is not None else None,
+            )
+
+    property_paths: list[dict[str, Any]] = []
+    for label, parent_label in sorted(entries):
+        bucket = entries[(label, parent_label)]
+        paths = [
+            {"tags": tags, "path": path, "change": change}
+            for path, (tags, change) in sorted(bucket.items(), key=lambda kv: kv[0])
+        ]
+        property_paths.append({"label": label, "parent_label": parent_label, "paths": paths})
+    return property_paths
 
 
 # ---------------------------------------------------------------------------
@@ -722,12 +1117,15 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
 
     Returns a dict with:
       previous, current  — folder paths as strings
-      changes            — ordered list of modl IR change events
+      changes             — ordered list of modl IR change events
+      property_paths      — modl IR PropertyPaths entries (literal runtime-path occurrences)
 
     When previous_dir is None (first-run mode), every element in current_dir
     is treated as ADDED and emitted with its complete aspects snapshot.
     """
     raw_changes: list[dict[str, Any]] = []
+    current_attrs_by_path: dict[str, dict[str, Any]] = {}
+    previous_attrs_by_path: dict[str, dict[str, Any]] = {}
 
     sources = [
         (MODEL_SNAPSHOT_FILENAME, "model", True),
@@ -739,6 +1137,9 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
     for filename, source_label, detect_renames in sources:
         prev = load_snapshot_yaml(previous_dir / filename) if previous_dir else {}
         curr = load_snapshot_yaml(current_dir / filename)
+        if source_label in ("model", "structs"):
+            current_attrs_by_path.update(curr)
+            previous_attrs_by_path.update(prev)
         if not prev and not curr:
             continue
         raw_changes.extend(_diff_dicts(prev, curr, source_label, detect_renames=detect_renames))
@@ -747,6 +1148,8 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
     modl_events = _to_modl_events(raw_changes)
     modl_events = _inject_entity_content(modl_events)
 
+    property_paths = _build_property_paths(modl_events, current_attrs_by_path, previous_attrs_by_path)
+
     _KIND_ORDER = {ENTITY: 0, ENUMERATION_SET: 1, PROPERTY: 2, ENUM_VALUE: 3}
     modl_events.sort(key=lambda e: _KIND_ORDER.get(e["kind"], 99))
 
@@ -754,4 +1157,5 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
         "previous": str(previous_dir) if previous_dir else None,
         "current": str(current_dir),
         "changes": modl_events,
+        "property_paths": property_paths,
     }
