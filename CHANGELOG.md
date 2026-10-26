@@ -18,10 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `avro-tools idl2schemata` to get `.avsc` output.
 - `--types-overlays/-L` option for all commands supporting `--types` (except `vspec export id`). Partial types files are merged into the types tree, so headers can be defined in any of the files. Modifications of existing nodes are logged as warnings.
 - `vspec diff` now emits a top-level `references` map (`{"output_type": "<struct label>"}`) on struct-typed `PROPERTY` events, declaring the dependency on the referenced struct `ENTITY`. Lets `modl sync` (ddmodl>=0.7.0) re-contract dependent properties when the referenced struct itself gets a new contract. See [diff.md](docs/diff.md#references).
+- `vspec diff` now emits a top-level `property_paths` list, declaring every concrete literal runtime path (and its instance `tags`) at which each binding-eligible property occurs, including struct-field usage-site flattening and an entity instance-delta cascade. Required by `modl sync` (ddmodl>=0.8.0). See [diff.md](docs/diff.md#property_paths).
 
 ### Changed
 
 - Bumped `ddmodl` to `0.7.0`.
+- Bumped `ddmodl` to `0.8.0`. `vspec diff`'s `instances`/`instances_added`/`instances_removed` aspects are now per-dimension maps (`{"dimension1": [...], "dimension2": [...]}`) instead of flat Cartesian-product path-string lists, matching modl's new dimension-map IR contract. The top-level `instantiate` field has been removed from `PROPERTY` events entirely — it has no representation in modl's IR anymore (previously-generated diff reports relying on it must be regenerated).
 
 
 ## 6.1
