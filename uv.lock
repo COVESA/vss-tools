@@ -583,7 +583,7 @@ wheels = [
 
 [[package]]
 name = "ddmodl"
-version = "0.8.0"
+version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -593,9 +593,9 @@ dependencies = [
     { name = "rich" },
     { name = "rich-click" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/15/6c/e6d3b62271dfab233ce0e36ef1f8aac51fb6b9769c550d1e7ae3f39409f1/ddmodl-0.8.0.tar.gz", hash = "sha256:91d712b1e5b143dabfe898465116f61dfd203b8b1a110267674b8ebb28fd48f2", size = 1245563, upload-time = "2026-10-26T22:59:50.01Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/74/5c/366b22c288dbdbe23c34dce8bd5b044170b217ad76502c8d891be3e9be01/ddmodl-0.8.1.tar.gz", hash = "sha256:e4b35b99eaffb5a78f1849f69666fe1e05aca742427e9860901b0a32524abc4c", size = 1242060, upload-time = "2026-10-27T00:48:18.234Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/26/d149d60af2ca547e058c208df8cc0d616d67c25b5095c52c8dc8dfd8a016/ddmodl-0.8.0-py3-none-any.whl", hash = "sha256:67d8d427f7c66badb6cb3cb06a5f4e8cdba7f6ab4d453e7347b138ae48a9e29a", size = 80108, upload-time = "2026-10-26T22:59:47.647Z" },
+    { url = "https://files.pythonhosted.org/packages/63/86/70d20cb9c5b47ff2f0b23e74a35d557e88352da3b8bd3cd3821222febe55/ddmodl-0.8.1-py3-none-any.whl", hash = "sha256:72dc27135b63de2a7fecc48603407a1c62ad31968ca95e030f17771d1c0616fe", size = 80906, upload-time = "2026-10-27T00:48:16.043Z" },
 ]
 
 [[package]]
@@ -2235,7 +2235,7 @@ requires-dist = [
     { name = "anytree", specifier = ">=2.12.1" },
     { name = "case-converter", specifier = ">=1.2.0" },
     { name = "click", specifier = ">=8.1.7" },
-    { name = "ddmodl", specifier = "==0.8.0" },
+    { name = "ddmodl", specifier = ">=0.8.1" },
     { name = "graphene", specifier = ">=3.4.3" },
     { name = "graphql-core", specifier = ">=3.2.5" },
     { name = "inflect", specifier = ">=7.5.0" },
