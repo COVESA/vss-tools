@@ -435,19 +435,29 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
     }
     if parent is not None:
         event["parent_label"] = parent
+
+    # datatype_leaf reflects the raw datatype (primitive vs. struct reference) and always
+    # drives `references`. A struct field (source == "structs") is never independently
+    # addressable — it has no property_paths entry of its own (see _is_struct_member in
+    # _build_property_paths) — so it is always reported as non-binding-eligible
+    # (is_leaf=False, binding_eligible omitted/False) regardless of its own datatype.
+    datatype_leaf = True
+    is_struct_field = source == "structs"
     if kind == PROPERTY:
-        is_leaf = _is_leaf(attrs)
+        datatype_leaf = _is_leaf(attrs)
+        is_leaf = False if is_struct_field else datatype_leaf
         event["is_leaf"] = is_leaf
         # A non-leaf PROPERTY's datatype always resolves to a struct (vspec datatypes
         # are either primitives or struct FQNs — never branches), so the struct value
         # itself is read/written as one atomic unit and is eligible for its own binding,
-        # on top of the bindings already minted for each of its child properties.
-        if not is_leaf:
+        # on top of the bindings already minted for each of its child properties. This
+        # doesn't apply to a struct's own fields, which are never independently addressable.
+        if not datatype_leaf and not is_struct_field:
             event["binding_eligible"] = True
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
-        if kind == PROPERTY and not is_leaf:
+        if kind == PROPERTY and not datatype_leaf:
             output_type = event["aspects"].get("output_type")
             if output_type is not None:
                 event["references"] = {"output_type": output_type}
@@ -460,7 +470,7 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
         attribute_changes = ev.get("attribute_changes") or []
         event["aspects"] = _map_aspects_delta(attribute_changes)
         if kind == PROPERTY:
-            references = _references_delta(attribute_changes, is_leaf)
+            references = _references_delta(attribute_changes, datatype_leaf)
             if references is not None:
                 event["references"] = references
 
@@ -656,63 +666,6 @@ def _direct_path_occurrences(
     return occurrences
 
 
-def _struct_reverse_refs(attrs_by_path: dict[str, dict[str, Any]]) -> dict[str, list[str]]:
-    """
-    Build a struct-label → referencing-FQNs reverse map from a combined model+structs
-    attrs snapshot, used to flatten struct fields onto every property that uses them.
-
-    Known limitation: a relative (non fully-qualified) struct reference is matched
-    verbatim against the referencing node's own `datatype` string — vss-tools does not
-    build a real tree here, so short struct names are not resolved against their
-    declaring branch, mirroring the existing `references`/`output_type` behaviour
-    elsewhere in this module.
-    """
-    reverse: dict[str, list[str]] = {}
-    for fqn, attrs in attrs_by_path.items():
-        if _node_type(attrs) in ("branch", "struct"):
-            continue
-        base_type, _ = _extract_datatype(attrs.get("datatype"))
-        if base_type is None:
-            continue
-        reverse.setdefault(base_type, []).append(fqn)
-    return reverse
-
-
-def _struct_field_occurrences(
-    fqn: str,
-    attrs_by_path: dict[str, dict[str, Any]],
-    reverse_refs: dict[str, list[str]],
-    _visiting: frozenset[str] = frozenset(),
-) -> list[tuple[str, dict[str, dict[str, str]]]]:
-    """
-    Resolve every literal runtime-path occurrence of a struct field by flattening it onto
-    every property (anywhere in the model, or another struct) whose datatype names the
-    field's own struct, recursing through struct-of-struct nesting.
-
-    Returns `[]` when the struct has no referencing property anywhere (an orphan struct) —
-    callers report an empty `paths: []` entry and log a warning in that case.
-    """
-    parent_label, _, field_name = fqn.rpartition(".")
-    if not parent_label or parent_label in _visiting:
-        if parent_label in _visiting:
-            log.warning(f"Circular struct reference detected while resolving '{fqn}' — skipping")
-        return []
-    visiting = _visiting | {parent_label}
-
-    occurrences: list[tuple[str, dict[str, dict[str, str]]]] = []
-    for usage_fqn in reverse_refs.get(parent_label, []):
-        usage_attrs = attrs_by_path.get(usage_fqn)
-        if usage_attrs is None:
-            continue
-        if _node_type(usage_attrs) == "property":
-            base_occurrences = _struct_field_occurrences(usage_fqn, attrs_by_path, reverse_refs, visiting)
-        else:
-            base_occurrences = _direct_path_occurrences(usage_fqn, usage_attrs, attrs_by_path)
-        for base_path, tags in base_occurrences:
-            occurrences.append((f"{base_path}.{field_name}", tags))
-    return occurrences
-
-
 def _merge_occurrences_into_bucket(
     bucket: dict[str, tuple[dict[str, dict[str, str]], str]],
     curr_occurrences: list[tuple[str, dict[str, dict[str, str]]]],
@@ -776,40 +729,14 @@ def _canonicalize_path(path: str, rename_map: dict[str, str]) -> str:
     return rename_map[best_old] + path[len(best_old) :]
 
 
-def _all_struct_field_fqns(
-    struct_label: str,
-    attrs_by_path: dict[str, dict[str, Any]],
-    _visiting: frozenset[str] = frozenset(),
-) -> set[str]:
-    """
-    Recursively collect every property FQN that is a direct or nested field of `struct_label`
-    (nested through struct-of-struct fields), within a single snapshot's attrs map.
-    """
-    if struct_label in _visiting:
-        return set()
-    visiting = _visiting | {struct_label}
-    prefix = struct_label + "."
-    result: set[str] = set()
-    for fqn, attrs in attrs_by_path.items():
-        if not fqn.startswith(prefix) or "." in fqn[len(prefix) :]:
-            continue
-        if _node_type(attrs) in ("branch", "struct"):
-            continue
-        result.add(fqn)
-        base_type, _ = _extract_datatype(attrs.get("datatype"))
-        if base_type is not None and not _datatype_is_leaf(attrs.get("datatype")):
-            result |= _all_struct_field_fqns(base_type, attrs_by_path, visiting)
-    return result
-
-
-def _struct_reference(attrs: dict[str, Any] | None) -> str | None:
-    """Return the struct label a property's `datatype` points at, or `None` for a leaf/branch/struct."""
-    if attrs is None or _node_type(attrs) in ("branch", "struct"):
-        return None
-    base_type, _ = _extract_datatype(attrs.get("datatype"))
-    if base_type is None or _datatype_is_leaf(attrs.get("datatype")):
-        return None
-    return base_type
+def _is_struct_member(
+    parent_label: str,
+    current_attrs_by_path: dict[str, dict[str, Any]],
+    previous_attrs_by_path: dict[str, dict[str, Any]],
+) -> bool:
+    """Whether `parent_label` is a struct, i.e. the property is a struct field rather than a model signal."""
+    parent_attrs = current_attrs_by_path.get(parent_label) or previous_attrs_by_path.get(parent_label)
+    return parent_attrs is not None and _node_type(parent_attrs) == "struct"
 
 
 def _build_property_paths(
@@ -820,44 +747,36 @@ def _build_property_paths(
     """
     Build the top-level `property_paths` list required by modl >=0.8.0.
 
-    For every ADDED/MODIFIED/REMOVED PROPERTY event that is binding-eligible
+    For every ADDED/MODIFIED/REMOVED model/structs PROPERTY event that is binding-eligible
     (`is_leaf` or `binding_eligible`), resolves every literal runtime-path occurrence in
     the current and/or previous snapshot. Also re-reports every binding-eligible property
     tagged with an entity whose `instances` changed in this diff (the entity instance-delta
-    cascade), and every field of a struct whose set of referencing properties changed in this
-    diff (the struct usage-site cascade) — in both cases even when the property itself has no
-    standalone event of its own.
+    cascade), even when the property itself has no standalone event of its own.
+
+    Struct fields (properties whose parent is a struct, not a branch) never get their own
+    entry — a struct has no standalone runtime address of its own; only the property that
+    references the struct (itself binding-eligible via `binding_eligible`) is reported.
     """
-    current_reverse_refs = _struct_reverse_refs(current_attrs_by_path)
-    previous_reverse_refs = _struct_reverse_refs(previous_attrs_by_path)
     rename_map = _build_rename_map(modl_events)
 
     def resolve(
-        fqn: str | None, attrs_by_path: dict[str, dict[str, Any]], reverse_refs: dict[str, list[str]]
+        fqn: str | None, attrs_by_path: dict[str, dict[str, Any]]
     ) -> list[tuple[str, dict[str, dict[str, str]]]]:
         if fqn is None:
             return []
         attrs = attrs_by_path.get(fqn)
         if attrs is None:
             return []
-        if _node_type(attrs) == "property":
-            return _struct_field_occurrences(fqn, attrs_by_path, reverse_refs)
         return _direct_path_occurrences(fqn, attrs, attrs_by_path)
 
     def resolve_previous(fqn: str | None) -> list[tuple[str, dict[str, dict[str, str]]]]:
-        occ = resolve(fqn, previous_attrs_by_path, previous_reverse_refs)
+        occ = resolve(fqn, previous_attrs_by_path)
         return [(_canonicalize_path(path, rename_map), _canonicalize_tags(tags, rename_map)) for path, tags in occ]
 
     entries: dict[tuple[str, str], dict[str, tuple[dict[str, dict[str, str]], str]]] = {}
 
-    def merge_fqns(label: str, parent_label: str, curr_fqn: str | None, prev_fqn: str | None) -> None:
-        curr_occ = resolve(curr_fqn, current_attrs_by_path, current_reverse_refs)
-        prev_occ = resolve_previous(prev_fqn)
-        bucket = entries.setdefault((label, parent_label), {})
-        _merge_occurrences_into_bucket(bucket, curr_occ, prev_occ)
-
     def merge(label: str, parent_label: str, curr_fqn: str | None, prev_fqn: str | None, warn_if_orphan: bool) -> None:
-        curr_occ = resolve(curr_fqn, current_attrs_by_path, current_reverse_refs)
+        curr_occ = resolve(curr_fqn, current_attrs_by_path)
         prev_occ = resolve_previous(prev_fqn)
         if warn_if_orphan and not curr_occ and not prev_occ:
             log.warning(
@@ -883,6 +802,8 @@ def _build_property_paths(
         parent_label = ev.get("parent_label")
         if parent_label is None:
             continue
+        if _is_struct_member(parent_label, current_attrs_by_path, previous_attrs_by_path):
+            continue
         change_type = ev["change_type"]
         if change_type == ADDED:
             merge(label, parent_label, label, None, warn_if_orphan=True)
@@ -905,7 +826,9 @@ def _build_property_paths(
             parent_label = fqn.rsplit(".", 1)[0] if "." in fqn else None
             if parent_label is None or (fqn, parent_label) in entries:
                 continue
-            curr_occ = resolve(fqn if curr_attrs is not None else None, current_attrs_by_path, current_reverse_refs)
+            if _is_struct_member(parent_label, current_attrs_by_path, previous_attrs_by_path):
+                continue
+            curr_occ = resolve(fqn if curr_attrs is not None else None, current_attrs_by_path)
             prev_occ = resolve_previous(fqn if prev_attrs is not None else None)
             touches_changed_entity = any(
                 entity_label in tags for _, tags in (*curr_occ, *prev_occ) for entity_label in changed_entities
@@ -914,37 +837,6 @@ def _build_property_paths(
                 continue
             bucket = entries.setdefault((fqn, parent_label), {})
             _merge_occurrences_into_bucket(bucket, curr_occ, prev_occ)
-
-    # Struct usage-site cascade: whenever a property's struct reference is gained, lost, or
-    # retargeted, re-report every field of every struct involved, even when the fields
-    # themselves are unchanged (only their set of usage sites changed).
-    changed_structs: set[str] = set()
-    for fqn in set(current_attrs_by_path) | set(previous_attrs_by_path):
-        curr_struct = _struct_reference(current_attrs_by_path.get(fqn))
-        prev_struct = _struct_reference(previous_attrs_by_path.get(fqn))
-        if curr_struct != prev_struct:
-            if curr_struct is not None:
-                changed_structs.add(curr_struct)
-            if prev_struct is not None:
-                changed_structs.add(prev_struct)
-
-    if changed_structs:
-        candidate_fqns: set[str] = set()
-        for struct_label in changed_structs:
-            candidate_fqns |= _all_struct_field_fqns(struct_label, current_attrs_by_path)
-            candidate_fqns |= _all_struct_field_fqns(struct_label, previous_attrs_by_path)
-        for fqn in sorted(candidate_fqns):
-            curr_attrs = current_attrs_by_path.get(fqn)
-            prev_attrs = previous_attrs_by_path.get(fqn)
-            parent_label = fqn.rsplit(".", 1)[0] if "." in fqn else None
-            if parent_label is None or (fqn, parent_label) in entries:
-                continue
-            merge_fqns(
-                fqn,
-                parent_label,
-                fqn if curr_attrs is not None else None,
-                fqn if prev_attrs is not None else None,
-            )
 
     property_paths: list[dict[str, Any]] = []
     for label, parent_label in sorted(entries):

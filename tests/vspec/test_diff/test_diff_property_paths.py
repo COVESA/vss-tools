@@ -11,7 +11,6 @@
 from pathlib import Path
 from typing import Any
 
-import pytest
 import yaml
 from modl.ir import DiffReport
 
@@ -222,8 +221,11 @@ class TestEntityInstanceDeltaCascade:
         assert change_for_path(entry, "Vehicle.Door.Center.IsOpen") == "added"
 
 
-class TestStructFlattening:
-    def test_single_usage_site(self, tmp_path: Path):
+class TestStructMembersExcluded:
+    """Struct fields never get their own property_paths entry — only the referencing
+    property (binding-eligible via `binding_eligible`) does."""
+
+    def test_struct_field_not_reported_single_usage_site(self, tmp_path: Path):
         structs = {
             "Types.Position": {"type": "struct", "description": "position"},
             "Types.Position.x": {"type": "property", "datatype": "float", "description": "x"},
@@ -241,11 +243,11 @@ class TestStructFlattening:
         result = diff_folders(prev, curr)
         DiffReport.model_validate(result)
 
-        entry = paths_for(result, "Types.Position.x")
-        assert entry["parent_label"] == "Types.Position"
-        assert entry["paths"] == [{"tags": {}, "path": "Vehicle.Position.x", "change": "added"}]
+        assert [p for p in result["property_paths"] if p["label"] == "Types.Position.x"] == []
+        entry = paths_for(result, "Vehicle.Position")
+        assert entry["paths"] == [{"tags": {}, "path": "Vehicle.Position", "change": "added"}]
 
-    def test_multiple_usage_sites(self, tmp_path: Path):
+    def test_struct_field_not_reported_with_multiple_usage_sites(self, tmp_path: Path):
         structs = {
             "Types.Position": {"type": "struct", "description": "position"},
             "Types.Position.x": {"type": "property", "datatype": "float", "description": "x"},
@@ -260,10 +262,11 @@ class TestStructFlattening:
         result = diff_folders(prev, curr)
         DiffReport.model_validate(result)
 
-        entry = paths_for(result, "Types.Position.x")
-        assert path_strings(entry) == {"Vehicle.Front.x", "Vehicle.Rear.x"}
+        assert [p for p in result["property_paths"] if p["label"] == "Types.Position.x"] == []
+        assert path_strings(paths_for(result, "Vehicle.Front")) == {"Vehicle.Front"}
+        assert path_strings(paths_for(result, "Vehicle.Rear")) == {"Vehicle.Rear"}
 
-    def test_nested_struct_of_struct(self, tmp_path: Path):
+    def test_nested_struct_of_struct_members_not_reported(self, tmp_path: Path):
         structs = {
             "Types.Inner": {"type": "struct", "description": "inner"},
             "Types.Inner.value": {"type": "property", "datatype": "float", "description": "value"},
@@ -283,21 +286,75 @@ class TestStructFlattening:
         result = diff_folders(prev, curr)
         DiffReport.model_validate(result)
 
-        entry = paths_for(result, "Types.Inner.value")
-        assert entry["paths"] == [{"tags": {}, "path": "Vehicle.Outer.inner.value", "change": "added"}]
+        assert [p for p in result["property_paths"] if p["label"] == "Types.Inner.value"] == []
+        assert [p for p in result["property_paths"] if p["label"] == "Types.Outer.inner"] == []
+        entry = paths_for(result, "Vehicle.Outer")
+        assert entry["paths"] == [{"tags": {}, "path": "Vehicle.Outer", "change": "added"}]
 
-    def test_orphan_struct_reports_empty_paths_and_warns(self, tmp_path: Path, caplog: pytest.LogCaptureFixture):
+
+class TestStructMemberIsLeafFalse:
+    """
+    Struct fields are never independently addressable — they have no property_paths entry
+    (see TestStructMembersExcluded), so they must never be reported as binding-eligible in
+    `changes` either, regardless of their own datatype: is_leaf=False and binding_eligible
+    omitted (effectively False), even when the field's own datatype is a primitive.
+    """
+
+    def test_primitive_struct_field_is_leaf_false(self, tmp_path: Path):
         structs = {
-            "Types.Orphan": {"type": "struct", "description": "orphan"},
-            "Types.Orphan.a": {"type": "property", "datatype": "float", "description": "a"},
+            "Types.Position": {"type": "struct", "description": "position"},
+            "Types.Position.x": {"type": "property", "datatype": "float", "description": "x"},
         }
         prev = snapshot(tmp_path, "prev", {"Vehicle": {"type": "branch", "description": "root"}})
-        curr = snapshot(tmp_path, "curr", {"Vehicle": {"type": "branch", "description": "root"}}, structs=structs)
-
-        with caplog.at_level("WARNING"):
-            result = diff_folders(prev, curr)
+        curr = snapshot(
+            tmp_path,
+            "curr",
+            {
+                "Vehicle": {"type": "branch", "description": "root"},
+                "Vehicle.Position": {"type": "sensor", "datatype": "Types.Position", "description": "pos"},
+            },
+            structs=structs,
+        )
+        result = diff_folders(prev, curr)
         DiffReport.model_validate(result)
 
-        entry = paths_for(result, "Types.Orphan.a")
-        assert entry["paths"] == []
-        assert any("orphan" in rec.message.lower() for rec in caplog.records)
+        field_event = next(c for c in result["changes"] if c["label"] == "Types.Position.x")
+        assert field_event["is_leaf"] is False
+        assert "binding_eligible" not in field_event
+
+        # The referencing property itself is still binding-eligible.
+        ref_event = next(c for c in result["changes"] if c["label"] == "Vehicle.Position" and c["kind"] == "PROPERTY")
+        assert ref_event["is_leaf"] is False
+        assert ref_event["binding_eligible"] is True
+
+    def test_struct_of_struct_field_is_leaf_false_and_references_preserved(self, tmp_path: Path):
+        structs = {
+            "Types.Inner": {"type": "struct", "description": "inner"},
+            "Types.Inner.value": {"type": "property", "datatype": "float", "description": "value"},
+            "Types.Outer": {"type": "struct", "description": "outer"},
+            "Types.Outer.inner": {"type": "property", "datatype": "Types.Inner", "description": "inner field"},
+        }
+        prev = snapshot(tmp_path, "prev", {"Vehicle": {"type": "branch", "description": "root"}})
+        curr = snapshot(
+            tmp_path,
+            "curr",
+            {
+                "Vehicle": {"type": "branch", "description": "root"},
+                "Vehicle.Outer": {"type": "sensor", "datatype": "Types.Outer", "description": "outer sensor"},
+            },
+            structs=structs,
+        )
+        result = diff_folders(prev, curr)
+        DiffReport.model_validate(result)
+
+        # The struct-of-struct field is non-leaf by its own datatype too, and must not be
+        # binding-eligible either way.
+        inner_field_event = next(c for c in result["changes"] if c["label"] == "Types.Outer.inner")
+        assert inner_field_event["is_leaf"] is False
+        assert "binding_eligible" not in inner_field_event
+        # references is still derived from the real datatype, for contract cascading purposes.
+        assert inner_field_event["references"] == {"output_type": "Types.Inner"}
+
+        value_field_event = next(c for c in result["changes"] if c["label"] == "Types.Inner.value")
+        assert value_field_event["is_leaf"] is False
+        assert "binding_eligible" not in value_field_event
