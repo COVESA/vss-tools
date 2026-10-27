@@ -91,13 +91,20 @@ event carries a wrapped `is_list` delta if it flips between `true`/`false`.
 knows which properties are eligible for binding generation: only leaf (primitive/scalar) properties
 get bindings; properties that reference another entity never do.
 
-It is derived with two rules:
+It is derived with three rules:
 
 1. **Branch/struct duality pointer events** (see [Branch duality](#branch-duality)) always get
    `is_leaf: false` — they represent a reference to another entity by construction.
-2. **Real signals and struct members** get `is_leaf` based on whether their base `datatype`
-   (stripped of any trailing `[]`) resolves to a known primitive VSS type. A `sensor`/`actuator`/
-   `attribute` whose `datatype` names a struct (e.g. `datatype: VehicleDataTypes.MyStruct`) is
+2. **Struct fields** (properties declared inside a `struct`, i.e. sourced from `structs.vspec`)
+   always get `is_leaf: false` and never `binding_eligible: true`, regardless of their own
+   `datatype` — a struct has no standalone runtime address of its own, so its fields are never
+   independently addressable and never get a `property_paths` entry either (see
+   [property_paths](#property_paths)). Only the property that references the struct (reported
+   with `binding_eligible: true`) is binding-eligible; `references`/`output_type` for a struct
+   field is still derived from its real `datatype`, unaffected by this rule.
+3. **Real signals** get `is_leaf` based on whether their base `datatype` (stripped of any
+   trailing `[]`) resolves to a known primitive VSS type. A `sensor`/`actuator`/`attribute`
+   whose `datatype` names a struct (e.g. `datatype: VehicleDataTypes.MyStruct`) is
    `is_leaf: false`, even though it isn't a duality pointer itself:
 
 ```yaml
@@ -255,10 +262,9 @@ concrete literal runtime path at which it occurs:
   independent of the parent property's own `change_type` — e.g. an entity gaining a new instance
   value re-reports every property under it with one new `"added"` path entry, even though the
   property itself has no event of its own in `changes` (the *entity instance-delta cascade*).
-- **Struct-typed properties** are flattened onto every usage site: a struct field's `paths` entries
-  are built relative to every property (anywhere in the model, or another struct) whose `datatype`
-  resolves to that struct, recursing through struct-of-struct nesting. A struct with no referencing
-  property anywhere (an orphan struct) gets `"paths": []` and a logged warning.
+- **Struct fields never get their own entry.** A struct has no standalone runtime address of its
+  own — only the property that references the struct (reported with `binding_eligible: true`) gets
+  a `property_paths` entry, at its own path. Struct members are not flattened onto usage sites.
 - **Known limitation**: branches using `instances_relation: sibling` (where the generated instance
   attaches next to the branch's own parent rather than nesting under the branch) are not supported —
   `property_paths` resolution assumes the default `"child"` relation, matching the existing
