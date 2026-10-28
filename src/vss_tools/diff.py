@@ -11,21 +11,25 @@ Pure diff logic for vspec compose snapshot folders.
 
 Compares two snapshot folders produced by `vspec compose` and returns a
 structured list of ADDED, REMOVED, and MODIFIED change events covering:
-  - model      (model_snapshot.vspec)
-  - structs    (structs_snapshot.vspec)
-  - units      (units_snapshot.yaml)
-  - quantities (quantities_snapshot.yaml)
+  - model      (model.vspec)
+  - structs    (structs.vspec)
+  - units      (units.yaml)
+  - quantities (quantities.yaml)
 
-No vss-tools tree parsing is performed — snapshots are already flat dicts.
+Change events are computed on the authored flat dicts of the snapshots. The runtime
+paths reported in `property_paths` are computed separately: each snapshot's model is
+parsed and instance-expanded with the vss-tools tree (the same code `vspec export` uses),
+and the resulting leaf paths of the previous and current snapshot are compared.
 """
 
 from __future__ import annotations
 
-import itertools
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
+from anytree import PreOrderIter
 
 from vss_tools import log
 from vss_tools.compose import (
@@ -35,7 +39,16 @@ from vss_tools.compose import (
     UNITS_SNAPSHOT_FILENAME,
 )
 from vss_tools.datatypes import Datatypes
-from vss_tools.tree import expand_string
+from vss_tools.model import VSSData, VSSRaw
+from vss_tools.tree import (
+    InvalidExpansionEntryException,
+    InvalidInstanceNodeException,
+    MultipleRootsException,
+    NoRootsException,
+    VSSNode,
+    build_tree,
+    expand_string,
+)
 
 # ---------------------------------------------------------------------------
 # Change type constants
@@ -172,59 +185,16 @@ def _expand_instances(value: Any) -> dict[str, list[str]]:
     return {f"dimension{i + 1}": values for i, values in enumerate(dimensions)}
 
 
-def _expand_instance_fqns(base_fqn: str, instances_value: Any) -> list[str]:
-    """
-    Expand a branch's instances into all branch FQN paths produced by expansion,
-    mirroring expand_instance() in tree.py — including every intermediate dimension hop.
-
-    Each top-level entry in instances_value is one dimension, iterated exactly as
-    expand_instances() iterates ``for instance in node.data.instances``.
-    Roots advance (next dimension attaches to generated nodes) when the dimension
-    entry is a list or expands to more than one name — matching the tree.py rule:
-      ``len(names) > 1 or isinstance(instance, list) → return nodes, nodes``.
-    """
-    if not instances_value:
-        return []
-
-    # Normalise: if instances_value itself is not a list, wrap it so we can
-    # iterate uniformly (mirrors tree.py where data.instances is always iterable).
-    raw_dimensions: list[Any] = instances_value if isinstance(instances_value, list) else [instances_value]
-
-    roots: list[str] = [base_fqn]
-    all_created: list[str] = []
-
-    for dimension in raw_dimensions:
-        if isinstance(dimension, list):
-            # Inner list: each element is an explicit name (possibly range syntax)
-            names: list[str] = []
-            for item in dimension:
-                s = str(item)
-                names.extend(expand_string(s) if "[" in s else [s])
-            advance = True  # isinstance(instance, list) → return nodes, nodes
-        elif isinstance(dimension, str) and "[" in dimension:
-            names = expand_string(dimension)
-            advance = len(names) > 1  # range expansion → return nodes, nodes
-        else:
-            names = [str(dimension)]
-            advance = False  # single plain string → return roots, nodes
-
-        new_nodes: list[str] = []
-        for root in roots:
-            for name in names:
-                fqn = f"{root}.{name}"
-                all_created.append(fqn)
-                new_nodes.append(fqn)
-
-        if advance:
-            roots = new_nodes
-
-    return all_created
-
-
-def _inject_instance_expansions(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _inject_instance_expansions(
+    raw_events: list[dict[str, Any]],
+    previous_hops: dict[str, list[str]],
+    current_hops: dict[str, list[str]],
+) -> list[dict[str, Any]]:
     """
     For every ENTITY ADDED or REMOVED event that carries an ``instances`` attribute,
-    inject ADDED or REMOVED events for all branch FQNs produced by instance expansion.
+    inject ADDED or REMOVED events for all instance branches the vss-tools tree produced
+    for that entity (`current_hops` for ADDED, `previous_hops` for REMOVED, each mapping an
+    entity label to its expanded hop FQNs — see `_ExpandedModel`).
 
     This mirrors the YAML exporter's behaviour: instances expand into concrete branch
     hops (one per dimension level), so those branches must appear in the diff just as
@@ -240,12 +210,12 @@ def _inject_instance_expansions(raw_events: list[dict[str, Any]]) -> list[dict[s
         if _vss_kind(ev["node_type"], ev["source"]) != ENTITY:
             continue
         attrs = ev.get("attributes") or {}
-        instances_value = attrs.get("instances")
-        if not instances_value:
+        if not attrs.get("instances"):
             continue
 
         description = attrs.get("description", "")
-        for fqn in _expand_instance_fqns(ev["path"], instances_value):
+        hops = current_hops if ev["type"] == ADDED else previous_hops
+        for fqn in hops.get(ev["path"], []):
             result.append(
                 {
                     "type": ev["type"],
@@ -269,8 +239,7 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
     (the modl IR requires the latter to carry the full prior-state snapshot).
 
     `instantiate` is excluded: it has no representation at all in modl's IR — it only
-    gates how vss-tools resolves literal runtime paths internally (see
-    `_effective_instantiate`/`_direct_path_occurrences`).
+    gates how vss-tools expands runtime paths (see `_expand_model`).
     """
     aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name", "instantiate")}
     kind = _vss_kind(node_type, source)
@@ -601,69 +570,127 @@ def _inject_entity_content(modl_events: list[dict[str, Any]]) -> list[dict[str, 
 # ---------------------------------------------------------------------------
 
 
-def _direct_path_occurrences(
-    fqn: str,
-    prop_attrs: dict[str, Any],
-    attrs_by_path: dict[str, dict[str, Any]],
-) -> list[tuple[str, dict[str, dict[str, str]]]]:
+class DiffTreeException(Exception):
+    """A snapshot model could not be parsed and expanded by the vss-tools tree."""
+
+
+PathOccurrence = tuple[str, dict[str, dict[str, str]]]
+
+# Marker attributes stamped onto the authored nodes before the tree expands them. Extra attributes
+# survive the tree's copy/merge operations, which lets the expanded nodes be traced back to the
+# authored (flat-diff) labels that change events are reported under.
+_DECLARED_KEY = "diff_declared"
+_INSTANCE_OF_KEY = "diff_instance_of"
+
+_LEAF_TYPES = frozenset({"sensor", "actuator", "attribute"})
+_STRUCTURAL_ATTRIBUTES = ("type", "instances", "instances_relation", "instantiate")
+
+
+@dataclass
+class _ExpandedModel:
     """
-    Resolve every literal runtime-path occurrence of a model/structs property by walking
-    its ancestor branch chain and fanning out over every instanced ancestor's dimensions.
+    Runtime view of one snapshot's model after vss-tools instance expansion.
 
-    Each instanced ancestor contributes one chosen combination of its dimension values,
-    inserted as an extra dotted path segment immediately after the ancestor's own name
-    (e.g. `Vehicle.Door.Left.IsOpen`, not `Vehicle.DoorLeft.IsOpen`). The immediate parent's
-    instances are skipped when `prop_attrs` declares `instantiate: false`. Returns a list of
-    `(path, tags)` pairs, where `tags` maps each contributing ancestor's FQN label to its
-    chosen `{dimension1: value, ...}` selection.
-
-    Known limitation: branches using `instances_relation: sibling` are not supported here —
-    same limitation as the existing `_expand_instance_fqns` branch-hop injection.
+    `paths` maps each authored leaf label to every runtime path it expands to, with the
+    instance `tags` selecting that path. `hops` maps each instanced entity label to the FQNs
+    of every instance branch generated for it.
     """
-    parts = fqn.split(".")
-    if len(parts) == 1:
-        return [(fqn, {})]
-    prop_name = parts[-1]
-    ancestor_segments = parts[:-1]
-    immediate_parent = ".".join(ancestor_segments)
 
-    contributions: list[tuple[str, list[list[str]]]] = []
-    running = ""
-    for seg in ancestor_segments:
-        running = seg if not running else f"{running}.{seg}"
-        if running == immediate_parent and not _effective_instantiate(prop_attrs):
+    paths: dict[str, list[PathOccurrence]] = field(default_factory=dict)
+    hops: dict[str, list[str]] = field(default_factory=dict)
+
+
+def _node_type_value(node: VSSNode) -> str:
+    node_type = getattr(node.data, "type", None)
+    return str(getattr(node_type, "value", node_type))
+
+
+def _hop_entity(node: VSSNode) -> str | None:
+    """
+    Return the label of the instanced entity this node is an instance hop of, else `None`.
+
+    Hop nodes are copies of the authored entity node, so they carry its instance marker; the
+    entity node itself (and copies of it nested below other hops) is told apart by its name.
+    `is_instance` is deliberately not used: the tree resets it when a hop is merged with an
+    authored node of the same name (e.g. `Vehicle.Foo.Red.Extra`).
+    """
+    entity = getattr(node.data, _INSTANCE_OF_KEY, None)
+    if entity is None or node.name == entity.rsplit(".", 1)[-1]:
+        return None
+    return str(entity)
+
+
+def _leaf_tags(leaf: VSSNode) -> dict[str, dict[str, str]]:
+    """Derive an expanded leaf's instance tags from the hop branches along its path."""
+    tags: dict[str, dict[str, str]] = {}
+    previous_entity: str | None = None
+    position = 0
+    for node in leaf.path[:-1]:
+        entity = _hop_entity(node)
+        if entity is None:
+            previous_entity = None
             continue
-        anc_attrs = attrs_by_path.get(running) or {}
-        dims = _instance_dimensions(anc_attrs.get("instances"))
-        if dims:
-            contributions.append((running, dims))
+        # Consecutive hops of the same entity are its successive dimensions.
+        position = position + 1 if entity == previous_entity else 1
+        previous_entity = entity
+        tags.setdefault(entity, {})[f"dimension{position}"] = node.name
+    return tags
 
-    if not contributions:
-        return [(fqn, {})]
 
-    choice_lists: list[list[tuple[str, tuple[str, ...]]]] = [
-        [(ancestor_label, combo) for combo in itertools.product(*dims)] for ancestor_label, dims in contributions
-    ]
+def _expand_model(model: dict[str, Any]) -> _ExpandedModel:
+    """
+    Parse a snapshot's model with the vss-tools tree and expand its instances exactly as
+    `vspec export` does, then collect the runtime leaf paths (sensor, actuator, attribute)
+    and the instance hop branches.
 
-    occurrences: list[tuple[str, dict[str, dict[str, str]]]] = []
-    for selection in itertools.product(*choice_lists):
-        tags: dict[str, dict[str, str]] = {}
-        hops: dict[str, str] = {}
-        for ancestor_label, combo in selection:
-            tags[ancestor_label] = {f"dimension{i + 1}": v for i, v in enumerate(combo)}
-            hops[ancestor_label] = ".".join(combo)
+    Struct types are not part of this tree: a struct never has runtime paths of its own, only
+    the leaf that references it does.
+    """
+    expanded = _ExpandedModel()
+    if not model:
+        return expanded
 
-        path_parts: list[str] = []
-        running = ""
-        for seg in ancestor_segments:
-            running = seg if not running else f"{running}.{seg}"
-            path_parts.append(seg)
-            if running in hops:
-                path_parts.append(hops[running])
-        path_parts.append(prop_name)
-        occurrences.append((".".join(path_parts), tags))
+    # Only the attributes that shape the expanded tree are handed to it, so unrelated
+    # attributes can never make a node fail validation.
+    marked: dict[str, Any] = {}
+    for fqn, attrs in model.items():
+        attrs = attrs or {}
+        entry = {k: attrs[k] for k in _STRUCTURAL_ATTRIBUTES if k in attrs}
+        entry[_DECLARED_KEY] = fqn
+        if entry.get("instances"):
+            entry[_INSTANCE_OF_KEY] = fqn
+        marked[fqn] = entry
 
-    return occurrences
+    # The tree needs a root node. Snapshots composed from a full model always declare one;
+    # a bare root stub keeps partial models (only descendants declared) expandable.
+    for root_name in {fqn.split(".", 1)[0] for fqn in marked}:
+        marked.setdefault(root_name, {"type": "branch"})
+
+    try:
+        root, _ = build_tree(marked, connect_orphans=True)
+        for node in PreOrderIter(root):
+            if isinstance(node.data, VSSRaw) and not isinstance(node.data, VSSData):
+                if _node_type_value(node) == "branch" and getattr(node.data, "instances", None):
+                    raise DiffTreeException(
+                        f"'{node.get_fqn()}' declares instances but is not a valid branch, cannot expand it"
+                    )
+        root.expand_instances()
+    except (
+        NoRootsException,
+        MultipleRootsException,
+        InvalidExpansionEntryException,
+        InvalidInstanceNodeException,
+    ) as e:
+        raise DiffTreeException(f"Could not expand the snapshot model with vss-tools: {type(e).__name__} {e}") from e
+
+    for node in PreOrderIter(root):
+        entity = _hop_entity(node)
+        if entity is not None:
+            expanded.hops.setdefault(entity, []).append(node.get_fqn())
+        if node.is_leaf and _node_type_value(node) in _LEAF_TYPES:
+            label = str(getattr(node.data, _DECLARED_KEY, None) or node.get_fqn())
+            expanded.paths.setdefault(label, []).append((node.get_fqn(), _leaf_tags(node)))
+    return expanded
 
 
 def _merge_occurrences_into_bucket(
@@ -743,15 +770,18 @@ def _build_property_paths(
     modl_events: list[dict[str, Any]],
     current_attrs_by_path: dict[str, dict[str, Any]],
     previous_attrs_by_path: dict[str, dict[str, Any]],
+    current_model: _ExpandedModel,
+    previous_model: _ExpandedModel,
 ) -> list[dict[str, Any]]:
     """
     Build the top-level `property_paths` list required by modl >=0.8.0.
 
     For every ADDED/MODIFIED/REMOVED model/structs PROPERTY event that is binding-eligible
-    (`is_leaf` or `binding_eligible`), resolves every literal runtime-path occurrence in
-    the current and/or previous snapshot. Also re-reports every binding-eligible property
-    tagged with an entity whose `instances` changed in this diff (the entity instance-delta
-    cascade), even when the property itself has no standalone event of its own.
+    (`is_leaf` or `binding_eligible`), looks up its runtime-path occurrences in the
+    expanded current and/or previous model (`_expand_model`) and classifies each path as
+    added, removed or unchanged. Also re-reports every leaf tagged with an entity whose
+    `instances` changed in this diff (the entity instance-delta cascade), even when the
+    property itself has no standalone event of its own.
 
     Struct fields (properties whose parent is a struct, not a branch) never get their own
     entry — a struct has no standalone runtime address of its own; only the property that
@@ -759,25 +789,18 @@ def _build_property_paths(
     """
     rename_map = _build_rename_map(modl_events)
 
-    def resolve(
-        fqn: str | None, attrs_by_path: dict[str, dict[str, Any]]
-    ) -> list[tuple[str, dict[str, dict[str, str]]]]:
-        if fqn is None:
-            return []
-        attrs = attrs_by_path.get(fqn)
-        if attrs is None:
-            return []
-        return _direct_path_occurrences(fqn, attrs, attrs_by_path)
+    def current_occurrences(label: str | None) -> list[PathOccurrence]:
+        return list(current_model.paths.get(label, [])) if label is not None else []
 
-    def resolve_previous(fqn: str | None) -> list[tuple[str, dict[str, dict[str, str]]]]:
-        occ = resolve(fqn, previous_attrs_by_path)
+    def previous_occurrences(label: str | None) -> list[PathOccurrence]:
+        occ = previous_model.paths.get(label, []) if label is not None else []
         return [(_canonicalize_path(path, rename_map), _canonicalize_tags(tags, rename_map)) for path, tags in occ]
 
     entries: dict[tuple[str, str], dict[str, tuple[dict[str, dict[str, str]], str]]] = {}
 
     def merge(label: str, parent_label: str, curr_fqn: str | None, prev_fqn: str | None, warn_if_orphan: bool) -> None:
-        curr_occ = resolve(curr_fqn, current_attrs_by_path)
-        prev_occ = resolve_previous(prev_fqn)
+        curr_occ = current_occurrences(curr_fqn)
+        prev_occ = previous_occurrences(prev_fqn)
         if warn_if_orphan and not curr_occ and not prev_occ:
             log.warning(
                 f"No runtime path could be resolved for binding-eligible property '{label}' "
@@ -813,23 +836,15 @@ def _build_property_paths(
             prev_label = ev.get("renamed_from") or label
             merge(label, parent_label, label, prev_label, warn_if_orphan=False)
 
-    # Entity instance-delta cascade: re-report every binding-eligible property tagged
-    # with a changed entity, even without its own event.
+    # Entity instance-delta cascade: re-report every leaf tagged with a changed entity,
+    # even without its own event.
     if changed_entities:
-        all_fqns = set(current_attrs_by_path) | set(previous_attrs_by_path)
-        for fqn in sorted(all_fqns):
-            curr_attrs = current_attrs_by_path.get(fqn)
-            prev_attrs = previous_attrs_by_path.get(fqn)
-            rep_attrs = curr_attrs if curr_attrs is not None else prev_attrs
-            if rep_attrs is None or _node_type(rep_attrs) in ("branch", "struct"):
-                continue
+        for fqn in sorted(set(current_model.paths) | set(previous_model.paths)):
             parent_label = fqn.rsplit(".", 1)[0] if "." in fqn else None
             if parent_label is None or (fqn, parent_label) in entries:
                 continue
-            if _is_struct_member(parent_label, current_attrs_by_path, previous_attrs_by_path):
-                continue
-            curr_occ = resolve(fqn if curr_attrs is not None else None, current_attrs_by_path)
-            prev_occ = resolve_previous(fqn if prev_attrs is not None else None)
+            curr_occ = current_occurrences(fqn)
+            prev_occ = previous_occurrences(fqn)
             touches_changed_entity = any(
                 entity_label in tags for _, tags in (*curr_occ, *prev_occ) for entity_label in changed_entities
             )
@@ -1018,6 +1033,8 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
     raw_changes: list[dict[str, Any]] = []
     current_attrs_by_path: dict[str, dict[str, Any]] = {}
     previous_attrs_by_path: dict[str, dict[str, Any]] = {}
+    current_model_flat: dict[str, Any] = {}
+    previous_model_flat: dict[str, Any] = {}
 
     sources = [
         (MODEL_SNAPSHOT_FILENAME, "model", True),
@@ -1032,15 +1049,22 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
         if source_label in ("model", "structs"):
             current_attrs_by_path.update(curr)
             previous_attrs_by_path.update(prev)
+        if source_label == "model":
+            current_model_flat, previous_model_flat = curr, prev
         if not prev and not curr:
             continue
         raw_changes.extend(_diff_dicts(prev, curr, source_label, detect_renames=detect_renames))
 
-    raw_changes = _inject_instance_expansions(raw_changes)
+    previous_model = _expand_model(previous_model_flat)
+    current_model = _expand_model(current_model_flat)
+
+    raw_changes = _inject_instance_expansions(raw_changes, previous_model.hops, current_model.hops)
     modl_events = _to_modl_events(raw_changes)
     modl_events = _inject_entity_content(modl_events)
 
-    property_paths = _build_property_paths(modl_events, current_attrs_by_path, previous_attrs_by_path)
+    property_paths = _build_property_paths(
+        modl_events, current_attrs_by_path, previous_attrs_by_path, current_model, previous_model
+    )
 
     _KIND_ORDER = {ENTITY: 0, ENUMERATION_SET: 1, PROPERTY: 2, ENUM_VALUE: 3}
     modl_events.sort(key=lambda e: _KIND_ORDER.get(e["kind"], 99))
