@@ -9,6 +9,7 @@ from typing import Any
 
 import pydantic
 import pytest
+
 from vss_tools.datatypes import dynamic_quantities
 from vss_tools.model import VSSDataDatatype, VSSUnit
 
