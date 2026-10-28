@@ -247,13 +247,16 @@ concrete literal runtime path at which it occurs:
 }
 ```
 
-- **Instanced ancestors** fan out the Cartesian product of their own dimensions (and of every other
-  instanced ancestor above them) into one `paths` entry per combination. Each contributing
-  ancestor's chosen hop is inserted as an extra dotted path segment immediately *after* its own
-  name — e.g. `Vehicle.Axle.Axle1.Wheel.Left.Speed`, not `Vehicle.Axle1.WheelLeft.Speed`.
-- A property's immediate parent's instances are skipped (not fanned out) when the property declares
-  `instantiate: false`.
-- **`tags`** maps each contributing ancestor's FQN label to the `{dimension1: value, ...}`
+- **Paths come from the vss-tools tree.** Each snapshot's `model.vspec` is parsed and
+  instance-expanded with the same tree code `vspec export` uses, for both the previous and the
+  current snapshot, and the leaf paths (`sensor`, `actuator`, `attribute`) of the two trees are
+  compared. Reported paths are therefore exactly the leaf paths an expanded export would contain:
+  instanced ancestors fan out into one entry per combination, each hop appearing after the
+  entity's own name (`Vehicle.Axle.Axle1.Wheel.Left.Speed`), `instantiate: false` pins a leaf to
+  its parent, a leaf declared below an instance (`Vehicle.Foo.Red.Extra`) exists for that instance
+  only, and `instances_relation: sibling` is followed as the tree resolves it. A snapshot model
+  the tree cannot expand fails the diff instead of producing guessed paths.
+- **`tags`** maps each instanced entity's FQN label to the `{dimension1: value, ...}`
   combination it contributed to that path — the same dimension-map shape used for `instances`. This
   is the canonical identity used for `change` classification: renaming an instanced ancestor changes
   the literal `path` string but not its `tags`, so the entry stays `"unchanged"` (only `path` is
@@ -265,10 +268,31 @@ concrete literal runtime path at which it occurs:
 - **Struct fields never get their own entry.** A struct has no standalone runtime address of its
   own — only the property that references the struct (reported with `binding_eligible: true`) gets
   a `property_paths` entry, at its own path. Struct members are not flattened onto usage sites.
-- **Known limitation**: branches using `instances_relation: sibling` (where the generated instance
-  attaches next to the branch's own parent rather than nesting under the branch) are not supported —
-  `property_paths` resolution assumes the default `"child"` relation, matching the existing
-  `_expand_instance_fqns` branch-hop injection used for `changes`.
+
+### Consistency between `changes` and `property_paths`
+
+`changes` are computed on the authored snapshot entries, `property_paths` on the expanded trees.
+Both live in one report and are kept consistent by these rules (enforced by
+`tests/vspec/test_diff/test_diff_path_consistency.py`):
+
+1. **Completeness** — every binding-eligible model `PROPERTY` event has exactly one `property_paths`
+   entry with the same `label` and `parent_label`.
+2. **Soundness** — every entry is justified by its own event, or by an `ENTITY` `MODIFIED` event with
+   `instances_added`/`instances_removed` for an entity in the entry's `tags`.
+3. **Event to path** — `ADDED` → all paths `added`; `REMOVED` → all paths `removed`. A `MODIFIED`
+   property has `added`/`removed` paths only because a tagged entity changed its instances or the
+   property's effective `instantiate` flipped; otherwise all paths are `unchanged`.
+4. **Path to cause** — an `added` path on a property present in both snapshots requires
+   `instances_added` on a tagged entity (or an `instantiate` flip); a `removed` path requires
+   `instances_removed` (or a flip).
+5. **Path integrity** — `added`/`unchanged` paths exist in the current tree, `removed`/`unchanged`
+   paths in the previous tree (previous paths pass through the ancestor-rename map), and no path
+   is reported twice. Struct fields never have entries.
+6. **Tag validity** — tag keys are entity labels and each tag value is one of that entity's
+   instance values on the side the path belongs to.
+7. **Instance branch events** — when an instanced entity is `ADDED`/`REMOVED`, one `ENTITY` event is
+   reported per instance branch of the expanded tree (previous tree for `REMOVED`, current for
+   `ADDED`), so no reported branch is absent from the corresponding tree.
 
 ## Example output
 
