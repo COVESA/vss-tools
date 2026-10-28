@@ -9,6 +9,7 @@ from typing import Any
 
 import pydantic
 import pytest
+
 from vss_tools.datatypes import dynamic_quantities
 from vss_tools.model import VSSDataDatatype, VSSUnit
 
@@ -27,6 +28,9 @@ from vss_tools.model import VSSDataDatatype, VSSUnit
         ({"datatype": "int8", "min": -100}, True),
         ({"datatype": "uint8", "max": -2}, False),
         ({"datatype": "uint8", "max": 100}, True),
+        ({"datatype": "uint8", "min": 10, "max": 20}, True),
+        ({"datatype": "uint8", "min": 10, "max": 10}, True),
+        ({"datatype": "uint8", "min": 100, "max": 10}, False),
         ({"datatype": "string", "max": 100}, False),
         ({"datatype": "uint8", "max": 100, "default": 110}, False),
         ({"datatype": "uint8", "max": 100, "default": 90}, True),
@@ -44,6 +48,7 @@ from vss_tools.model import VSSDataDatatype, VSSUnit
         ({"datatype": "uint8", "allowed": [1, 2, 3], "default": 3}, True),
         ({"datatype": "uint8", "allowed": [1, "foo"]}, False),
         ({"datatype": "uint8", "allowed": [1, 2]}, True),
+        ({"datatype": "uint8", "allowed": [1, 2, 1]}, False),
         ({"datatype": "uint8", "allowed": [1, 2, 3], "min": 3}, False),
         ({"datatype": "uint8", "allowed": [1, 2, 3], "max": 3}, False),
         ({"datatype": "uint8", "pattern": "xy"}, False),

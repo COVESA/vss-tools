@@ -277,6 +277,12 @@ class VSSDataDatatype(VSSData):
                     raise ValueError(f"max '{self.max}' is not an '{self.datatype}'")
         return self
 
+    def check_min_max_consistency(self) -> Self:
+        if self.min is not None and self.max is not None:
+            if self.min > self.max:
+                raise ValueError(f"'min' must be less than or equal to 'max': {self.min}>{self.max}")
+        return self
+
     def check_default_min_max(self) -> Self:
         if self.default is None:
             return self
@@ -359,6 +365,12 @@ class VSSDataDatatype(VSSData):
                     raise ValueError(f"'{v}' is not of type '{self.datatype}'")
         return self
 
+    def check_allowed_duplicates(self) -> Self:
+        if self.allowed is not None:
+            if len(self.allowed) != len(set(self.allowed)):
+                raise ValueError("'allowed' contains duplicate values")
+        return self
+
     @model_validator(mode="after")
     def check_allowed_min_max(self) -> Self:
         err = "'min/max' and 'allowed' cannot be used together"
@@ -427,9 +439,11 @@ class VSSDataDatatype(VSSData):
         self = self.check_type_default_consistency()
         self = self.check_enum_datatypes()
         self = self.check_allowed_datatype_consistency()
+        self = self.check_allowed_duplicates()
         self = self.check_default_values_in_enum()
         self = self.check_default_values_in_allowed()
         self = self.check_min_max_valid_datatype()
+        self = self.check_min_max_consistency()
         self = self.check_default_min_max()
         return self
 
