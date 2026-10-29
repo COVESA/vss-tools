@@ -290,9 +290,14 @@ Both live in one report and are kept consistent by these rules (enforced by
    is reported twice. Struct fields never have entries.
 6. **Tag validity** — tag keys are entity labels and each tag value is one of that entity's
    instance values on the side the path belongs to.
-7. **Instance branch events** — when an instanced entity is `ADDED`/`REMOVED`, one `ENTITY` event is
-   reported per instance branch of the expanded tree (previous tree for `REMOVED`, current for
-   `ADDED`), so no reported branch is absent from the corresponding tree.
+7. **No instance branch events** — instance branches (`Vehicle.Axle.Axle1.Wheel.Left`) are never
+   reported as entities; instances are an aspect of the authored entity and expanded paths only
+   appear in `property_paths`. Every `ENTITY`/`PROPERTY` event carries an authored label.
+8. **Parent integrity** — every `parent_label` is either an `ENTITY` event of the report or an
+   entity already authored in the previous snapshot, and every `ENTITY` `MODIFIED` event refers to
+   an entity that existed in the previous snapshot (a first run has none). A leaf declared below an
+   instance (`Vehicle.Foo.Red.Extra`) is anchored to its nearest authored ancestor
+   (`Vehicle.Foo`), never to the implicit `Vehicle.Foo.Red`.
 
 ## Example output
 

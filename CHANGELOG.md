@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `vspec diff` `property_paths` are now computed from the vss-tools tree (parsed and instance-expanded for both snapshots) instead of a hand-rolled expansion, so reported paths match `vspec export` output (no phantom paths for leaves declared below an instance, `instances_relation: sibling` supported). A snapshot model that cannot be expanded now fails the diff. Consistency rules between `changes` and `property_paths` are documented in [diff.md](docs/diff.md#consistency-between-changes-and-property_paths).
+- `vspec diff` no longer emits `ENTITY` events for instance branches (e.g. `Vehicle.Axle.Axle1.Wheel.Left`); instances are reported only through the `instances` aspect and `property_paths`. Events anchored below an instance (`Vehicle.Foo.Red.Extra`) are re-parented to their nearest authored ancestor, so no `ENTITY` `MODIFIED` event without a prior concept is fabricated. Fixes `modl sync` failing with `No concept found with current_label ...`.
 - Bumped `ddmodl` to `0.8.0`. `vspec diff`'s `instances`/`instances_added`/`instances_removed` aspects are now per-dimension maps (`{"dimension1": [...], "dimension2": [...]}`) instead of flat Cartesian-product path-string lists, matching modl's new dimension-map IR contract. The top-level `instantiate` field has been removed from `PROPERTY` events entirely — it has no representation in modl's IR anymore (previously-generated diff reports relying on it must be regenerated).
 
 
