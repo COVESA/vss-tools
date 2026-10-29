@@ -185,52 +185,6 @@ def _expand_instances(value: Any) -> dict[str, list[str]]:
     return {f"dimension{i + 1}": values for i, values in enumerate(dimensions)}
 
 
-def _inject_instance_expansions(
-    raw_events: list[dict[str, Any]],
-    previous_hops: dict[str, list[str]],
-    current_hops: dict[str, list[str]],
-) -> list[dict[str, Any]]:
-    """
-    For every ENTITY ADDED or REMOVED event that carries an ``instances`` attribute,
-    inject ADDED or REMOVED events for all instance branches the vss-tools tree produced
-    for that entity (`current_hops` for ADDED, `previous_hops` for REMOVED, each mapping an
-    entity label to its expanded hop FQNs — see `_ExpandedModel`).
-
-    This mirrors the YAML exporter's behaviour: instances expand into concrete branch
-    hops (one per dimension level), so those branches must appear in the diff just as
-    they would appear in any expanded output.  Without these synthetic events,
-    ``_inject_entity_content`` has no parent to anchor children to and creates phantom
-    ENTITY MODIFIED events instead.
-    """
-    result: list[dict[str, Any]] = []
-    for ev in raw_events:
-        result.append(ev)
-        if ev["type"] not in (ADDED, REMOVED):
-            continue
-        if _vss_kind(ev["node_type"], ev["source"]) != ENTITY:
-            continue
-        attrs = ev.get("attributes") or {}
-        if not attrs.get("instances"):
-            continue
-
-        description = attrs.get("description", "")
-        hops = current_hops if ev["type"] == ADDED else previous_hops
-        for fqn in hops.get(ev["path"], []):
-            result.append(
-                {
-                    "type": ev["type"],
-                    "source": ev["source"],
-                    "path": fqn,
-                    "node_type": "branch",
-                    "attributes": {
-                        "type": "branch",
-                        "description": description,
-                    },
-                }
-            )
-    return result
-
-
 def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dict[str, Any]:
     """
     Build a full aspects snapshot.
@@ -517,6 +471,29 @@ def _to_modl_events(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
+def _reparent_events(
+    modl_events: list[dict[str, Any]],
+    previous_reparent: dict[str, str],
+    current_reparent: dict[str, str],
+) -> None:
+    """
+    Re-point events whose `parent_label` names no authored entity at the authored ancestor the
+    vss-tools tree resolves it to (see `_ExpandedModel.reparent`), in place.
+
+    Without this, a leaf authored below an instance (`Vehicle.Foo.Red.Extra`) would anchor to
+    `Vehicle.Foo.Red`, a label that is never reported as an entity, and `_inject_entity_content`
+    would fabricate an ENTITY MODIFIED for it that references no existing concept. `REMOVED`
+    events resolve against the previous snapshot, all others against the current one.
+    """
+    for ev in modl_events:
+        parent = ev.get("parent_label")
+        if parent is None:
+            continue
+        mapping = previous_reparent if ev["change_type"] == REMOVED else current_reparent
+        if parent in mapping:
+            ev["parent_label"] = mapping[parent]
+
+
 def _inject_entity_content(modl_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Ensure every ENTITY/ENUMERATION_SET has a MODIFIED event with a content list
@@ -592,12 +569,15 @@ class _ExpandedModel:
     Runtime view of one snapshot's model after vss-tools instance expansion.
 
     `paths` maps each authored leaf label to every runtime path it expands to, with the
-    instance `tags` selecting that path. `hops` maps each instanced entity label to the FQNs
-    of every instance branch generated for it.
+    instance `tags` selecting that path. `reparent` maps a parent label that is not authored
+    in the model (e.g. the implicit instance branch `Vehicle.Foo.Red` of an authored
+    `Vehicle.Foo.Red.Extra`) to the nearest authored ancestor the tree resolves it to
+    (`Vehicle.Foo`). Instance branches are never reported as entities of their own: instances
+    are an aspect of the authored entity, and the expanded paths live in `property_paths`.
     """
 
     paths: dict[str, list[PathOccurrence]] = field(default_factory=dict)
-    hops: dict[str, list[str]] = field(default_factory=dict)
+    reparent: dict[str, str] = field(default_factory=dict)
 
 
 def _node_type_value(node: VSSNode) -> str:
@@ -637,11 +617,29 @@ def _leaf_tags(leaf: VSSNode) -> dict[str, dict[str, str]]:
     return tags
 
 
+def _authored_ancestor(node: VSSNode, own_label: str) -> str | None:
+    """
+    Return the label of the nearest authored entity above `node` in the expanded tree.
+
+    An instance hop resolves to the instanced entity it was generated for; any other node
+    carrying a declared marker resolves to that label. Auto-created implicit nodes carry no
+    marker and are skipped.
+    """
+    for ancestor in reversed(node.path[:-1]):
+        entity = _hop_entity(ancestor)
+        if entity is not None:
+            return entity
+        declared = getattr(ancestor.data, _DECLARED_KEY, None)
+        if declared is not None and declared != own_label:
+            return str(declared)
+    return None
+
+
 def _expand_model(model: dict[str, Any]) -> _ExpandedModel:
     """
     Parse a snapshot's model with the vss-tools tree and expand its instances exactly as
     `vspec export` does, then collect the runtime leaf paths (sensor, actuator, attribute)
-    and the instance hop branches.
+    and how parents that are not authored resolve to authored entities.
 
     Struct types are not part of this tree: a struct never has runtime paths of its own, only
     the leaf that references it does.
@@ -684,11 +682,16 @@ def _expand_model(model: dict[str, Any]) -> _ExpandedModel:
         raise DiffTreeException(f"Could not expand the snapshot model with vss-tools: {type(e).__name__} {e}") from e
 
     for node in PreOrderIter(root):
-        entity = _hop_entity(node)
-        if entity is not None:
-            expanded.hops.setdefault(entity, []).append(node.get_fqn())
+        declared = getattr(node.data, _DECLARED_KEY, None)
+        # Hop nodes carry their entity's markers but are not authored nodes themselves.
+        if declared is not None and "." in declared and _hop_entity(node) is None:
+            parent_label = declared.rsplit(".", 1)[0]
+            if parent_label not in model and parent_label not in expanded.reparent:
+                ancestor = _authored_ancestor(node, declared)
+                if ancestor is not None:
+                    expanded.reparent[parent_label] = ancestor
         if node.is_leaf and _node_type_value(node) in _LEAF_TYPES:
-            label = str(getattr(node.data, _DECLARED_KEY, None) or node.get_fqn())
+            label = str(declared or node.get_fqn())
             expanded.paths.setdefault(label, []).append((node.get_fqn(), _leaf_tags(node)))
     return expanded
 
@@ -1058,8 +1061,8 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
     previous_model = _expand_model(previous_model_flat)
     current_model = _expand_model(current_model_flat)
 
-    raw_changes = _inject_instance_expansions(raw_changes, previous_model.hops, current_model.hops)
     modl_events = _to_modl_events(raw_changes)
+    _reparent_events(modl_events, previous_model.reparent, current_model.reparent)
     modl_events = _inject_entity_content(modl_events)
 
     property_paths = _build_property_paths(
