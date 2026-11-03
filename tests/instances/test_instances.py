@@ -9,8 +9,9 @@
 import re
 from pathlib import Path
 
-import vss_tools.model as model
 from anytree import RenderTree
+
+import vss_tools.model as model
 from vss_tools.main import get_trees
 from vss_tools.tree import VSSNode
 

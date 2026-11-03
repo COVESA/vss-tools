@@ -10,6 +10,7 @@ from typing import Sequence
 
 from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import RDF, XSD
+
 from vss_tools import log
 from vss_tools.tree import VSSNode
 
