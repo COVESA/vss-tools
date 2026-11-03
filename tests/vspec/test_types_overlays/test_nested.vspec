@@ -1,0 +1,8 @@
+A:
+  type: branch
+  description: Branch A.
+
+A.Signal4:
+  datatype: Types.Sub.Struct4
+  type: sensor
+  description: Signal using a struct below an overlay header.

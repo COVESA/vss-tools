@@ -14,6 +14,7 @@ from typing import Any
 
 import pytest
 from click.testing import CliRunner
+
 from vss_tools.diff import (
     ADDED,
     ENTITY,
@@ -174,6 +175,64 @@ class TestSignalChanges:
     def test_no_cascade_field_on_any_change(self, result: dict[str, Any]):
         for c in result["changes"]:
             assert "cascade" not in c, f"Unexpected 'cascade' on change: {c}"
+
+
+# ---------------------------------------------------------------------------
+# diff_folders — struct-typed properties (binding_eligible)
+# ---------------------------------------------------------------------------
+
+
+class TestStructBindingEligible:
+    """
+    A PROPERTY whose datatype resolves to a struct (e.g. 'Types.Position') is non-leaf,
+    but the struct value itself is still read/written as one atomic unit, so it must be
+    reported with binding_eligible=True on top of is_leaf=False.
+    """
+
+    @pytest.fixture(scope="class")
+    def result(self):
+        return diff_folders(PREVIOUS, CURRENT)
+
+    def test_added_struct_property(self, result: dict[str, Any]):
+        by_label = changes_by_label(result)
+        added = by_label.get("A.Position")
+        assert added is not None
+        assert added["change_type"] == ADDED
+        assert added["kind"] == PROPERTY
+        assert added["is_leaf"] is False
+        assert added["binding_eligible"] is True
+
+    def test_removed_struct_property(self, result: dict[str, Any]):
+        by_label = changes_by_label(result)
+        removed = by_label.get("A.OldPosition")
+        assert removed is not None
+        assert removed["change_type"] == REMOVED
+        assert removed["is_leaf"] is False
+        assert removed["binding_eligible"] is True
+
+    def test_modified_struct_property(self, result: dict[str, Any]):
+        by_label = changes_by_label(result)
+        modified = by_label.get("A.Location")
+        assert modified is not None
+        assert modified["change_type"] == MODIFIED
+        assert modified["is_leaf"] is False
+        assert modified["binding_eligible"] is True
+
+    def test_primitive_property_has_no_binding_eligible_key(self, result: dict[str, Any]):
+        # binding_eligible is additive-only and must be omitted (not False) for leaf properties.
+        by_label = changes_by_label(result)
+        added = by_label.get("A.Humidity")
+        assert added is not None
+        assert added["is_leaf"] is True
+        assert "binding_eligible" not in added
+
+    def test_nested_branch_pointer_has_no_binding_eligible_key(self, result: dict[str, Any]):
+        # A.Portal is a branch-in-branch pointer event (never atomically bound).
+        by_label = changes_by_label(result, kind=PROPERTY)
+        rename = by_label.get("A.Portal")
+        assert rename is not None
+        assert rename["is_leaf"] is False
+        assert "binding_eligible" not in rename
 
 
 # ---------------------------------------------------------------------------
@@ -536,7 +595,7 @@ class TestBranchDuality:
 
         (prev_dir / "model.vspec").write_text("Vehicle:\n  type: branch\n  description: root\n")
         (curr_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Cabin:\n  type: branch\n  description: cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: cabin\n"
         )
 
         result = diff_folders(prev_dir, curr_dir)
@@ -565,7 +624,7 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Cabin:\n  type: branch\n  description: cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: cabin\n"
         )
         (curr_dir / "model.vspec").write_text("Vehicle:\n  type: branch\n  description: root\n")
 
@@ -595,12 +654,10 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n"
-            "Vehicle.Cabin:\n  type: branch\n  description: old cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: old cabin\n"
         )
         (curr_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n"
-            "Vehicle.Cabin:\n  type: branch\n  description: new cabin\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Cabin:\n  type: branch\n  description: new cabin\n"
         )
 
         result = diff_folders(prev_dir, curr_dir)
@@ -631,7 +688,7 @@ class TestBranchDuality:
         curr_dir.mkdir()
 
         (prev_dir / "model.vspec").write_text(
-            "Vehicle:\n  type: branch\n  description: root\n" "Vehicle.Door:\n  type: branch\n  description: door\n"
+            "Vehicle:\n  type: branch\n  description: root\nVehicle.Door:\n  type: branch\n  description: door\n"
         )
         (curr_dir / "model.vspec").write_text(
             "Vehicle:\n  type: branch\n  description: root\n"

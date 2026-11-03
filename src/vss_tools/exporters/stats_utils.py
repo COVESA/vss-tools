@@ -70,7 +70,7 @@ def process_piechart_stats(data_metadata: pd.DataFrame, output: Path, old_chart:
             v1 = int(version_cols[i][1])
             v2 = int(version_cols[i + 1][1])
             if v2 != v1 + 1:
-                log.warning(f"MISSING VERSION: V{v1+1}")
+                log.warning(f"MISSING VERSION: V{v1 + 1}")
     else:
         raise ValueError("No valid major version found. The operation cannot proceed.")
 

@@ -6,11 +6,14 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
 from anytree import PreOrderIter, findall
 
 from vss_tools import log
+from vss_tools.cli_options import get_types_overlays_from_context
 from vss_tools.datatypes import (
     dynamic_datatypes,
     dynamic_quantities,
@@ -21,11 +24,21 @@ from vss_tools.model import (
     VSSDataProperty,
     VSSDataStruct,
     get_all_model_fields,
+    get_vss_raw,
 )
 from vss_tools.strict import StrictExceptions, StrictOption, load_strict_exceptions
-from vss_tools.tree import ModelValidationException, VSSNode, add_struct_schemas, build_tree
+from vss_tools.tree import (
+    SEPARATOR,
+    ModelValidationException,
+    VSSNode,
+    add_struct_schemas,
+    build_tree,
+    count_seperator,
+    get_expected_parent,
+    get_name,
+)
 from vss_tools.units_quantities import DuplicatedUnitException, MalformedDictException, load_quantities, load_units
-from vss_tools.vspec import InvalidSpecDuplicatedEntryException, InvalidSpecException, load_vspec
+from vss_tools.vspec import InvalidSpecDuplicatedEntryException, InvalidSpecException, deep_update, load_vspec
 
 
 class NameViolationException(Exception):
@@ -49,6 +62,10 @@ class RootTypesException(Exception):
 
 
 class PropertyOrphansException(Exception):
+    pass
+
+
+class TypesOverlayException(Exception):
     pass
 
 
@@ -119,8 +136,67 @@ def check_default_first_allowed_violations(
             raise DefaultFirstAllowedException(f"default != allowed[0] violations detected: {violations}")
 
 
-def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode | None:
+def merge_types_overlay_node(node: VSSNode, attrs: dict[str, Any]) -> None:
+    """
+    Merges the raw attributes of a types overlay into an existing node.
+    The overlay has priority. Modified attributes are logged as warnings.
+    """
+    fqn = node.get_fqn()
+    current = node.data.as_dict(exclude_fields=["fqn"])
+    merged = deepcopy(current)
+    deep_update(merged, deepcopy(attrs))
+    for attr in attrs:
+        if attr not in current:
+            log.debug(f"Types overlay adds attribute '{attr}' to '{fqn}'")
+        elif current[attr] != merged[attr]:
+            log.warning(f"Types overlay modifies '{fqn}': '{attr}' {current[attr]!r} -> {merged[attr]!r}")
+    node.data = get_vss_raw(merged, fqn)
+    if isinstance(node.data, VSSDataStruct):
+        dynamic_datatypes.add(fqn)
+
+
+def merge_types_overlay(types_root: VSSNode, overlay_data: dict[str, Any]) -> None:
+    """
+    Merges raw types overlay data into an existing types tree.
+    Existing nodes are updated (modifications are logged), new nodes are added
+    below their parent. Parents must exist in the tree or in the overlay data.
+    """
+    orphans: list[str] = []
+    # Parents first, so that nodes added by the overlay can be parents as well
+    for fqn in sorted(overlay_data.keys(), key=count_seperator):
+        attrs = overlay_data[fqn]
+        if "*" in fqn:
+            raise TypesOverlayException(f"Wildcards are not supported in types overlays: '{fqn}'")
+        if fqn.split(SEPARATOR)[0] != types_root.name:
+            raise TypesOverlayException(f"'{fqn}' is not below the types root '{types_root.name}'")
+
+        existing = types_root.get_node_with_fqn(fqn)
+        if existing:
+            merge_types_overlay_node(existing, attrs)
+            continue
+
+        parent_fqn = get_expected_parent(fqn)
+        parent = types_root.get_node_with_fqn(parent_fqn) if parent_fqn else None
+        if parent is None:
+            orphans.append(fqn)
+            continue
+        node = VSSNode(get_name(fqn), fqn, attrs)
+        node.parent = parent
+        if isinstance(node.data, VSSDataStruct):
+            dynamic_datatypes.add(fqn)
+        log.debug(f"Types overlay adds '{fqn}'")
+
+    if orphans:
+        raise TypesOverlayException(f"Types overlay has orphans\n{orphans}")
+
+
+def get_types_root(
+    types: tuple[Path, ...], include_dirs: list[Path], types_overlays: tuple[Path, ...] = ()
+) -> VSSNode | None:
     if not types:
+        if types_overlays:
+            log.error("'--types-overlays' requires at least one '--types' file")
+            exit(1)
         log.debug("No user 'types' defined")
         return None
 
@@ -140,6 +216,15 @@ def get_types_root(types: tuple[Path, ...], include_dirs: list[Path]) -> VSSNode
                     raise MultipleTypeTreesException()
         else:
             types_root = root
+
+    # Types overlays are partial, they are merged into the complete types tree
+    if types_root and types_overlays:
+        overlay_data = load_vspec(include_dirs, list(types_overlays), "Types overlay")
+        try:
+            merge_types_overlay(types_root, overlay_data.data)
+        except TypesOverlayException as e:
+            log.critical(e)
+            exit(1)
 
     # Checking whether user defined root types e.g 'MyType'
     # instead of 'Types.MyType'
@@ -210,13 +295,17 @@ def get_trees(
     overlays: tuple[Path, ...] = (),
     expand: bool = True,
     strict_exceptions_file: Path | None = None,
+    types_overlays: tuple[Path, ...] | None = None,
 ) -> tuple[VSSNode, VSSNode | None]:
     """
     Loading vspec files, building and validating trees (types and normal).
-    Returning a tuple of the root and the types tree
+    Returning a tuple of the root and the types tree.
+    If 'types_overlays' is None the ones given on the command line are used.
     """
     if extended_attributes:
         log.info(f"User defined extra attributes: {extended_attributes}")
+    if types_overlays is None:
+        types_overlays = get_types_overlays_from_context()
     try:
         load_quantities_and_units(quantities, units, vspec.parent)
     except (ModelValidationException, DuplicatedUnitException, MalformedDictException) as e:
@@ -224,7 +313,7 @@ def get_trees(
         exit(1)
 
     try:
-        types_root = get_types_root(types, list(include_dirs))
+        types_root = get_types_root(types, list(include_dirs), types_overlays)
         vspec_data = load_vspec(list(include_dirs), [vspec] + list(overlays))
     except (InvalidSpecDuplicatedEntryException, InvalidSpecException) as e:
         log.critical(e)

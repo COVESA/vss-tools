@@ -12,6 +12,7 @@ from pathlib import Path
 import pydantic
 import pytest
 import yaml
+
 from vss_tools.strict import StrictException, StrictExceptions, StrictOption, load_strict_exceptions
 
 

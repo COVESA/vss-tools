@@ -38,5 +38,5 @@ def test_protobuf_comments(include_comments, expected_file, tmp_path):
     subprocess.run(cmd.split(), check=True)
     expected = HERE / expected_file
     assert filecmp.cmp(output, expected), (
-        f"Output differs from expected.\n" f"Got:\n{output.read_text()}\n" f"Expected:\n{expected.read_text()}"
+        f"Output differs from expected.\nGot:\n{output.read_text()}\nExpected:\n{expected.read_text()}"
     )
