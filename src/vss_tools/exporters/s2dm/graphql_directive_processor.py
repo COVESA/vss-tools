@@ -14,11 +14,12 @@ validation and string templates for directive injection. It replaces the
 brittle string manipulation approach with a more maintainable template system.
 """
 
+import re
 from string import Template
 
 from graphql import GraphQLSchema, print_schema
 
-from .graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
+from .predefined_elements import qudt_vocab
 
 
 class GraphQLDirectiveProcessor:
@@ -58,6 +59,7 @@ class GraphQLDirectiveProcessor:
             lines, vspec_comments.get("instance_dimension_enums", {}), processed_enum_values
         )
         lines = self._process_field_directives(lines, vspec_comments)
+        lines = self._process_instance_tag_field_directives(lines, vspec_comments)
         lines = self._process_deprecated_directives(lines, vspec_comments.get("field_deprecated", {}))
         lines = self._process_range_directives(lines, vspec_comments.get("field_ranges", {}))
         lines = self._process_type_directives(lines, vspec_comments)
@@ -70,48 +72,58 @@ class GraphQLDirectiveProcessor:
         """
         Process unit enum directives.
 
-        Annotates enum type with @vspec(element: QUANTITY_KIND, originalName: "{vss_quantity}")
-        and individual enum values with @vspec(element: UNIT, originalName: "{vss_key}") and,
-        when available, @reference(uri: "{qudt_uri}").
+        The enum type gets @vspec(element: QUANTITY_KIND, originalName: "{vss_quantity}") and, for QUDT enums,
+        the QUDT quantity-kind @reference. Every value of a QUDT enum keeps its QUDT @reference, and values
+        that are VSS units additionally get @vspec(element: UNIT, originalName: "{vss_key}").
         """
-        for qudt_quantity_kind, quantity_data in unit_enums_metadata.items():
-            enum_name = f"{convert_name_for_graphql_schema(qudt_quantity_kind, GraphQLElementType.TYPE)}Unit"
+        for quantity_data in unit_enums_metadata.values():
+            enum_name = quantity_data["enum_name"]
             vss_quantity = quantity_data.get("vss_quantity", "")
-            units_data: dict = quantity_data.get("units", {})
+            qudt_backed = quantity_data.get("qudt_backed", False)
+            quantity_kind_uri = qudt_vocab.get_quantity_kind_uri(enum_name) if qudt_backed else None
+            unit_uris = qudt_vocab.get_unit_uris(enum_name) if qudt_backed else {}
 
-            in_target_enum = False
-            for i, line in enumerate(lines):
-                if line.strip().startswith(f"enum {enum_name}"):
-                    if "@vspec" not in line:
-                        directive = f'@vspec(element: QUANTITY_KIND, originalName: "{vss_quantity}")'
-                        lines[i] = line.replace(" {", f" {directive} {{")
-                    in_target_enum = True
+            vss_key_by_value: dict[str, str] = {}
+            for vss_key, unit_info in quantity_data.get("units", {}).items():
+                vss_key_by_value.setdefault(unit_info["qudt_unit"], vss_key)
+
+            start = next((i for i, line in enumerate(lines) if re.match(rf"enum {enum_name}\b", line.strip())), None)
+            if start is None:
+                continue
+
+            if "@vspec" not in lines[start]:
+                type_directives = []
+                if vss_quantity:
+                    type_directives.append(f'@vspec(element: QUANTITY_KIND, originalName: "{vss_quantity}")')
+                if quantity_kind_uri:
+                    type_directives.append(f'@reference(uri: "{quantity_kind_uri}")')
+                if type_directives:
+                    lines[start] = re.sub(r"\s*\{\s*$", f" {' '.join(type_directives)} {{", lines[start])
+
+            in_description = False
+            for i in range(start + 1, len(lines)):
+                stripped = lines[i].strip()
+                if stripped == "}":
+                    break
+                if in_description:
+                    in_description = not stripped.endswith('"""')
                     continue
-                elif line.strip().startswith("enum ") and in_target_enum:
-                    in_target_enum = False
-                    continue
-                elif line.strip() == "}" and in_target_enum:
-                    in_target_enum = False
+                if stripped.startswith('"""'):
+                    in_description = not (len(stripped) > 3 and stripped.endswith('"""'))
                     continue
 
-                if in_target_enum and line.strip() and not line.strip().startswith('"'):
-                    stripped_line = line.strip()
-
-                    for vss_key, unit_info in units_data.items():
-                        qudt_unit = unit_info["qudt_unit"]
-                        qudt_uri = unit_info.get("qudt_uri")
-
-                        enum_value_key = f"{enum_name}.{qudt_unit}"
-                        if stripped_line.startswith(qudt_unit) and enum_value_key not in processed_values:
-                            if "@vspec" not in line:
-                                indent = line[: len(line) - len(line.lstrip())]
-                                directive = f'@vspec(element: UNIT, originalName: "{vss_key}")'
-                                if qudt_uri:
-                                    directive += f' @reference(uri: "{qudt_uri}")'
-                                lines[i] = f"{indent}{qudt_unit} {directive}"
-
-                            processed_values.add(enum_value_key)
-                            break
+                match = re.match(r"(\s*)([_A-Za-z][_0-9A-Za-z]*)(.*)$", lines[i])
+                if not match or "@vspec" in lines[i]:
+                    continue
+                indent, value_name, rest = match.groups()
+                value_directives = []
+                if value_name in vss_key_by_value:
+                    value_directives.append(f'@vspec(element: UNIT, originalName: "{vss_key_by_value[value_name]}")')
+                if value_name in unit_uris:
+                    value_directives.append(f'@reference(uri: "{unit_uris[value_name]}")')
+                if value_directives:
+                    lines[i] = f"{indent}{value_name} {' '.join(value_directives)}{rest}"
+                processed_values.add(f"{enum_name}.{value_name}")
         return lines
 
     def _process_allowed_enum_directives(
@@ -228,6 +240,20 @@ class GraphQLDirectiveProcessor:
                     lines[i] = line.rstrip() + f' @vspec(element: {element}, fqn: "{fqn}")'
                     break
 
+        return lines
+
+    def _process_instance_tag_field_directives(self, lines: list[str], vspec_comments: dict) -> list[str]:
+        """Annotate the `instanceTag` field of types that have instances with @instanceTag."""
+        type_names = set(vspec_comments.get("instance_tag_types", {}))
+        in_target_type = False
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.startswith("type "):
+                in_target_type = stripped[5:].split(" ")[0] in type_names
+            elif stripped == "}":
+                in_target_type = False
+            elif in_target_type and stripped.startswith("instanceTag:") and "@instanceTag" not in line:
+                lines[i] = line.rstrip() + " @instanceTag"
         return lines
 
     def _process_deprecated_directives(self, lines: list[str], field_deprecated: dict) -> list[str]:

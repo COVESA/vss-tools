@@ -292,7 +292,7 @@ class TestS2DMExporter:
         assert "PassengerSide" in sdl
 
         # Test that main type has instanceTag field
-        assert "instanceTag: Vehicle_Cabin_Seat_InstanceTag" in sdl
+        assert "instanceTag: Vehicle_Cabin_Seat_InstanceTag @instanceTag" in sdl
 
         # Test that instance tag type has dimension fields
         assert "dimension1: Vehicle_Cabin_Seat_InstanceTag_Dimension1" in sdl

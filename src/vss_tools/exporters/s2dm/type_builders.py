@@ -37,6 +37,7 @@ from graphql import (
 
 from vss_tools import log
 from vss_tools.datatypes import dynamic_units
+from vss_tools.model import VSSUnit
 from vss_tools.tree import VSSNode, expand_string
 from vss_tools.utils.pandas_utils import get_metadata_df
 
@@ -44,7 +45,7 @@ from .constants import S2DM_CONVERSIONS, VSS_LEAF_TYPES
 from .graphql_scalars import VSS_DATATYPE_MAP
 from .graphql_utils import GraphQLElementType, convert_name_for_graphql_schema
 from .metadata_tracker import build_field_path
-from .predefined_elements.qudt_mappings import QUDT_ALIASES, QUDT_MAPPING
+from .predefined_elements import qudt_vocab
 
 # Initialize inflect engine for pluralization (singleton)
 _inflect_engine = inflect.engine()
@@ -85,75 +86,92 @@ def _check_and_collect_plural_type_name(
 
 def create_unit_enums() -> tuple[dict[str, GraphQLEnumType], dict[str, dict]]:
     """
-    Create GraphQL enum types for VSS units grouped by QUDT quantity kind.
+    Create GraphQL unit enums from the loaded VSS units.
 
-    Generates enums like LengthUnit containing all length units (MILLIM, M, etc.) using
-    QUDT unit codes as enum value names. Each enum is keyed by its QUDT quantity kind
-    (e.g. "Length"), and enum values carry the VSS unit key as their internal GraphQL value.
+    Units declaring a `qudt:` block in units.yaml are looked up by URI in the QUDT vocabulary. The complete
+    QUDT enum (e.g. `LengthUnit`) is used as the basis, so every QUDT value is kept with its description and
+    `@reference`; the VSS units found in it are additionally annotated with `@vspec`. A declared URI that
+    cannot be found raises `UnresolvedQudtUnitError`.
+
+    Units without a `qudt:` block are custom: they are grouped by VSS quantity into a
+    `Custom<Quantity>Unit` enum containing only those units.
 
     Returns:
-        Tuple of (unit_enums, unit_metadata) where unit_metadata maps
-        QUDT quantity kind → {"vss_quantity": str, "units": {vss_key → {qudt_unit, qudt_uri?}}}
+        Tuple of (unit_enums, unit_metadata), both keyed by quantity kind short name (e.g. "Length") or by
+        `Custom<Quantity>` for custom units. unit_metadata values:
+        {"vss_quantity": str, "enum_name": str, "qudt_backed": bool,
+        "units": {vss_key → {"qudt_unit": enum value name, "qudt_uri": str | None}}}
     """
     unit_enums: dict[str, GraphQLEnumType] = {}
     unit_metadata: dict[str, dict] = {}
+    custom_values: dict[str, dict[str, GraphQLEnumValue]] = {}
 
-    for qudt_quantity_kind, quantity_data in _get_quantity_units().items():
-        enum_name = (
-            f"{convert_name_for_graphql_schema(qudt_quantity_kind, GraphQLElementType.ENUM, S2DM_CONVERSIONS)}Unit"
+    for unit_data in _iter_vss_units():
+        vss_key = cast(str, unit_data.key)
+        group_key, enum_value_name = _resolve_unit(unit_data)
+        vss_quantity = unit_data.quantity or ""
+
+        if unit_data.qudt is not None:
+            enum_name = qudt_vocab.resolve_qudt_unit_uri(
+                unit_uri=unit_data.qudt.unit, quantity_kind_uri=unit_data.qudt.kind, vss_key=vss_key
+            )[0]
+            if group_key not in unit_enums:
+                unit_enums[group_key] = qudt_vocab.get_enum_type(enum_name)
+                unit_metadata[group_key] = {
+                    "vss_quantity": vss_quantity,
+                    "enum_name": enum_name,
+                    "qudt_backed": True,
+                    "units": {},
+                }
+            qudt_uri: str | None = qudt_vocab.get_unit_uris(enum_name)[enum_value_name]
+        else:
+            if group_key not in unit_metadata:
+                unit_metadata[group_key] = {
+                    "vss_quantity": vss_quantity,
+                    "enum_name": f"{group_key}Unit",
+                    "qudt_backed": False,
+                    "units": {},
+                }
+                custom_values[group_key] = {}
+            custom_values[group_key][enum_value_name] = GraphQLEnumValue(
+                enum_value_name, description=unit_data.definition
+            )
+            qudt_uri = None
+
+        unit_metadata[group_key]["units"][vss_key] = {"qudt_unit": enum_value_name, "qudt_uri": qudt_uri}
+
+    for group_key, values in custom_values.items():
+        metadata = unit_metadata[group_key]
+        unit_enums[group_key] = GraphQLEnumType(
+            metadata["enum_name"], values, description=f'Units for "{metadata["vss_quantity"]}"'
         )
-        values = {info["qudt_unit"]: GraphQLEnumValue(vss_key) for vss_key, info in quantity_data["units"].items()}
-        unit_enums[qudt_quantity_kind] = GraphQLEnumType(
-            enum_name, values, description=f'Units for "{qudt_quantity_kind}"'
-        )
-        unit_metadata[qudt_quantity_kind] = quantity_data
 
     return unit_enums, unit_metadata
 
 
-def _get_quantity_units() -> dict[str, dict]:
+def _iter_vss_units() -> list[VSSUnit]:
+    """Return each loaded VSS unit once (dynamic_units also registers a unit under its descriptive text)."""
+    unique: dict[int, VSSUnit] = {id(unit): unit for unit in dynamic_units.values() if unit.key}
+    return list(unique.values())
+
+
+def _resolve_unit(unit_data: VSSUnit) -> tuple[str, str]:
     """
-    Build a mapping from QUDT quantity kind to units, sourced from QUDT_MAPPING.
+    Resolve the unit enum group key and enum value name of a VSS unit.
 
-    Cross-references VSS dynamic_units to obtain the VSS quantity key (used as
-    originalName on the GraphQL enum type). Units whose VSS key is not registered
-    in dynamic_units are skipped with a warning.
-
-    Returns:
-        dict mapping qudt_quantity_kind →
-          {"vss_quantity": str, "units": {vss_key → {"qudt_unit": str, "qudt_uri": str|None}}}
+    Units with a `qudt:` block are resolved against the QUDT vocabulary (raises `UnresolvedQudtUnitError`
+    when not found) and yield (quantity kind short name, QUDT enum value name), e.g. ("Length", "MILLIM").
+    Custom units yield ("Custom<Quantity>", sanitized unit key).
     """
-    quantity_units: dict[str, dict] = {}
+    vss_key = cast(str, unit_data.key)
+    if unit_data.qudt is not None:
+        _, enum_value_name = qudt_vocab.resolve_qudt_unit_uri(
+            unit_uri=unit_data.qudt.unit, quantity_kind_uri=unit_data.qudt.kind, vss_key=vss_key
+        )
+        return unit_data.qudt.kind.rstrip("/").rsplit("/", 1)[-1], enum_value_name
 
-    for vss_key, qudt_info in QUDT_MAPPING.items():
-        qudt_quantity_kind = qudt_info.get("qudt_quantity_kind", "")
-        qudt_unit = qudt_info.get("qudt_unit", "")
-        if not qudt_quantity_kind or not qudt_unit:
-            continue
-
-        # dynamic_units normalizes all keys to lowercase (see units_quantities.py).
-        # QUDT_MAPPING keys use canonical VSS casing (e.g. "W", "Celsius"), so
-        # always look up with .lower(). The original casing is preserved in vss_unit_data.key.
-        vss_unit_data = dynamic_units.get(vss_key.lower())
-        if vss_unit_data is None:
-            alias_key = next((a for a, canonical in QUDT_ALIASES.items() if canonical == vss_key), None)
-            if alias_key is not None:
-                vss_unit_data = dynamic_units.get(alias_key.lower())
-        if vss_unit_data is None:
-            log.debug(f"QUDT unit '{vss_key}' not found in loaded dynamic_units; skipping.")
-            continue
-
-        vss_quantity = vss_unit_data.quantity or ""
-
-        if qudt_quantity_kind not in quantity_units:
-            quantity_units[qudt_quantity_kind] = {"vss_quantity": vss_quantity, "units": {}}
-
-        quantity_units[qudt_quantity_kind]["units"][vss_key] = {
-            "qudt_unit": qudt_unit,
-            "qudt_uri": qudt_info.get("qudt_uri"),
-        }
-
-    return quantity_units
+    quantity = convert_name_for_graphql_schema(unit_data.quantity or "", GraphQLElementType.ENUM, S2DM_CONVERSIONS)
+    return f"Custom{quantity}", _sanitize_enum_value_for_graphql(vss_key)[0]
 
 
 def create_instance_types(
@@ -635,33 +653,25 @@ def _get_vss_type_if_valid(row: pd.Series) -> str | None:
 
 
 def _get_unit_args(leaf_row: pd.Series, unit_enums: dict[str, GraphQLEnumType]) -> dict[str, GraphQLArgument]:
-    """Generate unit argument for fields with units, using QUDT-based enum values."""
+    """Generate the unit argument for fields with units, defaulting to the unit's enum value."""
     unit = leaf_row.get("unit", "")
     if not unit:
         return {}
 
-    unit = QUDT_ALIASES.get(unit, unit)
-    qudt_info = QUDT_MAPPING.get(unit)
-    if qudt_info is None:
-        log.warning(f"Unit '{unit}' has no QUDT mapping; unit argument will not be generated.")
+    # dynamic_units keys are lowercase; the original casing is kept in VSSUnit.key.
+    unit_data = dynamic_units.get(unit.lower())
+    if unit_data is None:
+        log.warning(f"Unit '{unit}' is not a loaded VSS unit; unit argument will not be generated.")
         return {}
 
-    qudt_quantity_kind = qudt_info.get("qudt_quantity_kind", "")
-    qudt_unit = qudt_info.get("qudt_unit", "")
-    if not qudt_quantity_kind or not qudt_unit:
-        return {}
-
-    unit_enum = unit_enums.get(qudt_quantity_kind)
+    group_key, enum_value_name = _resolve_unit(unit_data)
+    unit_enum = unit_enums.get(group_key)
     if not unit_enum:
-        log.warning(
-            f"Unit '{unit}' with QUDT quantity kind '{qudt_quantity_kind}' has no corresponding GraphQL enum. "
-            "Unit argument will not be generated."
-        )
+        log.warning(f"Unit '{unit}' has no corresponding GraphQL enum '{group_key}'; unit argument not generated.")
         return {}
 
-    # default_value must be the internal Python value stored in GraphQLEnumValue (the VSS key).
-    # graphql-core's serializer maps that internal value → enum name (qudt_unit) when printing SDL.
-    return {"unit": GraphQLArgument(type_=unit_enum, default_value=unit)}
+    # Both QUDT and custom enums use the value name as the internal value.
+    return {"unit": GraphQLArgument(type_=unit_enum, default_value=enum_value_name)}
 
 
 def get_graphql_type_for_leaf(

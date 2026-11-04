@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from vss_tools import log
 from vss_tools.model import ModelValidationException, VSSQuantity, VSSUnit
+from vss_tools.vspec import deep_update
 
 
 class MalformedDictException(Exception):
@@ -25,6 +26,11 @@ class DuplicatedUnitException(Exception):
 def load_units_or_quantities(
     files: list[Path], class_type: type[VSSUnit | VSSQuantity]
 ) -> dict[str, VSSUnit | VSSQuantity]:
+    # Accumulates the raw (pre-validation) dict per key across files, so that a key
+    # redeclared in a later file only overrides the fields it actually mentions,
+    # instead of replacing the whole definition (e.g. a later file adding a
+    # 'string' allowed-datatype must not silently drop an earlier 'qudt:' block).
+    raw_data: dict[str, dict] = {}
     data: dict[str, VSSUnit | VSSQuantity] = {}
     for file in files:
         content = yaml.safe_load(file.read_text())
@@ -37,19 +43,19 @@ def load_units_or_quantities(
             k = k.lower()
             if v is None:
                 raise MalformedDictException(f"'{class_type.__name__}', '{k}' is 'None'")
-            overwrite = False
-            if k in data:
-                overwrite = True
+            # For VSSUnit, inject the canonical key (original casing) from the YAML key
+            if class_type == VSSUnit and isinstance(v, dict):
+                v["key"] = k_original
+            if k in raw_data:
+                log.warning(
+                    f"'{class_type.__name__}', merging additional definition of '{k}' from '{file}' "
+                    "(fields not mentioned there are kept from the earlier definition)."
+                )
+                deep_update(raw_data[k], v)
+            else:
+                raw_data[k] = v
             try:
-                # For VSSUnit, inject the canonical key (original casing) from the YAML key
-                if class_type == VSSUnit and isinstance(v, dict):
-                    v["key"] = k_original
-                val = class_type(**v)
-                if overwrite:
-                    log.warning(
-                        f"'{class_type.__name__}', overwriting definition of '{k}'. old: '{data[k]}', new: '{val}'"
-                    )
-                data[k] = val
+                data[k] = class_type(**raw_data[k])
             except ValidationError as e:
                 raise ModelValidationException(k, e) from None
     return data

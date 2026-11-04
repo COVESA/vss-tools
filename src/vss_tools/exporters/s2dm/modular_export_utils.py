@@ -263,7 +263,9 @@ def write_domain_files(
             if instance_tag_types:
                 base_type_name = instance_tag_types[0].replace("_InstanceTag", "")
                 instance_tag_type_name = instance_tag_types[0]
-                extend_block = f"extend type {base_type_name} {{\n  instanceTag: {instance_tag_type_name}\n}}"
+                extend_block = (
+                    f"extend type {base_type_name} {{\n  instanceTag: {instance_tag_type_name} @instanceTag\n}}"
+                )
                 content_parts.append(extend_block)
 
             # Join all content parts and apply directives

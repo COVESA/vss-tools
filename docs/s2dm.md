@@ -63,7 +63,7 @@ Vehicle.Speed:
 **Generated GraphQL:**
 ```graphql
 type Vehicle {
-  speed(unit: VelocityUnitEnum = KILOMETERS_PER_HOUR): Float
+  speed(unit: VelocityUnit = KILOMETERS_PER_HOUR): Float
     @vspec(
       element: SENSOR,
       fqn: "Vehicle.Speed",
@@ -317,17 +317,76 @@ temperature: Float @range(min: -40, max: 85)
 ```
 
 ### Unit Support
-Units are handled as enums, which are used as field arguments:
+Units are exported as enums, one per quantity kind, and used as field arguments with the VSS unit as default value:
 
 ```graphql
-speed(unit: VelocityUnitEnum = "KILOMETERS_PER_HOUR"): Float
+height(unit: LengthUnit = MILLIM): UInt16 @vspec(element: ACTUATOR, fqn: "Vehicle.Cabin.Seat.Height")
 ```
+
+The enum is derived from the `qudt:` mapping declared for the unit in `units.yaml`. Units without such a mapping become custom enums.
+
+#### QUDT-backed units
+
+```yaml
+mm:
+  definition: Length measured in millimeters
+  unit: millimeter
+  quantity: length
+  allowed-datatypes: ['numeric']
+  qudt:
+    unit: http://qudt.org/vocab/unit/MilliM
+    quantity-kind: http://qudt.org/vocab/quantitykind/Length
+```
+
+The exporter looks up the `quantity-kind` and `unit` URIs in the [QUDT units GraphQL vocabulary](https://github.com/COVESA/s2dm-vocab) (release asset `schema.graphql`, one enum per QUDT quantity kind, each annotated with its `@reference(uri: ...)`).
+The **entire** matching enum is used as the basis, so all QUDT units of that quantity kind are available, with their descriptions and `@reference` directives. On top of it, the VSS traceability is added with `@vspec`:
+
 ```graphql
-enum VelocityUnitEnum {
-  KILOMETERS_PER_HOUR
-  MILES_PER_HOUR
+enum LengthUnit @vspec(element: QUANTITY_KIND, originalName: "length") @reference(uri: "http://qudt.org/vocab/quantitykind/Length") {
+  """Angstrom | UCUM: Ao"""
+  ANGSTROM @reference(uri: "http://qudt.org/vocab/unit/ANGSTROM")
+
+  """Millimetre | UCUM: mm"""
+  MILLIM @vspec(element: UNIT, originalName: "mm") @reference(uri: "http://qudt.org/vocab/unit/MilliM")
+  # ... remaining QUDT length units
 }
 ```
+
+- The enum type carries `@vspec(element: QUANTITY_KIND, originalName: "<vss quantity>")`.
+- Values that correspond to a unit used in the VSS specification carry `@vspec(element: UNIT, originalName: "<vss unit key>")`.
+- Values that exist only in QUDT keep just their `@reference`.
+
+**The export fails** (`UnresolvedQudtUnitError`) when a declared `qudt:` URI cannot be found in the vocabulary. The error lists close matches to help fixing the mapping. The `http://` and `https://` forms of the QUDT URIs are treated as equivalent.
+
+#### Custom units
+
+Units without a `qudt:` block (for example, units defined by the user) are grouped by their VSS quantity into an enum named `Custom<Quantity>Unit`, containing only the declared units:
+
+```yaml
+stars:
+  definition: Rating expressed in stars
+  unit: stars
+  quantity: rating
+  allowed-datatypes: ['numeric']
+```
+
+```graphql
+enum CustomRatingUnit @vspec(element: QUANTITY_KIND, originalName: "rating") {
+  """Rating expressed in stars"""
+  STARS @vspec(element: UNIT, originalName: "stars")
+}
+```
+
+Custom enums have no `@reference` as there is no external definition to point to.
+
+#### Vocabulary download and cache
+
+The vocabulary is not stored in this repository. On first use it is downloaded from a pinned `s2dm-vocab` release, verified against a pinned SHA-256 checksum, and cached:
+
+| Setting | Purpose |
+| --- | --- |
+| `VSS_TOOLS_CACHE_DIR` | Cache directory. Falls back to `$XDG_CACHE_HOME/vss_tools`, then `~/.cache/vss_tools`. |
+| `VSS_TOOLS_QUDT_VOCAB_DIR` | Directory containing a `schema.graphql` to use as is, without downloading anything (offline / air-gapped use). |
 
 ## Usage
 
@@ -405,16 +464,15 @@ The exporter generates:
 """High-level vehicle data."""
 type Vehicle @vspec(element: BRANCH, fqn: "Vehicle") {
   """Vehicle speed."""
-  speed(unit: VelocityUnitEnum = "KILOMETERS_PER_HOUR"): Float @range(min: 0, max: 300) @vspec(
+  speed(unit: VelocityUnit = KILOMETERS_PER_HOUR): Float @range(min: 0, max: 300) @vspec(
     element: SENSOR,
     fqn: "Vehicle.Speed"
   )
 }
 
-enum VelocityUnitEnum @vspec(element: QUANTITY_KIND, metadata: [{key: "quantity", value: "velocity"}]) {
-  KILOMETERS_PER_HOUR @vspec(element: UNIT, metadata: [{key: "unit", value: "km/h"}])
-  METERS_PER_SECOND @vspec(element: UNIT, metadata: [{key: "unit", value: "m/s"}])
-  MILES_PER_HOUR @vspec(element: UNIT, metadata: [{key: "unit", value: "mph"}])
+enum VelocityUnit @vspec(element: QUANTITY_KIND, originalName: "velocity") @reference(uri: "http://qudt.org/vocab/quantitykind/Velocity") {
+  KILOMETERS_PER_HOUR @vspec(element: UNIT, originalName: "km/h") @reference(uri: "http://qudt.org/vocab/unit/KiloM-PER-HR")
+  # ... remaining QUDT velocity units
 }
 ```
 
