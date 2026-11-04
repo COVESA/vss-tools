@@ -11,6 +11,7 @@
 #
 
 import keyword
+import re
 from pathlib import Path
 
 import rich_click as click
@@ -153,11 +154,48 @@ def getAllowedName(name):
         return name
 
 
-def get_allowed_enum_literal(name: str):
-    name = name.replace(" ", "_")
-    if name[0].isdigit():
-        return "d" + name
-    return name
+def _enum_literal_key(name: str) -> str:
+    return name.removeprefix("_").lower()
+
+
+def get_allowed_enum_literals(names: list[str], reserved_names: tuple[str, ...] = ()) -> list[str]:
+    keywords = {word.lower() for word in idl_keywords}
+    literals: list[str] = []
+    encoded: set[int] = set()
+    for index, name in enumerate(names):
+        literal = name.replace(" ", "_")
+        if literal[:1].isdigit():
+            literal = "d" + literal
+        identifier = literal.removeprefix("_")
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", identifier) or (
+            not literal.startswith("_") and identifier.lower() in keywords
+        ):
+            literal = "vss_" + name.encode("utf-8", errors="surrogatepass").hex()
+            encoded.add(index)
+        literals.append(literal)
+
+    reserved = {_enum_literal_key(name) for name in literals}
+    used = {_enum_literal_key(name) for name in reserved_names}
+    result = [""] * len(names)
+    # Allocate existing spellings first; generated names cannot take their place.
+    for index in sorted(range(len(names)), key=lambda index: index in encoded):
+        base = literals[index]
+        literal = base
+        if _enum_literal_key(literal) in used:
+            suffix = 2
+            while True:
+                literal = f"{base}_{suffix}"
+                suffix += 1
+                key = _enum_literal_key(literal)
+                if key not in used and key not in reserved:
+                    break
+        used.add(_enum_literal_key(literal))
+        result[index] = literal
+    return result
+
+
+def get_allowed_enum_literal(name: str) -> str:
+    return get_allowed_enum_literals([name])[0]
 
 
 idl_file_buffer: list[str] = []
@@ -205,15 +243,12 @@ def export_node(node: VSSNode, generate_all_idl_features: bool) -> None:
             module name for enum is chosen as the node name +
             """
             if datatype in ["string", "string[]"]:
-                idl_file_buffer.append("module " + getAllowedName(node.name) + "_M")
+                module_name = getAllowedName(node.name) + "_M"
+                enum_name = getAllowedName(node.name) + "Values"
+                literals = get_allowed_enum_literals(allowed, (module_name, enum_name))
+                idl_file_buffer.append("module " + module_name)
                 idl_file_buffer.append("{")
-                idl_file_buffer.append(
-                    "enum "
-                    + getAllowedName(node.name)
-                    + "Values{"
-                    + str(",".join(get_allowed_enum_literal(item) for item in allowed))
-                    + "};"
-                )
+                idl_file_buffer.append("enum " + enum_name + "{" + ",".join(literals) + "};")
                 enum_created = True
                 idl_file_buffer.append("};")
                 allowed_values = str(allowed)
