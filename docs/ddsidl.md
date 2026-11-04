@@ -74,6 +74,15 @@ enum DirectionValues{FORWARD,BACKWARD,d123}
 *but could not be correctly handled by tools like "Eclipse Cyclone DDS idlc Python Backend"*
 *resulting in invalid Python code.*
 
+Allowed strings that are not valid IDL identifiers (including non-ASCII text,
+empty strings and unescaped keywords) use `vss_` followed by their UTF-8 bytes in
+hexadecimal, preserving escaped surrogate code units if present. Existing valid
+spellings, space replacement and the `d` digit prefix
+are retained. Collisions are resolved with numeric suffixes, accounting for IDL's
+case-insensitive names and leading-underscore escapes. Enum member order is
+unchanged, and generated names do not replace existing valid spellings or collide
+with the enclosing enum type and module names.
+
 ## Checking generated DDS-IDL file and generating code stubs from it
 
 IDL files can be supplied as input to one of the DDS implementation (e.g: CycloeDDS, FastDDS) and the data can be validated, and also stubs (python/c++/java code) can be generated from the contents in the IDL file.
