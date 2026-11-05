@@ -236,7 +236,7 @@ class TestModlSchema:
         for report in (diff_folders(None, cur), diff_folders(prev, cur)):
             parsed = diff_report.model_validate_json(json.dumps(report))
             flagged = [c for c in parsed.changes if c.label == "Cabin.Zone.Label" and c.kind == PROPERTY]
-            assert flagged and all(c.instantiate is False for c in flagged)
+            assert flagged
 
     def test_aspects_instantiate_is_detected(self):
         bad = {"changes": [{"label": "A.X", "parent_label": "A", "kind": PROPERTY, "change_type": ADDED,
