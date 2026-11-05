@@ -8,11 +8,13 @@
 
 """Tests for vss_tools.diff (pure logic) and `vspec diff` CLI."""
 
+import datetime
 import json
 from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from click.testing import CliRunner
 
 from vss_tools.diff import (
@@ -201,6 +203,7 @@ class TestStructBindingEligible:
         assert added["kind"] == PROPERTY
         assert added["is_leaf"] is False
         assert added["binding_eligible"] is True
+        assert added["references"] == {"output_type": "Types.Position"}
 
     def test_removed_struct_property(self, result: dict[str, Any]):
         by_label = changes_by_label(result)
@@ -209,6 +212,8 @@ class TestStructBindingEligible:
         assert removed["change_type"] == REMOVED
         assert removed["is_leaf"] is False
         assert removed["binding_eligible"] is True
+        # references is forbidden on REMOVED events.
+        assert "references" not in removed
 
     def test_modified_struct_property(self, result: dict[str, Any]):
         by_label = changes_by_label(result)
@@ -217,6 +222,9 @@ class TestStructBindingEligible:
         assert modified["change_type"] == MODIFIED
         assert modified["is_leaf"] is False
         assert modified["binding_eligible"] is True
+        # datatype (output_type) is unchanged (only description changed) — omit
+        # references entirely to keep modl's stored edge.
+        assert "references" not in modified
 
     def test_primitive_property_has_no_binding_eligible_key(self, result: dict[str, Any]):
         # binding_eligible is additive-only and must be omitted (not False) for leaf properties.
@@ -225,6 +233,7 @@ class TestStructBindingEligible:
         assert added is not None
         assert added["is_leaf"] is True
         assert "binding_eligible" not in added
+        assert "references" not in added
 
     def test_nested_branch_pointer_has_no_binding_eligible_key(self, result: dict[str, Any]):
         # A.Portal is a branch-in-branch pointer event (never atomically bound).
@@ -233,6 +242,8 @@ class TestStructBindingEligible:
         assert rename is not None
         assert rename["is_leaf"] is False
         assert "binding_eligible" not in rename
+        # Duality pointer events never carry output_type, so never references either.
+        assert "references" not in rename
 
 
 # ---------------------------------------------------------------------------
@@ -459,50 +470,139 @@ class TestDiffCli:
 
 
 # ---------------------------------------------------------------------------
-# _expand_instances — Cartesian product
+# CLI — non-JSON-native attribute values (YAML dates)
+# ---------------------------------------------------------------------------
+
+
+def _dated_snapshot(root: Path, name: str, review_date: Any) -> Path:
+    """Write a snapshot whose sensor carries an extended attribute holding `review_date`."""
+    folder = root / name
+    folder.mkdir()
+    model = {
+        "A": {"type": "branch", "description": "Branch."},
+        "A.Speed": {
+            "type": "sensor",
+            "datatype": "float",
+            "description": "Speed.",
+            "Custom_ReviewDate": review_date,
+        },
+    }
+    # safe_dump emits datetime.date as an unquoted YAML date, which the loader reads back as a date.
+    (folder / "model.vspec").write_text(yaml.safe_dump(model), encoding="utf-8")
+    return folder
+
+
+class TestDiffCliDateValues:
+    def test_snapshot_dates_load_as_date_objects(self, tmp_path: Path):
+        snap = _dated_snapshot(tmp_path, "cur", datetime.date(2025, 7, 18))
+        loaded = load_snapshot_yaml(snap / "model.vspec")
+        assert loaded["A.Speed"]["Custom_ReviewDate"] == datetime.date(2025, 7, 18)
+
+    @pytest.mark.parametrize("to_file", [False, True], ids=["stdout", "file"])
+    def test_first_run_added_serializes_date_as_iso(self, tmp_path: Path, to_file: bool):
+        current = _dated_snapshot(tmp_path, "cur", datetime.date(2025, 7, 18))
+        args = ["-c", str(current)]
+        out = tmp_path / "diff.json"
+        if to_file:
+            args += ["-o", str(out)]
+        result = CliRunner().invoke(cli, args)
+        assert result.exit_code == 0, result.output
+        data = json.loads(out.read_text(encoding="utf-8") if to_file else result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        assert speed["change_type"] == ADDED
+        assert speed["aspects"]["Custom_ReviewDate"] == "2025-07-18"
+
+    def test_datetime_serializes_as_iso(self, tmp_path: Path):
+        stamp = datetime.datetime(2025, 7, 18, 10, 30, 0)
+        current = _dated_snapshot(tmp_path, "cur", stamp)
+        result = CliRunner().invoke(cli, ["-c", str(current)])
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        assert speed["aspects"]["Custom_ReviewDate"] == "2025-07-18T10:30:00"
+
+    @pytest.mark.parametrize("to_file", [False, True], ids=["stdout", "file"])
+    def test_modified_serializes_previous_and_current_dates_as_iso(self, tmp_path: Path, to_file: bool):
+        previous = _dated_snapshot(tmp_path, "prev", datetime.date(2025, 7, 18))
+        current = _dated_snapshot(tmp_path, "cur", datetime.date(2026, 1, 5))
+        args = ["-p", str(previous), "-c", str(current)]
+        out = tmp_path / "diff.json"
+        if to_file:
+            args += ["-o", str(out)]
+        result = CliRunner().invoke(cli, args)
+        assert result.exit_code == 0, result.output
+        data = json.loads(out.read_text(encoding="utf-8") if to_file else result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        assert speed["change_type"] == MODIFIED
+        change = speed["aspects"]["Custom_ReviewDate"]
+        assert change["_op"] == "modified"
+        assert change["_previous"] == "2025-07-18"
+        assert change["_value"] == "2026-01-05"
+
+    @pytest.mark.parametrize(
+        ("yaml_value", "expected"),
+        [
+            ("!!set {b: null, a: null}", ["a", "b"]),
+            ("!!binary aGVsbG8=", "hello"),
+            ("2025-07-18T10:30:00Z", "2025-07-18T10:30:00Z"),
+        ],
+        ids=["set", "binary", "tz_aware_datetime"],
+    )
+    def test_other_yaml_native_types_do_not_break_diff(self, tmp_path: Path, yaml_value: str, expected: Any):
+        folder = tmp_path / "cur"
+        folder.mkdir()
+        (folder / "model.vspec").write_text(
+            "A:\n  type: branch\n  description: Branch.\n"
+            "A.Speed:\n  type: sensor\n  datatype: float\n  description: Speed.\n"
+            f"  Custom_Value: {yaml_value}\n",
+            encoding="utf-8",
+        )
+        result = CliRunner().invoke(cli, ["-c", str(folder)])
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.output)
+        speed = next(c for c in data["changes"] if c["kind"] == PROPERTY and c["label"] == "A.Speed")
+        value = speed["aspects"]["Custom_Value"]
+        assert (sorted(value) if isinstance(value, list) else value) == expected
+
+
+# ---------------------------------------------------------------------------
+# _expand_instances — dimension map
 # ---------------------------------------------------------------------------
 
 
 class TestExpandInstances:
     """Unit tests for the _expand_instances helper."""
 
-    def _expand(self, value: Any) -> list[str]:
+    def _expand(self, value: Any) -> dict[str, list[str]]:
         from vss_tools.diff import _expand_instances
 
         return _expand_instances(value)
 
     def test_single_plain_string(self):
-        assert self._expand("Row[1,3]") == ["Row1", "Row2", "Row3"]
+        assert self._expand("Row[1,3]") == {"dimension1": ["Row1", "Row2", "Row3"]}
 
     def test_plain_list_is_single_dimension(self):
-        assert self._expand(["Left", "Right"]) == ["Left", "Right"]
+        assert self._expand(["Left", "Right"]) == {"dimension1": ["Left", "Right"]}
 
     def test_range_string_in_list_is_single_dimension(self):
-        assert self._expand(["Row[1,2]"]) == ["Row1", "Row2"]
+        assert self._expand(["Row[1,2]"]) == {"dimension1": ["Row1", "Row2"]}
 
     def test_multidimensional_cartesian_product(self):
-        # ["Row[1,4]", ["DriverSide","PassengerSide"]] → 8 combinations
+        # ["Row[1,4]", ["DriverSide","PassengerSide"]] → two separate dimensions, no join
         value = ["Row[1,4]", ["DriverSide", "PassengerSide"]]
         result = self._expand(value)
-        expected = [
-            "Row1.DriverSide",
-            "Row1.PassengerSide",
-            "Row2.DriverSide",
-            "Row2.PassengerSide",
-            "Row3.DriverSide",
-            "Row3.PassengerSide",
-            "Row4.DriverSide",
-            "Row4.PassengerSide",
-        ]
-        assert result == expected
+        assert result == {
+            "dimension1": ["Row1", "Row2", "Row3", "Row4"],
+            "dimension2": ["DriverSide", "PassengerSide"],
+        }
 
     def test_two_range_dimensions(self):
         value = ["Row[1,2]", "Pos[1,2]"]
         result = self._expand(value)
-        assert result == ["Row1.Pos1", "Row1.Pos2", "Row2.Pos1", "Row2.Pos2"]
+        assert result == {"dimension1": ["Row1", "Row2"], "dimension2": ["Pos1", "Pos2"]}
 
     def test_none_returns_empty(self):
-        assert self._expand(None) == []
+        assert self._expand(None) == {}
 
     def test_multidimensional_in_diff_output(self, tmp_path: Path):
         """Cartesian product instances appear correctly in diff_folders output."""
@@ -536,7 +636,7 @@ class TestExpandInstances:
         assert result["changes"] == []
 
     def test_instances_added_with_cartesian_product(self, tmp_path: Path):
-        """An ADDED ENTITY node with multi-dimensional instances has Cartesian product in aspects."""
+        """An ADDED ENTITY node with multi-dimensional instances has a dimension map in aspects."""
         from vss_tools.diff import ADDED, ENTITY, PROPERTY, diff_folders
 
         prev_dir = tmp_path / "prev"
@@ -561,12 +661,10 @@ class TestExpandInstances:
         assert seat is not None
         assert seat["change_type"] == ADDED
         assert seat["kind"] == ENTITY
-        assert seat["aspects"]["instances"] == [
-            "Row1.DriverSide",
-            "Row1.PassengerSide",
-            "Row2.DriverSide",
-            "Row2.PassengerSide",
-        ]
+        assert seat["aspects"]["instances"] == {
+            "dimension1": ["Row1", "Row2"],
+            "dimension2": ["DriverSide", "PassengerSide"],
+        }
 
         # Vehicle.Seat is a branch child of Vehicle — dual-reported as PROPERTY too,
         # with is_list=True since it defines instances (no output_type: no type layer in vspec).
@@ -702,7 +800,7 @@ class TestBranchDuality:
         door_entity = entities.get("Vehicle.Door")
         assert door_entity is not None
         assert door_entity["change_type"] == MODIFIED
-        assert door_entity["aspects"]["instances_added"] == ["Left", "Right"]
+        assert door_entity["aspects"]["instances_added"] == {"dimension1": ["Left", "Right"]}
         assert "instances_removed" not in door_entity["aspects"]
         assert "instances" not in door_entity["aspects"]
 
@@ -808,3 +906,128 @@ class TestIsLeaf:
         removed = by_label["A.ParentStructSensor"]
         assert removed["change_type"] == REMOVED
         assert removed["is_leaf"] is False
+
+
+# ---------------------------------------------------------------------------
+# diff_folders — references (struct-typed PROPERTY events declaring their
+# dependency on the referenced struct ENTITY, for modl's contract-cascade).
+# ---------------------------------------------------------------------------
+
+
+class TestReferences:
+    def test_added_struct_property_has_references(self, tmp_path: Path):
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("")
+        (curr_dir / "model.vspec").write_text(
+            "A.ParentStructSensor:\n"
+            "  type: sensor\n"
+            "  description: rich sensor\n"
+            "  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        added = by_label["A.ParentStructSensor"]
+        assert added["references"] == {"output_type": "VehicleDataTypes.TestBranch1.ParentStruct"}
+
+    def test_removed_struct_property_has_no_references(self, tmp_path: Path):
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.ParentStructSensor:\n"
+            "  type: sensor\n"
+            "  description: rich sensor\n"
+            "  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text("")
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        removed = by_label["A.ParentStructSensor"]
+        assert "references" not in removed
+
+    def test_modified_unrelated_change_omits_references(self, tmp_path: Path):
+        # datatype (output_type) unchanged — references must be omitted entirely so
+        # modl keeps its stored edge, rather than being sent as an unnecessary no-op.
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: old\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: new\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["change_type"] == MODIFIED
+        assert "references" not in modified
+
+    def test_retargeted_struct_sends_full_map(self, tmp_path: Path):
+        # datatype changed from one struct to a different struct — references must
+        # carry the new target (a retarget always forces a new contract in modl).
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.NestedStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["references"] == {"output_type": "VehicleDataTypes.TestBranch1.NestedStruct"}
+
+    def test_struct_to_primitive_clears_references(self, tmp_path: Path):
+        # datatype changed from a struct to a primitive — references must be cleared
+        # with an explicit empty map, since the property no longer references anything.
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+        (curr_dir / "model.vspec").write_text("A.Position:\n  type: sensor\n  description: pos\n  datatype: float\n")
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["is_leaf"] is True
+        assert modified["references"] == {}
+
+    def test_primitive_to_struct_adds_references(self, tmp_path: Path):
+        # datatype changed from a primitive to a struct — references must be added
+        # with the full map, since this is a brand-new dependency edge.
+        prev_dir = tmp_path / "prev"
+        curr_dir = tmp_path / "curr"
+        prev_dir.mkdir()
+        curr_dir.mkdir()
+
+        (prev_dir / "model.vspec").write_text("A.Position:\n  type: sensor\n  description: pos\n  datatype: float\n")
+        (curr_dir / "model.vspec").write_text(
+            "A.Position:\n  type: sensor\n  description: pos\n  datatype: VehicleDataTypes.TestBranch1.ParentStruct\n"
+        )
+
+        result = diff_folders(prev_dir, curr_dir)
+        by_label = changes_by_label(result, kind=PROPERTY)
+        modified = by_label["A.Position"]
+        assert modified["is_leaf"] is False
+        assert modified["references"] == {"output_type": "VehicleDataTypes.TestBranch1.ParentStruct"}
