@@ -377,6 +377,13 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
         # doesn't apply to a struct's own fields, which are never independently addressable.
         if not datatype_leaf and not is_struct_field:
             event["binding_eligible"] = True
+        # `instantiate` is a top-level field (not an aspect). ADDED/REMOVED only pin it when the
+        # leaf declares `instantiate: false`; MODIFIED always carries the current effective value
+        # so the ledger can detect a transition. Never set on ENUM_VALUE (not a PROPERTY).
+        if change_type == MODIFIED:
+            event["instantiate"] = _effective_instantiate(attrs)
+        elif not _effective_instantiate(attrs):
+            event["instantiate"] = False
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
