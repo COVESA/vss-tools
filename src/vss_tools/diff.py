@@ -11,21 +11,25 @@ Pure diff logic for vspec compose snapshot folders.
 
 Compares two snapshot folders produced by `vspec compose` and returns a
 structured list of ADDED, REMOVED, and MODIFIED change events covering:
-  - model      (model_snapshot.vspec)
-  - structs    (structs_snapshot.vspec)
-  - units      (units_snapshot.yaml)
-  - quantities (quantities_snapshot.yaml)
+  - model      (model.vspec)
+  - structs    (structs.vspec)
+  - units      (units.yaml)
+  - quantities (quantities.yaml)
 
-No vss-tools tree parsing is performed — snapshots are already flat dicts.
+Change events are computed on the authored flat dicts of the snapshots. The runtime
+paths reported in `property_paths` are computed separately: each snapshot's model is
+parsed and instance-expanded with the vss-tools tree (the same code `vspec export` uses),
+and the resulting leaf paths of the previous and current snapshot are compared.
 """
 
 from __future__ import annotations
 
-import itertools
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
+from anytree import PreOrderIter
 
 from vss_tools import log
 from vss_tools.compose import (
@@ -35,7 +39,16 @@ from vss_tools.compose import (
     UNITS_SNAPSHOT_FILENAME,
 )
 from vss_tools.datatypes import Datatypes
-from vss_tools.tree import expand_string
+from vss_tools.model import VSSData, VSSRaw
+from vss_tools.tree import (
+    InvalidExpansionEntryException,
+    InvalidInstanceNodeException,
+    MultipleRootsException,
+    NoRootsException,
+    VSSNode,
+    build_tree,
+    expand_string,
+)
 
 # ---------------------------------------------------------------------------
 # Change type constants
@@ -124,134 +137,52 @@ def _extract_datatype(value: str | None) -> tuple[str | None, bool]:
     return value, False
 
 
-def _expand_instances(value: Any) -> list[str]:
+def _instance_dimensions(instances_value: Any) -> list[list[str]]:
     """
-    Expand a VSS instances value into fully-qualified instance path labels.
+    Split a VSS `instances` value into its individual dimensions, each a list of
+    concrete instance values — without computing their Cartesian product.
 
-    Each top-level list item is one dimension; the result is the Cartesian
-    product of all dimensions joined with '.'.  Examples:
-
-      "Row[1,4]"                                    → ["Row1","Row2","Row3","Row4"]
-      ["Left", "Right"]                             → ["Left", "Right"]
-      ["Row[1,2]", ["DriverSide","PassengerSide"]]  → ["Row1.DriverSide",
-                                                         "Row1.PassengerSide",
-                                                         "Row2.DriverSide",
-                                                         "Row2.PassengerSide"]
+      "Row[1,4]"                                    → [["Row1","Row2","Row3","Row4"]]
+      ["Left", "Right"]                             → [["Left", "Right"]]
+      ["Row[1,2]", ["DriverSide","PassengerSide"]]  → [["Row1","Row2"],
+                                                         ["DriverSide","PassengerSide"]]
     """
-    if value is None:
+    if not instances_value:
         return []
-    if isinstance(value, str):
-        return expand_string(value)
-    if not isinstance(value, list):
-        return [str(value)]
+    if isinstance(instances_value, str):
+        return [expand_string(instances_value)]
+    if not isinstance(instances_value, list):
+        return [[str(instances_value)]]
 
     # If every item is a plain string with no range syntax the whole list is
     # a single dimension (e.g. ["Left", "Right"]).
-    if all(isinstance(item, str) and "[" not in item for item in value):
-        return [str(item) for item in value]
+    if all(isinstance(item, str) and "[" not in item for item in instances_value):
+        return [[str(item) for item in instances_value]]
 
-    # Otherwise each item is its own dimension; compute Cartesian product.
+    # Otherwise each item is its own dimension.
     dimensions: list[list[str]] = []
-    for item in value:
+    for item in instances_value:
         if isinstance(item, list):
             dimensions.append([str(x) for x in item])
         elif isinstance(item, str) and "[" in item:
             dimensions.append(expand_string(item))
         else:
             dimensions.append([str(item)])
-
-    if not dimensions:
-        return []
-    return [".".join(combo) for combo in itertools.product(*dimensions)]
+    return dimensions
 
 
-def _expand_instance_fqns(base_fqn: str, instances_value: Any) -> list[str]:
+def _expand_instances(value: Any) -> dict[str, list[str]]:
     """
-    Expand a branch's instances into all branch FQN paths produced by expansion,
-    mirroring expand_instance() in tree.py — including every intermediate dimension hop.
+    Expand a VSS `instances` value into modl's dimension-map form: one entry per
+    dimension, positionally named `dimension1`, `dimension2`, ... (no Cartesian join).
 
-    Each top-level entry in instances_value is one dimension, iterated exactly as
-    expand_instances() iterates ``for instance in node.data.instances``.
-    Roots advance (next dimension attaches to generated nodes) when the dimension
-    entry is a list or expands to more than one name — matching the tree.py rule:
-      ``len(names) > 1 or isinstance(instance, list) → return nodes, nodes``.
+      "Row[1,4]"                                    → {"dimension1": ["Row1","Row2","Row3","Row4"]}
+      ["Left", "Right"]                             → {"dimension1": ["Left", "Right"]}
+      ["Row[1,2]", ["DriverSide","PassengerSide"]]  → {"dimension1": ["Row1","Row2"],
+                                                         "dimension2": ["DriverSide","PassengerSide"]}
     """
-    if not instances_value:
-        return []
-
-    # Normalise: if instances_value itself is not a list, wrap it so we can
-    # iterate uniformly (mirrors tree.py where data.instances is always iterable).
-    raw_dimensions: list[Any] = instances_value if isinstance(instances_value, list) else [instances_value]
-
-    roots: list[str] = [base_fqn]
-    all_created: list[str] = []
-
-    for dimension in raw_dimensions:
-        if isinstance(dimension, list):
-            # Inner list: each element is an explicit name (possibly range syntax)
-            names: list[str] = []
-            for item in dimension:
-                s = str(item)
-                names.extend(expand_string(s) if "[" in s else [s])
-            advance = True  # isinstance(instance, list) → return nodes, nodes
-        elif isinstance(dimension, str) and "[" in dimension:
-            names = expand_string(dimension)
-            advance = len(names) > 1  # range expansion → return nodes, nodes
-        else:
-            names = [str(dimension)]
-            advance = False  # single plain string → return roots, nodes
-
-        new_nodes: list[str] = []
-        for root in roots:
-            for name in names:
-                fqn = f"{root}.{name}"
-                all_created.append(fqn)
-                new_nodes.append(fqn)
-
-        if advance:
-            roots = new_nodes
-
-    return all_created
-
-
-def _inject_instance_expansions(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """
-    For every ENTITY ADDED or REMOVED event that carries an ``instances`` attribute,
-    inject ADDED or REMOVED events for all branch FQNs produced by instance expansion.
-
-    This mirrors the YAML exporter's behaviour: instances expand into concrete branch
-    hops (one per dimension level), so those branches must appear in the diff just as
-    they would appear in any expanded output.  Without these synthetic events,
-    ``_inject_entity_content`` has no parent to anchor children to and creates phantom
-    ENTITY MODIFIED events instead.
-    """
-    result: list[dict[str, Any]] = []
-    for ev in raw_events:
-        result.append(ev)
-        if ev["type"] not in (ADDED, REMOVED):
-            continue
-        if _vss_kind(ev["node_type"], ev["source"]) != ENTITY:
-            continue
-        attrs = ev.get("attributes") or {}
-        instances_value = attrs.get("instances")
-        if not instances_value:
-            continue
-
-        description = attrs.get("description", "")
-        for fqn in _expand_instance_fqns(ev["path"], instances_value):
-            result.append(
-                {
-                    "type": ev["type"],
-                    "source": ev["source"],
-                    "path": fqn,
-                    "node_type": "branch",
-                    "attributes": {
-                        "type": "branch",
-                        "description": description,
-                    },
-                }
-            )
-    return result
+    dimensions = _instance_dimensions(value)
+    return {f"dimension{i + 1}": values for i, values in enumerate(dimensions)}
 
 
 def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dict[str, Any]:
@@ -261,7 +192,8 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
     Used both for an ADDED event's `aspects` and a REMOVED event's `previous_aspects`
     (the modl IR requires the latter to carry the full prior-state snapshot).
 
-    `instantiate` is excluded: modl reads it as a top-level PROPERTY field, never as an aspect.
+    `instantiate` is excluded: it has no representation at all in modl's IR — it only
+    gates how vss-tools expands runtime paths (see `_expand_model`).
     """
     aspects = {k: v for k, v in attrs.items() if k not in ("fka", "quantity", "name", "instantiate")}
     kind = _vss_kind(node_type, source)
@@ -282,18 +214,43 @@ def _map_full_aspects(attrs: dict[str, Any], source: str, node_type: str) -> dic
     return aspects
 
 
-def _is_leaf(attrs: dict[str, Any]) -> bool:
+def _datatype_is_leaf(raw_datatype: str | None) -> bool:
     """
-    Whether a PROPERTY event's `datatype` resolves to a primitive/scalar (a leaf,
+    Whether a raw VSS `datatype` string resolves to a primitive/scalar (a leaf,
     binding-eligible) rather than another entity (a struct reference).
 
     Missing/None datatype defensively defaults to True (shouldn't occur for valid VSS
     signals). Array datatypes (`"Foo[]"`) are checked on their base type.
     """
-    base_type, _ = _extract_datatype(attrs.get("datatype"))
+    base_type, _ = _extract_datatype(raw_datatype)
     if base_type is None:
         return True
     return Datatypes.get_type(base_type) is not None
+
+
+def _is_leaf(attrs: dict[str, Any]) -> bool:
+    """Whether a PROPERTY event's `datatype` attribute resolves to a primitive/scalar."""
+    return _datatype_is_leaf(attrs.get("datatype"))
+
+
+def _references_delta(attribute_changes: list[dict[str, Any]], current_is_leaf: bool) -> dict[str, Any] | None:
+    """
+    Compute the `references` field for a MODIFIED PROPERTY event's `output_type` role.
+
+    Returns `None` when `datatype` didn't change — omit the field entirely, keeping modl's
+    stored edge. Returns `{}` when the property dropped a struct reference in favour of a
+    primitive. Returns the full `{"output_type": <label>}` map when the property now points
+    at a struct — whether newly (added) or retargeted (a different struct than before).
+    """
+    datatype_change = next((c for c in attribute_changes if c["attribute"] == "datatype"), None)
+    if datatype_change is None:
+        return None
+    if not current_is_leaf:
+        current_base, _ = _extract_datatype(datatype_change["current"])
+        return {"output_type": current_base}
+    if not _datatype_is_leaf(datatype_change["previous"]):
+        return {}
+    return None
 
 
 def _wrap_op(previous: Any, current: Any) -> dict[str, Any]:
@@ -316,8 +273,8 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
     Build the changed-keys-only aspects dict for a MODIFIED event.
 
     Every key is wrapped with its `_op` annotation via `_wrap_op`, except the
-    directional instance-list keys `instances_added`/`instances_removed`, which the
-    modl IR requires to stay as plain, unwrapped lists.
+    directional instance dimension-map keys `instances_added`/`instances_removed`, which
+    the modl IR requires to stay as plain, unwrapped dimension maps.
     """
     delta: dict[str, Any] = {}
     for ac in attribute_changes:
@@ -332,10 +289,7 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
             if prev_is_list != curr_is_list:
                 delta["is_list"] = _wrap_op(prev_is_list, curr_is_list)
         elif attr == "instances":
-            prev_expanded = _expand_instances(previous)
-            curr_expanded = _expand_instances(current)
-            added = [x for x in curr_expanded if x not in prev_expanded]
-            removed = [x for x in prev_expanded if x not in curr_expanded]
+            added, removed = _instances_dimension_delta(previous, current)
             if added:
                 delta["instances_added"] = added
             if removed:
@@ -343,6 +297,31 @@ def _map_aspects_delta(attribute_changes: list[dict[str, Any]]) -> dict[str, Any
         else:
             delta[attr] = _wrap_op(previous, current)
     return delta
+
+
+def _instances_dimension_delta(previous: Any, current: Any) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """
+    Diff two VSS `instances` values per-dimension (by positional dimension name),
+    returning `(added, removed)` dimension maps suitable for modl's
+    `instances_added`/`instances_removed` aspects.
+
+    A dimension that only exists on one side reports all of its values as added or
+    removed; a dimension present on both sides reports only the values that changed.
+    """
+    prev_map = _expand_instances(previous)
+    curr_map = _expand_instances(current)
+    added: dict[str, list[str]] = {}
+    removed: dict[str, list[str]] = {}
+    for dim in sorted(set(prev_map) | set(curr_map)):
+        pv = prev_map.get(dim, [])
+        cv = curr_map.get(dim, [])
+        add_vals = [v for v in cv if v not in pv]
+        rem_vals = [v for v in pv if v not in cv]
+        if add_vals:
+            added[dim] = add_vals
+        if rem_vals:
+            removed[dim] = rem_vals
+    return added, removed
 
 
 def _parent_label(path: str, source: str, attrs: dict[str, Any]) -> str | None:
@@ -379,14 +358,24 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
     }
     if parent is not None:
         event["parent_label"] = parent
+
+    # datatype_leaf reflects the raw datatype (primitive vs. struct reference) and always
+    # drives `references`. A struct field (source == "structs") is never independently
+    # addressable — it has no property_paths entry of its own (see _is_struct_member in
+    # _build_property_paths) — so it is always reported as non-binding-eligible
+    # (is_leaf=False, binding_eligible omitted/False) regardless of its own datatype.
+    datatype_leaf = True
+    is_struct_field = source == "structs"
     if kind == PROPERTY:
-        is_leaf = _is_leaf(attrs)
+        datatype_leaf = _is_leaf(attrs)
+        is_leaf = False if is_struct_field else datatype_leaf
         event["is_leaf"] = is_leaf
         # A non-leaf PROPERTY's datatype always resolves to a struct (vspec datatypes
         # are either primitives or struct FQNs — never branches), so the struct value
         # itself is read/written as one atomic unit and is eligible for its own binding,
-        # on top of the bindings already minted for each of its child properties.
-        if not is_leaf:
+        # on top of the bindings already minted for each of its child properties. This
+        # doesn't apply to a struct's own fields, which are never independently addressable.
+        if not datatype_leaf and not is_struct_field:
             event["binding_eligible"] = True
         # `instantiate` is a top-level field (not an aspect). ADDED/REMOVED only pin it when the
         # leaf declares `instantiate: false`; MODIFIED always carries the current effective value
@@ -398,13 +387,22 @@ def _build_primary_event(ev: dict[str, Any]) -> dict[str, Any]:
 
     if change_type == ADDED:
         event["aspects"] = _map_full_aspects(attrs, source, node_type)
+        if kind == PROPERTY and not datatype_leaf:
+            output_type = event["aspects"].get("output_type")
+            if output_type is not None:
+                event["references"] = {"output_type": output_type}
     elif change_type == REMOVED:
         event["aspects"] = {}
         event["previous_aspects"] = _map_full_aspects(attrs, source, node_type)
     else:  # MODIFIED
         if ev.get("previous_path"):
             event["renamed_from"] = ev["previous_path"]
-        event["aspects"] = _map_aspects_delta(ev.get("attribute_changes") or [])
+        attribute_changes = ev.get("attribute_changes") or []
+        event["aspects"] = _map_aspects_delta(attribute_changes)
+        if kind == PROPERTY:
+            references = _references_delta(attribute_changes, datatype_leaf)
+            if references is not None:
+                event["references"] = references
 
     return event
 
@@ -480,6 +478,29 @@ def _to_modl_events(raw_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
+def _reparent_events(
+    modl_events: list[dict[str, Any]],
+    previous_reparent: dict[str, str],
+    current_reparent: dict[str, str],
+) -> None:
+    """
+    Re-point events whose `parent_label` names no authored entity at the authored ancestor the
+    vss-tools tree resolves it to (see `_ExpandedModel.reparent`), in place.
+
+    Without this, a leaf authored below an instance (`Vehicle.Foo.Red.Extra`) would anchor to
+    `Vehicle.Foo.Red`, a label that is never reported as an entity, and `_inject_entity_content`
+    would fabricate an ENTITY MODIFIED for it that references no existing concept. `REMOVED`
+    events resolve against the previous snapshot, all others against the current one.
+    """
+    for ev in modl_events:
+        parent = ev.get("parent_label")
+        if parent is None:
+            continue
+        mapping = previous_reparent if ev["change_type"] == REMOVED else current_reparent
+        if parent in mapping:
+            ev["parent_label"] = mapping[parent]
+
+
 def _inject_entity_content(modl_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Ensure every ENTITY/ENUMERATION_SET has a MODIFIED event with a content list
@@ -526,6 +547,331 @@ def _inject_entity_content(modl_events: list[dict[str, Any]]) -> list[dict[str, 
             events.append(new_entity_event)
 
     return events
+
+
+# ---------------------------------------------------------------------------
+# property_paths resolution
+# ---------------------------------------------------------------------------
+
+
+class DiffTreeException(Exception):
+    """A snapshot model could not be parsed and expanded by the vss-tools tree."""
+
+
+PathOccurrence = tuple[str, dict[str, dict[str, str]]]
+
+# Marker attributes stamped onto the authored nodes before the tree expands them. Extra attributes
+# survive the tree's copy/merge operations, which lets the expanded nodes be traced back to the
+# authored (flat-diff) labels that change events are reported under.
+_DECLARED_KEY = "diff_declared"
+_INSTANCE_OF_KEY = "diff_instance_of"
+
+_LEAF_TYPES = frozenset({"sensor", "actuator", "attribute"})
+_STRUCTURAL_ATTRIBUTES = ("type", "instances", "instances_relation", "instantiate")
+
+
+@dataclass
+class _ExpandedModel:
+    """
+    Runtime view of one snapshot's model after vss-tools instance expansion.
+
+    `paths` maps each authored leaf label to every runtime path it expands to, with the
+    instance `tags` selecting that path. `reparent` maps a parent label that is not authored
+    in the model (e.g. the implicit instance branch `Vehicle.Foo.Red` of an authored
+    `Vehicle.Foo.Red.Extra`) to the nearest authored ancestor the tree resolves it to
+    (`Vehicle.Foo`). Instance branches are never reported as entities of their own: instances
+    are an aspect of the authored entity, and the expanded paths live in `property_paths`.
+    """
+
+    paths: dict[str, list[PathOccurrence]] = field(default_factory=dict)
+    reparent: dict[str, str] = field(default_factory=dict)
+
+
+def _node_type_value(node: VSSNode) -> str:
+    node_type = getattr(node.data, "type", None)
+    return str(getattr(node_type, "value", node_type))
+
+
+def _hop_entity(node: VSSNode) -> str | None:
+    """
+    Return the label of the instanced entity this node is an instance hop of, else `None`.
+
+    Hop nodes are copies of the authored entity node, so they carry its instance marker; the
+    entity node itself (and copies of it nested below other hops) is told apart by its name.
+    `is_instance` is deliberately not used: the tree resets it when a hop is merged with an
+    authored node of the same name (e.g. `Vehicle.Foo.Red.Extra`).
+    """
+    entity = getattr(node.data, _INSTANCE_OF_KEY, None)
+    if entity is None or node.name == entity.rsplit(".", 1)[-1]:
+        return None
+    return str(entity)
+
+
+def _leaf_tags(leaf: VSSNode) -> dict[str, dict[str, str]]:
+    """Derive an expanded leaf's instance tags from the hop branches along its path."""
+    tags: dict[str, dict[str, str]] = {}
+    previous_entity: str | None = None
+    position = 0
+    for node in leaf.path[:-1]:
+        entity = _hop_entity(node)
+        if entity is None:
+            previous_entity = None
+            continue
+        # Consecutive hops of the same entity are its successive dimensions.
+        position = position + 1 if entity == previous_entity else 1
+        previous_entity = entity
+        tags.setdefault(entity, {})[f"dimension{position}"] = node.name
+    return tags
+
+
+def _authored_ancestor(node: VSSNode, own_label: str) -> str | None:
+    """
+    Return the label of the nearest authored entity above `node` in the expanded tree.
+
+    An instance hop resolves to the instanced entity it was generated for; any other node
+    carrying a declared marker resolves to that label. Auto-created implicit nodes carry no
+    marker and are skipped.
+    """
+    for ancestor in reversed(node.path[:-1]):
+        entity = _hop_entity(ancestor)
+        if entity is not None:
+            return entity
+        declared = getattr(ancestor.data, _DECLARED_KEY, None)
+        if declared is not None and declared != own_label:
+            return str(declared)
+    return None
+
+
+def _expand_model(model: dict[str, Any]) -> _ExpandedModel:
+    """
+    Parse a snapshot's model with the vss-tools tree and expand its instances exactly as
+    `vspec export` does, then collect the runtime leaf paths (sensor, actuator, attribute)
+    and how parents that are not authored resolve to authored entities.
+
+    Struct types are not part of this tree: a struct never has runtime paths of its own, only
+    the leaf that references it does.
+    """
+    expanded = _ExpandedModel()
+    if not model:
+        return expanded
+
+    # Only the attributes that shape the expanded tree are handed to it, so unrelated
+    # attributes can never make a node fail validation.
+    marked: dict[str, Any] = {}
+    for fqn, attrs in model.items():
+        attrs = attrs or {}
+        entry = {k: attrs[k] for k in _STRUCTURAL_ATTRIBUTES if k in attrs}
+        entry[_DECLARED_KEY] = fqn
+        if entry.get("instances"):
+            entry[_INSTANCE_OF_KEY] = fqn
+        marked[fqn] = entry
+
+    # The tree needs a root node. Snapshots composed from a full model always declare one;
+    # a bare root stub keeps partial models (only descendants declared) expandable.
+    for root_name in {fqn.split(".", 1)[0] for fqn in marked}:
+        marked.setdefault(root_name, {"type": "branch"})
+
+    try:
+        root, _ = build_tree(marked, connect_orphans=True)
+        for node in PreOrderIter(root):
+            if isinstance(node.data, VSSRaw) and not isinstance(node.data, VSSData):
+                if _node_type_value(node) == "branch" and getattr(node.data, "instances", None):
+                    raise DiffTreeException(
+                        f"'{node.get_fqn()}' declares instances but is not a valid branch, cannot expand it"
+                    )
+        root.expand_instances()
+    except (
+        NoRootsException,
+        MultipleRootsException,
+        InvalidExpansionEntryException,
+        InvalidInstanceNodeException,
+    ) as e:
+        raise DiffTreeException(f"Could not expand the snapshot model with vss-tools: {type(e).__name__} {e}") from e
+
+    for node in PreOrderIter(root):
+        declared = getattr(node.data, _DECLARED_KEY, None)
+        # Hop nodes carry their entity's markers but are not authored nodes themselves.
+        if declared is not None and "." in declared and _hop_entity(node) is None:
+            parent_label = declared.rsplit(".", 1)[0]
+            if parent_label not in model and parent_label not in expanded.reparent:
+                ancestor = _authored_ancestor(node, declared)
+                if ancestor is not None:
+                    expanded.reparent[parent_label] = ancestor
+        if node.is_leaf and _node_type_value(node) in _LEAF_TYPES:
+            label = str(declared or node.get_fqn())
+            expanded.paths.setdefault(label, []).append((node.get_fqn(), _leaf_tags(node)))
+    return expanded
+
+
+def _merge_occurrences_into_bucket(
+    bucket: dict[str, tuple[dict[str, dict[str, str]], str]],
+    curr_occurrences: list[tuple[str, dict[str, dict[str, str]]]],
+    prev_occurrences: list[tuple[str, dict[str, dict[str, str]]]],
+) -> None:
+    """
+    Classify a property's current/previous runtime-path occurrences by their literal path
+    string and merge the result into `bucket`, keyed by path.
+
+    Callers must pre-canonicalize previous-side occurrence paths/tags through any ancestor
+    rename map (see `_canonicalize_path`/`_canonicalize_tags`) before calling this, so that an
+    ancestor rename only refreshes `tags` without manufacturing a spurious add+remove pair.
+    """
+    curr_by_path = dict(curr_occurrences)
+    prev_by_path = dict(prev_occurrences)
+    for path, tags in curr_by_path.items():
+        change = "unchanged" if path in prev_by_path else "added"
+        bucket[path] = (tags, change)
+    for path, tags in prev_by_path.items():
+        if path not in curr_by_path:
+            bucket[path] = (tags, "removed")
+
+
+def _build_rename_map(modl_events: list[dict[str, Any]]) -> dict[str, str]:
+    """
+    Build a previous-label \u2192 current-label map from every renamed ENTITY event in this diff
+    (including cascaded descendant renames, each of which gets its own ENTITY MODIFIED event).
+
+    Used to canonicalize an ancestor's tag key before classifying a property's path occurrences,
+    so an ancestor rename doesn't defeat tags-based unchanged/added/removed classification.
+    """
+    rename_map: dict[str, str] = {}
+    for ev in modl_events:
+        if ev["kind"] == ENTITY and ev["change_type"] == MODIFIED and ev.get("renamed_from"):
+            rename_map[ev["renamed_from"]] = ev["label"]
+    return rename_map
+
+
+def _canonicalize_tags(tags: dict[str, dict[str, str]], rename_map: dict[str, str]) -> dict[str, dict[str, str]]:
+    """Remap each ancestor FQN key in `tags` through `rename_map` to its current-label equivalent."""
+    if not rename_map:
+        return tags
+    return {rename_map.get(label, label): dims for label, dims in tags.items()}
+
+
+def _canonicalize_path(path: str, rename_map: dict[str, str]) -> str:
+    """
+    Rewrite the longest renamed-ancestor prefix of a previous-snapshot runtime path to its
+    current-label equivalent, so a pure ancestor rename resolves to the same literal path as
+    the current occurrence (classified as `unchanged` instead of a spurious add+remove pair).
+    """
+    if not rename_map:
+        return path
+    best_old: str | None = None
+    for old in rename_map:
+        if path == old or path.startswith(old + "."):
+            if best_old is None or len(old) > len(best_old):
+                best_old = old
+    if best_old is None:
+        return path
+    return rename_map[best_old] + path[len(best_old) :]
+
+
+def _is_struct_member(
+    parent_label: str,
+    current_attrs_by_path: dict[str, dict[str, Any]],
+    previous_attrs_by_path: dict[str, dict[str, Any]],
+) -> bool:
+    """Whether `parent_label` is a struct, i.e. the property is a struct field rather than a model signal."""
+    parent_attrs = current_attrs_by_path.get(parent_label) or previous_attrs_by_path.get(parent_label)
+    return parent_attrs is not None and _node_type(parent_attrs) == "struct"
+
+
+def _build_property_paths(
+    modl_events: list[dict[str, Any]],
+    current_attrs_by_path: dict[str, dict[str, Any]],
+    previous_attrs_by_path: dict[str, dict[str, Any]],
+    current_model: _ExpandedModel,
+    previous_model: _ExpandedModel,
+) -> list[dict[str, Any]]:
+    """
+    Build the top-level `property_paths` list required by modl >=0.8.0.
+
+    For every ADDED/MODIFIED/REMOVED model/structs PROPERTY event that is binding-eligible
+    (`is_leaf` or `binding_eligible`), looks up its runtime-path occurrences in the
+    expanded current and/or previous model (`_expand_model`) and classifies each path as
+    added, removed or unchanged. Also re-reports every leaf tagged with an entity whose
+    `instances` changed in this diff (the entity instance-delta cascade), even when the
+    property itself has no standalone event of its own.
+
+    Struct fields (properties whose parent is a struct, not a branch) never get their own
+    entry — a struct has no standalone runtime address of its own; only the property that
+    references the struct (itself binding-eligible via `binding_eligible`) is reported.
+    """
+    rename_map = _build_rename_map(modl_events)
+
+    def current_occurrences(label: str | None) -> list[PathOccurrence]:
+        return list(current_model.paths.get(label, [])) if label is not None else []
+
+    def previous_occurrences(label: str | None) -> list[PathOccurrence]:
+        occ = previous_model.paths.get(label, []) if label is not None else []
+        return [(_canonicalize_path(path, rename_map), _canonicalize_tags(tags, rename_map)) for path, tags in occ]
+
+    entries: dict[tuple[str, str], dict[str, tuple[dict[str, dict[str, str]], str]]] = {}
+
+    def merge(label: str, parent_label: str, curr_fqn: str | None, prev_fqn: str | None, warn_if_orphan: bool) -> None:
+        curr_occ = current_occurrences(curr_fqn)
+        prev_occ = previous_occurrences(prev_fqn)
+        if warn_if_orphan and not curr_occ and not prev_occ:
+            log.warning(
+                f"No runtime path could be resolved for binding-eligible property '{label}' "
+                "— likely an orphan struct type with no referencing property; reporting empty paths."
+            )
+        bucket = entries.setdefault((label, parent_label), {})
+        _merge_occurrences_into_bucket(bucket, curr_occ, prev_occ)
+
+    # ADDED/MODIFIED/REMOVED binding-eligible PROPERTY events.
+    changed_entities: set[str] = set()
+    for ev in modl_events:
+        if ev["kind"] == ENTITY and ev["change_type"] == MODIFIED:
+            if ev["aspects"].get("instances_added") or ev["aspects"].get("instances_removed"):
+                changed_entities.add(ev["label"])
+
+    for ev in modl_events:
+        if ev["kind"] != PROPERTY:
+            continue
+        if not (ev.get("is_leaf") or ev.get("binding_eligible", False)):
+            continue
+        label = ev["label"]
+        parent_label = ev.get("parent_label")
+        if parent_label is None:
+            continue
+        if _is_struct_member(parent_label, current_attrs_by_path, previous_attrs_by_path):
+            continue
+        change_type = ev["change_type"]
+        if change_type == ADDED:
+            merge(label, parent_label, label, None, warn_if_orphan=True)
+        elif change_type == REMOVED:
+            merge(label, parent_label, None, label, warn_if_orphan=False)
+        else:
+            prev_label = ev.get("renamed_from") or label
+            merge(label, parent_label, label, prev_label, warn_if_orphan=False)
+
+    # Entity instance-delta cascade: re-report every leaf tagged with a changed entity,
+    # even without its own event.
+    if changed_entities:
+        for fqn in sorted(set(current_model.paths) | set(previous_model.paths)):
+            parent_label = fqn.rsplit(".", 1)[0] if "." in fqn else None
+            if parent_label is None or (fqn, parent_label) in entries:
+                continue
+            curr_occ = current_occurrences(fqn)
+            prev_occ = previous_occurrences(fqn)
+            touches_changed_entity = any(
+                entity_label in tags for _, tags in (*curr_occ, *prev_occ) for entity_label in changed_entities
+            )
+            if not touches_changed_entity:
+                continue
+            bucket = entries.setdefault((fqn, parent_label), {})
+            _merge_occurrences_into_bucket(bucket, curr_occ, prev_occ)
+
+    property_paths: list[dict[str, Any]] = []
+    for label, parent_label in sorted(entries):
+        bucket = entries[(label, parent_label)]
+        paths = [
+            {"tags": tags, "path": path, "change": change}
+            for path, (tags, change) in sorted(bucket.items(), key=lambda kv: kv[0])
+        ]
+        property_paths.append({"label": label, "parent_label": parent_label, "paths": paths})
+    return property_paths
 
 
 # ---------------------------------------------------------------------------
@@ -688,12 +1034,17 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
 
     Returns a dict with:
       previous, current  — folder paths as strings
-      changes            — ordered list of modl IR change events
+      changes             — ordered list of modl IR change events
+      property_paths      — modl IR PropertyPaths entries (literal runtime-path occurrences)
 
     When previous_dir is None (first-run mode), every element in current_dir
     is treated as ADDED and emitted with its complete aspects snapshot.
     """
     raw_changes: list[dict[str, Any]] = []
+    current_attrs_by_path: dict[str, dict[str, Any]] = {}
+    previous_attrs_by_path: dict[str, dict[str, Any]] = {}
+    current_model_flat: dict[str, Any] = {}
+    previous_model_flat: dict[str, Any] = {}
 
     sources = [
         (MODEL_SNAPSHOT_FILENAME, "model", True),
@@ -705,13 +1056,25 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
     for filename, source_label, detect_renames in sources:
         prev = load_snapshot_yaml(previous_dir / filename) if previous_dir else {}
         curr = load_snapshot_yaml(current_dir / filename)
+        if source_label in ("model", "structs"):
+            current_attrs_by_path.update(curr)
+            previous_attrs_by_path.update(prev)
+        if source_label == "model":
+            current_model_flat, previous_model_flat = curr, prev
         if not prev and not curr:
             continue
         raw_changes.extend(_diff_dicts(prev, curr, source_label, detect_renames=detect_renames))
 
-    raw_changes = _inject_instance_expansions(raw_changes)
+    previous_model = _expand_model(previous_model_flat)
+    current_model = _expand_model(current_model_flat)
+
     modl_events = _to_modl_events(raw_changes)
+    _reparent_events(modl_events, previous_model.reparent, current_model.reparent)
     modl_events = _inject_entity_content(modl_events)
+
+    property_paths = _build_property_paths(
+        modl_events, current_attrs_by_path, previous_attrs_by_path, current_model, previous_model
+    )
 
     _KIND_ORDER = {ENTITY: 0, ENUMERATION_SET: 1, PROPERTY: 2, ENUM_VALUE: 3}
     modl_events.sort(key=lambda e: _KIND_ORDER.get(e["kind"], 99))
@@ -720,4 +1083,5 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
         "previous": str(previous_dir) if previous_dir else None,
         "current": str(current_dir),
         "changes": modl_events,
+        "property_paths": property_paths,
     }
