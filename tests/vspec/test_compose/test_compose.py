@@ -10,6 +10,8 @@ import filecmp
 import subprocess
 from pathlib import Path
 
+import yaml
+
 HERE = Path(__file__).resolve().parent
 TEST_UNITS = HERE / ".." / "test_units.yaml"
 TEST_QUANT = HERE / ".." / "test_quantities.yaml"
@@ -94,3 +96,22 @@ def test_compose_existing_dir_is_reused(tmp_path):
     assert result.returncode == 0, result.stderr
 
     assert stale.read_text(encoding="utf-8") != "stale content"
+
+
+def test_compose_keeps_unit_key_casing(tmp_path):
+    """Unit keys are written to units.yaml as authored, not lowercased."""
+    extra_units = tmp_path / "extra_units.yaml"
+    extra_units.write_text(
+        "Gm:\n  definition: Length measured in gigameters\n  unit: gigameter\n"
+        "  quantity: length\n  allowed-datatypes: ['numeric']\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "out"
+    cmd = ["vspec", "compose", "-u", str(TEST_UNITS), "-u", str(extra_units), "-q", str(TEST_QUANT)]
+    cmd += ["-s", str(HERE / "test_no_types.vspec"), "-o", str(out)]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+    keys = yaml.safe_load((out / "units.yaml").read_text(encoding="utf-8")).keys()
+    assert "Gm" in keys
+    assert "gm" not in keys

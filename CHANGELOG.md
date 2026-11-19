@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+### Fixed
+
+- `vspec compose` wrote the unit keys of `units.yaml` in lowercase (`kPa` → `kpa`), so every exporter reading the snapshot emitted lowercased units. The original key is kept now.
+- `vspec diff` compares unit keys case-insensitively, so a casing-only difference between two snapshots (e.g. a snapshot written before the fix above) is not reported as a removed plus an added unit.
+
 ### Removed
 
 Franca export removed
