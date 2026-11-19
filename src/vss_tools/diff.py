@@ -79,6 +79,18 @@ def load_snapshot_yaml(path: Path) -> dict[str, Any]:
     return content if isinstance(content, dict) else {}
 
 
+def _align_unit_keys(previous: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
+    """
+    Re-key previous units to the casing used in current.
+
+    Unit keys are case-insensitive (`kPa` and `kpa` are the same unit), so a
+    casing-only difference between two snapshots must not show up as a removed
+    plus an added unit.
+    """
+    current_by_lower = {k.lower(): k for k in current}
+    return {current_by_lower.get(k.lower(), k): v for k, v in previous.items()}
+
+
 def _node_type(attrs: dict[str, Any]) -> str:
     """Extract the VSS node type label from an attribute dict."""
     return str(attrs.get("type", "unknown"))
@@ -1056,6 +1068,8 @@ def diff_folders(previous_dir: Path | None, current_dir: Path) -> dict[str, Any]
     for filename, source_label, detect_renames in sources:
         prev = load_snapshot_yaml(previous_dir / filename) if previous_dir else {}
         curr = load_snapshot_yaml(current_dir / filename)
+        if source_label == "units":
+            prev = _align_unit_keys(prev, curr)
         if source_label in ("model", "structs"):
             current_attrs_by_path.update(curr)
             previous_attrs_by_path.update(prev)

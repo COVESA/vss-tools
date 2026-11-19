@@ -154,9 +154,11 @@ def cli(
     if resolved_units:
         # dynamic_units contains both key (e.g. "km") and unit-string (e.g. "kilometer")
         # aliases pointing to the same object. Keep only canonical key entries.
+        # load_units() lowercases the dict keys; write the original key (e.g. "kPa") so that
+        # exporters reading the snapshot emit the unit as authored.
         unit_data = load_units(resolved_units)
         units_snapshot = {
-            k: v.model_dump(by_alias=True, exclude_none=True, exclude={"key"}) for k, v in unit_data.items()
+            (v.key or k): v.model_dump(by_alias=True, exclude_none=True, exclude={"key"}) for k, v in unit_data.items()
         }
         units_out = output_dir / UNITS_SNAPSHOT_FILENAME
         if units_out.exists():

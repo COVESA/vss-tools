@@ -51,6 +51,9 @@ Each entry in `changes` is a modl IR event. Fields present depend on `kind` and 
 | quantities | — | `ENUMERATION_SET` |
 | units | — | `ENUM_VALUE` |
 
+Unit keys are matched case-insensitively between the two snapshots, like everywhere else in vss-tools:
+a key that only changes its casing (`kpa` → `kPa`) is not reported as a change.
+
 ## Branch duality
 
 VSS has no separate standalone-type layer: a branch's name is just its path segment, exactly like a
