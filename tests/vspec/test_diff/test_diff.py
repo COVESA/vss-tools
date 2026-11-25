@@ -288,6 +288,17 @@ class TestUnitChanges:
         assert "output_type" not in added["aspects"]
 
 
+def test_unit_key_casing_change_is_not_a_change(tmp_path: Path):
+    """kpa -> kPa is the same (case-insensitive) unit: no REMOVED + ADDED pair."""
+    unit = {"definition": "Pressure measured in kilopascal", "unit": "kilopascal", "quantity": "pressure"}
+    previous, current = tmp_path / "previous", tmp_path / "current"
+    for folder, key in ((previous, "kpa"), (current, "kPa")):
+        folder.mkdir()
+        (folder / "units.yaml").write_text(yaml.dump({key: unit}), encoding="utf-8")
+
+    assert diff_folders(previous, current)["changes"] == []
+
+
 # ---------------------------------------------------------------------------
 # diff_folders — entity content injection
 # ---------------------------------------------------------------------------
